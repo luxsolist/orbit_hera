@@ -53,6 +53,8 @@ export class PlayerController {
   hp = 100;
   maxFreq = 100;
   freq = 100;
+  /** 특수 무기 등에서 자연 회복을 잠시 막아야 할 때 true */
+  freqRegenSuppressed = false;
 
   private invuln = 0; // 피격 무적 타이머
 
@@ -68,6 +70,11 @@ export class PlayerController {
 
   get worldPosition(): THREE.Vector3 {
     return this.position;
+  }
+
+  /** 시점 yaw(라디안). 미니맵 회전·후방 카메라 방향 산출에 사용 */
+  get viewYaw(): number {
+    return this.yaw;
   }
 
   /** 카메라가 바라보는 정규화 방향 */
@@ -147,8 +154,10 @@ export class PlayerController {
 
     // 바위(오브젝트) 통과 불가: 겹치면 바깥으로 밀어내고, 바위를 파고드는
     // 운동량 성분은 제거해 벽에 미끄러지듯 멈추게 한다.
+    // feetY 가 바위 윗면 이상이면 디딘 상태로 보고 수평 차단을 무시 → 위에 올라설 수 있음.
     const before = { x: this.position.x, z: this.position.z };
-    const resolved = this.world.resolveCollision(before.x, before.z, PLAYER_RADIUS);
+    const feetY = this.position.y - EYE_HEIGHT;
+    const resolved = this.world.resolveCollision(before.x, before.z, PLAYER_RADIUS, feetY);
     if (resolved.x !== before.x || resolved.z !== before.z) {
       const nx = resolved.x - before.x;
       const nz = resolved.z - before.z;
@@ -168,8 +177,6 @@ export class PlayerController {
     }
 
     // --- 점프 / 중력 ---
-    const groundY = this.world.heightAt(this.position.x, this.position.z) + EYE_HEIGHT;
-
     // 지상에 있을 때 점프 예산/코요테 갱신
     if (this.grounded) {
       this.coyote = COYOTE_TIME;
@@ -193,8 +200,21 @@ export class PlayerController {
     const rising = this.velocityY > 0;
     const holdingJump = this.input.isDown("Space");
     const g = rising && !holdingJump ? GRAVITY * LOW_JUMP_MULT : GRAVITY;
+
+    // 바위 위 착지를 위해 이번 프레임 중력 적용 전 발 위치를 기억해 둔다.
+    const prevFeetY = this.position.y - EYE_HEIGHT;
     this.velocityY -= g * dt;
     this.position.y += this.velocityY * dt;
+
+    // 지면(또는 바위 윗면) 높이 계산: 발이 윗면보다 위에 있던 경우에만 디딤판으로 인정
+    // → 아래에서 바위 안으로 텔레포트되는 일을 막는다.
+    const terrainY = this.world.heightAt(this.position.x, this.position.z);
+    const rockTopY = this.world.topAt(this.position.x, this.position.z);
+    let standY = terrainY;
+    if (rockTopY > standY && prevFeetY >= rockTopY - 0.05) {
+      standY = rockTopY;
+    }
+    const groundY = standY + EYE_HEIGHT;
 
     if (this.position.y <= groundY) {
       this.position.y = groundY;
@@ -204,8 +224,10 @@ export class PlayerController {
       this.grounded = false;
     }
 
-    // --- 주파수 재충전 ---
-    this.freq = Math.min(this.maxFreq, this.freq + 22 * dt);
+    // --- 주파수 재충전 --- (특수 무기 발동 중에는 외부에서 억제)
+    if (!this.freqRegenSuppressed) {
+      this.freq = Math.min(this.maxFreq, this.freq + 22 * dt);
+    }
 
     this.syncCamera();
   }

@@ -16,11 +16,17 @@
           <span class="crosshair__dot"></span>
         </div>
 
+        <!-- 좌상단: 후방 카메라 보조 화면(메인 캔버스에 viewport 로 덧그림) + 텍스트 -->
+        <div class="hud__rear" aria-label="rear camera">
+          <div class="hud__rear-label">REAR-CAM · 180°</div>
+        </div>
         <div class="hud__corner hud__corner--tl">
           <div class="hud__label">REMOTE LINK</div>
           <div class="hud__unit" id="unitName">ANDROID-01</div>
         </div>
 
+        <!-- 우상단: 레이더 미니맵 + 텍스트 -->
+        <canvas id="minimap" class="hud__minimap" aria-label="minimap"></canvas>
         <div class="hud__corner hud__corner--tr">
           <div class="hud__stat">
             <span class="hud__label">PURGED</span>
@@ -47,6 +53,18 @@
           </div>
         </div>
 
+        <!-- 우하단: 특수 무기 쿨다운 인디케이터 -->
+        <div class="hud__special" id="specialIndicator">
+          <div class="hud__special-ring">
+            <svg viewBox="0 0 36 36" class="hud__special-svg">
+              <circle class="hud__special-track" cx="18" cy="18" r="15.6" />
+              <circle class="hud__special-fill" id="specialFill" cx="18" cy="18" r="15.6" />
+            </svg>
+            <div class="hud__special-label" id="specialLabel">RMB</div>
+          </div>
+          <div class="hud__special-name">BARRAGE · ×10</div>
+        </div>
+
         <div class="hud__scanline"></div>
       </div>
 
@@ -58,7 +76,8 @@
           <button id="startBtn" class="overlay__btn">접속 시작 / LINK IN</button>
           <ul class="overlay__controls">
             <li><b>WASD</b> 이동 · <b>SPACE</b> 점프(2단) · <b>SHIFT</b> 회피 대시</li>
-            <li><b>MOUSE</b> 조준 · <b>L-CLICK</b> 주파수 빔 조사</li>
+            <li><b>MOUSE</b> 조준 · <b>L-CLICK</b> 수동 빔 · 근접 적은 자동 사격</li>
+            <li><b>R-CLICK</b> 특수 살포(×10, 게이지 소진까지 · 60s 쿨다운)</li>
             <li><b>ESC</b> 링크 해제 (일시정지)</li>
           </ul>
         </div>

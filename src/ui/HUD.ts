@@ -15,6 +15,12 @@ export class HUD {
   private fireFlashTimer = 0;
   private damageFlashTimer = 0;
 
+  private specialEl: HTMLElement;
+  private specialFill: SVGCircleElement;
+  private specialLabel: HTMLElement;
+  // SVG 원둘레(반경 15.6) — CSS dasharray 와 동일하게 유지
+  private readonly specialCirc = 2 * Math.PI * 15.6;
+
   constructor() {
     this.root = byId("hud");
     this.hpFill = byId("hpFill");
@@ -23,6 +29,9 @@ export class HUD {
     this.waveCount = byId("waveCount");
     this.unitName = byId("unitName");
     this.crosshair = byId("crosshair");
+    this.specialEl = byId("specialIndicator");
+    this.specialFill = byId("specialFill") as unknown as SVGCircleElement;
+    this.specialLabel = byId("specialLabel");
 
     // 데미지 비네팅은 동적 생성
     this.damage = document.createElement("div");
@@ -52,6 +61,24 @@ export class HUD {
 
   setUnitName(name: string) {
     this.unitName.textContent = name;
+  }
+
+  /**
+   * 특수 무기 상태 갱신.
+   * @param ready 0~1 진행률(1=즉시 발동 가능)
+   * @param active 발동 중 여부
+   * @param remainingSec 쿨다운 남은 초(없으면 -1)
+   */
+  setSpecial(ready: number, active: boolean, remainingSec: number) {
+    const r = Math.max(0, Math.min(1, ready));
+    // dashoffset = circumference * (1 - progress)
+    this.specialFill.style.strokeDashoffset = String(this.specialCirc * (1 - r));
+    this.specialEl.classList.toggle("is-ready", r >= 1 && !active);
+    this.specialEl.classList.toggle("is-active", active);
+    this.specialEl.classList.toggle("is-cooling", !active && r < 1);
+    if (active) this.specialLabel.textContent = "FIRE";
+    else if (r >= 1) this.specialLabel.textContent = "RMB";
+    else this.specialLabel.textContent = String(Math.ceil(remainingSec));
   }
 
   flashFire() {

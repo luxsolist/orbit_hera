@@ -37,6 +37,17 @@ export class EnemyManager {
     return this.enemies.filter((e) => e.state === "alive").map((e) => e.hitMesh);
   }
 
+  /** 미니맵용 살아있는 적 위치 스냅샷(읽기 전용) */
+  get aliveSnapshot(): readonly { x: number; z: number }[] {
+    const out: { x: number; z: number }[] = [];
+    for (const e of this.enemies) {
+      if (e.state === "alive") {
+        out.push({ x: e.group.position.x, z: e.group.position.z });
+      }
+    }
+    return out;
+  }
+
   start() {
     this.clear();
     this.wave = 0;

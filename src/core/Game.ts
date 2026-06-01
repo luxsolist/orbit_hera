@@ -5,7 +5,10 @@ import { World } from "../world/World";
 import { PlayerController } from "../player/PlayerController";
 import { EnemyManager } from "../enemies/EnemyManager";
 import { FrequencyBeam } from "../weapons/FrequencyBeam";
+import { SpecialBarrage } from "../weapons/SpecialBarrage";
 import { HUD } from "../ui/HUD";
+import { RearView } from "../ui/RearView";
+import { Minimap } from "../ui/Minimap";
 import { createComposer } from "../fx/postprocessing";
 
 type GameState = "title" | "playing" | "paused" | "dead";
@@ -25,7 +28,10 @@ export class Game {
   private player: PlayerController;
   private enemies: EnemyManager;
   private beam: FrequencyBeam;
+  private special: SpecialBarrage;
   private hud: HUD;
+  private rearView: RearView;
+  private minimap: Minimap;
 
   private state: GameState = "title";
   private overlay: HTMLElement;
@@ -48,8 +54,11 @@ export class Game {
     this.player = new PlayerController(this.input, this.world, window.innerWidth / window.innerHeight);
     this.enemies = new EnemyManager(this.scene, this.world, this.player);
     this.beam = new FrequencyBeam(this.scene, this.player, this.enemies);
+    this.special = new SpecialBarrage(this.scene, this.player, this.enemies);
     this.hud = new HUD();
     this.composer = createComposer(this.renderer, this.scene, this.player.camera);
+    this.rearView = new RearView(this.renderer, this.scene, this.player);
+    this.minimap = new Minimap(this.player, this.enemies, this.world);
 
     this.wireEvents();
 
@@ -66,6 +75,7 @@ export class Game {
 
   private wireEvents() {
     this.beam.onFired = () => this.hud.flashFire();
+    this.special.onFired = () => this.hud.flashFire();
     this.enemies.onKill = () => this.hud.setKills(this.enemies.killCount);
     this.enemies.onWaveChange = (w) => this.hud.setWave(w);
     this.enemies.onPlayerHit = () => this.hud.flashDamage();
@@ -82,6 +92,7 @@ export class Game {
     if (this.state === "title" || this.state === "dead") {
       this.player.reset();
       this.enemies.start();
+      this.special.reset();
       this.hud.setKills(0);
       this.state = "playing";
     } else if (this.state === "paused") {
@@ -107,18 +118,29 @@ export class Game {
     if (this.state === "playing" && this.input.locked) {
       this.player.update(dt);
       this.beam.update(dt, this.input.fireHeld);
+      this.special.update(dt, this.input.specialPressed);
       this.enemies.update(dt);
       this.hud.update(dt);
 
       // HUD 수치 동기화
       this.hud.setHp(this.player.hp, this.player.maxHp);
       this.hud.setFrequency(this.player.freq, this.player.maxFreq);
+      this.hud.setSpecial(
+        this.special.cooldownReady,
+        this.special.isActive,
+        Math.max(0, 60 - this.special.cooldownReady * 60)
+      );
 
       if (this.player.isDead) this.onDeath();
     }
 
     this.input.endFrame();
     this.composer.render();
+    // 메인 렌더 후 좌상단 후방 시야를 덧그리고, 미니맵(2D 캔버스)을 갱신.
+    if (this.state === "playing") {
+      this.rearView.render();
+      this.minimap.render();
+    }
   }
 
   private onDeath() {

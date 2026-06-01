@@ -11,8 +11,8 @@ export const TERRAIN_HALF = TERRAIN_SIZE / 2;
  */
 export class World {
   readonly group = new THREE.Group();
-  /** 통과 불가 오브젝트(바위)의 수평 원기둥 콜라이더 목록 */
-  readonly colliders: { x: number; z: number; radius: number }[] = [];
+  /** 통과 불가 오브젝트(바위)의 수평 원기둥 콜라이더 + 윗면 Y(올라설 수 있는 높이) */
+  readonly colliders: { x: number; z: number; radius: number; top: number }[] = [];
   private amp = 7;
   private freq = 0.035;
 
@@ -27,9 +27,17 @@ export class World {
    * 수평 충돌 해소.
    * 반지름 radius 의 원(플레이어)이 바위 콜라이더와 겹치면 바깥으로 밀어낸 좌표를 반환.
    * (XZ 평면 원-원 검사 → 겹친 만큼 법선 방향으로 분리)
+   * feetY 가 바위 윗면 이상이면 그 위에 있는 것으로 보고 통과시킨다(올라타기/넘어가기 허용).
    */
-  resolveCollision(x: number, z: number, radius: number): { x: number; z: number } {
+  resolveCollision(
+    x: number,
+    z: number,
+    radius: number,
+    feetY: number
+  ): { x: number; z: number } {
     for (const c of this.colliders) {
+      // 윗면보다 발이 같거나 위면 디딘 상태 — 수평 차단하지 않음
+      if (feetY >= c.top - 0.05) continue;
       const dx = x - c.x;
       const dz = z - c.z;
       const min = c.radius + radius;
@@ -46,6 +54,22 @@ export class World {
       }
     }
     return { x, z };
+  }
+
+  /**
+   * (x,z) 좌표 위에 디딜 수 있는 바위 윗면 중 가장 높은 Y. 없으면 -Infinity.
+   * 플레이어 중심이 바위 수평 반경 안에 있을 때만 디딤판으로 인정.
+   */
+  topAt(x: number, z: number): number {
+    let best = -Infinity;
+    for (const c of this.colliders) {
+      const dx = x - c.x;
+      const dz = z - c.z;
+      if (dx * dx + dz * dz <= c.radius * c.radius) {
+        if (c.top > best) best = c.top;
+      }
+    }
+    return best;
   }
 
   /** 결정론적 의사 노이즈(여러 사인파 합성) */
@@ -128,16 +152,23 @@ export class World {
       const s = 1.2 + rand() * 3.5;
       const sx = s * (0.7 + rand() * 0.6);
       const sz = s * (0.7 + rand() * 0.6);
+      const sy = s * (1 + rand());
+      const baseY = this.heightAt(x, z) + s * 0.3;
       const mesh = new THREE.Mesh(rockGeo, rockMat);
-      mesh.scale.set(sx, s * (1 + rand()), sz);
-      mesh.position.set(x, this.heightAt(x, z) + s * 0.3, z);
+      mesh.scale.set(sx, sy, sz);
+      mesh.position.set(x, baseY, z);
       mesh.rotation.set(rand() * Math.PI, rand() * Math.PI, rand() * Math.PI);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       this.group.add(mesh);
 
-      // 수평 콜라이더: 바위의 수평 반경(아이코사헤드론 반경 1 × 수평 스케일)
-      this.colliders.push({ x, z, radius: Math.max(sx, sz) * 0.85 });
+      // 수평 콜라이더 + 윗면 Y(아이코사헤드론 반경 1 × 세로 스케일)
+      this.colliders.push({
+        x,
+        z,
+        radius: Math.max(sx, sz) * 0.85,
+        top: baseY + sy,
+      });
     }
   }
 

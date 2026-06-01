@@ -80,9 +80,55 @@ body {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
 }
-.hud__corner--tl { top: 0; left: 0; }
-.hud__corner--tr { top: 0; right: 0; text-align: right; }
+/* 위젯(후방 카메라/미니맵) 아래로 내려 텍스트가 겹치지 않게 한다. */
+.hud__corner--tl { top: 168px; left: 0; }
+.hud__corner--tr { top: 208px; right: 0; text-align: right; }
 .hud__corner--bl { bottom: 0; left: 0; }
+
+/* ---------------- 후방 카메라 프레임 ---------------- */
+/* 실제 영상은 메인 캔버스의 좌상단 영역에 viewport 로 그려진다.
+   여기서는 그 위에 얹는 테두리/라벨만 담당. */
+.hud__rear {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 240px;
+  height: 140px;
+  border: 1px solid rgba(52, 245, 255, 0.45);
+  box-shadow:
+    0 0 12px rgba(52, 245, 255, 0.25),
+    inset 0 0 18px rgba(5, 12, 18, 0.6);
+  pointer-events: none;
+  /* 코너 마크(L자) */
+  background:
+    linear-gradient(var(--seed-cyan), var(--seed-cyan)) top left/14px 1px no-repeat,
+    linear-gradient(var(--seed-cyan), var(--seed-cyan)) top left/1px 14px no-repeat,
+    linear-gradient(var(--seed-cyan), var(--seed-cyan)) top right/14px 1px no-repeat,
+    linear-gradient(var(--seed-cyan), var(--seed-cyan)) top right/1px 14px no-repeat,
+    linear-gradient(var(--seed-cyan), var(--seed-cyan)) bottom left/14px 1px no-repeat,
+    linear-gradient(var(--seed-cyan), var(--seed-cyan)) bottom left/1px 14px no-repeat,
+    linear-gradient(var(--seed-cyan), var(--seed-cyan)) bottom right/14px 1px no-repeat,
+    linear-gradient(var(--seed-cyan), var(--seed-cyan)) bottom right/1px 14px no-repeat;
+}
+.hud__rear-label {
+  position: absolute;
+  top: -18px;
+  left: 0;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--hud-dim);
+}
+
+/* ---------------- 미니맵 ---------------- */
+.hud__minimap {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 180px;
+  height: 180px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 8px rgba(52, 245, 255, 0.35));
+}
 
 .hud__label {
   font-size: 11px;
@@ -137,6 +183,75 @@ body {
     transparent 4px
   );
   mix-blend-mode: screen;
+}
+
+/* ---------------- 특수 무기 인디케이터(우하단) ---------------- */
+.hud__special {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.hud__special-ring {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+.hud__special-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg); /* 12시부터 시계방향 채움 */
+}
+.hud__special-track {
+  fill: rgba(5, 12, 18, 0.55);
+  stroke: rgba(255, 182, 72, 0.25);
+  stroke-width: 1.2;
+}
+.hud__special-fill {
+  fill: transparent;
+  stroke: var(--seed-amber);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  /* 둘레 = 2πr ≈ 98.0 (r=15.6). dashoffset 으로 진행 표현. */
+  stroke-dasharray: 98;
+  stroke-dashoffset: 98;
+  filter: drop-shadow(0 0 4px rgba(255, 182, 72, 0.6));
+  transition: stroke-dashoffset 0.12s linear;
+}
+.hud__special.is-ready .hud__special-fill {
+  stroke-dashoffset: 0;
+}
+.hud__special.is-active .hud__special-fill {
+  stroke: var(--seed-red);
+  filter: drop-shadow(0 0 8px rgba(255, 59, 78, 0.9));
+}
+.hud__special-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--seed-amber);
+  text-shadow: 0 0 6px rgba(255, 182, 72, 0.6);
+}
+.hud__special.is-cooling .hud__special-label {
+  color: rgba(232, 251, 255, 0.6);
+  text-shadow: none;
+}
+.hud__special.is-active .hud__special-label {
+  color: var(--seed-red);
+}
+.hud__special-name {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--hud-dim);
 }
 
 /* 데미지 플래시 */

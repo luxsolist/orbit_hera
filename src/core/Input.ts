@@ -12,6 +12,8 @@ export class Input {
   firePressed = false;
   /** 좌클릭을 누르고 있는가 (연속 사격용) */
   fireHeld = false;
+  /** 이번 프레임에 우클릭(특수 무기 발동)이 새로 눌렸는가 (엣지 트리거) */
+  specialPressed = false;
   /** 포인터 락(조준 모드) 활성 여부 */
   locked = false;
 
@@ -38,14 +40,19 @@ export class Input {
     });
 
     this.canvas.addEventListener("mousedown", (e) => {
-      if (e.button === 0 && this.locked) {
+      if (!this.locked) return;
+      if (e.button === 0) {
         this.firePressed = true;
         this.fireHeld = true;
+      } else if (e.button === 2) {
+        this.specialPressed = true;
       }
     });
     window.addEventListener("mouseup", (e) => {
       if (e.button === 0) this.fireHeld = false;
     });
+    // 우클릭이 컨텍스트 메뉴를 열지 않도록 차단(잠금 여부와 무관하게 캔버스 위에서는 차단)
+    this.canvas.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
   requestLock() {
@@ -73,6 +80,7 @@ export class Input {
   /** 프레임 끝에서 호출: 엣지 트리거 플래그 리셋 */
   endFrame() {
     this.firePressed = false;
+    this.specialPressed = false;
     this.pressed.clear();
   }
 }

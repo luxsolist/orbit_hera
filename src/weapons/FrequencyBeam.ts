@@ -4,15 +4,24 @@ import type { EnemyManager } from "../enemies/EnemyManager";
 import type { SeedEnemy } from "../enemies/SeedEnemy";
 import { DamageNumbers } from "../fx/damageNumbers";
 
+// --- 수동 발사(좌클릭) — 원거리/풀파워 ---
 const DAMAGE = 38; // 기준 거리(DMG_REF_DIST)에서의 기본 위력
 const FREQ_COST = 11;
 const FIRE_INTERVAL = 0.11; // 연사 간격(초)
 const RANGE = 400;
 const BEAM_LIFETIME = 0.09;
 
-// --- 자동 조준(에임 어시스트) ---
-// 거리에 상관없이 사거리(RANGE) 내의 적이면 조준선 콘 안에 들어올 때 자동 보정.
+// --- 자동 조준(에임 어시스트) — 콘 안 적이 있으면 빔 방향 보정 ---
 const ASSIST_COS = Math.cos(THREE.MathUtils.degToRad(20)); // 보정 콘(반각 20°)
+
+// --- 근거리 자동발사 모드 ---
+// 콘 안 + AUTO_FIRE_RANGE 이내 적이 있으면 매 AUTO_FIRE_INTERVAL 마다 자동으로 사격한다.
+// 발당 비용 × 발사 속도 ≤ 회복 속도(22/s) 가 되어 게이지가 거의 일정하게 유지된다.
+const AUTO_FIRE_RANGE = 80;
+const AUTO_FIRE_INTERVAL = 0.16;
+const AUTO_FIRE_COST = 3; // 3 / 0.16 ≈ 18.75/s < 22/s 회복 → 게이지 보존
+const AUTO_FIRE_DAMAGE = 14; // 거리 보정으로 근접 시 더 강해진다(damageForDistance)
+const AUTO_FIRE_COS = Math.cos(THREE.MathUtils.degToRad(18)); // 자동발사 발동 콘
 
 // --- 거리 반비례 위력 ---
 const DMG_REF_DIST = 26; // 이 거리에서 위력 = DAMAGE (배수 1.0)
@@ -76,9 +85,20 @@ export class FrequencyBeam {
   update(dt: number, firing: boolean) {
     if (this.cooldown > 0) this.cooldown -= dt;
 
-    if (firing && this.cooldown <= 0) {
-      this.fire();
-      this.cooldown = FIRE_INTERVAL;
+    if (this.cooldown <= 0) {
+      // 근거리 자동발사 우선: 콘 + AUTO_FIRE_RANGE 안의 적이 있으면 자동 사격(저비용·연사)
+      const origin = this.player.camera.position;
+      const aimDir = this.player.getAimDirection().clone();
+      const autoDir = this.acquireAutoFireTarget(origin, aimDir);
+      if (autoDir) {
+        this.fireAt(autoDir, AUTO_FIRE_COST, AUTO_FIRE_DAMAGE);
+        this.cooldown = AUTO_FIRE_INTERVAL;
+      } else if (firing) {
+        // 원거리/콘 밖 — 수동 발사(좌클릭). 풀파워, 더 빠른 연사.
+        // 기존 자동조준(에임 어시스트) 보정은 fireManual 안에서 처리.
+        this.fireManual();
+        this.cooldown = FIRE_INTERVAL;
+      }
     }
 
     this.damageNumbers.update(dt);
@@ -192,16 +212,19 @@ export class FrequencyBeam {
     }
   }
 
-  private fire() {
-    if (!this.player.spendFrequency(FREQ_COST)) return; // 주파수 부족
-
+  /** 좌클릭 수동 발사 — 풀 비용/데미지 + 에임 어시스트(콘 안 적이면 빔 보정). */
+  private fireManual() {
     const origin = this.player.camera.position;
     const aimDir = this.player.getAimDirection().clone();
-
-    // 근거리 적 자동 조준: 조준선 근처의 가장 정렬된 적으로 빔 방향을 보정
     const assistDir = this.acquireAssistTarget(origin, aimDir);
-    const dir = assistDir ?? aimDir;
+    this.fireAt(assistDir ?? aimDir, FREQ_COST, DAMAGE);
+  }
 
+  /** 공통 발사 경로 — 지정 방향으로 레이캐스트, 비용 차감, 시각·데미지 처리. */
+  private fireAt(dir: THREE.Vector3, cost: number, baseDamage: number) {
+    if (!this.player.spendFrequency(cost)) return; // 주파수 부족
+
+    const origin = this.player.camera.position;
     this.raycaster.set(origin, dir);
 
     const hits = this.raycaster.intersectObjects(this.enemies.hitMeshes, false);
@@ -211,11 +234,8 @@ export class FrequencyBeam {
       endPoint = hits[0].point.clone();
       const enemy = hits[0].object.userData.enemy as SeedEnemy | undefined;
       if (enemy) {
-        // 위력은 적중 거리에 반비례
-        const damage = this.damageForDistance(hits[0].distance);
-        // 입힌 데미지를 적중 지점에 잠깐 표시(글자 크기는 거리에 반비례)
+        const damage = this.damageForDistance(hits[0].distance, baseDamage);
         this.damageNumbers.spawn(endPoint, damage);
-        // 적중 순간 번쩍임 + 사방으로 튀는 스파크(타격감 극대화)
         this.spawnImpact(endPoint, hits[0].face?.normal, dir);
         const killed = enemy.applyFrequencyHit(damage);
         if (killed) {
@@ -227,7 +247,6 @@ export class FrequencyBeam {
       endPoint = origin.clone().add(dir.clone().multiplyScalar(RANGE));
     }
 
-    // 머즐: 카메라 약간 아래/오른쪽
     const muzzle = origin
       .clone()
       .add(dir.clone().multiplyScalar(1.2))
@@ -274,13 +293,47 @@ export class FrequencyBeam {
   }
 
   /** 적중 거리에 반비례한 위력(가까울수록 강함). 상·하한으로 클램프. */
-  private damageForDistance(dist: number): number {
+  private damageForDistance(dist: number, base: number): number {
     const mult = THREE.MathUtils.clamp(
       DMG_REF_DIST / Math.max(dist, 1),
       DMG_MIN_MULT,
       DMG_MAX_MULT
     );
-    return DAMAGE * mult;
+    return base * mult;
+  }
+
+  /**
+   * 근거리 자동발사용 타깃 탐색.
+   * 자동발사 콘(AUTO_FIRE_COS) + AUTO_FIRE_RANGE 안에서 가장 정렬된 적의 방향을 반환.
+   * 후보 없으면 null → 자동발사를 건너뛴다.
+   */
+  private acquireAutoFireTarget(
+    origin: THREE.Vector3,
+    aimDir: THREE.Vector3
+  ): THREE.Vector3 | null {
+    let bestDir: THREE.Vector3 | null = null;
+    let bestCos = AUTO_FIRE_COS;
+
+    const enemyPos = new THREE.Vector3();
+    const toEnemy = new THREE.Vector3();
+
+    for (const mesh of this.enemies.hitMeshes) {
+      mesh.getWorldPosition(enemyPos);
+      toEnemy.subVectors(enemyPos, origin);
+      const dist = toEnemy.length();
+      if (dist < 0.001 || dist > AUTO_FIRE_RANGE) continue;
+
+      toEnemy.divideScalar(dist);
+      const cos = toEnemy.dot(aimDir);
+      if (cos <= 0) continue;
+
+      if (cos > bestCos) {
+        bestCos = cos;
+        bestDir = toEnemy.clone();
+      }
+    }
+
+    return bestDir;
   }
 
   private spawnBeamVisual(from: THREE.Vector3, to: THREE.Vector3) {
