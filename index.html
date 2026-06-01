@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>SEED — Remote Link Combat</title>
+    <link rel="stylesheet" href="/src/ui/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+
+      <!-- 원격 접속 HUD 오버레이 -->
+      <div id="hud" class="hud" aria-hidden="true">
+        <div class="hud__crosshair" id="crosshair">
+          <span class="crosshair__dot"></span>
+        </div>
+
+        <div class="hud__corner hud__corner--tl">
+          <div class="hud__label">REMOTE LINK</div>
+          <div class="hud__unit" id="unitName">ANDROID-01</div>
+        </div>
+
+        <div class="hud__corner hud__corner--tr">
+          <div class="hud__stat">
+            <span class="hud__label">PURGED</span>
+            <span class="hud__value" id="killCount">0</span>
+          </div>
+          <div class="hud__stat">
+            <span class="hud__label">WAVE</span>
+            <span class="hud__value" id="waveCount">1</span>
+          </div>
+        </div>
+
+        <div class="hud__corner hud__corner--bl">
+          <div class="hud__bar">
+            <div class="hud__label">INTEGRITY</div>
+            <div class="hud__bar-track">
+              <div class="hud__bar-fill hud__bar-fill--hp" id="hpFill"></div>
+            </div>
+          </div>
+          <div class="hud__bar">
+            <div class="hud__label">FREQUENCY</div>
+            <div class="hud__bar-track">
+              <div class="hud__bar-fill hud__bar-fill--freq" id="freqFill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud__scanline"></div>
+      </div>
+
+      <!-- 시작 / 일시정지 오버레이 -->
+      <div id="overlay" class="overlay">
+        <div class="overlay__panel">
+          <h1 class="overlay__title" data-text="SEED">SEED</h1>
+          <p class="overlay__subtitle">REMOTE LINK COMBAT — VERTICAL SLICE</p>
+          <button id="startBtn" class="overlay__btn">접속 시작 / LINK IN</button>
+          <ul class="overlay__controls">
+            <li><b>WASD</b> 이동 · <b>SPACE</b> 점프(2단) · <b>SHIFT</b> 회피 대시</li>
+            <li><b>MOUSE</b> 조준 · <b>L-CLICK</b> 주파수 빔 조사</li>
+            <li><b>ESC</b> 링크 해제 (일시정지)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
