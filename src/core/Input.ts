@@ -77,6 +77,25 @@ export class Input {
     return { dx, dy };
   }
 
+  /**
+   * 외부(예: MobileControls)에서 키 입력을 합성하기 위한 API.
+   * 키보드 이벤트와 동일하게 keys/pressed 셋을 관리해
+   * isDown/wasPressed 가 변경 없이 동작하도록 한다.
+   */
+  syntheticKeyDown(code: string) {
+    if (!this.keys.has(code)) this.pressed.add(code);
+    this.keys.add(code);
+  }
+  syntheticKeyUp(code: string) {
+    this.keys.delete(code);
+  }
+
+  /** 룩(시야 회전) 델타를 누적. 픽셀 ≒ 마우스 movement 와 동일 단위. */
+  addLookDelta(dx: number, dy: number) {
+    this.mouseDX += dx;
+    this.mouseDY += dy;
+  }
+
   /** 프레임 끝에서 호출: 엣지 트리거 플래그 리셋 */
   endFrame() {
     this.firePressed = false;

@@ -23,6 +23,12 @@ body {
   user-select: none;
   -webkit-user-select: none;
 }
+/* 터치 디바이스에서 브라우저 기본 스크롤·핀치·더블탭 줌 차단 */
+body.is-touch {
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
 
 #app {
   position: fixed;
@@ -128,6 +134,171 @@ body {
   height: 180px;
   pointer-events: none;
   filter: drop-shadow(0 0 8px rgba(52, 245, 255, 0.35));
+}
+
+/* ---------------- 터치 컨트롤 ---------------- */
+/* 모바일/터치 디바이스에서만 표시. 데스크톱은 MobileControls 가 DOM 도 만들지 않는다. */
+.tc {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none; /* 자체는 투명 — 하위 버튼만 터치 받음 */
+}
+
+/* 플로팅 조이스틱: 첫 터치 위치에 등장. 비활성 상태에서는 보이지 않음. */
+.tc__joy {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(5, 12, 18, 0.35);
+  border: 1px solid rgba(52, 245, 255, 0.4);
+  box-shadow: 0 0 14px rgba(52, 245, 255, 0.25), inset 0 0 18px rgba(5, 12, 18, 0.5);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.tc__joy.is-active { opacity: 1; }
+.tc__joy-knob {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(52, 245, 255, 0.5);
+  box-shadow: 0 0 12px rgba(52, 245, 255, 0.7);
+  transition: transform 0.04s linear;
+}
+
+/* 버튼 클러스터: 우하단 삼각 배치 (특수 위, 점프 아래우, 대시 아래좌) */
+.tc__buttons {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  display: grid;
+  grid-template-columns: 64px 64px;
+  grid-template-rows: 64px 64px;
+  gap: 14px;
+}
+.tc__btn {
+  position: relative;
+  border-radius: 50%;
+  background: rgba(5, 12, 18, 0.55);
+  border: 1px solid rgba(52, 245, 255, 0.55);
+  color: var(--seed-cyan);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.08s, background 0.1s;
+}
+.tc__btn.is-pressed {
+  transform: scale(0.92);
+  background: rgba(52, 245, 255, 0.22);
+}
+.tc__btn--jump { grid-column: 2; grid-row: 2; } /* 우하단 = 엄지 홈 */
+.tc__btn--dash { grid-column: 1; grid-row: 2; }
+.tc__btn--special {
+  grid-column: 2;
+  grid-row: 1;
+  border-color: var(--seed-amber);
+  color: var(--seed-amber);
+  box-shadow: 0 0 14px rgba(255, 182, 72, 0.35);
+}
+.tc__btn--special.is-active {
+  border-color: var(--seed-red);
+  color: var(--seed-red);
+  box-shadow: 0 0 18px rgba(255, 59, 78, 0.7);
+}
+.tc__btn--special.is-cooling {
+  border-color: rgba(232, 251, 255, 0.35);
+  color: rgba(232, 251, 255, 0.7);
+  box-shadow: none;
+}
+/* 특수 버튼 진행링(SVG) */
+.tc__btn-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+.tc__btn-ring-track {
+  fill: none;
+  stroke: rgba(255, 182, 72, 0.18);
+  stroke-width: 2;
+}
+.tc__btn-ring-fill {
+  fill: none;
+  stroke: var(--seed-amber);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.1s linear;
+}
+.tc__btn--special.is-active .tc__btn-ring-fill {
+  stroke: var(--seed-red);
+}
+.tc__btn-label {
+  position: relative;
+  z-index: 1;
+}
+
+/* 모바일 전용 분기 */
+body.is-touch .hud__special { display: none; } /* 우하단 버튼 자체가 인디케이터 역할 */
+body.is-touch .hud__corner--bl { padding: 14px 16px; }
+body.is-touch .hud__bar { width: 180px; }
+.overlay__controls--touch { display: none; }
+body.is-touch .overlay__controls--mouse { display: none; }
+body.is-touch .overlay__controls--touch { display: block; }
+
+/* ---------------- 회전 안내 오버레이 ---------------- */
+/* 터치 디바이스 + 세로 모드에서만 표시. 모든 상호작용을 차단(z-index 최상위, 입력 흡수). */
+.mc-rotate {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: linear-gradient(135deg, #07111a 0%, #050a13 70%);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  color: var(--seed-cyan);
+  text-align: center;
+}
+body.is-touch.is-portrait .mc-rotate { display: flex; }
+.mc-rotate__inner { padding: 32px; }
+.mc-rotate__icon {
+  font-size: 96px;
+  line-height: 1;
+  color: var(--seed-amber);
+  text-shadow: 0 0 24px rgba(255, 182, 72, 0.55);
+  animation: mc-rotate-hint 1.8s ease-in-out infinite;
+  display: inline-block;
+}
+@keyframes mc-rotate-hint {
+  0%, 25% { transform: rotate(0deg); }
+  55%, 100% { transform: rotate(-90deg); }
+}
+.mc-rotate__msg {
+  margin-top: 28px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #e8fbff;
+}
+.mc-rotate__sub {
+  margin-top: 8px;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  color: var(--hud-dim);
 }
 
 .hud__label {

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { Input } from "./Input";
+import { MobileControls } from "./MobileControls";
 import { World } from "../world/World";
 import { PlayerController } from "../player/PlayerController";
 import { EnemyManager } from "../enemies/EnemyManager";
@@ -24,6 +25,7 @@ export class Game {
   private clock = new THREE.Clock();
 
   private input: Input;
+  private mobile: MobileControls;
   private world: World;
   private player: PlayerController;
   private enemies: EnemyManager;
@@ -50,6 +52,7 @@ export class Game {
 
     // 시스템 구성
     this.input = new Input(canvas);
+    this.mobile = new MobileControls(this.input);
     this.world = new World(this.scene);
     this.player = new PlayerController(this.input, this.world, window.innerWidth / window.innerHeight);
     this.enemies = new EnemyManager(this.scene, this.world, this.player);
@@ -100,10 +103,19 @@ export class Game {
     }
     this.hideOverlay();
     this.hud.setActive(true);
-    this.input.requestLock();
+    // 터치 디바이스에서는 포인터락이 의미 없음 — 강제로 잠금 상태로 가정.
+    // 사용자 제스처 컨텍스트에서 풀스크린 + 가로 모드 잠금을 시도(폴백은 회전 안내).
+    if (this.mobile.enabled) {
+      this.input.locked = true;
+      this.mobile.attemptLandscapeLock();
+    } else {
+      this.input.requestLock();
+    }
   }
 
   private onPointerLockChange() {
+    // 터치 디바이스는 포인터락 이벤트로 일시정지하지 않는다(애초에 락이 없음).
+    if (this.mobile.enabled) return;
     if (!this.input.locked && this.state === "playing") {
       // ESC 등으로 잠금 해제 → 일시정지
       this.state = "paused";
@@ -115,7 +127,9 @@ export class Game {
   private frame() {
     const dt = Math.min(this.clock.getDelta(), 0.05); // 스파이크 방지
 
-    if (this.state === "playing" && this.input.locked) {
+    // 모바일 세로 모드 등으로 입력을 받지 말아야 할 때는 게임 로직을 건너뛰고
+    // 렌더만 유지(회전 안내 오버레이가 화면을 덮음).
+    if (this.state === "playing" && this.input.locked && !this.mobile.isBlocked) {
       this.player.update(dt);
       this.beam.update(dt, this.input.fireHeld);
       this.special.update(dt, this.input.specialPressed);
@@ -125,11 +139,10 @@ export class Game {
       // HUD 수치 동기화
       this.hud.setHp(this.player.hp, this.player.maxHp);
       this.hud.setFrequency(this.player.freq, this.player.maxFreq);
-      this.hud.setSpecial(
-        this.special.cooldownReady,
-        this.special.isActive,
-        Math.max(0, 60 - this.special.cooldownReady * 60)
-      );
+      const cdReady = this.special.cooldownReady;
+      const cdRemaining = Math.max(0, 60 - cdReady * 60);
+      this.hud.setSpecial(cdReady, this.special.isActive, cdRemaining);
+      this.mobile.setSpecialState(cdReady, this.special.isActive, cdRemaining);
 
       if (this.player.isDead) this.onDeath();
     }
