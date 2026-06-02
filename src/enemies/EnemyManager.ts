@@ -63,9 +63,9 @@ export class EnemyManager {
   }
 
   private spawnOne() {
-    // 플레이어로부터 충분히 떨어진 가장자리에서 스폰
+    // 대형 도심 월드 — 플레이어 주변 근거리 밴드에서 스폰(교전 유지)
     const angle = Math.random() * Math.PI * 2;
-    const radius = 45 + Math.random() * (TERRAIN_HALF - 55);
+    const radius = 55 + Math.random() * 150;
     const x = THREE.MathUtils.clamp(
       this.player.worldPosition.x + Math.cos(angle) * radius,
       -TERRAIN_HALF + 6,

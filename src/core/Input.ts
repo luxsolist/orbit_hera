@@ -16,6 +16,8 @@ export class Input {
   specialPressed = false;
   /** 포인터 락(조준 모드) 활성 여부 */
   locked = false;
+  /** 락 획득 직후 첫 mousemove(엔게이지 점프 델타)를 버리기 위한 플래그 */
+  private freshLock = false;
 
   constructor(private canvas: HTMLCanvasElement) {
     window.addEventListener("keydown", (e) => {
@@ -25,7 +27,14 @@ export class Input {
     window.addEventListener("keyup", (e) => this.keys.delete(e.code));
 
     document.addEventListener("pointerlockchange", () => {
+      const wasLocked = this.locked;
       this.locked = document.pointerLockElement === this.canvas;
+      if (this.locked && !wasLocked) {
+        // 락 획득 — 누적 델타를 비우고 첫 엔게이지 mousemove(큰 점프)는 버린다
+        this.mouseDX = 0;
+        this.mouseDY = 0;
+        this.freshLock = true;
+      }
       if (!this.locked) {
         this.keys.clear();
         this.pressed.clear();
@@ -35,6 +44,10 @@ export class Input {
 
     this.canvas.addEventListener("mousemove", (e) => {
       if (!this.locked) return;
+      if (this.freshLock) {
+        this.freshLock = false;
+        return; // 락 직후 엔게이지 점프 델타 무시
+      }
       this.mouseDX += e.movementX;
       this.mouseDY += e.movementY;
     });

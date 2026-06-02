@@ -1,0 +1,30 @@
+[
+ {
+  "id": "gyeongbokgung",
+  "name": "경복궁 · Gyeongbokgung",
+  "subtitle": "Seoul, Korea — 도심 한복판의 왕궁",
+  "bytes": 521817,
+  "buildings": 3765
+ },
+ {
+  "id": "manhattan",
+  "name": "Times Square",
+  "subtitle": "Manhattan, NYC — 마천루 협곡 (확장 ±2.5km)",
+  "bytes": 1657779,
+  "buildings": 8087
+ },
+ {
+  "id": "osaka",
+  "name": "Osaka Castle · 大阪城",
+  "subtitle": "Osaka, Japan — 天守閣 (일본식 양식 샘플)",
+  "bytes": 146101,
+  "buildings": 689
+ },
+ {
+  "id": "paris",
+  "name": "Eiffel Tower",
+  "subtitle": "Paris, France — 샹드마르스 광장",
+  "bytes": 262881,
+  "buildings": 734
+ }
+]

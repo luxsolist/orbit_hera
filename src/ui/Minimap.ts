@@ -60,6 +60,96 @@ export class Minimap {
     const px = this.player.worldPosition.x;
     const pz = this.player.worldPosition.z;
 
+    // 월드점 → 미니맵 픽셀(플레이어 중심 + 시점 정렬)
+    const toPix = (wx: number, wz: number): [number, number] => {
+      const lp = this.worldToLocal(wx - px, wz - pz, yaw);
+      return [cx + lp.x, cy + lp.y];
+    };
+
+    // ---- 지형/건물 희미하게(배경 위, 마커 아래) ----
+    // 수역(옅은 청록 면)
+    ctx.fillStyle = "rgba(46, 116, 150, 0.22)";
+    for (const w of this.world.waterRings) {
+      const q = w.p;
+      const m = q.length / 2;
+      if (m < 3) continue;
+      let mx = 0,
+        mz = 0;
+      for (let i = 0; i < m; i++) {
+        mx += q[i * 2];
+        mz += q[i * 2 + 1];
+      }
+      if (Math.hypot(mx / m - px, mz / m - pz) > WORLD_RADIUS + 250) continue;
+      ctx.beginPath();
+      for (let i = 0; i < m; i++) {
+        const [sx, sy] = toPix(q[i * 2], q[i * 2 + 1]);
+        if (i === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // 도로(옅은 회색 선)
+    ctx.strokeStyle = "rgba(150, 162, 172, 0.16)";
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    for (const r of this.world.roadRings) {
+      const q = r.p;
+      const n = q.length / 2;
+      if (n < 2) continue;
+      ctx.lineWidth = Math.max(1, (r.w ?? 6) * this.scale * 0.5);
+      ctx.beginPath();
+      let any = false;
+      for (let i = 0; i < n - 1; i++) {
+        const ax = q[i * 2],
+          az = q[i * 2 + 1],
+          bx = q[i * 2 + 2],
+          bz = q[i * 2 + 3];
+        if (Math.hypot((ax + bx) / 2 - px, (az + bz) / 2 - pz) > WORLD_RADIUS + 20) continue;
+        const [s0x, s0y] = toPix(ax, az);
+        const [s1x, s1y] = toPix(bx, bz);
+        ctx.moveTo(s0x, s0y);
+        ctx.lineTo(s1x, s1y);
+        any = true;
+      }
+      if (any) ctx.stroke();
+    }
+
+    // 건물(옅은 회청색 면) — OBB + 오목 건물 삼각형
+    ctx.fillStyle = "rgba(132, 156, 170, 0.20)";
+    for (const b of this.world.buildingBoxes) {
+      if (Math.hypot(b.cx - px, b.cz - pz) - b.br > WORLD_RADIUS) continue;
+      const vx = -b.uz,
+        vz = b.ux;
+      ctx.beginPath();
+      const S = [[1, 1], [1, -1], [-1, -1], [-1, 1]];
+      for (let k = 0; k < 4; k++) {
+        const su = S[k][0],
+          sv = S[k][1];
+        const [sx, sy] = toPix(
+          b.cx + b.ux * b.hu * su + vx * b.hv * sv,
+          b.cz + b.uz * b.hu * su + vz * b.hv * sv
+        );
+        if (k === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.closePath();
+      ctx.fill();
+    }
+    for (const t of this.world.triBoxes) {
+      if (Math.hypot(t.mx - px, t.mz - pz) - t.br > WORLD_RADIUS) continue;
+      const [ax, ay] = toPix(t.ax, t.az);
+      const [bx2, by2] = toPix(t.bx, t.bz);
+      const [c2x, c2y] = toPix(t.cx, t.cz);
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(bx2, by2);
+      ctx.lineTo(c2x, c2y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
     // 동심 거리 링(20/40/60 월드 유닛)
     ctx.strokeStyle = "rgba(52, 245, 255, 0.12)";
     ctx.lineWidth = 1;

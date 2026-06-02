@@ -72,8 +72,10 @@
       <div id="overlay" class="overlay">
         <div class="overlay__panel">
           <h1 class="overlay__title" data-text="SEED">SEED</h1>
-          <p class="overlay__subtitle">REMOTE LINK COMBAT — VERTICAL SLICE</p>
-          <button id="startBtn" class="overlay__btn">접속 시작 / LINK IN</button>
+          <p class="overlay__subtitle">전장 선택 / SELECT BATTLEFIELD</p>
+          <div id="mapList" class="overlay__maps"></div>
+          <button id="startBtn" class="overlay__btn" hidden>재접속 / RESUME</button>
+          <button id="backBtn" class="overlay__btn overlay__btn--ghost" hidden>전장 선택 / CHANGE MAP</button>
           <ul class="overlay__controls overlay__controls--mouse">
             <li><b>WASD</b> 이동 · <b>SPACE</b> 점프(2단) · <b>SHIFT</b> 회피 대시</li>
             <li><b>MOUSE</b> 조준 · <b>L-CLICK</b> 수동 빔 · 근접 적은 자동 사격</li>

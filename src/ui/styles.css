@@ -456,6 +456,10 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 }
 .overlay__title {
   position: relative;
+  /* 글자 폭에 맞춰 줄이고 가운데 정렬 — 그래야 시안 복제(::before, left:2px)가
+     글자 기준으로 2px 만 어긋난다(넓은 패널에서 좌우로 크게 벌어지던 문제 수정). */
+  width: fit-content;
+  margin-inline: auto;
   font-size: 88px;
   font-weight: 900;
   letter-spacing: 0.3em;
@@ -514,3 +518,51 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   color: rgba(232, 251, 255, 0.7);
 }
 .overlay__controls b { color: var(--seed-amber); }
+
+/* ── 전장 선택 메뉴 ── */
+.overlay__maps[hidden] {
+  display: none; /* display:grid 가 [hidden] 의 display:none 을 덮어쓰는 문제 보정(일시정지/로딩 시 목록 숨김) */
+}
+.overlay__maps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+  width: min(680px, 86vw);
+  margin: 18px 0 6px;
+}
+.overlay__map {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 14px 16px;
+  background: rgba(20, 40, 52, 0.55);
+  border: 1px solid rgba(52, 245, 255, 0.28);
+  border-radius: 8px;
+  color: #cdeef5;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.overlay__map:hover {
+  transform: translateY(-2px);
+  border-color: rgba(52, 245, 255, 0.8);
+  background: rgba(28, 58, 74, 0.7);
+}
+.overlay__map-name {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.overlay__map-sub {
+  font-size: 12.5px;
+  opacity: 0.78;
+}
+.overlay__map-meta {
+  font-size: 11px;
+  opacity: 0.55;
+  font-family: ui-monospace, monospace;
+}
+.overlay__btn--ghost {
+  background: transparent;
+  opacity: 0.82;
+}

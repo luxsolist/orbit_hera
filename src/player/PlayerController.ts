@@ -10,8 +10,8 @@ const AIR_RATE = 4.5; // 공중 응답속도(낮게 두어 관성 유지)
 
 const GRAVITY = 46; // 중력(상향: 빠릿한 점프 아크)
 const LOW_JUMP_MULT = 2.2; // 상승 중 스페이스를 떼면 적용되는 추가 중력(가변 점프 높이)
-const JUMP_VELOCITY = 17;
-const AIR_JUMP_VELOCITY = 15; // 2단(공중) 점프
+const JUMP_VELOCITY = 21.5; // 점프 정점 ≈ v²/(2·GRAVITY) = 5.0m (실제 높이 4m 궁장을 넘을 수 있게)
+const AIR_JUMP_VELOCITY = 19; // 2단(공중) 점프 — 1단 상향에 맞춰 함께 상향
 const MAX_AIR_JUMPS = 1; // 지상 점프 + 공중 점프 1회 = 총 2단
 const COYOTE_TIME = 0.1; // 발판 이탈 직후에도 점프 허용되는 유예
 
@@ -38,7 +38,7 @@ export class PlayerController {
   private pitch = 0;
   private velocityY = 0;
   private grounded = true;
-  private position = new THREE.Vector3(0, 0, 24);
+  private position = new THREE.Vector3();
 
   // 수평 운동량 / 점프·대시 상태
   private hVel = new THREE.Vector3(); // x,z 수평 속도(운동량)
@@ -63,8 +63,10 @@ export class PlayerController {
     private world: World,
     aspect: number
   ) {
-    this.camera = new THREE.PerspectiveCamera(72, aspect, 0.1, 600);
-    this.position.y = this.world.heightAt(this.position.x, this.position.z) + EYE_HEIGHT;
+    this.camera = new THREE.PerspectiveCamera(72, aspect, 0.1, 8000);
+    const sp = this.world.spawn;
+    this.position.set(sp.x, this.world.heightAt(sp.x, sp.z) + EYE_HEIGHT, sp.z);
+    this.yaw = sp.yaw;
     this.syncCamera();
   }
 
@@ -253,8 +255,9 @@ export class PlayerController {
     this.coyote = 0;
     this.dashTime = 0;
     this.dashCooldown = 0;
-    this.position.set(0, this.world.heightAt(0, 24) + EYE_HEIGHT, 24);
-    this.yaw = 0;
+    const sp = this.world.spawn;
+    this.position.set(sp.x, this.world.heightAt(sp.x, sp.z) + EYE_HEIGHT, sp.z);
+    this.yaw = sp.yaw;
     this.pitch = 0;
     this.syncCamera();
   }
