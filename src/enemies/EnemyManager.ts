@@ -6,6 +6,16 @@ import { TERRAIN_HALF } from "../world/World";
 
 const ATTACK_RANGE = 3.2;
 const ATTACK_DAMAGE = 9;
+export const SPAWN_CEILING = 300; // 적 공중 스폰 최대 고도(지면 대비, m)
+export const SPAWN_BIAS = 2.5; // 스폰 고도 지수 가중(>1 일수록 지상 편향 강함)
+
+/**
+ * 균등난수 u∈[0,1) → 지면 대비 스폰 고도(m). u^SPAWN_BIAS 가중으로 지상에 가까울수록 빈도↑.
+ * 경계: u=0 → 0, u→1 → SPAWN_CEILING. 단조 증가.
+ */
+export function spawnAltitude(u: number): number {
+  return Math.pow(u, SPAWN_BIAS) * SPAWN_CEILING;
+}
 
 /**
  * 적 스폰/웨이브/처치 집계 관리.
@@ -76,7 +86,8 @@ export class EnemyManager {
       -TERRAIN_HALF + 6,
       TERRAIN_HALF - 6
     );
-    const y = this.world.heightAt(x, z) + 2;
+    // 공중 투입 — 지면 대비 0~300m 랜덤 고도(지상에 가까울수록 빈도 ↑). spawnAltitude 참조.
+    const y = this.world.heightAt(x, z) + spawnAltitude(Math.random());
 
     const scale = 1.2 + Math.random() * 0.8;
     const speed = 4.5 + this.wave * 0.4 + Math.random();
@@ -97,10 +108,9 @@ export class EnemyManager {
     }
 
     const playerPos = this.player.worldPosition;
-    const terrainY = (x: number, z: number) => this.world.heightAt(x, z);
 
     for (const enemy of this.enemies) {
-      enemy.update(dt, playerPos, terrainY);
+      enemy.update(dt, playerPos);
 
       if (enemy.tryAttack(playerPos, ATTACK_RANGE)) {
         this.player.takeDamage(ATTACK_DAMAGE);

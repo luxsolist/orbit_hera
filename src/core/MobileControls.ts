@@ -13,9 +13,22 @@ const SPEED_STEPS: [number, number][] = [
   [0.6, 0.55],
   [0.85, 0.8],
 ];
-function stepScale(mag: number): number {
+export function stepScale(mag: number): number {
   for (const [hi, s] of SPEED_STEPS) if (mag < hi) return s;
   return 1;
+}
+
+/**
+ * 조이스틱 정규화 변위(nx,ny ∈ [-1,1], +y=아래) → 합성할 WASD 키 + 속도 배율(순수).
+ * 데드존 밖 축만 키로(8방향), 속도는 변위 크기를 단계화. 아래로 끌면 후진(KeyS).
+ */
+export function joystickToKeys(nx: number, ny: number, deadzone = DEADZONE): { keys: Set<string>; scale: number } {
+  const keys = new Set<string>();
+  if (nx > deadzone) keys.add("KeyD");
+  if (nx < -deadzone) keys.add("KeyA");
+  if (ny > deadzone) keys.add("KeyS"); // 아래로 끌면 후진
+  if (ny < -deadzone) keys.add("KeyW");
+  return { keys, scale: stepScale(Math.min(1, Math.hypot(nx, ny))) };
 }
 
 interface MoveTouch {
@@ -374,14 +387,9 @@ export class MobileControls {
   }
 
   private updateMoveKeys(nx: number, ny: number) {
-    // 조이스틱 변위 크기에 비례한 속도 배율(방향은 8방향 키, 속도는 단계화)
-    this.input.moveScale = stepScale(Math.min(1, Math.hypot(nx, ny)));
-
-    const want = new Set<string>();
-    if (nx > DEADZONE) want.add("KeyD");
-    if (nx < -DEADZONE) want.add("KeyA");
-    if (ny > DEADZONE) want.add("KeyS"); // 아래로 끌면 후진
-    if (ny < -DEADZONE) want.add("KeyW");
+    // 순수 매핑(joystickToKeys)으로 키 집합·속도 배율 산출 후 Input 에 반영
+    const { keys: want, scale } = joystickToKeys(nx, ny);
+    this.input.moveScale = scale;
 
     for (const k of this.activeMoveKeys) {
       if (!want.has(k)) this.input.syntheticKeyUp(k);

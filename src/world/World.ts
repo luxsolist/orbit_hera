@@ -3,6 +3,9 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import type { MapData, SpawnPoint } from "./MapData";
 import { CollisionWorld } from "./CollisionWorld";
 import { StructureBuilder } from "./StructureBuilder";
+import { TerrainField } from "./TerrainField";
+import { SkyEnvironment } from "./SkyEnvironment";
+import { resolveBuildingStyle } from "./precinct";
 import { setUniformColor } from "./geo";
 
 /** 미니맵 등 표현 레이어가 World 의 근처 지형/건물 형상을 (내부 구조 노출 없이) 받는 싱크. */
@@ -28,68 +31,35 @@ export interface MinimapSink {
 const TERRAIN_SIZE = 6000;
 export const TERRAIN_HALF = TERRAIN_SIZE / 2; // 3000 (±3km)
 const SEGMENTS = 360; // 지형 격자 ~16.7m 유지(확장에도 산세 디테일 보존)
-const TILE_COLOR = new THREE.Color(0x3a5c82); // 경복궁 권역 건물 기와 슬래브색(선명한 청기와)
 
 export class World {
   readonly group = new THREE.Group();
   /** 플레이어 스폰(맵 데이터 기준) */
   readonly spawn: SpawnPoint;
   private map: MapData;
-  /** 도심 평탄 영역(건물 분포 bbox) — cityMask 산출용 */
-  private cx0 = 0;
-  private cx1 = 0;
-  private cz0 = 0;
-  private cz1 = 0;
+  /** 지형 높이·도심/경계 마스크 등 연속 공간 질의 계층. */
+  private readonly field: TerrainField;
   /** 충돌 세계 — 원기둥/건물 OBB/오목 삼각형/궁장 박스 + 격자 브로드페이즈. */
   private readonly collision = new CollisionWorld();
   /** 데이터 구동 랜드마크(parts/mats) 공통 인터프리터. */
   private readonly structures = new StructureBuilder();
-  /** 태양(평행광) — 큰 맵에서 그림자가 플레이어를 따라오도록 매 프레임 이동. */
-  private sun?: THREE.DirectionalLight;
+  /** 대기/조명(태양 그림자 추종 포함). */
+  private readonly sky: SkyEnvironment;
 
   constructor(scene: THREE.Scene, map: MapData) {
     this.map = map;
     this.spawn = map.spawn ?? { x: 0, z: 0, yaw: 0 };
-    this.computeCityExtent();
+    this.field = new TerrainField(map);
     this.buildTerrain();
     this.buildRoads();
     this.buildLaneMarkings();
     this.buildWater();
     this.buildCity();
     this.buildLandmarks();
-    this.buildPalaceWalls();
+    this.buildPrecinctWalls();
     this.collision.finalize(); // 모든 콜라이더 등록 후 격자 공간 인덱스 구축
-    this.buildLighting(scene);
-    this.buildSky(scene);
+    this.sky = new SkyEnvironment(scene, this.spawn);
     scene.add(this.group);
-  }
-
-  /** 건물 분포 bbox 계산(도심 평탄 마스크/배경산 경계용) */
-  private computeCityExtent() {
-    let x0 = Infinity,
-      x1 = -Infinity,
-      z0 = Infinity,
-      z1 = -Infinity;
-    for (const b of this.map.buildings) {
-      for (let i = 0; i < b.p.length; i += 2) {
-        const x = b.p[i],
-          z = b.p[i + 1];
-        if (x < x0) x0 = x;
-        if (x > x1) x1 = x;
-        if (z < z0) z0 = z;
-        if (z > z1) z1 = z;
-      }
-    }
-    if (!isFinite(x0)) {
-      x0 = -100;
-      x1 = 100;
-      z0 = -100;
-      z1 = 100;
-    }
-    this.cx0 = x0;
-    this.cx1 = x1;
-    this.cz0 = z0;
-    this.cz1 = z1;
   }
 
   // ─────────────────────────── 충돌/지표 API (CollisionWorld 위임) ───────────────────────────
@@ -136,47 +106,10 @@ export class World {
     this.collision.forEachCircleNear(cx, cz, radius, (x, z, r) => sink.rock(x, z, r));
   }
 
-  // ─────────────────────────────── 지형 높이 ───────────────────────────────
-
-  private peak(x: number, z: number, cx: number, cz: number, height: number, radius: number): number {
-    const dx = x - cx;
-    const dz = z - cz;
-    return height * Math.exp(-(dx * dx + dz * dz) / (2 * radius * radius));
-  }
-
-  /** 도심 평탄 영역 마스크(건물 분포 bbox 안=1 → 가장자리 산지=0) */
-  private cityMask(x: number, z: number): number {
-    const mx = (this.cx0 + this.cx1) / 2,
-      mz = (this.cz0 + this.cz1) / 2;
-    const hx = (this.cx1 - this.cx0) / 2,
-      hz = (this.cz1 - this.cz0) / 2;
-    const dx = Math.max(0, Math.abs(x - mx) - hx);
-    const dz = Math.max(0, Math.abs(z - mz) - hz);
-    const d = Math.sqrt(dx * dx + dz * dz);
-    return 1 - THREE.MathUtils.smoothstep(d, 0, 220);
-  }
-
-  /** 맵 경계 폴리곤(있으면) 내부 판정 — 레이캐스팅. 없으면 false. */
-  private inPalace(x: number, z: number): boolean {
-    const b = this.map.boundary;
-    if (!b || b.length < 6) return false;
-    const n = b.length / 2;
-    let inside = false;
-    for (let i = 0, j = n - 1; i < n; j = i++) {
-      const xi = b[i * 2],
-        zi = b[i * 2 + 1];
-      const xj = b[j * 2],
-        zj = b[j * 2 + 1];
-      if (zi > z !== zj > z && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) inside = !inside;
-    }
-    return inside;
-  }
+  // ─────────────────────────────── 지형 높이(TerrainField 위임) ───────────────────────────────
 
   heightAt(x: number, z: number): number {
-    let h = 0;
-    for (const m of this.map.mountains ?? []) h += this.peak(x, z, m.x, m.z, m.h, m.r);
-    h += Math.sin(x * 0.012 + 1) * Math.cos(z * 0.011 - 2) * 3.0; // 완만한 기복
-    return h * (1 - this.cityMask(x, z));
+    return this.field.heightAt(x, z);
   }
 
   private buildTerrain() {
@@ -191,7 +124,8 @@ export class World {
     const forest = new THREE.Color(0x2f9e22); // 진한 채도 숲
     const granite = new THREE.Color(0xa8b2be); // 밝은 한색 화강암
     const urban = new THREE.Color(0xc2bdb0); // 도심 지표(밝은 포장 콘크리트)
-    const bareEarth = new THREE.Color(0xd49a3e); // 경복궁 내부 맨땅(선명한 마사토)
+    // 특수 권역(경계 내부) 바닥색 — 데이터 구동. 없으면 권역 맨땅 처리 안 함.
+    const bareGround = this.map.precinct?.groundColor ? new THREE.Color(Number(this.map.precinct.groundColor)) : null;
     const m = new THREE.Color();
 
     for (let i = 0; i < pos.count; i++) {
@@ -202,9 +136,9 @@ export class World {
 
       m.copy(lawn).lerp(forest, THREE.MathUtils.smoothstep(y, 8, 60));
       m.lerp(granite, THREE.MathUtils.smoothstep(y, 120, 230));
-      color.copy(m).lerp(urban, this.cityMask(x, z));
-      // 경복궁 경계 안쪽은 포장/도로 대신 맨땅(마사토)으로
-      if (this.map.bare && this.inPalace(x, z)) color.copy(bareEarth);
+      color.copy(m).lerp(urban, this.field.cityMask(x, z));
+      // 특수 권역 경계 안쪽은 포장 대신 데이터 지정 바닥색(예: 경복궁 마사토)
+      if (bareGround && this.field.inPalace(x, z)) color.copy(bareGround);
       colors.push(color.r, color.g, color.b);
     }
 
@@ -265,29 +199,10 @@ export class World {
 
   // ─────────────────────────────── 도심(실측) ───────────────────────────────
 
-  /** 랜드마크 타입별 OSM 건물 제외 반경(여기 안의 OSM 건물은 생략하고 양식화 메시로 대체) */
-  private static readonly LANDMARK_R: Record<string, number> = {
-    geunjeongjeon: 30,
-    gwanghwamun: 24,
-    gyeonghoeru: 30,
-    "statue-sejong": 11,
-    "statue-yi": 9,
-    "eiffel-tower": 75,
-    "pont-iena": 28,
-    "pont-bir-hakeim": 28,
-    "quai-branly": 50,
-    "palais-tokyo": 60,
-    "blue-house": 45,
-    "folk-museum": 30,
-    mmca: 55,
-    "sejong-center": 50,
-    dongsipjagak: 14,
-    jogyesa: 40,
-  };
-
+  /** 랜드마크 제외 반경(excludeR) 안의 OSM 건물은 생략하고 양식화 메시로 대체 — 전부 데이터 구동. */
   private inLandmark(x: number, z: number): boolean {
     for (const l of this.map.landmarks ?? []) {
-      const r = l.excludeR ?? World.LANDMARK_R[l.type] ?? 0;
+      const r = l.excludeR ?? 0;
       if ((x - l.x) ** 2 + (z - l.z) ** 2 < r * r) return true;
     }
     return false;
@@ -303,11 +218,10 @@ export class World {
     return this.gates.some((g) => (x - g.x) ** 2 + (z - g.z) ** 2 < (g.r + margin) ** 2);
   }
 
-  /** 건물 높이별/권역별 색 */
-  private buildingColor(h: number, palace: number, jitter: number, out: THREE.Color) {
-    if (palace > 0.5) {
-      // 경복궁 전통 건물: 선명한 단청/주칠 톤
-      out.setHex(0xcc5a28);
+  /** 건물 색 — 특수 권역(precinctColor 지정)이면 그 양식색, 아니면 높이별 도심 팔레트. */
+  private buildingColor(h: number, precinctColor: number | null, jitter: number, out: THREE.Color) {
+    if (precinctColor != null) {
+      out.setHex(precinctColor); // 권역 양식색(예: 경복궁 단청/주칠)
     } else if (h < 9) out.setHex(0xe6c23a); // 저층 — 선명한 황금/베이지
     else if (h < 22) out.setHex(0x3fb56a); // 중층 — 선명한 녹색
     else if (h < 45) out.setHex(0x3a82e0); // 고층 — 선명한 파랑
@@ -320,8 +234,12 @@ export class World {
   private buildCity() {
     const buildings = this.map.buildings;
     const geos: THREE.BufferGeometry[] = [];
-    const tileGeos: THREE.BufferGeometry[] = []; // 경복궁 권역 지붕(기와색)
+    const roofGeos: THREE.BufferGeometry[] = []; // 특수 권역 지붕 슬래브(예: 경복궁 기와)
     const col = new THREE.Color();
+    // 특수 권역 건물 양식(데이터 구동). boundary 내부 건물에만 적용.
+    const pb = this.map.precinct?.building;
+    const precinctColor = pb ? Number(pb.color) : null;
+    const roofColor = pb?.roof ? new THREE.Color(Number(pb.roof.color)) : null;
 
     for (const b of buildings) {
       const p = b.p;
@@ -348,15 +266,13 @@ export class World {
       cz /= n;
       if (this.inLandmark(cx, cz)) continue;
 
-      // 실제 경복궁 경계(폴리곤)로 판정 — 사각형 마스크는 궁보다 좁아 동/북 가장자리를 놓침
-      const palace = this.inPalace(cx, cz) ? 1 : 0;
-      // 경복궁 권역의 대형 인클로저(행각/마당 외곽이 통짜 폴리곤으로 매핑됨)는 마당 전체를
-      // 솔리드로 막으므로 생략 → 근정전 등 마당을 열어 둔다.
-      if (palace > 0.5 && (x1 - x0) * (z1 - z0) > 2000) continue;
-
-      let h = b.h ?? 9;
-      if (palace > 0.5) h = Math.min(h, 8); // 권역 내는 저층으로
-      const roofTop = palace > 0.5 ? h + 1.4 : h; // 옥상(디딤면) 높이 — 궁 권역은 기와 슬래브 두께 포함
+      // 경계 폴리곤으로 특수 권역(경내) 판정 → 권역 양식(높이 상한·지붕·색·인클로저 생략) 해석.
+      const inPrecinct = pb != null && this.field.inPalace(cx, cz);
+      const style = resolveBuildingStyle(inPrecinct, b.h ?? 9, (x1 - x0) * (z1 - z0), pb);
+      // 권역의 대형 인클로저(마당 외곽 통짜 폴리곤)는 마당 전체를 솔리드로 막으므로 생략.
+      if (style.skip) continue;
+      const h = style.height;
+      const roofTop = style.roofTop; // 옥상(디딤면) 높이 — 권역은 지붕 슬래브 두께 포함
 
       // 렌더되는 건물(도심·궁 권역 전각/행각 모두)에 충돌 박스 부여. 단 대형 인클로저는
       // 위에서 이미 제외(마당 솔리드 방지)했고, 문(門) 개구부 안 건물(문루 등)만 통과 허용.
@@ -379,23 +295,23 @@ export class World {
       geo.rotateX(-Math.PI / 2); // 압출 방향(+Z) → +Y 로 세움
 
       const jitter = ((Math.abs(Math.round(cx * 7 + cz * 13)) % 100) / 100) || 0.5;
-      this.buildingColor(h, palace, jitter, col);
+      this.buildingColor(h, style.usePrecinctColor ? precinctColor : null, jitter, col);
       setUniformColor(geo, col);
       geo.deleteAttribute("uv"); // 병합 일관성(uv 불필요)
       geos.push(geo);
 
-      // 경복궁 권역 건물엔 짙은 기와색 지붕 슬래브를 살짝 얹어 전통 지붕 느낌
-      if (palace > 0.5) {
-        const roof = new THREE.ExtrudeGeometry(shape, { depth: 1.4, bevelEnabled: false, steps: 1 });
+      // 권역 건물엔 지정 색 지붕 슬래브를 살짝 얹어 전통 지붕 느낌(예: 경복궁 기와)
+      if (style.roofThick > 0 && roofColor) {
+        const roof = new THREE.ExtrudeGeometry(shape, { depth: style.roofThick, bevelEnabled: false, steps: 1 });
         roof.rotateX(-Math.PI / 2);
         roof.translate(0, h, 0);
         roof.deleteAttribute("uv");
-        setUniformColor(roof, TILE_COLOR);
-        tileGeos.push(roof);
+        setUniformColor(roof, roofColor);
+        roofGeos.push(roof);
       }
     }
 
-    const allGeos = geos.concat(tileGeos);
+    const allGeos = geos.concat(roofGeos);
     if (allGeos.length) {
       const merged = mergeGeometries(allGeos, false);
       allGeos.forEach((g) => g.dispose());
@@ -417,6 +333,7 @@ export class World {
     const roads = this.map.roads;
     const geos: THREE.BufferGeometry[] = [];
     const Y = 0.25;
+    const suppressInPrecinct = this.map.precinct?.suppressRoads ?? false;
     for (const r of roads) {
       const p = r.p;
       const half = (r.w ?? 6) / 2;
@@ -426,8 +343,8 @@ export class World {
           z0 = p[i * 2 + 1];
         const x1 = p[i * 2 + 2],
           z1 = p[i * 2 + 3];
-        // 경복궁 경계 안쪽에는 아스팔트 도로를 두지 않음(맨땅)
-        if (this.inPalace((x0 + x1) / 2, (z0 + z1) / 2)) continue;
+        // 특수 권역(suppressRoads)이면 경계 안쪽엔 아스팔트 도로를 두지 않음(맨땅)
+        if (suppressInPrecinct && this.field.inPalace((x0 + x1) / 2, (z0 + z1) / 2)) continue;
         let nx = z1 - z0,
           nz = -(x1 - x0);
         const len = Math.hypot(nx, nz) || 1;
@@ -476,6 +393,7 @@ export class World {
     const roads = this.map.roads;
     const Y = 0.32;
     const MARK = 0.12; // 차선 폭(m) — 더 가늘게
+    const suppressInPrecinct = this.map.precinct?.suppressRoads ?? false;
 
     const yellow: number[] = [];
 
@@ -518,8 +436,8 @@ export class World {
           dz = z1 - z0;
         const L = Math.hypot(dx, dz);
         if (L < 0.01) continue;
-        // 궁 내부 구간은 도로가 없으므로 차선도 그리지 않음
-        if (this.inPalace((x0 + x1) / 2, (z0 + z1) / 2)) continue;
+        // 도로를 없앤 권역 내부 구간은 차선도 그리지 않음
+        if (suppressInPrecinct && this.field.inPalace((x0 + x1) / 2, (z0 + z1) / 2)) continue;
         const ux = dx / L,
           uz = dz / L;
         const nx = -uz,
@@ -595,29 +513,29 @@ export class World {
       if (lm.type === "structure") this.structures.build(lm, this.group, this.collision);
   }
 
-  // ─────────────────────────── 경복궁 궁장(담장, 실측 폴리라인) ───────────────────────────
+  // ─────────────────────────── 특수 권역 둘레 담장(경계 폴리라인) ───────────────────────────
 
   /**
-   * 경복궁 둘레 담장 — OSM 경복궁 경계 폴리곤(rel/5501517) 외곽을 따라 완전한 궁장을 세운다.
-   * (barrier=wall 데이터는 서·북이 누락돼 있어 경계 폴리곤으로 사방을 모두 두름)
-   * 실제 높이 4m. 발이 윗면 이상이면 통과(wallBoxes 의 top 판정) → 점프(정점 ~5m)로
-   * 뛰어넘기/담장 위 올라서기 가능. 광화문 개구부는 비움.
+   * 경계(boundary) 폴리곤 외곽을 따라 두르는 둘레 담장 — 치수·색은 precinct.wall(데이터)에서 주입.
+   * 발이 윗면 이상이면 통과(wallBoxes 의 top 판정) → 점프로 뛰어넘기/담장 위 올라서기 가능.
+   * gates 개구부는 비운다. (예: 경복궁 궁장 — 사대문 광화문·신무문·건춘문·영추문)
    */
-  private buildPalaceWalls() {
-    const WALL_H = 4;
-    const THICK = 0.9;
+  private buildPrecinctWalls() {
+    const wall = this.map.precinct?.wall;
+    const B = this.map.boundary;
+    if (!wall || !B || B.length < 6) return; // 담장 양식 또는 경계 없으면 담장 없음
+
+    const WALL_H = wall.height;
+    const THICK = wall.thickness;
     const HALF = THICK / 2;
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0xc8b48c, flatShading: true, roughness: 0.95 });
-    const capMat = new THREE.MeshStandardMaterial({ color: 0x3a5c82, flatShading: true, roughness: 0.85 });
+    const stoneMat = new THREE.MeshStandardMaterial({ color: Number(wall.bodyColor), flatShading: true, roughness: 0.95 });
+    const capMat = new THREE.MeshStandardMaterial({ color: Number(wall.capColor), flatShading: true, roughness: 0.85 });
 
     const bodyGeos: THREE.BufferGeometry[] = [];
     const capGeos: THREE.BufferGeometry[] = [];
 
-    // 사대문 개구부 — 담장을 비워 통과 가능하게(광화문·신무문·건춘문·영추문)
+    // 문 개구부 — 담장을 비워 통과 가능하게
     const gateGap = (x: number, z: number) => this.nearGate(x, z);
-
-    const B = this.map.boundary;
-    if (!B || B.length < 6) return; // 경계 없으면 담장 없음
     for (let i = 0; i < B.length / 2 - 1; i++) {
       {
         const ax = B[i * 2],
@@ -678,47 +596,8 @@ export class World {
     }
   }
 
-  // ─────────────────────────────── 라이팅/하늘 ───────────────────────────────
-
-  private buildLighting(scene: THREE.Scene) {
-    const hemi = new THREE.HemisphereLight(0xbfdcff, 0x6f7a4a, 1.18);
-    scene.add(hemi);
-
-    const sun = new THREE.DirectionalLight(0xfff3da, 2.0);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 1400;
-    const s = 420; // 플레이어 주변을 덮는 그림자 범위(매 프레임 추종)
-    sun.shadow.camera.left = -s;
-    sun.shadow.camera.right = s;
-    sun.shadow.camera.top = s;
-    sun.shadow.camera.bottom = -s;
-    sun.shadow.bias = -0.0006;
-    scene.add(sun.target);
-    scene.add(sun);
-    this.sun = sun;
-    this.updateSun(this.spawn.x, this.spawn.z); // 초기 위치
-
-    const fill = new THREE.DirectionalLight(0xaecbe6, 0.4);
-    fill.position.set(-200, 160, -300);
-    scene.add(fill);
-  }
-
-  /** 태양(그림자 프러스텀)을 플레이어 위치로 평행이동 — 광원 방향은 유지. */
-  private updateSun(px: number, pz: number) {
-    if (!this.sun) return;
-    this.sun.position.set(px + 300, 520, pz + 360); // 남동 오전 햇살(상대 방향 고정)
-    this.sun.target.position.set(px, 0, pz);
-  }
-
-  /** 매 프레임 호출 — 큰 맵에서도 플레이어 주변에 그림자가 유지되도록 태양 추종. */
+  /** 매 프레임 호출 — 큰 맵에서도 플레이어 주변에 그림자가 유지되도록 태양 추종(SkyEnvironment 위임). */
   update(px: number, pz: number) {
-    this.updateSun(px, pz);
-  }
-
-  private buildSky(scene: THREE.Scene) {
-    scene.background = new THREE.Color(0x2f9bf2); // 선명한 하늘 파랑
-    scene.fog = new THREE.Fog(0xb8e0ff, 900, 5000); // 밝고 청량한 원경 헤이즈
+    this.sky.update(px, pz);
   }
 }

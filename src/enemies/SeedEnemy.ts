@@ -4,7 +4,30 @@ import { createDissolveMaterial, type DissolveMaterial } from "../fx/dissolve";
 const SHELL_GEO = new THREE.IcosahedronGeometry(1, 2); // 부드러운 유기적 곡면(스펙 1장)
 const CORE_GEO = new THREE.IcosahedronGeometry(0.42, 1);
 
+const PULSE_RATE = 4; // 박동 위상 속도(rad/s)
+const BOB_RATE = 2; // 자유 부유 위상 속도(rad/s)
+const BOB_AMPLITUDE = 0.4; // 자유 부유 상하 진폭(m)
+const STOP_DIST = 2.2; // 이 거리 이내면 추적 정지(접촉 교전 거리)
+
 export type EnemyState = "alive" | "dissolving" | "dead";
+
+export interface Vec3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/**
+ * 3D 추적 1스텝 — from 에서 to 를 향해 speed·dt 만큼 이동한 새 좌표를 반환.
+ * 거리가 stopDist 이내면 정지(그대로). 지형/물체 무시(자유 부유). 부수효과 없는 순수 함수.
+ */
+export function pursueStep(from: Vec3, to: Vec3, speed: number, dt: number, stopDist: number): Vec3 {
+  const dx = to.x - from.x, dy = to.y - from.y, dz = to.z - from.z;
+  const dist = Math.hypot(dx, dy, dz);
+  if (dist <= stopDist) return { x: from.x, y: from.y, z: from.z };
+  const k = (speed * dt) / dist;
+  return { x: from.x + dx * k, y: from.y + dy * k, z: from.z + dz * k };
+}
 
 /**
  * 외계 씨앗 적 유닛.
@@ -69,10 +92,14 @@ export class SeedEnemy {
     return false;
   }
 
-  update(dt: number, target: THREE.Vector3, terrainY: (x: number, z: number) => number) {
-    this.pulsePhase += dt * 4;
-    this.bobPhase += dt * 2;
+  update(dt: number, target: THREE.Vector3) {
+    this.pulsePhase += dt * PULSE_RATE;
+    this.bobPhase += dt * BOB_RATE;
+    if (this.updateVisual(dt)) this.updateMotion(dt, target); // 소멸 중이 아니면 이동
+  }
 
+  /** FX 갱신 — 피격 플래시·디졸브·박동/스케일. 살아있으면 true(이동 처리 진행). */
+  private updateVisual(dt: number): boolean {
     // 피격 플래시 감쇠(빠르게 꺼져 '팍' 터지는 순간 강조)
     if (this.hitFlash > 0) {
       this.hitFlash = Math.max(0, this.hitFlash - dt * 9);
@@ -85,7 +112,7 @@ export class SeedEnemy {
       this.core.scale.setScalar(Math.max(0, 1 - this.dissolveProgress * 1.2));
       this.coreMat.emissiveIntensity = 4.5 * (1 - this.dissolveProgress);
       if (this.dissolveProgress >= 1) this.state = "dead";
-      return;
+      return false;
     }
 
     // 체력 비율에 따라 쪼그라들기(스펙: 쪼그라뜨려 소멸)
@@ -99,21 +126,15 @@ export class SeedEnemy {
       1.8 + Math.sin(this.pulsePhase) * 0.8,
       0.1
     );
+    return true;
+  }
 
-    // --- 추적 AI: 플레이어 향해 수평 이동 ---
+  /** 추적 AI — 플레이어를 향해 3D 이동(상하 포함) + 자유 부유. 지형/물체와 무관하게 떠서 다가옴. */
+  private updateMotion(dt: number, target: THREE.Vector3) {
     const pos = this.group.position;
-    const dx = target.x - pos.x;
-    const dz = target.z - pos.z;
-    const dist = Math.hypot(dx, dz);
-    if (dist > 2.2) {
-      pos.x += (dx / dist) * this.speed * dt;
-      pos.z += (dz / dist) * this.speed * dt;
-    }
-
-    // 지표면 위에서 둥실 떠다님
-    const ground = terrainY(pos.x, pos.z);
-    const hover = this.baseScale * 1.1 + Math.sin(this.bobPhase) * 0.4;
-    pos.y = ground + hover;
+    const next = pursueStep(pos, target, this.speed, dt, STOP_DIST);
+    pos.set(next.x, next.y, next.z);
+    pos.y += BOB_AMPLITUDE * BOB_RATE * Math.cos(this.bobPhase) * dt; // 누적 X 미세 흔들림
 
     if (this.attackCooldown > 0) this.attackCooldown -= dt;
   }

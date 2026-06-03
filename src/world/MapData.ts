@@ -7,28 +7,6 @@ export interface Ring {
   w?: number; // 도로 폭(m)
 }
 
-export type LandmarkType =
-  | "geunjeongjeon"
-  | "gwanghwamun"
-  | "gyeonghoeru"
-  | "statue-yi"
-  | "statue-sejong"
-  // 파리
-  | "eiffel-tower"
-  | "pont-iena"
-  | "pont-bir-hakeim"
-  | "quai-branly"
-  | "palais-tokyo"
-  // 경복궁 주변
-  | "blue-house"
-  | "folk-museum"
-  | "mmca"
-  | "sejong-center"
-  | "dongsipjagak"
-  | "jogyesa"
-  // 일본
-  | "tenshukaku";
-
 /** 데이터 구동 랜드마크(structure)용 — 재질 정의 */
 export interface MatDef {
   c: string; // hex 색 "ada793"
@@ -76,8 +54,8 @@ export interface ColliderDef {
 }
 
 export interface Landmark {
-  /** 양식화 빌더 타입. "structure" 면 parts/mats 로 공통 렌더(데이터 구동). */
-  type: LandmarkType | "structure";
+  /** 양식화 빌더 타입 — parts/mats 로 공통 렌더(전부 데이터 구동). */
+  type: "structure";
   x: number;
   z: number;
   /** Y축 회전(라디안) — 다리·강변 건물 방향 맞춤. 기본 0. */
@@ -88,7 +66,7 @@ export interface Landmark {
   colliders?: ColliderDef[];
   /** 축정렬 통과 불가 박스(광화문 피어 등). rot=0 기준 로컬 좌표. */
   boxColliders?: { x0: number; x1: number; z0: number; z1: number }[];
-  /** 이 반경 안 OSM 건물을 제거(LANDMARK_R 대체). */
+  /** 이 반경 안 OSM 건물을 제거(양식화 메시로 대체할 자리 비우기). */
   excludeR?: number;
 }
 
@@ -135,6 +113,37 @@ export interface MapData {
   mountains?: Mountain[];
   /** 플레이어 스폰 */
   spawn?: SpawnPoint;
-  /** 경계 내부를 맨땅으로 표현할지 */
-  bare?: boolean;
+  /** 경계(boundary) 내부를 특수 권역으로 처리하는 양식 — 없으면 일반 도심으로만 렌더. */
+  precinct?: PrecinctSpec;
+}
+
+/**
+ * 특수 권역(예: 궁궐 경내) 양식 — boundary 폴리곤 내부에 적용. 모든 값은 데이터(JSON)에서 주입해
+ * 맵별 고유 처리를 코드 분기 없이 일반화한다. 색은 "0xRRGGBB" 문자열.
+ */
+/** 권역 내부 건물 양식(전통 전각 등). */
+export interface PrecinctBuilding {
+  color: string; // 벽체색
+  maxHeight?: number; // 층고 상한(권역 내 저층화)
+  skipEnclosuresOver?: number; // 이 면적 초과 인클로저(마당 솔리드)는 생략
+  roof?: { color: string; thickness: number }; // 옥상 지붕 슬래브(기와 등)
+}
+
+/** 권역 경계 폴리라인을 따라 두르는 둘레 담장. */
+export interface PrecinctWall {
+  height: number;
+  thickness: number;
+  bodyColor: string;
+  capColor: string;
+}
+
+export interface PrecinctSpec {
+  /** 경계 내부 바닥색(있으면 포장 대신 이 색 맨땅 — 예: 마사토). */
+  groundColor?: string;
+  /** 경계 내부 아스팔트 도로·차선 제거 */
+  suppressRoads?: boolean;
+  /** 경계 내부 건물 양식 */
+  building?: PrecinctBuilding;
+  /** 둘레 담장 */
+  wall?: PrecinctWall;
 }

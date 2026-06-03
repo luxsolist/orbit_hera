@@ -7,6 +7,7 @@ import { DamageNumbers } from "../fx/damageNumbers";
 import type { BeamSpec } from "./WeaponSpec";
 import { damageForDistance } from "./WeaponSpec";
 import { makeGlowTexture, spawnBeam } from "./beamFx";
+import { bestAlignedDir, type Vec3 } from "./targeting";
 
 // 적중 임팩트 FX(프레젠테이션 — 무기 밸런스와 무관해 코드 고정. 데미지/사거리/연사 등 전투
 // 수치는 모두 BeamSpec(JSON)에서 주입된다.)
@@ -253,68 +254,27 @@ export class FrequencyBeam {
    * 허용 콘(ASSIST_COS) 안에 들어오는 가장 정렬된(각도가 작은) 적을 골라
    * 그 방향을 반환. 없으면 null(원래 조준 유지).
    */
-  private acquireAssistTarget(
-    origin: THREE.Vector3,
-    aimDir: THREE.Vector3
-  ): THREE.Vector3 | null {
-    let bestDir: THREE.Vector3 | null = null;
-    let bestCos = this.assistCos; // 콘 밖이면 후보 제외
-
-    const enemyPos = new THREE.Vector3();
-    const toEnemy = new THREE.Vector3();
-
+  /** 현재 살아있는 적의 월드 좌표 목록(콘 조준 입력). */
+  private enemyPositions(): Vec3[] {
+    const ps: Vec3[] = [];
+    const tmp = new THREE.Vector3();
     for (const mesh of this.enemies.hitMeshes) {
-      mesh.getWorldPosition(enemyPos);
-      toEnemy.subVectors(enemyPos, origin);
-      const dist = toEnemy.length();
-      if (dist < 0.001 || dist > this.spec.range) continue;
-
-      toEnemy.divideScalar(dist); // 정규화
-      const cos = toEnemy.dot(aimDir);
-      if (cos <= 0) continue; // 등 뒤의 적 제외
-
-      // 콘 안에서 가장 정렬된(각도가 작은) 적 우선
-      if (cos > bestCos) {
-        bestCos = cos;
-        bestDir = toEnemy.clone();
-      }
+      mesh.getWorldPosition(tmp);
+      ps.push({ x: tmp.x, y: tmp.y, z: tmp.z });
     }
-
-    return bestDir;
+    return ps;
   }
 
-  /**
-   * 근거리 자동발사용 타깃 탐색.
-   * 자동발사 콘 + 사거리(spec.auto) 안에서 가장 정렬된 적의 방향을 반환.
-   * 후보 없으면 null → 자동발사를 건너뛴다.
-   */
-  private acquireAutoFireTarget(
-    origin: THREE.Vector3,
-    aimDir: THREE.Vector3
-  ): THREE.Vector3 | null {
-    let bestDir: THREE.Vector3 | null = null;
-    let bestCos = this.autoCos;
+  /** 에임 어시스트 — 조준 콘(assist) 안에서 가장 정렬된 적 방향. 없으면 null. */
+  private acquireAssistTarget(origin: THREE.Vector3, aimDir: THREE.Vector3): THREE.Vector3 | null {
+    const dir = bestAlignedDir(origin, aimDir, this.enemyPositions(), this.spec.range, this.assistCos);
+    return dir ? new THREE.Vector3(dir.x, dir.y, dir.z) : null;
+  }
 
-    const enemyPos = new THREE.Vector3();
-    const toEnemy = new THREE.Vector3();
-
-    for (const mesh of this.enemies.hitMeshes) {
-      mesh.getWorldPosition(enemyPos);
-      toEnemy.subVectors(enemyPos, origin);
-      const dist = toEnemy.length();
-      if (dist < 0.001 || dist > this.spec.auto.range) continue;
-
-      toEnemy.divideScalar(dist);
-      const cos = toEnemy.dot(aimDir);
-      if (cos <= 0) continue;
-
-      if (cos > bestCos) {
-        bestCos = cos;
-        bestDir = toEnemy.clone();
-      }
-    }
-
-    return bestDir;
+  /** 근거리 자동발사 조준 — 콘+사거리(spec.auto) 안에서 가장 정렬된 적 방향. 없으면 null(자동발사 생략). */
+  private acquireAutoFireTarget(origin: THREE.Vector3, aimDir: THREE.Vector3): THREE.Vector3 | null {
+    const dir = bestAlignedDir(origin, aimDir, this.enemyPositions(), this.spec.auto.range, this.autoCos);
+    return dir ? new THREE.Vector3(dir.x, dir.y, dir.z) : null;
   }
 
   private spawnBeamVisual(from: THREE.Vector3, to: THREE.Vector3) {

@@ -11,7 +11,8 @@
     "accel": 9,
     "verticalSpeed": 26,
     "ceiling": 140,
-    "rollDeg": 16
+    "rollDeg": 16,
+    "spawnHeight": 100
   },
   "actions": [
     { "label": "▲", "key": "Space", "desc": "상승" },

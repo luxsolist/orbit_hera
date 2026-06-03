@@ -29,6 +29,7 @@ export interface FlyMove {
   verticalSpeed: number; // 상승/하강 목표 속도(Space=상승, Ctrl/C=하강)
   ceiling: number; // 디딘 지면 대비 최대 비행 고도
   rollDeg: number; // 좌우 이동 시 최대 롤(뱅킹) 각도(도)
+  spawnHeight: number; // 스폰 시 지면 대비 시작 고도(m) — 공중 투입
 }
 
 export type DroneMove = WalkMove | FlyMove;

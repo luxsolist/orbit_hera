@@ -2,7 +2,7 @@ import * as THREE from "three";
 import type { Input } from "../core/Input";
 import type { World } from "../world/World";
 import { TERRAIN_HALF } from "../world/World";
-import type { DroneSpec, JumpSpec, FlyMove } from "./DroneSpec";
+import type { DroneSpec, DroneMove, JumpSpec, FlyMove } from "./DroneSpec";
 
 const PITCH_LIMIT = Math.PI / 2 - 0.05;
 const MOVE_MAX_STEP = 0.8; // 수평 이동 1스텝 최대 거리 — 고속(대시) 터널링 방지 서브스테핑
@@ -15,6 +15,14 @@ const ROLL_RATE = 6; // 비행 롤(뱅킹) 보간 응답속도
 export function stepVerticalVelocity(vy: number, dt: number, j: JumpSpec): number {
   if (vy > 0) return vy - j.riseGravity * dt; // 상승: 감속
   return Math.max(vy - j.fallGravity * dt, -j.fallTerminal); // 하강: 가속 후 종단 클램프
+}
+
+/**
+ * 스폰 시 지면 대비 시작 높이(m). 비행: spawnHeight(공중 투입)를 비행 천장(ceiling) 내로 클램프 /
+ * 보행: 시점 높이(eye)로 지면에 디딤. world spawn 의 x/z 위에 이 값을 더해 배치한다.
+ */
+export function spawnHeightAboveGround(move: DroneMove, eye: number): number {
+  return move.mode === "fly" ? Math.min(move.spawnHeight, move.ceiling) : eye;
 }
 
 /**
@@ -72,10 +80,19 @@ export class PlayerController {
     this.freq = spec.vitals.maxFreq;
 
     this.camera = new THREE.PerspectiveCamera(spec.view.fov, aspect, 0.1, 8000);
-    const sp = this.world.spawn;
-    this.position.set(sp.x, this.world.heightAt(sp.x, sp.z) + this.eye, sp.z);
-    this.yaw = sp.yaw;
+    this.placeAtSpawn();
     this.syncCamera();
+  }
+
+  /**
+   * 맵 고유 스폰(x/z/yaw)에 배치. 비행 드론은 지면 대비 spawnHeight(m) 상공에 투입,
+   * 보행 드론은 지면(eye) 높이에 디딘다. 시작 고도는 디딘 지면 위로 비행 천장(ceiling) 내로 제한.
+   */
+  private placeAtSpawn() {
+    const sp = this.world.spawn;
+    const ground = this.world.heightAt(sp.x, sp.z);
+    this.position.set(sp.x, ground + spawnHeightAboveGround(this.spec.move, this.eye), sp.z);
+    this.yaw = sp.yaw;
   }
 
   get worldPosition(): THREE.Vector3 {
@@ -314,9 +331,7 @@ export class PlayerController {
     this.coyote = 0;
     this.dashTime = 0;
     this.dashCooldown = 0;
-    const sp = this.world.spawn;
-    this.position.set(sp.x, this.world.heightAt(sp.x, sp.z) + this.eye, sp.z);
-    this.yaw = sp.yaw;
+    this.placeAtSpawn();
     this.pitch = 0;
     this.syncCamera();
   }

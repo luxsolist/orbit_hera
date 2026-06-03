@@ -6,6 +6,7 @@ import type { Sfx } from "../core/Sfx";
 import { DamageNumbers } from "../fx/damageNumbers";
 import type { BarrageSpec } from "./WeaponSpec";
 import { makeGlowTexture, spawnBeam } from "./beamFx";
+import { nearestInCone } from "./targeting";
 
 // 전투 수치(타깃 수·사거리·쿨다운·살포·데미지·색)는 모두 BarrageSpec(JSON)에서 주입.
 
@@ -149,28 +150,23 @@ export class SpecialBarrage {
     this.onFired?.();
   }
 
-  /** 전방 콘 안의 살아있는 적을 거리 오름차순으로 max 개까지. */
+  /** 전방 콘 안의 살아있는 적을 거리 오름차순으로 max 개까지(raycast 용 mesh 동봉). */
   private acquireTargets(
     origin: THREE.Vector3,
     aimDir: THREE.Vector3,
     max: number
   ): { mesh: THREE.Object3D; dir: THREE.Vector3; dist: number }[] {
-    const out: { mesh: THREE.Object3D; dir: THREE.Vector3; dist: number }[] = [];
-    const enemyPos = new THREE.Vector3();
-    const toEnemy = new THREE.Vector3();
-
-    for (const mesh of this.enemies.hitMeshes) {
-      mesh.getWorldPosition(enemyPos);
-      toEnemy.subVectors(enemyPos, origin);
-      const dist = toEnemy.length();
-      if (dist < 0.001 || dist > this.spec.range) continue;
-      const dir = toEnemy.clone().divideScalar(dist);
-      if (dir.dot(aimDir) < this.coneCos) continue;
-      out.push({ mesh, dir, dist });
-    }
-
-    out.sort((a, b) => a.dist - b.dist);
-    return out.slice(0, max);
+    const meshes = this.enemies.hitMeshes;
+    const tmp = new THREE.Vector3();
+    const positions = meshes.map((mesh) => {
+      mesh.getWorldPosition(tmp);
+      return { x: tmp.x, y: tmp.y, z: tmp.z };
+    });
+    return nearestInCone(origin, aimDir, positions, this.spec.range, this.coneCos, max).map((t) => ({
+      mesh: meshes[t.index],
+      dir: new THREE.Vector3(t.dir.x, t.dir.y, t.dir.z),
+      dist: t.dist,
+    }));
   }
 
   private updateBeams(dt: number) {

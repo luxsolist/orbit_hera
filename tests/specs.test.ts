@@ -38,7 +38,7 @@ describe("드론 스펙(JSON)", () => {
         for (const k of ["velocity", "riseGravity", "fallGravity", "fallTerminal", "maxRiseHeight", "coyoteTime"])
           num(d.move.jump?.[k]);
       } else {
-        for (const k of ["speed", "accel", "verticalSpeed", "ceiling", "rollDeg"]) num(d.move[k]);
+        for (const k of ["speed", "accel", "verticalSpeed", "ceiling", "rollDeg", "spawnHeight"]) num(d.move[k]);
       }
 
       expect(Array.isArray(d.actions)).toBe(true);
@@ -88,12 +88,41 @@ describe("무기 스펙(JSON)", () => {
 describe("전장 카탈로그(JSON)", () => {
   const cat = load(`${M}/index.json`) as Array<{ id: string; name: string; lat?: number; lon?: number }>;
 
+  const hex = (v: unknown) => expect(Number.isFinite(Number(v))).toBe(true); // "0xRRGGBB" 파싱 가능
+
   for (const e of cat) {
     it(`${e.id}: 파일 + 세계지도 좌표(lat/lon)`, () => {
       expect(existsSync(`${M}/${e.id}.json`)).toBe(true);
       expect(typeof e.name).toBe("string");
       num(e.lat);
       num(e.lon);
+    });
+
+    it(`${e.id}: 특수 권역(precinct) 스키마 — 있으면 형태/색/경계 일관`, () => {
+      const m = load(`${M}/${e.id}.json`);
+      // 랜드마크는 전부 data-driven structure + excludeR(코드 하드코딩 제거 회귀 가드)
+      for (const l of m.landmarks ?? []) {
+        expect(l.type).toBe("structure");
+        num(l.excludeR);
+      }
+      if (!m.precinct) return; // 일반 도심 맵은 권역 없음
+      const p = m.precinct;
+      if (p.groundColor != null) hex(p.groundColor);
+      if (p.building) {
+        hex(p.building.color);
+        if (p.building.roof) {
+          hex(p.building.roof.color);
+          num(p.building.roof.thickness);
+        }
+      }
+      if (p.wall) {
+        num(p.wall.height);
+        num(p.wall.thickness);
+        hex(p.wall.bodyColor);
+        hex(p.wall.capColor);
+        // 담장은 경계 폴리라인이 있어야 세울 수 있음
+        expect(Array.isArray(m.boundary) && m.boundary.length >= 6).toBe(true);
+      }
     });
   }
 });
