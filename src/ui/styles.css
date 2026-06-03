@@ -143,6 +143,10 @@ body.is-touch {
   inset: 0;
   z-index: 12;
   pointer-events: none; /* 자체는 투명 — 하위 버튼만 터치 받음 */
+  display: none; /* 플레이 중(is-active)에만 표시 — 메뉴/인트로/일시정지에선 숨김 */
+}
+.tc.is-active {
+  display: block;
 }
 
 /* 플로팅 조이스틱: 첫 터치 위치에 등장. 비활성 상태에서는 보이지 않음. */
@@ -564,5 +568,12 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 }
 .overlay__btn--ghost {
   background: transparent;
-  opacity: 0.82;
+  color: var(--seed-cyan);
+  border: 1px solid rgba(52, 245, 255, 0.5);
+  box-shadow: none;
+  opacity: 0.9;
+}
+.overlay__btn--ghost:hover {
+  box-shadow: 0 0 18px rgba(52, 245, 255, 0.45);
+  opacity: 1;
 }

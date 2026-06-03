@@ -38,6 +38,7 @@ export class MobileControls {
 
   readonly enabled: boolean;
 
+  private root!: HTMLElement;
   private joystickEl!: HTMLElement;
   private knobEl!: HTMLElement;
   private btnJump!: HTMLElement;
@@ -157,7 +158,19 @@ export class MobileControls {
     buttons.appendChild(this.btnSpecial);
     root.appendChild(buttons);
 
+    this.root = root;
     document.body.appendChild(root);
+  }
+
+  /** 플레이 중일 때만 가상 컨트롤(조이스틱·버튼)을 표시. 메뉴/인트로/일시정지에선 숨김. */
+  setActive(active: boolean): void {
+    if (!this.enabled) return;
+    this.root.classList.toggle("is-active", active);
+    if (!active) {
+      this.hideJoystick();
+      this.moveTouch = null;
+      this.lookTouch = null;
+    }
   }
 
   private makeButton(className: string, label: string): HTMLElement {

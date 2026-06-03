@@ -1,6 +1,18 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { MapData, SpawnPoint } from "./MapData";
+import { CollisionWorld } from "./CollisionWorld";
+import { StructureBuilder } from "./StructureBuilder";
+import { setUniformColor } from "./geo";
+
+/** 미니맵 등 표현 레이어가 World 의 근처 지형/건물 형상을 (내부 구조 노출 없이) 받는 싱크. */
+export interface MinimapSink {
+  water(points: ReadonlyArray<number>): void;
+  road(ax: number, az: number, bx: number, bz: number, width: number): void;
+  building(corners: ReadonlyArray<number>): void;
+  triangle(ax: number, az: number, bx: number, bz: number, cx: number, cz: number): void;
+  rock(x: number, z: number, radius: number): void;
+}
 
 /**
  * 전장(맵) 렌더러 — 런타임에 서버에서 내려받은 MapData(OpenStreetMap 실측 기반)를 그린다.
@@ -16,6 +28,7 @@ import type { MapData, SpawnPoint } from "./MapData";
 const TERRAIN_SIZE = 6000;
 export const TERRAIN_HALF = TERRAIN_SIZE / 2; // 3000 (±3km)
 const SEGMENTS = 360; // 지형 격자 ~16.7m 유지(확장에도 산세 디테일 보존)
+const TILE_COLOR = new THREE.Color(0x37414d); // 경복궁 권역 건물 기와 슬래브색
 
 export class World {
   readonly group = new THREE.Group();
@@ -27,38 +40,10 @@ export class World {
   private cx1 = 0;
   private cz0 = 0;
   private cz1 = 0;
-  readonly colliders: { x: number; z: number; radius: number; top: number }[] = [];
-  /**
-   * 건물 충돌 — 방향성 바운딩 박스(OBB). 축정렬 AABB 는 사선 건물의 빈 모서리까지 막으므로
-   * footprint 의 최소면적 회전 사각형을 써서 실제 외곽에 밀착시킨다.
-   * center(cx,cz) + 단위 u축(ux,uz) + 반폭(hu: u방향, hv: v=⊥방향) + br(브로드페이즈용 외접반경)
-   */
-  readonly buildingBoxes: {
-    cx: number;
-    cz: number;
-    ux: number;
-    uz: number;
-    hu: number;
-    hv: number;
-    br: number;
-  }[] = [];
-  /**
-   * 오목(ㄱ/ㄷ자) 건물은 단일 OBB 도 빈 모서리를 막으므로 footprint 를 삼각분할해
-   * 삼각형 콜라이더로 정확히 막는다. (mx,mz: 무게중심, br: 외접반경 — 브로드페이즈)
-   */
-  readonly triBoxes: {
-    ax: number;
-    az: number;
-    bx: number;
-    bz: number;
-    cx: number;
-    cz: number;
-    mx: number;
-    mz: number;
-    br: number;
-  }[] = [];
-  /** 궁장(담장) 박스 — top 보다 발이 높으면 통과(점프로 넘기/위에 올라서기 허용). */
-  private wallBoxes: { x0: number; x1: number; z0: number; z1: number; top: number }[] = [];
+  /** 충돌 세계 — 원기둥/건물 OBB/오목 삼각형/궁장 박스 + 격자 브로드페이즈. */
+  private readonly collision = new CollisionWorld();
+  /** 데이터 구동 랜드마크(parts/mats) 공통 인터프리터. */
+  private readonly structures = new StructureBuilder();
   /** 태양(평행광) — 큰 맵에서 그림자가 플레이어를 따라오도록 매 프레임 이동. */
   private sun?: THREE.DirectionalLight;
 
@@ -73,18 +58,10 @@ export class World {
     this.buildCity();
     this.buildLandmarks();
     this.buildPalaceWalls();
+    this.collision.finalize(); // 모든 콜라이더 등록 후 격자 공간 인덱스 구축
     this.buildLighting(scene);
     this.buildSky(scene);
     scene.add(this.group);
-  }
-
-  /** 미니맵 지형 레이어용 — 도로 폴리라인. */
-  get roadRings() {
-    return this.map.roads;
-  }
-  /** 미니맵 지형 레이어용 — 수역 폴리곤. */
-  get waterRings() {
-    return this.map.water;
   }
 
   /** 건물 분포 bbox 계산(도심 평탄 마스크/배경산 경계용) */
@@ -115,277 +92,48 @@ export class World {
     this.cz1 = z1;
   }
 
-  // ─────────────────────────── 충돌/지표 API (기존 호환) ───────────────────────────
+  // ─────────────────────────── 충돌/지표 API (CollisionWorld 위임) ───────────────────────────
 
   resolveCollision(x: number, z: number, radius: number, feetY: number): { x: number; z: number } {
-    // 원기둥 콜라이더(바위/전각): 윗면 위에 있으면 디딘 것으로 보고 통과 허용
-    for (const c of this.colliders) {
-      if (feetY >= c.top - 0.05) continue;
-      const dx = x - c.x;
-      const dz = z - c.z;
-      const min = c.radius + radius;
-      const d2 = dx * dx + dz * dz;
-      if (d2 >= min * min) continue;
-      if (d2 > 1e-6) {
-        const d = Math.sqrt(d2);
-        const push = (min - d) / d;
-        x += dx * push;
-        z += dz * push;
-      } else {
-        x += min;
-      }
-    }
-    // 건물 박스(원-OBB): 회전 좌표계로 옮겨 원-사각형 분리 후 다시 월드로
-    for (const b of this.buildingBoxes) {
-      const dx = x - b.cx;
-      const dz = z - b.cz;
-      if (dx * dx + dz * dz > (b.br + radius) * (b.br + radius)) continue; // 브로드페이즈
-      // OBB 로컬 좌표(u: 장축, v: ⊥). v축 = (-uz, ux)
-      const lu = dx * b.ux + dz * b.uz;
-      const lv = -dx * b.uz + dz * b.ux;
-      const cu = lu < -b.hu ? -b.hu : lu > b.hu ? b.hu : lu; // 박스 위 최근접점
-      const cv = lv < -b.hv ? -b.hv : lv > b.hv ? b.hv : lv;
-      let nu = lu,
-        nv = lv;
-      if (cu !== lu || cv !== lv) {
-        // 중심이 박스 밖
-        const du = lu - cu,
-          dv = lv - cv;
-        const d2 = du * du + dv * dv;
-        if (d2 >= radius * radius || d2 < 1e-9) continue;
-        const d = Math.sqrt(d2);
-        const push = (radius - d) / d;
-        nu = lu + du * push;
-        nv = lv + dv * push;
-      } else {
-        // 중심이 박스 내부 → 가장 가까운 변으로 탈출
-        const pul = lu + b.hu + radius;
-        const pur = b.hu - lu + radius;
-        const pvl = lv + b.hv + radius;
-        const pvr = b.hv - lv + radius;
-        const m = Math.min(pul, pur, pvl, pvr);
-        if (m === pul) nu = -b.hu - radius;
-        else if (m === pur) nu = b.hu + radius;
-        else if (m === pvl) nv = -b.hv - radius;
-        else nv = b.hv + radius;
-      }
-      // 로컬 → 월드
-      x = b.cx + nu * b.ux - nv * b.uz;
-      z = b.cz + nu * b.uz + nv * b.ux;
-    }
-    // 오목 건물 삼각형 콜라이더(원-삼각형): 실제 외곽에 정확히 막음
-    for (const t of this.triBoxes) {
-      const dmx = x - t.mx,
-        dmz = z - t.mz;
-      if (dmx * dmx + dmz * dmz > (t.br + radius) * (t.br + radius)) continue; // 브로드페이즈
-      const ex = [t.ax, t.bx, t.cx],
-        ez = [t.az, t.bz, t.cz];
-      let bd2 = Infinity,
-        qx = 0,
-        qz = 0,
-        ne = 0;
-      for (let k = 0; k < 3; k++) {
-        const ax = ex[k],
-          az = ez[k];
-        const sx = ex[(k + 1) % 3] - ax,
-          sz = ez[(k + 1) % 3] - az;
-        const tt = Math.max(0, Math.min(1, ((x - ax) * sx + (z - az) * sz) / (sx * sx + sz * sz || 1)));
-        const cxp = ax + sx * tt,
-          czp = az + sz * tt;
-        const d2 = (x - cxp) ** 2 + (z - czp) ** 2;
-        if (d2 < bd2) {
-          bd2 = d2;
-          qx = cxp;
-          qz = czp;
-          ne = k;
-        }
-      }
-      const s1 = (x - t.bx) * (t.az - t.bz) - (t.ax - t.bx) * (z - t.bz);
-      const s2 = (x - t.cx) * (t.bz - t.cz) - (t.bx - t.cx) * (z - t.cz);
-      const s3 = (x - t.ax) * (t.cz - t.az) - (t.cx - t.ax) * (z - t.az);
-      const inside = !((s1 < 0 || s2 < 0 || s3 < 0) && (s1 > 0 || s2 > 0 || s3 > 0));
-      if (inside) {
-        // 가장 가까운 변의 바깥 법선 방향으로 반경만큼 밖에 둔다
-        const ax = ex[ne],
-          az = ez[ne];
-        let nx = -(ez[(ne + 1) % 3] - az),
-          nz = ex[(ne + 1) % 3] - ax;
-        const nl = Math.hypot(nx, nz) || 1;
-        nx /= nl;
-        nz /= nl;
-        if (nx * (t.mx - ax) + nz * (t.mz - az) > 0) {
-          nx = -nx;
-          nz = -nz;
-        }
-        x = qx + nx * radius;
-        z = qz + nz * radius;
-      } else if (bd2 < radius * radius) {
-        const d = Math.sqrt(bd2) || 1e-6;
-        const push = (radius - d) / d;
-        x += (x - qx) * push;
-        z += (z - qz) * push;
-      }
-    }
-    // 궁장 박스(원-AABB): 발이 담장 윗면 이상이면 통과(점프로 넘기/위에 올라서기)
-    for (const b of this.wallBoxes) {
-      if (feetY >= b.top - 0.05) continue;
-      if (x <= b.x0 - radius || x >= b.x1 + radius || z <= b.z0 - radius || z >= b.z1 + radius)
-        continue;
-      const cxp = x < b.x0 ? b.x0 : x > b.x1 ? b.x1 : x;
-      const czp = z < b.z0 ? b.z0 : z > b.z1 ? b.z1 : z;
-      if (cxp !== x || czp !== z) {
-        const dx = x - cxp;
-        const dz = z - czp;
-        const d2 = dx * dx + dz * dz;
-        if (d2 >= radius * radius || d2 < 1e-9) continue;
-        const d = Math.sqrt(d2);
-        const push = (radius - d) / d;
-        x += dx * push;
-        z += dz * push;
-      } else {
-        const pxl = x - b.x0 + radius;
-        const pxr = b.x1 - x + radius;
-        const pzl = z - b.z0 + radius;
-        const pzr = b.z1 - z + radius;
-        const m = Math.min(pxl, pxr, pzl, pzr);
-        if (m === pxl) x = b.x0 - radius;
-        else if (m === pxr) x = b.x1 + radius;
-        else if (m === pzl) z = b.z0 - radius;
-        else z = b.z1 + radius;
-      }
-    }
-    return { x, z };
+    return this.collision.resolveCollision(x, z, radius, feetY);
   }
 
   topAt(x: number, z: number): number {
-    let best = -Infinity;
-    for (const c of this.colliders) {
-      const dx = x - c.x;
-      const dz = z - c.z;
-      if (dx * dx + dz * dz <= c.radius * c.radius) {
-        if (c.top > best) best = c.top;
-      }
-    }
-    // 담장 윗면에 올라설 수 있도록(좁은 담장 위 디딤)
-    for (const b of this.wallBoxes) {
-      if (x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1 && b.top > best) best = b.top;
-    }
-    return best;
+    return this.collision.topAt(x, z);
   }
 
-  /** 축정렬 박스를 OBB 로 등록(ang=0) */
-  private addAabbBox(x0: number, x1: number, z0: number, z1: number) {
-    const hu = (x1 - x0) / 2,
-      hv = (z1 - z0) / 2;
-    this.buildingBoxes.push({
-      cx: (x0 + x1) / 2,
-      cz: (z0 + z1) / 2,
-      ux: 1,
-      uz: 0,
-      hu,
-      hv,
-      br: Math.hypot(hu, hv),
-    });
-  }
-
-  /**
-   * footprint 다각형의 최소면적 회전 사각형(OBB)을 충돌 박스로 등록.
-   * 각 변 방향으로 점들을 회전 투영해 AABB 면적이 최소가 되는 방향을 택한다(rotating-calipers).
-   * inset 만큼 안으로 줄여 인접 건물 사이 통로를 확보.
-   */
-  private addFootprintBox(p: number[], inset: number) {
-    const n = p.length / 2;
-    // footprint 실제 면적(shoelace) — OBB 커버리지 판정용
-    let polyA = 0;
-    for (let i = 0, j = n - 1; i < n; j = i++)
-      polyA += p[j * 2] * p[i * 2 + 1] - p[i * 2] * p[j * 2 + 1];
-    polyA = Math.abs(polyA) / 2;
-
-    let best = Infinity,
-      bux = 1,
-      buz = 0,
-      bcu = 0,
-      bcv = 0,
-      bhu = 0,
-      bhv = 0;
-    for (let e = 0; e < n; e++) {
-      const ex = p[((e + 1) % n) * 2] - p[e * 2];
-      const ez = p[((e + 1) % n) * 2 + 1] - p[e * 2 + 1];
-      const L = Math.hypot(ex, ez);
-      if (L < 1e-6) continue;
-      const ux = ex / L,
-        uz = ez / L;
-      let umin = Infinity,
-        umax = -Infinity,
-        vmin = Infinity,
-        vmax = -Infinity;
-      for (let i = 0; i < n; i++) {
-        const px = p[i * 2],
-          pz = p[i * 2 + 1];
-        const u = px * ux + pz * uz;
-        const v = -px * uz + pz * ux;
-        if (u < umin) umin = u;
-        if (u > umax) umax = u;
-        if (v < vmin) vmin = v;
-        if (v > vmax) vmax = v;
-      }
-      const area = (umax - umin) * (vmax - vmin);
-      if (area < best) {
-        best = area;
-        bux = ux;
-        buz = uz;
-        bcu = (umin + umax) / 2;
-        bcv = (vmin + vmax) / 2;
-        bhu = (umax - umin) / 2;
-        bhv = (vmax - vmin) / 2;
+  /** 미니맵 등 표현 레이어: 시야 반경 내 지형/건물/콜라이더를 (내부 노출 없이) 싱크로 방문. */
+  queryMinimap(cx: number, cz: number, radius: number, sink: MinimapSink): void {
+    // 수역(폴리곤) — 개수 적어 선형 + 중심 컬링
+    for (const w of this.map.water) {
+      const q = w.p;
+      const m = q.length / 2;
+      if (m < 3) continue;
+      let mx = 0, mz = 0;
+      for (let i = 0; i < m; i++) { mx += q[i * 2]; mz += q[i * 2 + 1]; }
+      if (Math.hypot(mx / m - cx, mz / m - cz) > radius + 250) continue;
+      sink.water(q);
+    }
+    // 도로(세그먼트) — 중점 컬링
+    for (const r of this.map.roads) {
+      const q = r.p;
+      const n = q.length / 2;
+      if (n < 2) continue;
+      const w = r.w ?? 6;
+      for (let i = 0; i < n - 1; i++) {
+        const ax = q[i * 2], az = q[i * 2 + 1], bx = q[i * 2 + 2], bz = q[i * 2 + 3];
+        if (Math.hypot((ax + bx) / 2 - cx, (az + bz) / 2 - cz) > radius + 20) continue;
+        sink.road(ax, az, bx, bz, w);
       }
     }
-    if (!isFinite(best)) return;
-    // OBB 가 실제 외곽을 충분히 밀착하지 못하면(오목 건물) 삼각분할로 정확히 막는다
-    if (polyA / best < 0.7) {
-      this.addTriColliders(p);
-      return;
-    }
-    const hu = Math.max(0.1, bhu - inset),
-      hv = Math.max(0.1, bhv - inset);
-    this.buildingBoxes.push({
-      cx: bcu * bux - bcv * buz, // 로컬 중심 → 월드
-      cz: bcu * buz + bcv * bux,
-      ux: bux,
-      uz: buz,
-      hu,
-      hv,
-      br: Math.hypot(hu, hv),
-    });
-  }
-
-  /** 오목 footprint 를 삼각분할(ear-clipping)해 삼각형 콜라이더로 등록 */
-  private addTriColliders(p: number[]) {
-    let n = p.length / 2;
-    // 닫힘 중복점 제거
-    if (n >= 2 && p[0] === p[(n - 1) * 2] && p[1] === p[(n - 1) * 2 + 1]) n -= 1;
-    if (n < 3) return;
-    const contour: THREE.Vector2[] = [];
-    for (let i = 0; i < n; i++) contour.push(new THREE.Vector2(p[i * 2], p[i * 2 + 1]));
-    let tris: number[][];
-    try {
-      tris = THREE.ShapeUtils.triangulateShape(contour, []);
-    } catch {
-      return;
-    }
-    for (const t of tris) {
-      const a = contour[t[0]],
-        b = contour[t[1]],
-        c = contour[t[2]];
-      const mx = (a.x + b.x + c.x) / 3,
-        mz = (a.y + b.y + c.y) / 3;
-      const br = Math.max(
-        Math.hypot(a.x - mx, a.y - mz),
-        Math.hypot(b.x - mx, b.y - mz),
-        Math.hypot(c.x - mx, c.y - mz)
-      );
-      this.triBoxes.push({ ax: a.x, az: a.y, bx: b.x, bz: b.y, cx: c.x, cz: c.y, mx, mz, br });
-    }
+    // 건물(격자 브로드페이즈)
+    const minX = cx - radius, minZ = cz - radius, maxX = cx + radius, maxZ = cz + radius;
+    this.collision.forEachBuildingNear(minX, minZ, maxX, maxZ, (c) => sink.building(c));
+    this.collision.forEachTriNear(minX, minZ, maxX, maxZ, (ax, az, bx, bz, tx, tz) =>
+      sink.triangle(ax, az, bx, bz, tx, tz)
+    );
+    // 전각/동상 콜라이더(점)
+    this.collision.forEachCircleNear(cx, cz, radius, (x, z, r) => sink.rock(x, z, r));
   }
 
   // ─────────────────────────────── 지형 높이 ───────────────────────────────
@@ -603,7 +351,7 @@ export class World {
       // 렌더되는 건물(도심·궁 권역 전각/행각 모두)에 충돌 박스 부여. 단 대형 인클로저는
       // 위에서 이미 제외(마당 솔리드 방지)했고, 문(門) 개구부 안 건물(문루 등)만 통과 허용.
       if (!this.nearGate(cx, cz, 6)) {
-        this.addFootprintBox(p, 0.3); // 실제 외곽에 밀착한 OBB(오목 footprint 는 삼각 콜라이더)
+        this.collision.addFootprintBox(p, 0.3); // 실제 외곽에 밀착한 OBB(오목 footprint 는 삼각 콜라이더)
       }
 
       let h = b.h ?? 9;
@@ -624,14 +372,7 @@ export class World {
 
       const jitter = ((Math.abs(Math.round(cx * 7 + cz * 13)) % 100) / 100) || 0.5;
       this.buildingColor(h, palace, jitter, col);
-      const cnt = geo.attributes.position.count;
-      const carr = new Float32Array(cnt * 3);
-      for (let i = 0; i < cnt; i++) {
-        carr[i * 3] = col.r;
-        carr[i * 3 + 1] = col.g;
-        carr[i * 3 + 2] = col.b;
-      }
-      geo.setAttribute("color", new THREE.BufferAttribute(carr, 3));
+      setUniformColor(geo, col);
       geo.deleteAttribute("uv"); // 병합 일관성(uv 불필요)
       geos.push(geo);
 
@@ -641,15 +382,7 @@ export class World {
         roof.rotateX(-Math.PI / 2);
         roof.translate(0, h, 0);
         roof.deleteAttribute("uv");
-        const rc = new THREE.Color(0x37414d);
-        const rcnt = roof.attributes.position.count;
-        const rarr = new Float32Array(rcnt * 3);
-        for (let i = 0; i < rcnt; i++) {
-          rarr[i * 3] = rc.r;
-          rarr[i * 3 + 1] = rc.g;
-          rarr[i * 3 + 2] = rc.b;
-        }
-        roof.setAttribute("color", new THREE.BufferAttribute(rarr, 3));
+        setUniformColor(roof, TILE_COLOR);
         tileGeos.push(roof);
       }
     }
@@ -846,191 +579,12 @@ export class World {
     }
   }
 
-  // ─────────────────────────── 핵심 전각(양식화 랜드마크) ───────────────────────────
-
-  /**
-   * 두께 있는 팔작지붕(솔리드). 윗면(처마~용마루) + 두께 t 만큼 내린 아랫면 + 처마 측면대로
-   * 닫힌 입체를 만든다 → 처마 끝에 실제 두께가 보이고 아래에서 봐도 비치지 않음.
-   */
-  /**
-   * 팔작/우진각 계열 지붕 — 양식 무지(無知)의 제네릭 생성기. 양식은 모두 파라미터(데이터):
-   *  ridge(용마루 길이) · cap(용마루 마루) · fin(망새/취두) · up(처마 끝 들림).
-   * 처마는 8점(모서리 4 + 변 중점 4)으로 두어 up>0 일 때 모서리만 들려 한·일·중 처마 곡선을
-   * 표현(up=0 이면 변 중점이 슬로프 위에 있어 기존 직선 처마와 동일).
-   */
-  private hipRoofGeometry(
-    W: number, D: number, H: number,
-    ridge = 0.42, t = 0.8, cap = 0, fin = 0, up = 0
-  ) {
-    const rW = W * ridge;
-    const L = up > 0 ? up * Math.max(1.5, H * 0.35) : 0; // 모서리 들림 높이
-    // 처마: 모서리(L 만큼 들림) + 변 중점(0)
-    const A = [-W, L, -D], B = [W, L, -D], C = [W, L, D], Dd = [-W, L, D];
-    const mAB = [0, 0, -D], mBC = [W, 0, 0], mCD = [0, 0, D], mDA = [-W, 0, 0];
-    const R0 = [-rW, H, 0], R1 = [rW, H, 0];
-    const lo = (p: number[]) => [p[0], p[1] - t, p[2]];
-
-    const verts: number[] = [];
-    const tri = (a: number[], b: number[], c: number[]) => verts.push(...a, ...b, ...c);
-    const top: number[][][] = [
-      [Dd, mCD, R0], [mCD, R1, R0], [mCD, C, R1], // +Z
-      [B, mAB, R1], [mAB, R0, R1], [mAB, A, R0], // -Z
-      [C, mBC, R1], [mBC, B, R1], // +X
-      [A, mDA, R0], [mDA, Dd, R0], // -X
-    ];
-    for (const [a, b, c] of top) tri(a, b, c); // 윗면
-    for (const [a, b, c] of top) tri(lo(a), lo(c), lo(b)); // 아랫면(반전)
-    // 처마 측면대(8점 둘레 두께 t)
-    const E = [A, mAB, B, mBC, C, mCD, Dd, mDA];
-    for (let i = 0; i < 8; i++) {
-      const P = E[i], Q = E[(i + 1) % 8], Pb = lo(P), Qb = lo(Q);
-      tri(P, Q, Qb);
-      tri(P, Qb, Pb);
-    }
-    const slope = new THREE.BufferGeometry();
-    slope.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
-    slope.computeVertexNormals();
-    const geos: THREE.BufferGeometry[] = [slope];
-
-    // 용마루 마루(cap>0) + 양끝 망새/취두(fin>0)
-    if (cap > 0) {
-      const rcH = Math.max(0.5, H * cap);
-      const rcW = rW + Math.min(0.6, W * 0.06);
-      const rcZ = Math.max(0.6, D * 0.1);
-      const capBox = (w: number, h: number, d: number, x: number, y: number) => {
-        const b = new THREE.BoxGeometry(w, h, d).toNonIndexed();
-        b.deleteAttribute("uv");
-        b.translate(x, y, 0);
-        geos.push(b);
-      };
-      capBox(rcW * 2, rcH, rcZ * 2, 0, H - 0.15 + rcH / 2);
-      if (fin > 0)
-        for (const sx of [-1, 1]) capBox(0.7, rcH * fin, rcZ * 1.6, sx * rcW, H - 0.15 + (rcH * fin) / 2);
-    }
-    return geos.length === 1 ? slope : mergeGeometries(geos, false);
-  }
+  // ─────────────────────── 데이터 구동 랜드마크(StructureBuilder 위임) ───────────────────────
 
   /** 맵 데이터의 landmarks 를 배치 — 전부 데이터 구동(structure) 공통 렌더. */
   private buildLandmarks() {
-    for (const lm of this.map.landmarks ?? []) {
-      if (lm.type === "structure") this.buildStructure(lm);
-    }
-  }
-
-  // ─────────────────────── 데이터 구동 랜드마크(공통 인터프리터) ───────────────────────
-
-  /** 부품(Part) → 비인덱스 BufferGeometry(로컬 변환 반영, 병합 일관성 위해 uv 제거). */
-  private partGeometry(part: import("./MapData").Part): THREE.BufferGeometry | null {
-    let g: THREE.BufferGeometry;
-    switch (part.g) {
-      case "box":
-        g = new THREE.BoxGeometry(part.s![0], part.s![1], part.s![2]);
-        break;
-      case "cyl":
-        g = new THREE.CylinderGeometry(part.rt!, part.rb!, part.h!, part.seg ?? 8, 1, part.open ?? false, part.t0 ?? 0, part.tl ?? Math.PI * 2);
-        break;
-      case "cone":
-        g = new THREE.ConeGeometry(part.r!, part.h!, part.seg ?? 8);
-        break;
-      case "plane":
-        g = new THREE.PlaneGeometry(part.s![0], part.s![1]);
-        g.rotateX(-Math.PI / 2);
-        break;
-      case "hiproof":
-        g = this.hipRoofGeometry(
-          part.W!, part.D!, part.H!,
-          part.ridge ?? 0.42, part.t ?? 0.8, part.cap ?? 0, part.fin ?? 0, part.up ?? 0
-        );
-        break;
-      case "strut":
-        g = this.strutGeometry(part.a!, part.b!, part.thick ?? 1);
-        break;
-      default:
-        return null;
-    }
-    if (part.g !== "strut") {
-      if (part.rx || part.ry || part.rz) {
-        g.applyMatrix4(
-          new THREE.Matrix4().makeRotationFromEuler(
-            new THREE.Euler(part.rx ?? 0, part.ry ?? 0, part.rz ?? 0, "XYZ")
-          )
-        );
-      }
-      if (part.p) g.translate(part.p[0], part.p[1], part.p[2]);
-    }
-    g = g.toNonIndexed();
-    g.deleteAttribute("uv");
-    return g;
-  }
-
-  /** 두 점을 잇는 각진 보(strut) 지오메트리 — 변환 베이크. */
-  private strutGeometry(a: number[], b: number[], thick: number): THREE.BufferGeometry {
-    const dx = b[0] - a[0],
-      dy = b[1] - a[1],
-      dz = b[2] - a[2];
-    const len = Math.hypot(dx, dy, dz) || 0.01;
-    const g = new THREE.BoxGeometry(thick, len, thick);
-    const q = new THREE.Quaternion().setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      new THREE.Vector3(dx, dy, dz).normalize()
-    );
-    const m = new THREE.Matrix4().compose(
-      new THREE.Vector3((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2),
-      q,
-      new THREE.Vector3(1, 1, 1)
-    );
-    g.applyMatrix4(m);
-    return g;
-  }
-
-  /** 데이터 구동 랜드마크: parts/mats 를 재질별로 병합해 렌더 + colliders/excludeR 처리. */
-  private buildStructure(lm: import("./MapData").Landmark) {
-    const mats = (lm.mats ?? []).map(
-      (d) =>
-        new THREE.MeshStandardMaterial({
-          color: parseInt(d.c, 16),
-          roughness: d.rough ?? 0.9,
-          metalness: d.metal ?? 0,
-          flatShading: d.flat ?? false,
-          transparent: d.opacity != null,
-          opacity: d.opacity ?? 1,
-        })
-    );
-    // 재질별로 지오메트리 모아 병합(드로콜 최소화)
-    const byMat = new Map<number, THREE.BufferGeometry[]>();
-    for (const part of lm.parts ?? []) {
-      const geo = this.partGeometry(part);
-      if (!geo) continue;
-      if (!byMat.has(part.m)) byMat.set(part.m, []);
-      byMat.get(part.m)!.push(geo);
-    }
-    const grp = new THREE.Group();
-    for (const [mi, geos] of byMat) {
-      const merged = geos.length === 1 ? geos[0] : mergeGeometries(geos, false);
-      geos.forEach((g) => g !== merged && g.dispose());
-      const mesh = new THREE.Mesh(merged, mats[mi] ?? new THREE.MeshStandardMaterial());
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      grp.add(mesh);
-    }
-    const rot = lm.rot ?? 0;
-    grp.rotation.y = rot;
-    grp.position.set(lm.x, 0, lm.z);
-    this.group.add(grp);
-    // 콜라이더(로컬 → 회전·이동 적용)
-    const c = Math.cos(rot),
-      s = Math.sin(rot);
-    for (const col of lm.colliders ?? []) {
-      this.colliders.push({
-        x: lm.x + col.x * c + col.z * s,
-        z: lm.z - col.x * s + col.z * c,
-        radius: col.r,
-        top: col.top,
-      });
-    }
-    // 축정렬 통과 불가 박스(rot=0 가정 — 광화문 피어 등)
-    for (const b of lm.boxColliders ?? [])
-      this.addAabbBox(lm.x + b.x0, lm.x + b.x1, lm.z + b.z0, lm.z + b.z1);
+    for (const lm of this.map.landmarks ?? [])
+      if (lm.type === "structure") this.structures.build(lm, this.group, this.collision);
   }
 
   // ─────────────────────────── 경복궁 궁장(담장, 실측 폴리라인) ───────────────────────────
@@ -1096,7 +650,7 @@ export class World {
           const X1 = Math.max(x0 + px, x0 - px, x1 + px, x1 - px);
           const Z0 = Math.min(z0 + pz, z0 - pz, z1 + pz, z1 - pz);
           const Z1 = Math.max(z0 + pz, z0 - pz, z1 + pz, z1 - pz);
-          this.wallBoxes.push({ x0: X0, x1: X1, z0: Z0, z1: Z1, top: WALL_H });
+          this.collision.addWallBox(X0, X1, Z0, Z1, WALL_H);
         }
       }
     }

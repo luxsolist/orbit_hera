@@ -8,6 +8,7 @@ import { writeFileSync, readFileSync, mkdirSync, existsSync, statSync } from "no
 import { execFileSync } from "node:child_process";
 import { MAPS } from "./maps.config.mjs";
 import { RECIPES } from "./landmarks.mjs";
+import { projFns, buildingHeight, roadWidth, ringArea } from "./osm.mjs";
 
 // 레시피가 있는 랜드마크는 부품 목록(structure)으로 베이킹, 나머지는 그대로(타입별 빌더).
 function bakeLandmarks(landmarks) {
@@ -37,41 +38,6 @@ const ENDPOINTS = [
 const only = process.argv[2];
 const OUT_DIR = "public/maps";
 mkdirSync(OUT_DIR, { recursive: true });
-
-function projFns(lat0, lon0) {
-  const M_LAT = 111320;
-  const M_LON = 111320 * Math.cos((lat0 * Math.PI) / 180);
-  return (lat, lon) => [
-    Math.round((lon - lon0) * M_LON * 100) / 100,
-    Math.round(-(lat - lat0) * M_LAT * 100) / 100,
-  ];
-}
-
-function buildingHeight(t = {}) {
-  if (t.height) {
-    const v = parseFloat(String(t.height).replace(/[^\d.]/g, ""));
-    if (v > 0) return Math.round(v * 10) / 10;
-  }
-  if (t["building:levels"]) {
-    const v = parseFloat(t["building:levels"]);
-    if (v > 0) return Math.round(Math.max(3, v * 3.3) * 10) / 10;
-  }
-  const b = t.building;
-  if (b === "hut" || b === "shed" || b === "roof") return 3;
-  if (b === "temple" || b === "shrine" || b === "palace" || b === "pavilion") return 7;
-  if (b === "house" || b === "detached" || b === "hanok") return 6;
-  return 9;
-}
-
-const roadWidth = (hw) =>
-  ({ motorway: 26, trunk: 24, primary: 28, secondary: 16, tertiary: 11, residential: 7, living_street: 6, pedestrian: 9 }[hw] || 6);
-
-function ringArea(p) {
-  let a = 0;
-  for (let i = 0, j = p.length / 2 - 1; i < p.length / 2; j = i++)
-    a += p[j * 2] * p[i * 2 + 1] - p[i * 2] * p[j * 2 + 1];
-  return Math.abs(a) / 2;
-}
 
 function overpassQuery(bbox) {
   const b = bbox.join(",");

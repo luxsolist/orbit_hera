@@ -47,6 +47,11 @@ export class PlayerController {
   private dashTime = 0; // 대시 진행 잔여
   private dashCooldown = 0;
   private dashDir = new THREE.Vector3();
+  // 매 프레임 재사용 임시 벡터(할당/ GC 회피)
+  private _fwd = new THREE.Vector3();
+  private _right = new THREE.Vector3();
+  private _wish = new THREE.Vector3();
+  private _look = new THREE.Vector3();
 
   // 상태값(HUD 연동)
   maxHp = 100;
@@ -110,11 +115,11 @@ export class PlayerController {
     this.pitch -= dy * MOUSE_SENSITIVITY;
     this.pitch = THREE.MathUtils.clamp(this.pitch, -PITCH_LIMIT, PITCH_LIMIT);
 
-    // --- 이동 입력(수평) ---
-    const forward = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
-    const right = new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
+    // --- 이동 입력(수평) — 재사용 임시 벡터 ---
+    const forward = this._fwd.set(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
+    const right = this._right.set(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
 
-    const wish = new THREE.Vector3();
+    const wish = this._wish.set(0, 0, 0);
     if (this.input.isDown("KeyW")) wish.add(forward);
     if (this.input.isDown("KeyS")) wish.sub(forward);
     if (this.input.isDown("KeyD")) wish.add(right);
@@ -236,12 +241,13 @@ export class PlayerController {
 
   private syncCamera() {
     this.camera.position.copy(this.position);
-    const dir = new THREE.Vector3(
-      -Math.sin(this.yaw) * Math.cos(this.pitch),
-      Math.sin(this.pitch),
-      -Math.cos(this.yaw) * Math.cos(this.pitch)
+    // 시선 타깃 = 위치 + 시선 방향(재사용 임시 벡터)
+    this._look.set(
+      this.position.x - Math.sin(this.yaw) * Math.cos(this.pitch),
+      this.position.y + Math.sin(this.pitch),
+      this.position.z - Math.cos(this.yaw) * Math.cos(this.pitch)
     );
-    this.camera.lookAt(this.position.clone().add(dir));
+    this.camera.lookAt(this._look);
   }
 
   reset() {
