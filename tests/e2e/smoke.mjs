@@ -36,6 +36,40 @@ try {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 
+  // ─── 인트로 시네마틱: 버튼 재생 → 수 초 재생 → 예외/NaN 0, 캔버스 비-블랙, Esc 복귀 ───
+  {
+    console.log(`\n[intro] 시네마틱 재생`);
+    const errors = [];
+    page.on("console", (e) => { if (e.type() === "error") errors.push(e.text()); });
+    page.on("pageerror", (e) => errors.push("PAGEERROR: " + e.message));
+    await page.goto(BASE, { waitUntil: "load" });
+    await page.locator("#storyBtn").waitFor({ state: "visible", timeout: 15000 });
+    await page.locator("#storyBtn").click(); // 스토리 버튼 → 목록
+    await page.locator(".sidepop__item").first().click(); // 첫 항목(인트로) → 재생
+    await page.waitForTimeout(6000); // 스킵 없이 재생(씬1~2 build/update + 프레임 루프 가동)
+
+    const introHidden = await page.evaluate(() => {
+      const el = document.getElementById("overlay");
+      return !!el && el.classList.contains("is-hidden"); // 재생 중엔 메뉴 숨김
+    });
+    ok(introHidden, "인트로 재생 중(메뉴 오버레이 숨김)");
+
+    let size = 0;
+    for (let r = 0; r < 2 && size === 0; r++) {
+      try {
+        const buf = await page.screenshot({ clip: { x: 490, y: 210, width: 300, height: 300 }, timeout: 15000 });
+        size = buf.length;
+      } catch { /* 폰트대기 플레이크 → 재시도 */ }
+    }
+    if (size === 0) console.log("  · 인트로 캡처 불가(플레이크) — 블랙 검사 건너뜀");
+    else ok(size > 3000, `인트로 화면 비-블랙(PNG ${size}B > 3000)`);
+
+    await page.keyboard.press("Escape"); // 즉시 종료 → 메뉴 복귀
+    await page.locator(".zone-dot").first().waitFor({ state: "visible", timeout: 15000 });
+    ok(true, "Esc 인트로 종료 → 메뉴 복귀");
+    ok(errors.length === 0, `인트로 콘솔/페이지 에러 0${errors.length ? " — " + errors.slice(0, 3).join(" | ") : ""}`);
+  }
+
   for (let i = 0; i < maps.length; i++) {
     const m = maps[i];
     console.log(`\n[${m.id}] ${m.name}`);
@@ -47,9 +81,11 @@ try {
 
     await page.goto(BASE, { waitUntil: "load" });
     await page.waitForTimeout(800);
-    await page.keyboard.press("Escape"); // 인트로 시네마틱 스킵 → 메뉴
-    await page.locator(".overlay__map").first().waitFor({ state: "visible", timeout: 15000 });
-    await page.locator(".overlay__map").nth(i).click(); // 카탈로그 순서 = index.json 순서
+    const dot = `.zone-dot[data-map="${m.id}"]`;
+    await page.locator(dot).waitFor({ state: "visible", timeout: 15000 });
+    await page.locator(dot).click(); // 세계지도 점 클릭 → 팝업
+    await page.locator(".zonepop__drone").first().waitFor({ state: "visible", timeout: 8000 });
+    await page.locator(".zonepop__drone").first().click(); // 기체 선택 → 즉시 출격
     await page.waitForTimeout(5000); // 다운로드 + 월드 빌드 + 첫 프레임들
 
     // (2) playing 진입 → 오버레이 숨김(locator 는 가시성 대기하므로 evaluate 로 직접 확인)

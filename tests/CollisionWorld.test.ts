@@ -71,7 +71,7 @@ describe("CollisionWorld — walls (step-on)", () => {
 describe("CollisionWorld — footprint OBB vs concave triangles", () => {
   it("a convex square footprint blocks an interior point", () => {
     const c = new CollisionWorld();
-    c.addFootprintBox([-2, -2, 2, -2, 2, 2, -2, 2], 0);
+    c.addFootprintBox([-2, -2, 2, -2, 2, 2, -2, 2], 0, 10);
     c.finalize();
     const r = c.resolveCollision(0.5, 0, 1, 0);
     expect(Math.hypot(r.x - 0.5, r.z - 0)).toBeGreaterThan(0.5); // 밖으로 밀림
@@ -80,7 +80,7 @@ describe("CollisionWorld — footprint OBB vs concave triangles", () => {
   it("a concave L footprint blocks the solid arm but not the empty notch", () => {
     const c = new CollisionWorld();
     // L: 좌측 세로바 + 하단 가로바. 우상단(x>2, z>2)은 폴리곤 밖(빈 노치).
-    c.addFootprintBox([0, 0, 6, 0, 6, 2, 2, 2, 2, 6, 0, 6], 0);
+    c.addFootprintBox([0, 0, 6, 0, 6, 2, 2, 2, 2, 6, 0, 6], 0, 10);
     c.finalize();
     const solid = c.resolveCollision(1, 1, 0.5, 0); // 솔리드 내부 → 밀림
     expect(Math.hypot(solid.x - 1, solid.z - 1)).toBeGreaterThan(0);
@@ -95,5 +95,28 @@ describe("CollisionWorld — footprint OBB vs concave triangles", () => {
     const r = c.resolveCollision(0, 0, 1, 0); // finalize 안 함 → 충돌 없음
     expect(near(r.x, 0)).toBe(true);
     expect(near(r.z, 0)).toBe(true);
+  });
+});
+
+describe("CollisionWorld — building roof (step-on)", () => {
+  it("blocks below the roof top but passes/stands at or above it", () => {
+    const c = new CollisionWorld();
+    c.addFootprintBox([-3, -3, 3, -3, 3, 3, -3, 3], 0, 12); // 옥상 높이 12
+    c.finalize();
+    const low = c.resolveCollision(0, 0, 1, 0); // 발 낮음 → 막힘
+    expect(Math.hypot(low.x, low.z)).toBeGreaterThan(0.5);
+    const high = c.resolveCollision(0, 0, 1, 12); // 발 옥상 이상 → 통과(올라서기)
+    expect(near(high.x, 0)).toBe(true);
+    expect(near(high.z, 0)).toBe(true);
+    expect(c.topAt(0, 0)).toBe(12); // 옥상 위면 디딤
+    expect(c.topAt(100, 0)).toBe(-Infinity);
+  });
+
+  it("a concave (triangulated) building roof is standable via topAt", () => {
+    const c = new CollisionWorld();
+    c.addFootprintBox([0, 0, 6, 0, 6, 2, 2, 2, 2, 6, 0, 6], 0, 9); // L자 → 삼각 콜라이더
+    c.finalize();
+    expect(c.topAt(1, 1)).toBe(9); // 솔리드 팔 위
+    expect(c.topAt(4, 4)).toBe(-Infinity); // 빈 노치
   });
 });

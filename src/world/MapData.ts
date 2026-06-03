@@ -112,6 +112,8 @@ export interface MapCatalogEntry {
   subtitle: string;
   bytes?: number;
   buildings?: number;
+  lat?: number; // 침공 지점 위도(세계지도 표시용)
+  lon?: number; // 침공 지점 경도
 }
 
 /** 전장 1개의 전체 렌더 데이터 — public/maps/<id>.json */

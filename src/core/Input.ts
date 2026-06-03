@@ -16,6 +16,8 @@ export class Input {
   specialPressed = false;
   /** 포인터 락(조준 모드) 활성 여부 */
   locked = false;
+  /** 이동 속도 배율(0..1) — 모바일 조이스틱 조절량에 비례. 키보드는 항상 1(전속). */
+  moveScale = 1;
   /** 락 획득 직후 첫 mousemove(엔게이지 점프 델타)를 버리기 위한 플래그 */
   private freshLock = false;
 

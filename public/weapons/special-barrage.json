@@ -1,0 +1,16 @@
+{
+  "id": "special-barrage",
+  "name": "다중 빔 살포 / BARRAGE",
+  "abbr": "살포",
+  "type": "barrage",
+  "maxBeams": 10,
+  "coneDeg": 55,
+  "range": 220,
+  "cooldown": 60,
+  "drainRate": 60,
+  "salvoInterval": 0.12,
+  "salvoDamage": 16,
+  "beamLifetime": 0.13,
+  "colorBeam": "0xffb648",
+  "colorGlow": "0xffd58a"
+}

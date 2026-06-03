@@ -1,0 +1,28 @@
+{
+  "id": "walker",
+  "name": "ANDROID-01",
+  "displayName": "보행 드론 / WALKER",
+  "body": { "eyeHeight": 2.2, "radius": 1.2 },
+  "vitals": { "maxHp": 100, "maxFreq": 100, "freqRegen": 22 },
+  "view": { "fov": 80, "mouseSensitivity": 0.0022 },
+  "dash": { "speed": 192, "duration": 0.16, "cooldown": 2.0 },
+  "move": {
+    "mode": "walk",
+    "speed": 16.7,
+    "groundAccel": 28,
+    "airAccel": 8,
+    "jump": {
+      "velocity": 28,
+      "riseGravity": 55,
+      "fallGravity": 50,
+      "fallTerminal": 25.5,
+      "maxRiseHeight": 100,
+      "coyoteTime": 0.1
+    }
+  },
+  "actions": [
+    { "label": "JUMP", "key": "Space", "desc": "점프" },
+    { "label": "DASH", "key": "ShiftLeft", "desc": "대시" }
+  ],
+  "weapons": { "primary": "frequency-beam", "special": "special-barrage" }
+}

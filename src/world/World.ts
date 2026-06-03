@@ -28,7 +28,7 @@ export interface MinimapSink {
 const TERRAIN_SIZE = 6000;
 export const TERRAIN_HALF = TERRAIN_SIZE / 2; // 3000 (±3km)
 const SEGMENTS = 360; // 지형 격자 ~16.7m 유지(확장에도 산세 디테일 보존)
-const TILE_COLOR = new THREE.Color(0x37414d); // 경복궁 권역 건물 기와 슬래브색
+const TILE_COLOR = new THREE.Color(0x3a5c82); // 경복궁 권역 건물 기와 슬래브색(선명한 청기와)
 
 export class World {
   readonly group = new THREE.Group();
@@ -187,11 +187,11 @@ export class World {
     const color = new THREE.Color();
     const colors: number[] = [];
 
-    const lawn = new THREE.Color(0x79a541);
-    const forest = new THREE.Color(0x47742e);
-    const granite = new THREE.Color(0x8c8c8c);
-    const urban = new THREE.Color(0x9a978d); // 도심 지표(보도/포장 콘크리트)
-    const bareEarth = new THREE.Color(0xb09360); // 경복궁 내부 맨땅(마사토)
+    const lawn = new THREE.Color(0x5ec22e); // 선명한 잔디 녹색
+    const forest = new THREE.Color(0x2f9e22); // 진한 채도 숲
+    const granite = new THREE.Color(0xa8b2be); // 밝은 한색 화강암
+    const urban = new THREE.Color(0xc2bdb0); // 도심 지표(밝은 포장 콘크리트)
+    const bareEarth = new THREE.Color(0xd49a3e); // 경복궁 내부 맨땅(선명한 마사토)
     const m = new THREE.Color();
 
     for (let i = 0; i < pos.count; i++) {
@@ -233,7 +233,7 @@ export class World {
   /** 배경 산지의 화강암 바위(도심 평지에는 두지 않음) */
   private scatterRocks() {
     const rockGeo = new THREE.IcosahedronGeometry(1, 0);
-    const rockMat = new THREE.MeshStandardMaterial({ color: 0x8c8c8c, flatShading: true, roughness: 0.95 });
+    const rockMat = new THREE.MeshStandardMaterial({ color: 0xaab0ba, flatShading: true, roughness: 0.95 });
     let seed = 20240601;
     const rand = () => {
       seed = (seed * 1664525 + 1013904223) % 0xffffffff;
@@ -247,13 +247,19 @@ export class World {
       if (elev < 50) continue;
       placed++;
       const s = 6 + rand() * 16;
+      const sx = s * (0.7 + rand() * 0.6),
+        sy = s * (1 + rand()),
+        sz = s * (0.7 + rand() * 0.6);
+      const baseY = elev + s * 0.2;
       const mesh = new THREE.Mesh(rockGeo, rockMat);
-      mesh.scale.set(s * (0.7 + rand() * 0.6), s * (1 + rand()), s * (0.7 + rand() * 0.6));
-      mesh.position.set(x, elev + s * 0.2, z);
+      mesh.scale.set(sx, sy, sz);
+      mesh.position.set(x, baseY, z);
       mesh.rotation.set(rand() * Math.PI, rand() * Math.PI, rand() * Math.PI);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       this.group.add(mesh);
+      // 통과 불가 + 디딜 수 있는 바위 콜라이더(수평 반경 ≈ 평균 가로 스케일, 윗면 ≈ 정점 근처)
+      this.collision.addCircle(x, z, (sx + sz) / 2, baseY + sy * 0.8);
     }
   }
 
@@ -300,12 +306,12 @@ export class World {
   /** 건물 높이별/권역별 색 */
   private buildingColor(h: number, palace: number, jitter: number, out: THREE.Color) {
     if (palace > 0.5) {
-      // 경복궁 전통 건물: 전돌/목조 톤
-      out.setHex(0x9e5b3a);
-    } else if (h < 9) out.setHex(0xbdb38f); // 저층 주택/한옥가
-    else if (h < 22) out.setHex(0x969aa0); // 중층 상가/빌딩
-    else if (h < 45) out.setHex(0x7090ab); // 고층 오피스
-    else out.setHex(0x79b4c9); // 마천루(유리)
+      // 경복궁 전통 건물: 선명한 단청/주칠 톤
+      out.setHex(0xcc5a28);
+    } else if (h < 9) out.setHex(0xe6c23a); // 저층 — 선명한 황금/베이지
+    else if (h < 22) out.setHex(0x3fb56a); // 중층 — 선명한 녹색
+    else if (h < 45) out.setHex(0x3a82e0); // 고층 — 선명한 파랑
+    else out.setHex(0x2fcadf); // 마천루(유리) — 밝은 시안
     // 동별 미세 변주
     const j = (jitter - 0.5) * 0.12;
     out.offsetHSL(0, 0, j);
@@ -348,14 +354,16 @@ export class World {
       // 솔리드로 막으므로 생략 → 근정전 등 마당을 열어 둔다.
       if (palace > 0.5 && (x1 - x0) * (z1 - z0) > 2000) continue;
 
-      // 렌더되는 건물(도심·궁 권역 전각/행각 모두)에 충돌 박스 부여. 단 대형 인클로저는
-      // 위에서 이미 제외(마당 솔리드 방지)했고, 문(門) 개구부 안 건물(문루 등)만 통과 허용.
-      if (!this.nearGate(cx, cz, 6)) {
-        this.collision.addFootprintBox(p, 0.3); // 실제 외곽에 밀착한 OBB(오목 footprint 는 삼각 콜라이더)
-      }
-
       let h = b.h ?? 9;
       if (palace > 0.5) h = Math.min(h, 8); // 권역 내는 저층으로
+      const roofTop = palace > 0.5 ? h + 1.4 : h; // 옥상(디딤면) 높이 — 궁 권역은 기와 슬래브 두께 포함
+
+      // 렌더되는 건물(도심·궁 권역 전각/행각 모두)에 충돌 박스 부여. 단 대형 인클로저는
+      // 위에서 이미 제외(마당 솔리드 방지)했고, 문(門) 개구부 안 건물(문루 등)만 통과 허용.
+      // 발이 옥상(roofTop) 이상이면 통과 → 옥상에 올라설 수 있음.
+      if (!this.nearGate(cx, cz, 6)) {
+        this.collision.addFootprintBox(p, 0.3, roofTop); // 실제 외곽에 밀착한 OBB(오목 footprint 는 삼각 콜라이더)
+      }
 
       const shape = new THREE.Shape();
       shape.moveTo(p[0], -p[1]);
@@ -449,7 +457,7 @@ export class World {
     // 진한 회색 아스팔트(밝은 보도/마당 지표와 또렷이 대비). 리본 법선 방향과 무관하게
     // 위에서 보이도록 양면 렌더.
     const mat = new THREE.MeshStandardMaterial({
-      color: 0x2b2d30,
+      color: 0x44484f,
       roughness: 1.0,
       metalness: 0,
       side: THREE.DoubleSide,
@@ -537,13 +545,13 @@ export class World {
       mesh.name = "lane-markings";
       this.group.add(mesh);
     };
-    add(yellow, 0xa1894a); // 중앙선(바랜 노랑)
+    add(yellow, 0xf2cf1f); // 중앙선(선명한 원색 노랑)
   }
 
   private buildWater() {
     const water = this.map.water;
     const mat = new THREE.MeshStandardMaterial({
-      color: 0x3f76e4,
+      color: 0x1f8cf0,
       transparent: true,
       opacity: 0.85,
       roughness: 0.2,
@@ -599,8 +607,8 @@ export class World {
     const WALL_H = 4;
     const THICK = 0.9;
     const HALF = THICK / 2;
-    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x8d897d, flatShading: true, roughness: 0.95 });
-    const capMat = new THREE.MeshStandardMaterial({ color: 0x37414d, flatShading: true, roughness: 0.85 });
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0xc8b48c, flatShading: true, roughness: 0.95 });
+    const capMat = new THREE.MeshStandardMaterial({ color: 0x3a5c82, flatShading: true, roughness: 0.85 });
 
     const bodyGeos: THREE.BufferGeometry[] = [];
     const capGeos: THREE.BufferGeometry[] = [];
@@ -710,7 +718,7 @@ export class World {
   }
 
   private buildSky(scene: THREE.Scene) {
-    scene.background = new THREE.Color(0x80aef0);
-    scene.fog = new THREE.Fog(0xa9c8f2, 900, 5000);
+    scene.background = new THREE.Color(0x2f9bf2); // 선명한 하늘 파랑
+    scene.fog = new THREE.Fog(0xb8e0ff, 900, 5000); // 밝고 청량한 원경 헤이즈
   }
 }

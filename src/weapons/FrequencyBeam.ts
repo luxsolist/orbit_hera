@@ -2,32 +2,14 @@ import * as THREE from "three";
 import type { PlayerController } from "../player/PlayerController";
 import type { EnemyManager } from "../enemies/EnemyManager";
 import type { SeedEnemy } from "../enemies/SeedEnemy";
+import type { Sfx } from "../core/Sfx";
 import { DamageNumbers } from "../fx/damageNumbers";
+import type { BeamSpec } from "./WeaponSpec";
+import { damageForDistance } from "./WeaponSpec";
+import { makeGlowTexture, spawnBeam } from "./beamFx";
 
-// --- 수동 발사(좌클릭) — 원거리/풀파워 ---
-const DAMAGE = 38; // 기준 거리(DMG_REF_DIST)에서의 기본 위력
-const FREQ_COST = 11;
-const FIRE_INTERVAL = 0.11; // 연사 간격(초)
-const RANGE = 400;
-const BEAM_LIFETIME = 0.09;
-
-// --- 자동 조준(에임 어시스트) — 콘 안 적이 있으면 빔 방향 보정 ---
-const ASSIST_COS = Math.cos(THREE.MathUtils.degToRad(20)); // 보정 콘(반각 20°)
-
-// --- 근거리 자동발사 모드 ---
-// 콘 안 + AUTO_FIRE_RANGE 이내 적이 있으면 매 AUTO_FIRE_INTERVAL 마다 자동으로 사격한다.
-// 발당 비용 × 발사 속도 ≤ 회복 속도(22/s) 가 되어 게이지가 거의 일정하게 유지된다.
-const AUTO_FIRE_RANGE = 80;
-const AUTO_FIRE_INTERVAL = 0.16;
-const AUTO_FIRE_COST = 3; // 3 / 0.16 ≈ 18.75/s < 22/s 회복 → 게이지 보존
-const AUTO_FIRE_DAMAGE = 14; // 거리 보정으로 근접 시 더 강해진다(damageForDistance)
-const AUTO_FIRE_COS = Math.cos(THREE.MathUtils.degToRad(18)); // 자동발사 발동 콘
-
-// --- 거리 반비례 위력 ---
-const DMG_REF_DIST = 26; // 이 거리에서 위력 = DAMAGE (배수 1.0)
-const DMG_MAX_MULT = 2.5; // 초근접 위력 상한
-const DMG_MIN_MULT = 0.5; // 원거리 위력 하한
-
+// 적중 임팩트 FX(프레젠테이션 — 무기 밸런스와 무관해 코드 고정. 데미지/사거리/연사 등 전투
+// 수치는 모두 BeamSpec(JSON)에서 주입된다.)
 const IMPACT_FLASH_LIFE = 0.14; // 적중 번쩍임 지속(짧고 강하게)
 const SPARK_LIFE = 0.22; // 튀는 스파크 파편 지속
 const SPARK_COUNT = 7; // 적중당 분출 스파크 수
@@ -65,6 +47,9 @@ export class FrequencyBeam {
   private glowTexture: THREE.Texture;
   private sparkTexture: THREE.Texture;
   private damageNumbers: DamageNumbers;
+  private readonly assistCos: number; // 에임 어시스트 콘(스펙 각도 → cos)
+  private readonly autoCos: number; // 자동발사 콘
+  private readonly beamColor: number; // 빔 색(스펙 "0x..." → number)
 
   /** 빔/임팩트가 발광해야 하므로 fired 상태를 HUD로 알림 */
   onFired?: () => void;
@@ -74,10 +59,15 @@ export class FrequencyBeam {
   constructor(
     private scene: THREE.Scene,
     private player: PlayerController,
-    private enemies: EnemyManager
+    private enemies: EnemyManager,
+    private spec: BeamSpec,
+    private sfx?: Sfx
   ) {
-    this.raycaster.far = RANGE;
-    this.glowTexture = makeGlowTexture();
+    this.raycaster.far = spec.range;
+    this.assistCos = Math.cos(THREE.MathUtils.degToRad(spec.manual.assistConeDeg));
+    this.autoCos = Math.cos(THREE.MathUtils.degToRad(spec.auto.coneDeg));
+    this.beamColor = Number(spec.color);
+    this.glowTexture = makeGlowTexture("rgba(120,255,255,0.8)", "rgba(52,245,255,0)");
     this.sparkTexture = makeSparkTexture();
     this.damageNumbers = new DamageNumbers(scene);
   }
@@ -91,13 +81,13 @@ export class FrequencyBeam {
       const aimDir = this.player.getAimDirection().clone();
       const autoDir = this.acquireAutoFireTarget(origin, aimDir);
       if (autoDir) {
-        this.fireAt(autoDir, AUTO_FIRE_COST, AUTO_FIRE_DAMAGE);
-        this.cooldown = AUTO_FIRE_INTERVAL;
+        this.fireAt(autoDir, this.spec.auto.freqCost, this.spec.auto.damage, false);
+        this.cooldown = this.spec.auto.fireInterval;
       } else if (firing) {
         // 원거리/콘 밖 — 수동 발사(좌클릭). 풀파워, 더 빠른 연사.
         // 기존 자동조준(에임 어시스트) 보정은 fireManual 안에서 처리.
         this.fireManual();
-        this.cooldown = FIRE_INTERVAL;
+        this.cooldown = this.spec.manual.fireInterval;
       }
     }
 
@@ -107,7 +97,7 @@ export class FrequencyBeam {
     for (let i = this.beams.length - 1; i >= 0; i--) {
       const b = this.beams[i];
       b.life -= dt;
-      const t = Math.max(0, b.life / BEAM_LIFETIME);
+      const t = Math.max(0, b.life / this.spec.beamLifetime);
       (b.line.material as THREE.MeshBasicMaterial).opacity = t;
       b.glow.material.opacity = t;
       b.glow.scale.setScalar(2 + (1 - t) * 4);
@@ -217,12 +207,13 @@ export class FrequencyBeam {
     const origin = this.player.camera.position;
     const aimDir = this.player.getAimDirection().clone();
     const assistDir = this.acquireAssistTarget(origin, aimDir);
-    this.fireAt(assistDir ?? aimDir, FREQ_COST, DAMAGE);
+    this.fireAt(assistDir ?? aimDir, this.spec.manual.freqCost, this.spec.manual.damage, true);
   }
 
   /** 공통 발사 경로 — 지정 방향으로 레이캐스트, 비용 차감, 시각·데미지 처리. */
-  private fireAt(dir: THREE.Vector3, cost: number, baseDamage: number) {
+  private fireAt(dir: THREE.Vector3, cost: number, baseDamage: number, manual: boolean) {
     if (!this.player.spendFrequency(cost)) return; // 주파수 부족
+    this.sfx?.beam(manual); // 발사음(수동=묵직/자동=가벼움) — 실제 발사된 경우에만
 
     const origin = this.player.camera.position;
     this.raycaster.set(origin, dir);
@@ -234,7 +225,7 @@ export class FrequencyBeam {
       endPoint = hits[0].point.clone();
       const enemy = hits[0].object.userData.enemy as SeedEnemy | undefined;
       if (enemy) {
-        const damage = this.damageForDistance(hits[0].distance, baseDamage);
+        const damage = damageForDistance(hits[0].distance, baseDamage, this.spec.falloff);
         this.damageNumbers.spawn(endPoint, damage);
         this.spawnImpact(endPoint, hits[0].face?.normal, dir);
         const killed = enemy.applyFrequencyHit(damage);
@@ -244,7 +235,7 @@ export class FrequencyBeam {
         }
       }
     } else {
-      endPoint = origin.clone().add(dir.clone().multiplyScalar(RANGE));
+      endPoint = origin.clone().add(dir.clone().multiplyScalar(this.spec.range));
     }
 
     const muzzle = origin
@@ -267,7 +258,7 @@ export class FrequencyBeam {
     aimDir: THREE.Vector3
   ): THREE.Vector3 | null {
     let bestDir: THREE.Vector3 | null = null;
-    let bestCos = ASSIST_COS; // 콘 밖이면 후보 제외
+    let bestCos = this.assistCos; // 콘 밖이면 후보 제외
 
     const enemyPos = new THREE.Vector3();
     const toEnemy = new THREE.Vector3();
@@ -276,7 +267,7 @@ export class FrequencyBeam {
       mesh.getWorldPosition(enemyPos);
       toEnemy.subVectors(enemyPos, origin);
       const dist = toEnemy.length();
-      if (dist < 0.001 || dist > RANGE) continue;
+      if (dist < 0.001 || dist > this.spec.range) continue;
 
       toEnemy.divideScalar(dist); // 정규화
       const cos = toEnemy.dot(aimDir);
@@ -292,19 +283,9 @@ export class FrequencyBeam {
     return bestDir;
   }
 
-  /** 적중 거리에 반비례한 위력(가까울수록 강함). 상·하한으로 클램프. */
-  private damageForDistance(dist: number, base: number): number {
-    const mult = THREE.MathUtils.clamp(
-      DMG_REF_DIST / Math.max(dist, 1),
-      DMG_MIN_MULT,
-      DMG_MAX_MULT
-    );
-    return base * mult;
-  }
-
   /**
    * 근거리 자동발사용 타깃 탐색.
-   * 자동발사 콘(AUTO_FIRE_COS) + AUTO_FIRE_RANGE 안에서 가장 정렬된 적의 방향을 반환.
+   * 자동발사 콘 + 사거리(spec.auto) 안에서 가장 정렬된 적의 방향을 반환.
    * 후보 없으면 null → 자동발사를 건너뛴다.
    */
   private acquireAutoFireTarget(
@@ -312,7 +293,7 @@ export class FrequencyBeam {
     aimDir: THREE.Vector3
   ): THREE.Vector3 | null {
     let bestDir: THREE.Vector3 | null = null;
-    let bestCos = AUTO_FIRE_COS;
+    let bestCos = this.autoCos;
 
     const enemyPos = new THREE.Vector3();
     const toEnemy = new THREE.Vector3();
@@ -321,7 +302,7 @@ export class FrequencyBeam {
       mesh.getWorldPosition(enemyPos);
       toEnemy.subVectors(enemyPos, origin);
       const dist = toEnemy.length();
-      if (dist < 0.001 || dist > AUTO_FIRE_RANGE) continue;
+      if (dist < 0.001 || dist > this.spec.auto.range) continue;
 
       toEnemy.divideScalar(dist);
       const cos = toEnemy.dot(aimDir);
@@ -337,58 +318,14 @@ export class FrequencyBeam {
   }
 
   private spawnBeamVisual(from: THREE.Vector3, to: THREE.Vector3) {
-    const axis = new THREE.Vector3().subVectors(to, from);
-    const length = axis.length();
-    // 실린더 기본 축은 +Y. 길이만큼 만들고 중점에 배치한 뒤 방향으로 회전.
-    const geo = new THREE.CylinderGeometry(0.05, 0.05, length, 6, 1, true);
-
-    const mat = new THREE.MeshBasicMaterial({
-      color: 0x60ffff,
-      transparent: true,
-      opacity: 1,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
+    const { line, glow } = spawnBeam(this.scene, this.glowTexture, from, to, {
+      beamColor: this.beamColor,
+      glowColor: 0x9bffff,
+      radius: 0.05,
+      glowScale: 2.5,
     });
-    const line = new THREE.Mesh(geo, mat);
-    line.position.copy(from).add(to).multiplyScalar(0.5);
-    line.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      axis.clone().normalize()
-    );
-    this.scene.add(line);
-
-    // 임팩트 글로우
-    const glowMat = new THREE.SpriteMaterial({
-      map: this.glowTexture,
-      color: 0x9bffff,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    const glow = new THREE.Sprite(glowMat);
-    glow.position.copy(to);
-    glow.scale.setScalar(2.5);
-    this.scene.add(glow);
-
-    this.beams.push({ line, glow, life: BEAM_LIFETIME });
+    this.beams.push({ line, glow, life: this.spec.beamLifetime });
   }
-}
-
-/** 방사형 그라데이션 글로우 텍스처 생성 */
-function makeGlowTexture(): THREE.Texture {
-  const size = 64;
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  grad.addColorStop(0, "rgba(255,255,255,1)");
-  grad.addColorStop(0.3, "rgba(120,255,255,0.8)");
-  grad.addColorStop(1, "rgba(52,245,255,0)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.needsUpdate = true;
-  return tex;
 }
 
 /** 스파크 파편용: 중심이 날카롭게 밝은 작은 점 텍스처 */

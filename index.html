@@ -73,21 +73,45 @@
         <div class="overlay__panel">
           <h1 class="overlay__title" data-text="SEED">SEED</h1>
           <p class="overlay__subtitle">전장 선택 / SELECT BATTLEFIELD</p>
-          <div id="mapList" class="overlay__maps"></div>
-          <button id="introBtn" class="overlay__btn overlay__btn--ghost">▶ 인트로 영상 / WATCH INTRO</button>
+          <!-- 메뉴: 풀스크린 세계지도 + 좌하단 스토리 / 우하단 ? 버튼 -->
+          <div id="menuLayout" class="menu">
+            <div class="menu__map">
+              <div id="worldMap" class="worldmap"></div>
+              <!-- 점 클릭 시 그 위치 위에 뜨는 지역 정보 + 기체 선택(출격) 팝업 -->
+              <div id="zonePopup" class="zonepop" hidden>
+                <button id="zonePopClose" class="zonepop__close" type="button" aria-label="close">×</button>
+                <div class="zonepop__name" id="zonePopName"></div>
+                <div class="zonepop__sub" id="zonePopSub"></div>
+                <div class="zonepop__meta" id="zonePopMeta"></div>
+                <div class="zonepop__dlabel">기체 선택 → 출격 / DEPLOY</div>
+                <div class="zonepop__drones" id="zonePopDrones"></div>
+              </div>
+              <!-- 좌하단 스토리 버튼 + 세로 목록 팝업 -->
+              <button id="storyBtn" class="map-btn map-btn--story" type="button">스토리 / STORY</button>
+              <div id="storyPopup" class="sidepop" hidden>
+                <div class="sidepop__head">스토리 / STORY</div>
+                <div id="storyList" class="sidepop__list"></div>
+              </div>
+              <!-- 우하단 도움말(?) 버튼 + 조작 설명 팝업 -->
+              <button id="helpBtn" class="map-btn map-btn--help" type="button" aria-label="help">?</button>
+              <div id="helpPopup" class="sidepop sidepop--right" hidden>
+                <div class="sidepop__head">조작 / CONTROLS</div>
+                <ul class="overlay__controls overlay__controls--mouse">
+                  <li id="hintMoveMouse"><b>WASD</b> 이동 · <b>SPACE</b> 점프 · <b>SHIFT</b> 대시</li>
+                  <li><b>L-CLICK</b> 수동 사격 · 근접 자동</li>
+                  <li><b>R-CLICK</b> 특수 무기 · <b>ESC</b> 일시정지</li>
+                </ul>
+                <ul class="overlay__controls overlay__controls--touch">
+                  <li><b>조이스틱</b> 이동 · <b>스와이프</b> 시야</li>
+                  <li id="hintMoveTouch"><b>JUMP</b> 점프 · <b>DASH</b> 대시</li>
+                  <li><b>SP</b> 특수 · 근접 자동 사격</li>
+                </ul>
+                <div class="sidepop__credit">Map data © OpenStreetMap contributors</div>
+              </div>
+            </div>
+          </div>
           <button id="startBtn" class="overlay__btn" hidden>재접속 / RESUME</button>
           <button id="backBtn" class="overlay__btn overlay__btn--ghost" hidden>전장 선택 / CHANGE MAP</button>
-          <ul class="overlay__controls overlay__controls--mouse">
-            <li><b>WASD</b> 이동 · <b>SPACE</b> 점프(2단) · <b>SHIFT</b> 회피 대시</li>
-            <li><b>MOUSE</b> 조준 · <b>L-CLICK</b> 수동 빔 · 근접 적은 자동 사격</li>
-            <li><b>R-CLICK</b> 특수 살포(×10, 게이지 소진까지 · 60s 쿨다운)</li>
-            <li><b>ESC</b> 링크 해제 (일시정지)</li>
-          </ul>
-          <ul class="overlay__controls overlay__controls--touch">
-            <li><b>좌하단 조이스틱</b> 이동 · <b>우측 스와이프</b> 시야</li>
-            <li><b>JUMP</b> 점프(2단) · <b>DASH</b> 회피 · 근접 적은 자동 사격</li>
-            <li><b>SP</b> 특수 살포(×10, 게이지 소진까지 · 60s 쿨다운)</li>
-          </ul>
         </div>
       </div>
     </div>

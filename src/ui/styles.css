@@ -207,11 +207,14 @@ body.is-touch {
   transform: scale(0.92);
   background: rgba(52, 245, 255, 0.22);
 }
-.tc__btn--jump { grid-column: 2; grid-row: 2; } /* 우하단 = 엄지 홈 */
-.tc__btn--dash { grid-column: 1; grid-row: 2; }
+/* 전투(좌측 열): 기본무기 수동발사(좌상) / 특수(좌하) */
+.tc__btn--fire { grid-column: 1; grid-row: 1; }
+/* 드론 동작(우측 열, 엄지 근처): ACT1(우상) / ACT2(우하 = 엄지 홈) */
+.tc__btn--act1 { grid-column: 2; grid-row: 1; font-size: 18px; letter-spacing: 0; }
+.tc__btn--act2 { grid-column: 2; grid-row: 2; font-size: 18px; letter-spacing: 0; }
 .tc__btn--special {
-  grid-column: 2;
-  grid-row: 1;
+  grid-column: 1;
+  grid-row: 2;
   border-color: var(--seed-amber);
   color: var(--seed-amber);
   box-shadow: 0 0 14px rgba(255, 182, 72, 0.35);
@@ -454,6 +457,23 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   opacity: 0;
   pointer-events: none;
 }
+/* 메뉴(전장 선택) — 뒤의 인트로 장면 배경이 비치도록 반투명 + 패널 가독성 백드롭 */
+.overlay--scene {
+  background: radial-gradient(circle at 50% 42%, rgba(4, 8, 16, 0.26), rgba(3, 6, 12, 0.64) 80%);
+  align-items: flex-start; /* 콘텐츠가 길면 위에서부터 + 스크롤(잘림 방지) */
+  overflow-y: auto;
+}
+.overlay--scene .overlay__panel {
+  margin: auto; /* 화면보다 작으면 가운데, 크면 스크롤 */
+  background: rgba(6, 12, 20, 0.42);
+  border: 1px solid rgba(52, 245, 255, 0.12);
+  border-radius: 16px;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  padding: 18px 26px;
+}
+.overlay--scene .overlay__title { font-size: 54px; } /* 글리치 SEED 제목 유지 */
+.overlay--scene .overlay__subtitle { display: none; } /* 부제만 숨김 */
 .overlay__panel {
   text-align: center;
   padding: 40px;
@@ -528,12 +548,185 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   display: none; /* display:grid 가 [hidden] 의 display:none 을 덮어쓰는 문제 보정(일시정지/로딩 시 목록 숨김) */
 }
 .overlay__maps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 12px;
-  width: min(680px, 86vw);
-  margin: 18px 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+  margin: 2px 0;
 }
+
+/* ── 메뉴: 세계지도(카드, 직전 크기) + 점 클릭 팝업 + 코너 버튼 ── */
+.menu[hidden] { display: none; }
+.menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(900px, 92vw);
+  margin: 14px 0 6px;
+}
+.menu__map { position: relative; width: 100%; }
+
+/* 세계지도(시안 그리드 + 실측 근사 대륙) */
+.worldmap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: rgba(4, 14, 22, 0.5);
+  border: 1px solid rgba(52, 245, 255, 0.32);
+  border-radius: 8px;
+  box-shadow: inset 0 0 40px rgba(52, 245, 255, 0.08);
+}
+.worldmap svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* 코너 버튼(스토리 / 도움말) */
+.map-btn {
+  position: absolute;
+  bottom: 14px;
+  z-index: 6;
+  background: rgba(8, 18, 28, 0.85);
+  border: 1px solid rgba(52, 245, 255, 0.45);
+  color: var(--seed-cyan);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.map-btn:hover { background: rgba(52, 245, 255, 0.16); border-color: var(--seed-cyan); }
+.map-btn--story { left: 14px; padding: 8px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
+.map-btn--help { right: 14px; width: 34px; height: 34px; border-radius: 50%; font-size: 17px; font-weight: 700; }
+
+/* 사이드 팝업(스토리 목록 / 도움말) */
+.sidepop {
+  position: absolute;
+  bottom: 56px;
+  left: 14px;
+  z-index: 7;
+  width: 278px;
+  max-height: 64%;
+  overflow-y: auto;
+  padding: 12px 14px;
+  text-align: left;
+  background: rgba(8, 18, 28, 0.97);
+  border: 1px solid rgba(52, 245, 255, 0.5);
+  border-radius: 10px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.6), 0 0 16px rgba(52, 245, 255, 0.18);
+}
+.sidepop[hidden] { display: none; }
+.sidepop--right { left: auto; right: 14px; }
+.sidepop__head { font-size: 11px; letter-spacing: 0.14em; opacity: 0.6; margin-bottom: 10px; }
+.sidepop__list { display: flex; flex-direction: column; gap: 7px; }
+.sidepop__item {
+  text-align: left;
+  padding: 10px 12px;
+  background: rgba(20, 40, 52, 0.6);
+  border: 1px solid rgba(52, 245, 255, 0.32);
+  border-radius: 7px;
+  color: #cdeef5;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s;
+}
+.sidepop__item:hover { background: rgba(52, 245, 255, 0.16); border-color: var(--seed-cyan); transform: translateX(2px); }
+.sidepop .overlay__controls { margin-top: 0; font-size: 12px; line-height: 1.8; }
+.sidepop .overlay__controls li { margin-bottom: 2px; } /* 길면 깔끔히 줄바꿈(클리핑 방지) */
+.sidepop .overlay__controls + .overlay__controls { margin-top: 8px; }
+.sidepop__credit {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(52, 245, 255, 0.15);
+  font-size: 9.5px;
+  opacity: 0.5;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
+
+/* 침공 지점 점: 등록=흰색, 침공 중=붉은 깜빡임. 클릭 영역 16px. */
+.zone-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.zone-dot > i { display: block; width: 9px; height: 9px; border-radius: 50%; transition: transform 0.1s; }
+.zone-dot--reg > i { background: #eaffff; box-shadow: 0 0 6px rgba(255, 255, 255, 0.7); }
+.zone-dot--invaded > i {
+  background: var(--seed-red);
+  box-shadow: 0 0 8px 2px rgba(255, 59, 78, 0.85);
+  animation: zoneBlink 1s ease-in-out infinite;
+}
+.zone-dot:hover > i { transform: scale(1.5); }
+@keyframes zoneBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.5); }
+}
+
+/* 점 클릭 팝업(그 위치 위) — 지역 정보 + 기체 선택(출격) */
+.zonepop {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 14px));
+  z-index: 5;
+  width: 232px;
+  padding: 12px 14px 14px;
+  text-align: left;
+  background: rgba(8, 18, 28, 0.96);
+  border: 1px solid rgba(52, 245, 255, 0.5);
+  border-radius: 10px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.6), 0 0 16px rgba(52, 245, 255, 0.18);
+}
+.zonepop[hidden] { display: none; }
+.zonepop::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-top-color: rgba(52, 245, 255, 0.5);
+}
+.zonepop--l { transform: translate(-80%, calc(-100% - 14px)); }
+.zonepop--l::after { left: 80%; }
+.zonepop--r { transform: translate(-20%, calc(-100% - 14px)); }
+.zonepop--r::after { left: 20%; }
+.zonepop__close {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--hud-dim);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+.zonepop__name { font-size: 15px; font-weight: 700; color: #dffaff; padding-right: 16px; }
+.zonepop__sub { font-size: 11.5px; opacity: 0.8; margin-top: 3px; }
+.zonepop__meta { font-size: 10.5px; opacity: 0.62; font-family: ui-monospace, monospace; margin-top: 3px; }
+.zonepop__dlabel { font-size: 10px; letter-spacing: 0.12em; opacity: 0.6; margin: 10px 0 6px; }
+.zonepop__drones { display: flex; gap: 8px; }
+.zonepop__drone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  padding: 7px 6px;
+  cursor: pointer;
+  background: rgba(20, 40, 52, 0.6);
+  border: 1px solid rgba(52, 245, 255, 0.4);
+  border-radius: 7px;
+  color: #cdeef5;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s;
+}
+.zonepop__drone:hover { background: rgba(52, 245, 255, 0.18); border-color: var(--seed-cyan); transform: translateY(-1px); }
+.zonepop__drone-name { font-size: 12px; font-weight: 700; }
+.zonepop__drone-mode { font-size: 9.5px; opacity: 0.6; font-family: ui-monospace, monospace; }
 .overlay__map {
   display: flex;
   flex-direction: column;
@@ -564,6 +757,59 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 .overlay__map-meta {
   font-size: 11px;
   opacity: 0.55;
+  font-family: ui-monospace, monospace;
+}
+/* 기체(드론) 선택 */
+.overlay__drone-section[hidden] {
+  display: none;
+}
+.overlay__drone-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+.overlay__section-label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  opacity: 0.6;
+}
+.overlay__drones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.overlay__drone {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  padding: 8px 18px;
+  background: rgba(20, 40, 52, 0.5);
+  border: 1px solid rgba(52, 245, 255, 0.28);
+  border-radius: 8px;
+  color: #cdeef5;
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+.overlay__drone:hover {
+  transform: translateY(-2px);
+  border-color: rgba(52, 245, 255, 0.7);
+}
+.overlay__drone.is-selected {
+  border-color: var(--seed-cyan);
+  background: rgba(52, 245, 255, 0.16);
+  box-shadow: 0 0 14px rgba(52, 245, 255, 0.3);
+}
+.overlay__drone-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+.overlay__drone-mode {
+  font-size: 10.5px;
+  opacity: 0.6;
   font-family: ui-monospace, monospace;
 }
 .overlay__btn--ghost {

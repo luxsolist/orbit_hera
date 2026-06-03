@@ -1,0 +1,21 @@
+{
+  "id": "flyer",
+  "name": "DRONE-V1",
+  "displayName": "비행 드론 / FLYER",
+  "body": { "eyeHeight": 2.0, "radius": 1.0 },
+  "vitals": { "maxHp": 70, "maxFreq": 120, "freqRegen": 26 },
+  "view": { "fov": 88, "mouseSensitivity": 0.0024 },
+  "move": {
+    "mode": "fly",
+    "speed": 83.3,
+    "accel": 9,
+    "verticalSpeed": 26,
+    "ceiling": 140,
+    "rollDeg": 16
+  },
+  "actions": [
+    { "label": "▲", "key": "Space", "desc": "상승" },
+    { "label": "▼", "key": "ShiftLeft", "desc": "하강" }
+  ],
+  "weapons": { "primary": "frequency-beam", "special": "special-barrage" }
+}

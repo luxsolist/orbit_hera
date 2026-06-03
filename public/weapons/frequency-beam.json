@@ -1,0 +1,12 @@
+{
+  "id": "frequency-beam",
+  "name": "주파수 빔 / FREQUENCY BEAM",
+  "abbr": "빔",
+  "type": "beam",
+  "range": 400,
+  "color": "0x60ffff",
+  "beamLifetime": 0.09,
+  "manual": { "damage": 38, "freqCost": 11, "fireInterval": 0.11, "assistConeDeg": 20 },
+  "auto": { "damage": 14, "freqCost": 3, "fireInterval": 0.16, "range": 80, "coneDeg": 18 },
+  "falloff": { "refDist": 26, "maxMult": 2.5, "minMult": 0.5 }
+}

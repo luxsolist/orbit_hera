@@ -157,7 +157,7 @@ export class CinematicPlayer {
   }
 }
 
-function disposeObject(o: THREE.Object3D): void {
+export function disposeObject(o: THREE.Object3D): void {
   o.traverse((c) => {
     const mesh = c as THREE.Mesh;
     if (mesh.geometry) mesh.geometry.dispose();

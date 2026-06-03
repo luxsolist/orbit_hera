@@ -2,9 +2,9 @@ import * as THREE from "three";
 import { SpatialGrid } from "./SpatialGrid";
 
 type Circle = { x: number; z: number; radius: number; top: number };
-/** 방향성 바운딩 박스(OBB): center + 단위 u축 + 반폭(hu:u, hv:⊥) + br(외접반경, 브로드페이즈). */
-type OBB = { cx: number; cz: number; ux: number; uz: number; hu: number; hv: number; br: number };
-type Tri = { ax: number; az: number; bx: number; bz: number; cx: number; cz: number; mx: number; mz: number; br: number };
+/** 방향성 바운딩 박스(OBB): center + 단위 u축 + 반폭(hu:u, hv:⊥) + br(외접반경) + top(옥상=디딤면, 그 위면 통과). */
+type OBB = { cx: number; cz: number; ux: number; uz: number; hu: number; hv: number; br: number; top: number };
+type Tri = { ax: number; az: number; bx: number; bz: number; cx: number; cz: number; mx: number; mz: number; br: number; top: number };
 type Wall = { x0: number; x1: number; z0: number; z1: number; top: number };
 
 /**
@@ -29,11 +29,11 @@ export class CollisionWorld {
     this.circles.push({ x, z, radius, top });
   }
 
-  /** 축정렬 박스를 OBB(ang=0)로 등록(광화문 피어 등). */
-  addAabbBox(x0: number, x1: number, z0: number, z1: number): void {
+  /** 축정렬 박스를 OBB(ang=0)로 등록(광화문 피어 등). top 위면 통과(기본 Infinity = 항상 솔리드). */
+  addAabbBox(x0: number, x1: number, z0: number, z1: number, top = Infinity): void {
     const hu = (x1 - x0) / 2,
       hv = (z1 - z0) / 2;
-    this.boxes.push({ cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, ux: 1, uz: 0, hu, hv, br: Math.hypot(hu, hv) });
+    this.boxes.push({ cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, ux: 1, uz: 0, hu, hv, br: Math.hypot(hu, hv), top });
   }
 
   /** 궁장(담장) 박스 — top 보다 발이 높으면 통과(점프 넘기/위에 디딤). */
@@ -44,9 +44,9 @@ export class CollisionWorld {
   /**
    * footprint 다각형의 최소면적 회전 사각형(OBB)을 충돌 박스로 등록(rotating-calipers).
    * OBB 커버리지가 부족한 오목(ㄱ/ㄷ자) 건물은 삼각분할 콜라이더로 정확히 막는다.
-   * inset 만큼 안으로 줄여 인접 건물 사이 통로 확보.
+   * inset 만큼 안으로 줄여 인접 건물 사이 통로 확보. top=옥상 높이(그 위면 통과 → 올라서기).
    */
-  addFootprintBox(p: number[], inset: number): void {
+  addFootprintBox(p: number[], inset: number, top: number): void {
     const n = p.length / 2;
     let polyA = 0;
     for (let i = 0, j = n - 1; i < n; j = i++)
@@ -83,7 +83,7 @@ export class CollisionWorld {
     }
     if (!isFinite(best)) return;
     if (polyA / best < 0.7) {
-      this.addTriColliders(p);
+      this.addTriColliders(p, top);
       return;
     }
     const hu = Math.max(0.1, bhu - inset),
@@ -96,11 +96,12 @@ export class CollisionWorld {
       hu,
       hv,
       br: Math.hypot(hu, hv),
+      top,
     });
   }
 
-  /** 오목 footprint 를 삼각분할(ear-clipping)해 삼각형 콜라이더로 등록. */
-  private addTriColliders(p: number[]): void {
+  /** 오목 footprint 를 삼각분할(ear-clipping)해 삼각형 콜라이더로 등록. top=옥상 높이. */
+  private addTriColliders(p: number[], top: number): void {
     let n = p.length / 2;
     if (n >= 2 && p[0] === p[(n - 1) * 2] && p[1] === p[(n - 1) * 2 + 1]) n -= 1;
     if (n < 3) return;
@@ -121,7 +122,7 @@ export class CollisionWorld {
         Math.hypot(b.x - mx, b.y - mz),
         Math.hypot(c.x - mx, c.y - mz)
       );
-      this.tris.push({ ax: a.x, az: a.y, bx: b.x, bz: b.y, cx: c.x, cz: c.y, mx, mz, br });
+      this.tris.push({ ax: a.x, az: a.y, bx: b.x, bz: b.y, cx: c.x, cz: c.y, mx, mz, br, top });
     }
   }
 
@@ -152,8 +153,9 @@ export class CollisionWorld {
       }
     }
     const pad = radius + 1.5; // 격자 질의 여유(해소 중 작은 이동 커버)
-    // 건물 OBB(원-사각형): 격자 브로드페이즈
+    // 건물 OBB(원-사각형): 격자 브로드페이즈. 발이 옥상 이상이면 통과(올라서기).
     this.boxGrid.query(x - pad, z - pad, x + pad, z + pad, (b) => {
+      if (feetY >= b.top - 0.05) return;
       const dx = x - b.cx, dz = z - b.cz;
       if (dx * dx + dz * dz > (b.br + radius) * (b.br + radius)) return;
       const lu = dx * b.ux + dz * b.uz;
@@ -183,8 +185,9 @@ export class CollisionWorld {
       x = b.cx + nu * b.ux - nv * b.uz;
       z = b.cz + nu * b.uz + nv * b.ux;
     });
-    // 오목 건물 삼각형(원-삼각형): 격자 브로드페이즈
+    // 오목 건물 삼각형(원-삼각형): 격자 브로드페이즈. 발이 옥상 이상이면 통과.
     this.triGrid.query(x - pad, z - pad, x + pad, z + pad, (t) => {
+      if (feetY >= t.top - 0.05) return;
       const dmx = x - t.mx, dmz = z - t.mz;
       if (dmx * dmx + dmz * dmz > (t.br + radius) * (t.br + radius)) return;
       const ex = [t.ax, t.bx, t.cx], ez = [t.az, t.bz, t.cz];
@@ -254,7 +257,7 @@ export class CollisionWorld {
     return { x, z };
   }
 
-  /** (x,z) 에서 디딜 수 있는 가장 높은 윗면(원기둥/담장 위) — 없으면 -Infinity. */
+  /** (x,z) 에서 디딜 수 있는 가장 높은 윗면(원기둥/담장/건물 옥상) — 없으면 -Infinity. */
   topAt(x: number, z: number): number {
     let best = -Infinity;
     for (const c of this.circles) {
@@ -264,6 +267,22 @@ export class CollisionWorld {
     for (const b of this.walls) {
       if (x >= b.x0 && x <= b.x1 && z >= b.z0 && z <= b.z1 && b.top > best) best = b.top;
     }
+    // 건물 OBB 옥상(점-OBB 내부 판정)
+    this.boxGrid.query(x, z, x, z, (b) => {
+      if (!isFinite(b.top) || b.top <= best) return;
+      const dx = x - b.cx, dz = z - b.cz;
+      const lu = dx * b.ux + dz * b.uz;
+      const lv = -dx * b.uz + dz * b.ux;
+      if (Math.abs(lu) <= b.hu && Math.abs(lv) <= b.hv) best = b.top;
+    });
+    // 오목 건물 삼각형 옥상(점-삼각형 내부 판정)
+    this.triGrid.query(x, z, x, z, (t) => {
+      if (!isFinite(t.top) || t.top <= best) return;
+      const s1 = (x - t.bx) * (t.az - t.bz) - (t.ax - t.bx) * (z - t.bz);
+      const s2 = (x - t.cx) * (t.bz - t.cz) - (t.bx - t.cx) * (z - t.cz);
+      const s3 = (x - t.ax) * (t.cz - t.az) - (t.cx - t.ax) * (z - t.az);
+      if (!((s1 < 0 || s2 < 0 || s3 < 0) && (s1 > 0 || s2 > 0 || s3 > 0))) best = t.top;
+    });
     return best;
   }
 

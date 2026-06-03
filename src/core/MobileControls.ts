@@ -1,10 +1,22 @@
 import type { Input } from "./Input";
+import type { ActionButton } from "../player/DroneSpec";
 
 // 룩 감도(픽셀당 입력 누적). PlayerController 의 MOUSE_SENSITIVITY=0.0022 와 곱해
 // 라디안/픽셀 ≒ 0.0035 가 되도록 1.6 배.
 const LOOK_SCALE = 1.6;
 const KNOB_MAX_DIST = 56; // 조이스틱 중심에서 노브가 갈 수 있는 최대 거리(px)
 const DEADZONE = 0.2;
+
+// 조이스틱 변위 크기(0..1) → 이동 속도 배율(4단계). [경계 미만 → 배율]. 최대 구간은 default 1.0.
+const SPEED_STEPS: [number, number][] = [
+  [0.4, 0.3],
+  [0.6, 0.55],
+  [0.85, 0.8],
+];
+function stepScale(mag: number): number {
+  for (const [hi, s] of SPEED_STEPS) if (mag < hi) return s;
+  return 1;
+}
 
 interface MoveTouch {
   id: number;
@@ -21,9 +33,10 @@ interface LookTouch {
  * 모바일/터치 디바이스용 컨트롤.
  * - 좌하단 플로팅 조이스틱(좌반쪽 영역 어디에서 시작해도 그 자리에 생성) → WASD 합성
  * - 우반쪽 빈 공간 스와이프 → 룩(시야) 회전
- * - 우하단 점프/대시/특수 3 버튼
+ * - 우하단 2×2 버튼: 상단 고정 전투(특수 SP / 기본무기 수동발사 FIRE),
+ *   하단 드론별 동작 2개(ACT1/ACT2, 엄지 근처). 동작 버튼은 DroneSpec.actions 로 설정.
  *
- * 자동발사가 근거리 조준선 안의 적을 알아서 처리하므로 별도 발사 버튼은 두지 않는다.
+ * 기본무기는 자동조준·자동발사가 근거리를 처리하고, FIRE 버튼은 원거리/수동 사격 보조다.
  */
 export class MobileControls {
   /** 터치 가능 디바이스 여부 — Game/Input 쪽에서 포인터락 우회 결정에 사용. */
@@ -41,9 +54,13 @@ export class MobileControls {
   private root!: HTMLElement;
   private joystickEl!: HTMLElement;
   private knobEl!: HTMLElement;
-  private btnJump!: HTMLElement;
-  private btnDash!: HTMLElement;
-  private btnSpecial!: HTMLElement;
+  private btnFire!: HTMLElement; // 고정 — 기본무기 수동발사(자동발사 보조)
+  private btnSpecial!: HTMLElement; // 고정 — 특수무기
+  private btnAct1!: HTMLElement; // 드론 동작 1(좌하)
+  private btnAct2!: HTMLElement; // 드론 동작 2(우하 = 엄지 홈)
+  private act1Key: string | null = null;
+  private act2Key: string | null = null;
+  private specialAbbr = "SP"; // 특수 버튼 라벨(무기 스펙 abbr 로 configure)
   private specialRingFill!: SVGCircleElement;
   private specialLabel!: HTMLElement;
   private readonly specialCirc = 2 * Math.PI * 26; // r=26 (CSS와 동기화)
@@ -102,8 +119,8 @@ export class MobileControls {
     this.btnSpecial.classList.toggle("is-ready", r >= 1 && !active);
     this.btnSpecial.classList.toggle("is-active", active);
     this.btnSpecial.classList.toggle("is-cooling", !active && r < 1);
-    if (active) this.specialLabel.textContent = "FIRE";
-    else if (r >= 1) this.specialLabel.textContent = "SP";
+    // 발동/준비 시 무기 라벨, 쿨다운 중엔 남은 초
+    if (active || r >= 1) this.specialLabel.textContent = this.specialAbbr;
     else this.specialLabel.textContent = String(Math.ceil(remainingSec));
   }
 
@@ -123,8 +140,7 @@ export class MobileControls {
     // 버튼 클러스터 (우하단)
     const buttons = document.createElement("div");
     buttons.className = "tc__buttons";
-    this.btnJump = this.makeButton("tc__btn tc__btn--jump", "JUMP");
-    this.btnDash = this.makeButton("tc__btn tc__btn--dash", "DASH");
+    this.btnFire = this.makeButton("tc__btn tc__btn--fire", "FIRE");
     this.btnSpecial = this.makeButton("tc__btn tc__btn--special", "SP");
     // 특수 버튼: 가장자리 진행링(SVG)
     this.btnSpecial.innerHTML = "";
@@ -153,9 +169,16 @@ export class MobileControls {
     this.specialLabel = label;
     this.btnSpecial.appendChild(label);
 
-    buttons.appendChild(this.btnDash);
-    buttons.appendChild(this.btnJump);
-    buttons.appendChild(this.btnSpecial);
+    // 드론 동작 버튼 2개(configure 로 라벨/키 지정 — 미설정 슬롯은 숨김)
+    this.btnAct1 = this.makeButton("tc__btn tc__btn--act1", "");
+    this.btnAct2 = this.makeButton("tc__btn tc__btn--act2", "");
+    this.btnAct1.style.display = "none";
+    this.btnAct2.style.display = "none";
+
+    buttons.appendChild(this.btnFire); // 좌상
+    buttons.appendChild(this.btnSpecial); // 좌하
+    buttons.appendChild(this.btnAct1); // 우상
+    buttons.appendChild(this.btnAct2); // 우하(엄지 홈)
     root.appendChild(buttons);
 
     this.root = root;
@@ -223,15 +246,43 @@ export class MobileControls {
   }
 
   private bindButtons() {
-    this.bindButton(this.btnJump,
-      () => this.input.syntheticKeyDown("Space"),
-      () => this.input.syntheticKeyUp("Space"));
-    this.bindButton(this.btnDash,
-      () => this.input.syntheticKeyDown("ShiftLeft"),
-      () => this.input.syntheticKeyUp("ShiftLeft"));
+    // 고정 전투: 기본무기 수동발사(좌클릭과 동일 경로) / 특수(엣지)
+    this.bindButton(this.btnFire,
+      () => { this.input.fireHeld = true; },
+      () => { this.input.fireHeld = false; });
     this.bindButton(this.btnSpecial,
       () => { this.input.specialPressed = true; },
       () => { /* 엣지 — 별도 처리 없음 */ });
+    // 드론 동작: configure 가 채운 키를 누르는 동안 합성(점프/대시는 엣지, 상승/하강은 홀드로 동작)
+    this.bindButton(this.btnAct1,
+      () => { if (this.act1Key) this.input.syntheticKeyDown(this.act1Key); },
+      () => { if (this.act1Key) this.input.syntheticKeyUp(this.act1Key); });
+    this.bindButton(this.btnAct2,
+      () => { if (this.act2Key) this.input.syntheticKeyDown(this.act2Key); },
+      () => { if (this.act2Key) this.input.syntheticKeyUp(this.act2Key); });
+  }
+
+  /**
+   * 드론/무기에 맞춰 버튼 구성. 동작: actions[0]=우상(ACT1), actions[1]=우하(ACT2, 엄지 홈).
+   * 전투 라벨: fireLabel(기본무기)·specialLabel(특수)은 무기 스펙 abbr 에서 받는다.
+   */
+  configure(cfg: { actions: ActionButton[]; fireLabel: string; specialLabel: string }): void {
+    if (!this.enabled) return;
+    this.btnFire.textContent = cfg.fireLabel;
+    this.specialAbbr = cfg.specialLabel;
+    this.act1Key = cfg.actions[0]?.key ?? null;
+    this.act2Key = cfg.actions[1]?.key ?? null;
+    this.applyAction(this.btnAct1, cfg.actions[0]);
+    this.applyAction(this.btnAct2, cfg.actions[1]);
+  }
+
+  private applyAction(btn: HTMLElement, action: ActionButton | undefined) {
+    if (action) {
+      btn.textContent = action.label;
+      btn.style.display = "";
+    } else {
+      btn.style.display = "none";
+    }
   }
 
   private bindButton(el: HTMLElement, down: () => void, up: () => void) {
@@ -323,6 +374,9 @@ export class MobileControls {
   }
 
   private updateMoveKeys(nx: number, ny: number) {
+    // 조이스틱 변위 크기에 비례한 속도 배율(방향은 8방향 키, 속도는 단계화)
+    this.input.moveScale = stepScale(Math.min(1, Math.hypot(nx, ny)));
+
     const want = new Set<string>();
     if (nx > DEADZONE) want.add("KeyD");
     if (nx < -DEADZONE) want.add("KeyA");
@@ -341,6 +395,7 @@ export class MobileControls {
   private releaseMoveKeys() {
     for (const k of this.activeMoveKeys) this.input.syntheticKeyUp(k);
     this.activeMoveKeys.clear();
+    this.input.moveScale = 1; // 손 떼면 배율 초기화
   }
 
   private showJoystickAt(x: number, y: number) {

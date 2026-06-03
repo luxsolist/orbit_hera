@@ -1,0 +1,4 @@
+[
+  { "id": "walker", "name": "ANDROID-01", "displayName": "보행 드론 / WALKER", "mode": "walk" },
+  { "id": "flyer", "name": "DRONE-V1", "displayName": "비행 드론 / FLYER", "mode": "fly" }
+]

@@ -1,0 +1,4 @@
+[
+  { "id": "frequency-beam", "name": "주파수 빔 / FREQUENCY BEAM", "type": "beam" },
+  { "id": "special-barrage", "name": "다중 빔 살포 / BARRAGE", "type": "barrage" }
+]

@@ -79,7 +79,7 @@ export class EnemyManager {
     const y = this.world.heightAt(x, z) + 2;
 
     const scale = 1.2 + Math.random() * 0.8;
-    const speed = 3.5 + this.wave * 0.35 + Math.random();
+    const speed = 4.5 + this.wave * 0.4 + Math.random();
     const enemy = new SeedEnemy(new THREE.Vector3(x, y, z), scale, speed);
     this.enemies.push(enemy);
     this.scene.add(enemy.group);
@@ -92,7 +92,7 @@ export class EnemyManager {
       if (this.spawnTimer <= 0) {
         this.spawnOne();
         this.pendingSpawns -= 1;
-        this.spawnTimer = 0.45;
+        this.spawnTimer = 0.35;
       }
     }
 

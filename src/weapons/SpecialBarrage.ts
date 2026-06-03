@@ -2,19 +2,12 @@ import * as THREE from "three";
 import type { PlayerController } from "../player/PlayerController";
 import type { EnemyManager } from "../enemies/EnemyManager";
 import type { SeedEnemy } from "../enemies/SeedEnemy";
+import type { Sfx } from "../core/Sfx";
 import { DamageNumbers } from "../fx/damageNumbers";
+import type { BarrageSpec } from "./WeaponSpec";
+import { makeGlowTexture, spawnBeam } from "./beamFx";
 
-// --- 특수 무기 파라미터 ---
-const MAX_BEAMS = 10; // 동시 추적 가능한 최대 타깃 수
-const CONE_COS = Math.cos(THREE.MathUtils.degToRad(55)); // 전방 시야 콘(반각 55°)
-const RANGE = 220; // 자동 락온 사거리
-const COOLDOWN = 60; // 1분 쿨다운
-const DRAIN_RATE = 60; // 초당 freq 소진(회복 22/s 보다 충분히 커서 게이지가 줄어듦)
-const SALVO_INTERVAL = 0.12; // 살포 간격(초) — 타깃당 ~8.3발/s
-const SALVO_DAMAGE = 16; // 발당 위력(거리 보정 미적용, 균질)
-const BEAM_LIFETIME = 0.13;
-const COLOR_BEAM = 0xffb648; // 호박색 — 기본 무기(시안)과 구분
-const COLOR_GLOW = 0xffd58a;
+// 전투 수치(타깃 수·사거리·쿨다운·살포·데미지·색)는 모두 BarrageSpec(JSON)에서 주입.
 
 interface ActiveBeam {
   line: THREE.Mesh;
@@ -37,6 +30,9 @@ export class SpecialBarrage {
   private active = false;
   private salvoTimer = 0;
   private cooldown = 0; // 0 이하 = 발동 가능
+  private readonly coneCos: number; // 전방 콘(스펙 각도 → cos)
+  private readonly colorBeam: number;
+  private readonly colorGlow: number;
 
   /** HUD 발광 트리거(크로스헤어 플래시 재사용) */
   onFired?: () => void;
@@ -45,18 +41,23 @@ export class SpecialBarrage {
   constructor(
     private scene: THREE.Scene,
     private player: PlayerController,
-    private enemies: EnemyManager
+    private enemies: EnemyManager,
+    private spec: BarrageSpec,
+    private sfx?: Sfx
   ) {
-    this.raycaster.far = RANGE;
+    this.raycaster.far = spec.range;
+    this.coneCos = Math.cos(THREE.MathUtils.degToRad(spec.coneDeg));
+    this.colorBeam = Number(spec.colorBeam);
+    this.colorGlow = Number(spec.colorGlow);
     this.damageNumbers = new DamageNumbers(scene);
-    this.glowTexture = makeGlowTexture();
+    this.glowTexture = makeGlowTexture("rgba(255,210,140,0.85)", "rgba(255,170,72,0)");
   }
 
   /** 0~1 쿨다운 진행률(1=준비완료). HUD 표시용. */
   get cooldownReady(): number {
     if (this.active) return 0;
     if (this.cooldown <= 0) return 1;
-    return 1 - this.cooldown / COOLDOWN;
+    return 1 - this.cooldown / this.spec.cooldown;
   }
 
   get isActive(): boolean {
@@ -77,20 +78,20 @@ export class SpecialBarrage {
     // 발동: 비활성 + 쿨다운 완료 + freq 가 일정 이상일 때만(쥐꼬리만큼 남았을 때 트리거 방지)
     if (triggerPressed && !this.active && this.cooldown <= 0 && this.player.freq > 5) {
       this.active = true;
-      this.cooldown = COOLDOWN;
+      this.cooldown = this.spec.cooldown;
       this.salvoTimer = 0; // 즉시 첫 살포
       this.player.freqRegenSuppressed = true;
     }
 
     if (this.active) {
       // 게이지 소진
-      this.player.freq = Math.max(0, this.player.freq - DRAIN_RATE * dt);
+      this.player.freq = Math.max(0, this.player.freq - this.spec.drainRate * dt);
 
       // 살포
       this.salvoTimer -= dt;
       if (this.salvoTimer <= 0) {
         this.fireSalvo();
-        this.salvoTimer = SALVO_INTERVAL;
+        this.salvoTimer = this.spec.salvoInterval;
       }
 
       // 종료 조건: 게이지 0
@@ -109,7 +110,7 @@ export class SpecialBarrage {
     const origin = this.player.camera.position;
     const aimDir = this.player.getAimDirection().clone();
 
-    const targets = this.acquireTargets(origin, aimDir, MAX_BEAMS);
+    const targets = this.acquireTargets(origin, aimDir, this.spec.maxBeams);
     if (targets.length === 0) {
       // 대상 없으면 빔만 안 쏘고 소진은 계속(특수 발동은 유지)
       return;
@@ -130,20 +131,21 @@ export class SpecialBarrage {
         endPoint = hits[0].point.clone();
         const enemy = hits[0].object.userData.enemy as SeedEnemy | undefined;
         if (enemy) {
-          this.damageNumbers.spawn(endPoint, SALVO_DAMAGE);
-          const killed = enemy.applyFrequencyHit(SALVO_DAMAGE);
+          this.damageNumbers.spawn(endPoint, this.spec.salvoDamage);
+          const killed = enemy.applyFrequencyHit(this.spec.salvoDamage);
           if (killed) {
             this.enemies.registerKill();
             this.onKill?.(enemy);
           }
         }
       } else {
-        endPoint = origin.clone().add(dir.clone().multiplyScalar(RANGE));
+        endPoint = origin.clone().add(dir.clone().multiplyScalar(this.spec.range));
       }
 
       this.spawnBeamVisual(muzzle, endPoint);
     }
 
+    this.sfx?.barrage(targets.length); // 동시 발사된 빔 수에 비례한 묵직한 일제사격음
     this.onFired?.();
   }
 
@@ -161,9 +163,9 @@ export class SpecialBarrage {
       mesh.getWorldPosition(enemyPos);
       toEnemy.subVectors(enemyPos, origin);
       const dist = toEnemy.length();
-      if (dist < 0.001 || dist > RANGE) continue;
+      if (dist < 0.001 || dist > this.spec.range) continue;
       const dir = toEnemy.clone().divideScalar(dist);
-      if (dir.dot(aimDir) < CONE_COS) continue;
+      if (dir.dot(aimDir) < this.coneCos) continue;
       out.push({ mesh, dir, dist });
     }
 
@@ -175,7 +177,7 @@ export class SpecialBarrage {
     for (let i = this.beams.length - 1; i >= 0; i--) {
       const b = this.beams[i];
       b.life -= dt;
-      const t = Math.max(0, b.life / BEAM_LIFETIME);
+      const t = Math.max(0, b.life / this.spec.beamLifetime);
       (b.line.material as THREE.MeshBasicMaterial).opacity = t;
       b.glow.material.opacity = t;
       b.glow.scale.setScalar(2 + (1 - t) * 5);
@@ -189,52 +191,12 @@ export class SpecialBarrage {
   }
 
   private spawnBeamVisual(from: THREE.Vector3, to: THREE.Vector3) {
-    const axis = new THREE.Vector3().subVectors(to, from);
-    const length = axis.length();
-    const geo = new THREE.CylinderGeometry(0.07, 0.07, length, 6, 1, true);
-    const mat = new THREE.MeshBasicMaterial({
-      color: COLOR_BEAM,
-      transparent: true,
-      opacity: 1,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
+    const { line, glow } = spawnBeam(this.scene, this.glowTexture, from, to, {
+      beamColor: this.colorBeam,
+      glowColor: this.colorGlow,
+      radius: 0.07,
+      glowScale: 2.8,
     });
-    const line = new THREE.Mesh(geo, mat);
-    line.position.copy(from).add(to).multiplyScalar(0.5);
-    line.quaternion.setFromUnitVectors(
-      new THREE.Vector3(0, 1, 0),
-      axis.clone().normalize()
-    );
-    this.scene.add(line);
-
-    const glowMat = new THREE.SpriteMaterial({
-      map: this.glowTexture,
-      color: COLOR_GLOW,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-    const glow = new THREE.Sprite(glowMat);
-    glow.position.copy(to);
-    glow.scale.setScalar(2.8);
-    this.scene.add(glow);
-
-    this.beams.push({ line, glow, life: BEAM_LIFETIME });
+    this.beams.push({ line, glow, life: this.spec.beamLifetime });
   }
-}
-
-function makeGlowTexture(): THREE.Texture {
-  const size = 64;
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  grad.addColorStop(0, "rgba(255,255,255,1)");
-  grad.addColorStop(0.3, "rgba(255,210,140,0.85)");
-  grad.addColorStop(1, "rgba(255,170,72,0)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.needsUpdate = true;
-  return tex;
 }
