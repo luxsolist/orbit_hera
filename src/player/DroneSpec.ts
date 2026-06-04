@@ -30,6 +30,7 @@ export interface FlyMove {
   ceiling: number; // 디딘 지면 대비 최대 비행 고도
   rollDeg: number; // 좌우 이동 시 최대 롤(뱅킹) 각도(도)
   spawnHeight: number; // 스폰 시 지면 대비 시작 고도(m) — 공중 투입
+  minAltitude?: number; // 비행 하한 고도(지면 대비, m) — 지상 안전지대로 못 내려오게(밸런스). 없으면 0.
 }
 
 export type DroneMove = WalkMove | FlyMove;

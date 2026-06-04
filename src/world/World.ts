@@ -5,8 +5,9 @@ import { CollisionWorld } from "./CollisionWorld";
 import { StructureBuilder } from "./StructureBuilder";
 import { TerrainField } from "./TerrainField";
 import { SkyEnvironment } from "./SkyEnvironment";
-import { resolveBuildingStyle } from "./precinct";
+import { resolveBuildingStyle, buildingBaseColor } from "./precinct";
 import { setUniformColor } from "./geo";
+import { parseHexColor } from "../core/math";
 
 /** 미니맵 등 표현 레이어가 World 의 근처 지형/건물 형상을 (내부 구조 노출 없이) 받는 싱크. */
 export interface MinimapSink {
@@ -220,15 +221,8 @@ export class World {
 
   /** 건물 색 — 특수 권역(precinctColor 지정)이면 그 양식색, 아니면 높이별 도심 팔레트. */
   private buildingColor(h: number, precinctColor: number | null, jitter: number, out: THREE.Color) {
-    if (precinctColor != null) {
-      out.setHex(precinctColor); // 권역 양식색(예: 경복궁 단청/주칠)
-    } else if (h < 9) out.setHex(0xe6c23a); // 저층 — 선명한 황금/베이지
-    else if (h < 22) out.setHex(0x3fb56a); // 중층 — 선명한 녹색
-    else if (h < 45) out.setHex(0x3a82e0); // 고층 — 선명한 파랑
-    else out.setHex(0x2fcadf); // 마천루(유리) — 밝은 시안
-    // 동별 미세 변주
-    const j = (jitter - 0.5) * 0.12;
-    out.offsetHSL(0, 0, j);
+    out.setHex(buildingBaseColor(h, precinctColor));
+    out.offsetHSL(0, 0, (jitter - 0.5) * 0.12); // 동별 미세 명도 변주
   }
 
   private buildCity() {
@@ -238,8 +232,8 @@ export class World {
     const col = new THREE.Color();
     // 특수 권역 건물 양식(데이터 구동). boundary 내부 건물에만 적용.
     const pb = this.map.precinct?.building;
-    const precinctColor = pb ? Number(pb.color) : null;
-    const roofColor = pb?.roof ? new THREE.Color(Number(pb.roof.color)) : null;
+    const precinctColor = pb ? parseHexColor(pb.color) : null;
+    const roofColor = pb?.roof ? new THREE.Color(parseHexColor(pb.roof.color)) : null;
 
     for (const b of buildings) {
       const p = b.p;

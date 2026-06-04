@@ -1,0 +1,12 @@
+{
+  "id": "frequency-beam-heavy",
+  "name": "중주파 빔 / HEAVY BEAM",
+  "abbr": "빔",
+  "type": "beam",
+  "range": 400,
+  "color": "0x60ffff",
+  "beamLifetime": 0.1,
+  "manual": { "damage": 50, "freqCost": 14, "fireInterval": 0.15, "assistConeDeg": 20 },
+  "auto": { "damage": 20, "freqCost": 4, "fireInterval": 0.2, "range": 45 },
+  "falloff": { "refDist": 30, "maxMult": 3.2, "minMult": 0.5 }
+}

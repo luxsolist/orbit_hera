@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { createComposer } from "../fx/postprocessing";
+import { createComposer, disposeComposer } from "../fx/postprocessing";
 import { disposeObject } from "./CinematicPlayer";
 import type { CutScene, SceneCtx } from "./CinematicPlayer";
 
@@ -76,5 +76,6 @@ export class MenuBackground {
     this.cut?.dispose?.(this.ctx);
     this.clearScene();
     this.fade.remove();
+    disposeComposer(this.composer); // 컴포저 + 블룸 패스 렌더타깃 모두 해제(미해제 시 누적 → iPad 멈춤)
   }
 }

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import * as THREE from "three";
 import {
-  ease, rng, lump, spinAlong, makeSwarm, updateSwarm,
-  oumuamua, moon, seabed, makeCore, makeSeed, beachHouse, plasmoidSwarm,
+  ease, rng, lump, spinAlong, makeSwarm, updateSwarm, fallFrag, track,
+  oumuamua, moon, seabed, makeCore, makeSeed, beachHouse, plasmoidSwarm, type Frag,
 } from "../src/intro/helpers";
 
 /** 지오메트리의 모든 정점 좌표가 유한한지(NaN/Infinity 없음) — 블랙스크린 회귀 가드. */
@@ -118,19 +118,65 @@ describe("지오메트리 팩토리 — NaN 없음(블랙스크린 회귀 가드
     expect(allFinite(oumuamua().geometry)).toBe(true);
     expect(allFinite(moon(6).geometry)).toBe(true);
     expect(allFinite(seabed().geometry)).toBe(true);
-    expect(allFinite(makeCore(1.2, 0xff4a1e).geometry)).toBe(true);
+    expect(allFinite(makeCore(1.2, 3200).geometry)).toBe(true);
     expect(allFinite(makeSeed(0.5, 2).geometry)).toBe(true);
   });
-  it("beachHouse: walls 3 + roof userData 구성", () => {
+  it("beachHouse: 벽/지붕 조각 다수(각 10+) userData 구성", () => {
     const h = beachHouse();
-    const ud = h.userData as { walls: unknown[]; roof: THREE.Mesh };
-    expect(ud.walls).toHaveLength(3);
-    expect(ud.roof).toBeInstanceOf(THREE.Mesh);
+    const ud = h.userData as { wallFrags: unknown[]; roofFrags: unknown[] };
+    expect(ud.wallFrags.length).toBeGreaterThanOrEqual(10);
+    expect(ud.roofFrags.length).toBeGreaterThanOrEqual(10);
   });
-  it("plasmoidSwarm: 인스턴스 수 + 색상 버퍼", () => {
+  it("plasmoidSwarm: 인스턴스 수 + 색상 버퍼 + wn∈[0,1] + 결정성", () => {
     const sw = plasmoidSwarm(100, 77);
     expect(sw.count).toBe(100);
     expect(sw.instanceColor).not.toBeNull();
     expect(allFinite(sw.geometry)).toBe(true);
+    const wn = sw.userData.wn as Float32Array;
+    expect(wn.length).toBe(100);
+    for (const v of wn) expect(v).toBeGreaterThanOrEqual(0), expect(v).toBeLessThanOrEqual(1);
+    expect((plasmoidSwarm(100, 77).userData.wn as Float32Array)[0]).toBe(wn[0]); // 같은 시드 → 동일
+  });
+});
+
+describe("fallFrag — 조각 낙하(수직 p²·수평 ease)", () => {
+  const make = (): Frag => ({
+    mesh: new THREE.Mesh(),
+    home: new THREE.Vector3(0, 10, 0),
+    rest: new THREE.Vector3(2, 0, 2),
+    axis: new THREE.Vector3(0, 1, 0),
+    spin: 0,
+    delay: 0,
+    fall: 1,
+  });
+  it("트리거 전(p≤0)=제자리, p=1=rest, p=0.5=수직 p²·수평 ease", () => {
+    const f = make();
+    f.mesh.position.copy(f.home);
+    fallFrag(f, 0); // p=0 → 제자리
+    expect(f.mesh.position.y).toBe(10);
+    fallFrag(f, 1); // p=1 → rest
+    expect(f.mesh.position.x).toBeCloseTo(2, 6);
+    expect(f.mesh.position.y).toBeCloseTo(0, 6);
+    const g = make();
+    g.mesh.position.copy(g.home);
+    fallFrag(g, 0.5); // 수직 y=lerp(10,0,0.25)=7.5, 수평 x=lerp(0,2,ease(0.5)=0.5)=1
+    expect(g.mesh.position.y).toBeCloseTo(7.5, 6);
+    expect(g.mesh.position.x).toBeCloseTo(1, 6);
+  });
+});
+
+describe("track — 카메라 이징 이동", () => {
+  it("k 양끝/중점/클램프", () => {
+    const cam = new THREE.PerspectiveCamera();
+    const ctx = { camera: cam } as unknown as Parameters<typeof track>[0];
+    const look = new THREE.Vector3();
+    track(ctx, 0, [0, 0, 0], [10, 0, 0], look);
+    expect(cam.position.x).toBeCloseTo(0, 6);
+    track(ctx, 1, [0, 0, 0], [10, 0, 0], look);
+    expect(cam.position.x).toBeCloseTo(10, 6);
+    track(ctx, 0.5, [0, 0, 0], [10, 0, 0], look); // ease(0.5)=0.5 → 5
+    expect(cam.position.x).toBeCloseTo(5, 6);
+    track(ctx, 2, [0, 0, 0], [10, 0, 0], look); // 클램프 → 10
+    expect(cam.position.x).toBeCloseTo(10, 6);
   });
 });

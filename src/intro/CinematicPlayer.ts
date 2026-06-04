@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { createComposer } from "../fx/postprocessing";
+import { createComposer, disposeComposer } from "../fx/postprocessing";
 
 /** 컷씬이 채우고 갱신하는 렌더 컨텍스트(전용 씬/카메라). */
 export interface SceneCtx {
@@ -154,7 +154,19 @@ export class CinematicPlayer {
     this.fade.remove();
     this.hint.remove();
     this.clearScene();
+    disposeComposer(this.composer); // 컴포저 + 블룸 패스 렌더타깃 모두 해제(미해제 시 누적 → iPad 멈춤)
   }
+}
+
+const TEX_SLOTS = ["map", "emissiveMap", "normalMap", "roughnessMap", "metalnessMap", "alphaMap", "aoMap"] as const;
+
+function disposeMaterial(m: THREE.Material): void {
+  const slots = m as unknown as Record<string, unknown>;
+  for (const k of TEX_SLOTS) {
+    const t = slots[k] as THREE.Texture | undefined;
+    if (t && t.isTexture) t.dispose(); // 머티리얼이 들고 있던 텍스처(.map 등)까지 해제
+  }
+  m.dispose();
 }
 
 export function disposeObject(o: THREE.Object3D): void {
@@ -162,7 +174,7 @@ export function disposeObject(o: THREE.Object3D): void {
     const mesh = c as THREE.Mesh;
     if (mesh.geometry) mesh.geometry.dispose();
     const mat = (mesh as { material?: THREE.Material | THREE.Material[] }).material;
-    if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
-    else if (mat) mat.dispose();
+    if (Array.isArray(mat)) mat.forEach(disposeMaterial);
+    else if (mat) disposeMaterial(mat);
   });
 }

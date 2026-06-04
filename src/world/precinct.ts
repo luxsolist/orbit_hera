@@ -38,3 +38,15 @@ export function resolveBuildingStyle(
   const roofThick = active && pb.roof ? pb.roof.thickness : 0;
   return { skip: false, height, roofThick, roofTop: height + roofThick, usePrecinctColor: active };
 }
+
+/**
+ * 건물 기본색(HSL 동별 변주 전) — 순수 hex.
+ * precinctColor 가 있으면 권역 양식색, 없으면 높이별 도심 팔레트(저층→마천루).
+ */
+export function buildingBaseColor(h: number, precinctColor: number | null): number {
+  if (precinctColor != null) return precinctColor; // 권역 양식색(예: 경복궁 단청)
+  if (h < 9) return 0xe6c23a; // 저층 — 황금/베이지
+  if (h < 22) return 0x3fb56a; // 중층 — 녹색
+  if (h < 45) return 0x3a82e0; // 고층 — 파랑
+  return 0x2fcadf; // 마천루(유리) — 시안
+}

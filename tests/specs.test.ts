@@ -59,7 +59,7 @@ describe("무기 스펙(JSON)", () => {
 
   it("카탈로그/파일 일치", () => {
     for (const e of cat) {
-      expect(["beam", "barrage"]).toContain(e.type);
+      expect(["beam", "barrage", "stream"]).toContain(e.type);
       expect(existsSync(`${W}/${e.id}.json`)).toBe(true);
     }
   });
@@ -73,11 +73,20 @@ describe("무기 스펙(JSON)", () => {
         num(w.range); num(w.beamLifetime);
         expect(Number.isFinite(Number(w.color))).toBe(true); // "0x..." 파싱 가능
         for (const k of ["damage", "freqCost", "fireInterval", "assistConeDeg"]) num(w.manual?.[k]);
-        for (const k of ["damage", "freqCost", "fireInterval", "range", "coneDeg"]) num(w.auto?.[k]);
+        for (const k of ["damage", "freqCost", "fireInterval", "range"]) num(w.auto?.[k]);
         for (const k of ["refDist", "maxMult", "minMult"]) num(w.falloff?.[k]);
-      } else {
+        if (w.muzzleOffsets != null) expect(Array.isArray(w.muzzleOffsets)).toBe(true);
+      } else if (w.type === "barrage") {
         for (const k of ["maxBeams", "coneDeg", "range", "cooldown", "drainRate", "salvoInterval", "salvoDamage", "beamLifetime"])
           num(w[k]);
+        for (const k of ["refDist", "maxMult", "minMult"]) num(w.falloff?.[k]);
+        expect(Number.isFinite(Number(w.colorBeam))).toBe(true);
+        expect(Number.isFinite(Number(w.colorGlow))).toBe(true);
+      } else {
+        // stream(오버드라이브)
+        for (const k of ["range", "cooldown", "drainRate", "fireInterval", "damage", "assistConeDeg", "beamLifetime"]) num(w[k]);
+        expect(Array.isArray(w.muzzleOffsets)).toBe(true);
+        for (const k of ["refDist", "maxMult", "minMult"]) num(w.falloff?.[k]);
         expect(Number.isFinite(Number(w.colorBeam))).toBe(true);
         expect(Number.isFinite(Number(w.colorGlow))).toBe(true);
       }

@@ -1,0 +1,13 @@
+{
+  "id": "frequency-beam-light",
+  "name": "경주파 빔 / LIGHT BEAM",
+  "abbr": "빔",
+  "type": "beam",
+  "range": 400,
+  "color": "0x90ffff",
+  "beamLifetime": 0.08,
+  "muzzleOffsets": [-0.55, 0.55],
+  "manual": { "damage": 13, "freqCost": 7, "fireInterval": 0.085, "assistConeDeg": 33 },
+  "auto": { "damage": 5, "freqCost": 2, "fireInterval": 0.13, "range": 120 },
+  "falloff": { "refDist": 26, "maxMult": 2.5, "minMult": 0.75 }
+}

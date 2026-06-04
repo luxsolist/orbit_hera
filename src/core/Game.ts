@@ -3,20 +3,25 @@ import type { EffectComposer } from "three/examples/jsm/postprocessing/EffectCom
 import { Input } from "./Input";
 import { MobileControls } from "./MobileControls";
 import { Sfx } from "./Sfx";
+import { Diagnostics } from "./Diagnostics";
 import { World } from "../world/World";
 import { PlayerController } from "../player/PlayerController";
 import { fetchDrone } from "../player/drones";
 import type { DroneSpec } from "../player/DroneSpec";
 import { fetchWeapon } from "../weapons/weapons";
-import type { BeamSpec, BarrageSpec } from "../weapons/WeaponSpec";
+import type { BeamSpec, SpecialWeapon } from "../weapons/WeaponSpec";
 import { EnemyManager } from "../enemies/EnemyManager";
+import { fetchPlasmoid } from "../enemies/plasmoids";
+import { DEFAULT_PLASMOID } from "../enemies/PlasmoidSpec";
 import { FrequencyBeam } from "../weapons/FrequencyBeam";
 import { SpecialBarrage } from "../weapons/SpecialBarrage";
+import { SpecialStream } from "../weapons/SpecialStream";
 import { HUD } from "../ui/HUD";
 import { RearView } from "../ui/RearView";
 import { Minimap } from "../ui/Minimap";
 import { MenuScreen } from "../ui/MenuScreen";
-import { createComposer } from "../fx/postprocessing";
+import { createComposer, disposeComposer } from "../fx/postprocessing";
+import { TargetBrackets } from "../fx/TargetBrackets";
 import { CinematicPlayer } from "../intro/CinematicPlayer";
 import { MenuBackground } from "../intro/MenuBackground";
 import { introScenes } from "../intro/scenes";
@@ -30,10 +35,11 @@ interface Session {
   player: PlayerController;
   enemies: EnemyManager;
   beam: FrequencyBeam;
-  special: SpecialBarrage;
+  special: SpecialWeapon;
   composer: EffectComposer;
   rearView: RearView;
   minimap: Minimap;
+  brackets: TargetBrackets;
 }
 
 /**
@@ -49,11 +55,13 @@ export class Game {
   private mobile: MobileControls;
   private hud: HUD;
   private sfx = new Sfx();
+  private diag = new Diagnostics();
 
   // 전장 선택 후 원자적으로 생성되는 플레이 세션(전부 존재 or 전부 없음)
   private session?: Session;
 
   private state: GameState = "menu";
+  private tornDown = false; // pagehide 정리 1회 가드
   private intro?: CinematicPlayer;
   private menuBg?: MenuBackground; // 메뉴 배경: 랜덤 인트로 장면
   private overlay: HTMLElement;
@@ -65,13 +73,20 @@ export class Game {
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // 터치/iPad(Retina)는 DPR 캡을 낮춰 프레임버퍼·VRAM 부하 완화(반복 실행 시 GPU 스톨/멈춤 방지)
+    const dprCap = navigator.maxTouchPoints > 0 ? 1.5 : 2;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, dprCap));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.scene.background = new THREE.Color(0x0a0e12);
+
+    // 진단 계측(?diag) — WebGL 컨텍스트 손실/전역 에러/렌더러 자원 추적
+    this.diag.watchContext(canvas);
+    this.diag.watchGlobalErrors();
+    this.diag.snapshot(this.renderer, "boot");
 
     this.input = new Input(canvas);
     this.mobile = new MobileControls(this.input);
@@ -91,6 +106,9 @@ export class Game {
 
     window.addEventListener("resize", () => this.onResize());
     document.addEventListener("pointerlockchange", () => this.onPointerLockChange());
+    // 페이지 이탈(맵 변경=reload 등) 시 GPU 컨텍스트 즉시 반납 — iOS가 다음 페이지에 컨텍스트를 빨리 내주게 해
+    // 새로고침 반복 누적으로 인한 멈춤 방지. bfcache 복귀 가능 시(persisted)엔 파괴하지 않음.
+    window.addEventListener("pagehide", (e) => { if (!e.persisted) this.teardown(); });
 
     this.showMenu(); // 전장 선택으로 바로 진입(인트로는 버튼으로 재생)
   }
@@ -111,7 +129,7 @@ export class Game {
 
   start() {
     this.clock.start();
-    this.renderer.setAnimationLoop(() => this.frame());
+    this.renderer.setAnimationLoop(() => this.diag.guard(() => { this.diag.tick(); this.frame(); }));
   }
 
   /** 메뉴 배경(랜덤 인트로 장면) 정리 — 메뉴 이탈(전장 선택/인트로 재생) 시 호출. */
@@ -134,6 +152,7 @@ export class Game {
 
   private showMenu() {
     this.state = "menu";
+    this.diag.snapshot(this.renderer, "menu");
     this.overlayTitle.textContent = "SEED";
     this.overlayTitle.setAttribute("data-text", "SEED");
     this.startBtn.hidden = true;
@@ -183,6 +202,14 @@ export class Game {
       return this.failToMenu("무기 스펙 로드 실패 — " + (e as Error).message);
     }
 
+    // 적(플라즈모이드) 스펙 로드 — 실패해도 내장 기본값으로 진행(전투 차단 방지)
+    let plasmoidSpec = DEFAULT_PLASMOID;
+    try {
+      plasmoidSpec = await fetchPlasmoid("plasmoid");
+    } catch {
+      plasmoidSpec = DEFAULT_PLASMOID;
+    }
+
     this.overlaySubtitle.textContent = "전장 구축 중… / BUILDING";
     // 다음 프레임으로 넘겨 UI 가 갱신되도록
     await new Promise((r) => setTimeout(r, 16));
@@ -194,16 +221,22 @@ export class Game {
     // 모바일 버튼 구성 — 동작(드론) + 전투 라벨(무기 스펙 abbr)
     this.mobile.configure({
       actions: drone.actions,
-      fireLabel: (primaryWeapon as BeamSpec).abbr,
-      specialLabel: (specialWeapon as BarrageSpec).abbr,
+      fireLabel: primaryWeapon.abbr, // abbr 은 모든 무기 타입 공통 → 캐스트 불필요
+      specialLabel: specialWeapon.abbr,
     });
-    const enemies = new EnemyManager(this.scene, world, player);
+    const enemies = new EnemyManager(this.scene, world, player, plasmoidSpec);
     const beam = new FrequencyBeam(this.scene, player, enemies, primaryWeapon as BeamSpec, this.sfx);
-    const special = new SpecialBarrage(this.scene, player, enemies, specialWeapon as BarrageSpec, this.sfx);
+    // 특수무기 타입별 구동 — barrage(콘 살포) / stream(오버드라이브 듀얼 연사). 판별 유니온 내로잉(캐스트 X).
+    let special: SpecialWeapon;
+    if (specialWeapon.type === "stream") special = new SpecialStream(this.scene, player, enemies, specialWeapon, this.sfx);
+    else if (specialWeapon.type === "barrage") special = new SpecialBarrage(this.scene, player, enemies, specialWeapon, this.sfx);
+    else return this.failToMenu("특수무기 타입 오류 — " + specialWeapon.type);
     const composer = createComposer(this.renderer, this.scene, player.camera);
     const rearView = new RearView(this.renderer, this.scene, player);
     const minimap = new Minimap(player, enemies, world);
-    this.session = { world, player, enemies, beam, special, composer, rearView, minimap };
+    const brackets = new TargetBrackets(this.scene);
+    this.session = { world, player, enemies, beam, special, composer, rearView, minimap, brackets };
+    this.diag.snapshot(this.renderer, "battle-built"); // 세션(컴포저 등) 생성 직후 — 누수 추적 핵심 지점
     this.wireEvents(this.session);
     this.beginPlay();
   }
@@ -231,7 +264,10 @@ export class Game {
     s.special.onFired = () => this.hud.flashFire();
     s.enemies.onKill = () => this.hud.setKills(s.enemies.killCount);
     s.enemies.onWaveChange = (w) => this.hud.setWave(w);
-    s.enemies.onPlayerHit = () => this.hud.flashDamage();
+    s.enemies.onPlayerHit = () => {
+      this.hud.flashDamage();
+      this.sfx.sizzle(); // 접촉 피해 — 달군 철판에 물 닿는 "치익" 기화음
+    };
   }
 
   /** 일시정지/사망 후 버튼: 재접속(같은 전장 재개/재시작) */
@@ -249,6 +285,18 @@ export class Game {
   }
 
   /** 전장 변경 — 재접속(reload)으로 메뉴부터 다시 */
+  /** 페이지 이탈 전 GPU 자원 즉시 해제 — 컴포저(+블룸 패스), 인트로/메뉴, 렌더러 컨텍스트. */
+  private teardown() {
+    if (this.tornDown) return;
+    this.tornDown = true;
+    this.renderer.setAnimationLoop(null);
+    this.intro?.dispose();
+    this.menuBg?.dispose();
+    if (this.session) disposeComposer(this.session.composer);
+    this.renderer.forceContextLoss(); // GPU 컨텍스트 즉시 반납(iOS 회수 촉진)
+    this.renderer.dispose();
+  }
+
   private changeMap() {
     window.location.reload();
   }
@@ -275,6 +323,7 @@ export class Game {
       if (!this.menuBg) {
         this.menuBg = new MenuBackground(this.renderer, introScenes());
         this.overlay.classList.add("overlay--scene");
+        this.diag.snapshot(this.renderer, "menuBg+"); // 메뉴 배경 컴포저 생성 직후
       }
       this.menuBg.update(dt); // 랜덤 인트로 장면을 배경으로 렌더
       return;
@@ -289,12 +338,13 @@ export class Game {
       s.beam.update(dt, this.input.fireHeld);
       s.special.update(dt, this.input.specialPressed);
       s.enemies.update(dt);
+      s.brackets.update(s.player.camera, s.enemies.aliveMarkers); // 500m 이내 적에 코너 브래킷
       this.hud.update(dt);
 
       this.hud.setHp(s.player.hp, s.player.maxHp);
       this.hud.setFrequency(s.player.freq, s.player.maxFreq);
       const cdReady = s.special.cooldownReady;
-      const cdRemaining = Math.max(0, 60 - cdReady * 60);
+      const cdRemaining = s.special.cooldownRemainingSec;
       this.hud.setSpecial(cdReady, s.special.isActive, cdRemaining);
       this.mobile.setSpecialState(cdReady, s.special.isActive, cdRemaining);
 
@@ -313,11 +363,14 @@ export class Game {
     const s = this.session;
     this.state = "dead";
     this.setPlayActive(false);
-    document.exitPointerLock();
+    s?.brackets.hide(); // 사망 화면에 브래킷·체력수치 잔상 방지
+    // 실제 포인터락은 데스크탑만 사용(모바일은 합성 락). iPad WebKit 은 exitPointerLock 미지원/실패 가능 →
+    // 가드 없이 호출하면 예외로 showPanel 이 건너뛰어져 버튼이 안 뜸. 모바일은 호출 생략 + 옵셔널 체이닝.
+    if (!this.mobile.enabled) document.exitPointerLock?.();
     this.showPanel(
       "LINK LOST",
       s ? `정화 ${s.enemies.killCount}체 · WAVE ${s.enemies.wave}` : "",
-      "재시작 / RESTART"
+      "재접속 / RECONNECT"
     );
   }
 

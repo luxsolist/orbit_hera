@@ -1,0 +1,17 @@
+{
+  "id": "special-overdrive",
+  "name": "오버드라이브 / OVERDRIVE",
+  "abbr": "오버",
+  "type": "stream",
+  "range": 400,
+  "cooldown": 30,
+  "drainRate": 50,
+  "fireInterval": 0.09,
+  "damage": 50,
+  "assistConeDeg": 18,
+  "muzzleOffsets": [-0.55, 0.55],
+  "beamLifetime": 0.08,
+  "colorBeam": "0x90ffff",
+  "colorGlow": "0xbfffff",
+  "falloff": { "refDist": 40, "maxMult": 1.8, "minMult": 0.75 }
+}

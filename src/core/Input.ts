@@ -2,6 +2,11 @@
  * 키보드 + Pointer Lock 마우스룩 입력 상태를 한 곳에서 관리.
  * - 키 상태는 프레임 간 누적(폴링), 마우스 이동량은 프레임마다 소비(consume).
  */
+// 게임 조작 키 — 락(플레이) 중 브라우저 기본동작(Space 스크롤 등) 차단해 전후좌우+상승/하강 동시 입력 보장.
+const GAME_KEYS = new Set([
+  "KeyW", "KeyA", "KeyS", "KeyD", "Space", "ShiftLeft", "ShiftRight", "KeyC",
+]);
+
 export class Input {
   private keys = new Set<string>();
   private pressed = new Set<string>(); // 이번 프레임에 새로 눌린 키(엣지)
@@ -23,10 +28,15 @@ export class Input {
 
   constructor(private canvas: HTMLCanvasElement) {
     window.addEventListener("keydown", (e) => {
+      // 락(플레이) 중엔 게임 키의 브라우저 기본동작(Space 스크롤 등) 차단 → WASD+Space/Shift 동시 입력 보장
+      if (this.locked && GAME_KEYS.has(e.code)) e.preventDefault();
       if (!this.keys.has(e.code)) this.pressed.add(e.code); // OS 키 반복 제외
       this.keys.add(e.code);
     });
-    window.addEventListener("keyup", (e) => this.keys.delete(e.code));
+    window.addEventListener("keyup", (e) => {
+      if (this.locked && GAME_KEYS.has(e.code)) e.preventDefault();
+      this.keys.delete(e.code);
+    });
 
     document.addEventListener("pointerlockchange", () => {
       const wasLocked = this.locked;

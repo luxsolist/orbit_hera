@@ -1,46 +1,41 @@
 import * as THREE from "three";
 import type { PlayerController } from "../player/PlayerController";
 import type { EnemyManager } from "../enemies/EnemyManager";
-import type { SeedEnemy } from "../enemies/SeedEnemy";
+import { getEnemy } from "../enemies/SeedEnemy";
 import type { Sfx } from "../core/Sfx";
 import { DamageNumbers } from "../fx/damageNumbers";
-import type { BarrageSpec } from "./WeaponSpec";
-import { makeGlowTexture, spawnBeam } from "./beamFx";
+import type { BarrageSpec, SpecialWeapon } from "./WeaponSpec";
+import { damageForDistance } from "./WeaponSpec";
+import { makeGlowTexture, muzzleFrom, beamEnd, BeamPool, type BeamStyle } from "./beamFx";
+import { DrainCycle } from "./DrainCycle";
+import { parseHexColor } from "../core/math";
 import { nearestInCone } from "./targeting";
 
-// 전투 수치(타깃 수·사거리·쿨다운·살포·데미지·색)는 모두 BarrageSpec(JSON)에서 주입.
+const TRIGGER_FLOOR = 5; // 발동 최소 freq
 
-interface ActiveBeam {
-  line: THREE.Mesh;
-  glow: THREE.Sprite;
-  life: number;
-}
+// 전투 수치(타깃 수·사거리·쿨다운·살포·데미지·색)는 모두 BarrageSpec(JSON)에서 주입.
 
 /**
  * 특수 무기 — 다중 빔 살포.
  * 우클릭 1회 발동 → 전방 콘 안의 적(최대 10) 에게 빔을 동시에 연속 살포.
- * 발동 후 freq 게이지가 0 이 될 때까지 자동 유지되고, 발동 순간부터 60s 쿨다운.
+ * 발동 후 freq 게이지가 0 이 될 때까지 자동 유지되고, 사용 종료(게이지 0) 후 spec.cooldown 만큼 쿨다운.
  * 자연 회복은 발동 동안 억제(PlayerController.freqRegenSuppressed).
  */
-export class SpecialBarrage {
+export class SpecialBarrage implements SpecialWeapon {
   private raycaster = new THREE.Raycaster();
-  private beams: ActiveBeam[] = [];
+  private beamPool: BeamPool;
   private damageNumbers: DamageNumbers;
   private glowTexture: THREE.Texture;
 
-  private active = false;
-  private salvoTimer = 0;
-  private cooldown = 0; // 0 이하 = 발동 가능
+  private cycle: DrainCycle; // 발동/소진/사용후쿨다운 상태기계(SpecialStream 과 공유)
   private readonly coneCos: number; // 전방 콘(스펙 각도 → cos)
-  private readonly colorBeam: number;
-  private readonly colorGlow: number;
+  private readonly style: BeamStyle;
 
   /** HUD 발광 트리거(크로스헤어 플래시 재사용) */
   onFired?: () => void;
-  onKill?: (enemy: SeedEnemy) => void;
 
   constructor(
-    private scene: THREE.Scene,
+    scene: THREE.Scene,
     private player: PlayerController,
     private enemies: EnemyManager,
     private spec: BarrageSpec,
@@ -48,62 +43,36 @@ export class SpecialBarrage {
   ) {
     this.raycaster.far = spec.range;
     this.coneCos = Math.cos(THREE.MathUtils.degToRad(spec.coneDeg));
-    this.colorBeam = Number(spec.colorBeam);
-    this.colorGlow = Number(spec.colorGlow);
+    this.style = { beamColor: parseHexColor(spec.colorBeam), glowColor: parseHexColor(spec.colorGlow), radius: 0.07, glowScale: 2.8 };
     this.damageNumbers = new DamageNumbers(scene);
     this.glowTexture = makeGlowTexture("rgba(255,210,140,0.85)", "rgba(255,170,72,0)");
+    this.beamPool = new BeamPool(scene, this.glowTexture, spec.beamLifetime, 5);
+    this.cycle = new DrainCycle({ cooldown: spec.cooldown, drainRate: spec.drainRate, fireInterval: spec.salvoInterval, triggerFloor: TRIGGER_FLOOR });
   }
 
-  /** 0~1 쿨다운 진행률(1=준비완료). HUD 표시용. */
   get cooldownReady(): number {
-    if (this.active) return 0;
-    if (this.cooldown <= 0) return 1;
-    return 1 - this.cooldown / this.spec.cooldown;
+    return this.cycle.cooldownReady;
   }
-
+  get cooldownRemainingSec(): number {
+    return this.cycle.cooldownRemainingSec;
+  }
   get isActive(): boolean {
-    return this.active;
+    return this.cycle.isActive;
   }
 
   /** 게임 재시작 시 호출 — 쿨다운/활성 상태 초기화. */
   reset() {
-    this.active = false;
-    this.cooldown = 0;
-    this.salvoTimer = 0;
+    this.cycle.reset();
     this.player.freqRegenSuppressed = false;
   }
 
   update(dt: number, triggerPressed: boolean) {
-    if (this.cooldown > 0) this.cooldown -= dt;
-
-    // 발동: 비활성 + 쿨다운 완료 + freq 가 일정 이상일 때만(쥐꼬리만큼 남았을 때 트리거 방지)
-    if (triggerPressed && !this.active && this.cooldown <= 0 && this.player.freq > 5) {
-      this.active = true;
-      this.cooldown = this.spec.cooldown;
-      this.salvoTimer = 0; // 즉시 첫 살포
-      this.player.freqRegenSuppressed = true;
-    }
-
-    if (this.active) {
-      // 게이지 소진
-      this.player.freq = Math.max(0, this.player.freq - this.spec.drainRate * dt);
-
-      // 살포
-      this.salvoTimer -= dt;
-      if (this.salvoTimer <= 0) {
-        this.fireSalvo();
-        this.salvoTimer = this.spec.salvoInterval;
-      }
-
-      // 종료 조건: 게이지 0
-      if (this.player.freq <= 0) {
-        this.active = false;
-        this.player.freqRegenSuppressed = false;
-      }
-    }
-
+    const r = this.cycle.step(dt, triggerPressed, this.player.freq);
+    this.player.freqRegenSuppressed = r.active;
+    if (r.drain) this.player.freq = Math.max(0, this.player.freq - r.drain);
+    if (r.fire) this.fireSalvo();
     this.damageNumbers.update(dt);
-    this.updateBeams(dt);
+    this.beamPool.update(dt);
   }
 
   /** 한 번의 살포: 전방 콘 안의 가장 가까운 적 최대 N 명에 동시 빔 사격. */
@@ -117,30 +86,19 @@ export class SpecialBarrage {
       return;
     }
 
-    const muzzle = origin
-      .clone()
-      .add(aimDir.clone().multiplyScalar(1.2))
-      .add(new THREE.Vector3(0, -0.5, 0));
+    const muzzle = muzzleFrom(origin, aimDir);
 
     for (const t of targets) {
       const dir = t.dir;
       this.raycaster.set(origin, dir);
-      const hits = this.raycaster.intersectObject(t.mesh, false);
+      const hit = this.raycaster.intersectObject(t.mesh, false)[0];
+      const endPoint = beamEnd(hit, origin, dir, this.spec.range);
 
-      let endPoint: THREE.Vector3;
-      if (hits.length > 0) {
-        endPoint = hits[0].point.clone();
-        const enemy = hits[0].object.userData.enemy as SeedEnemy | undefined;
-        if (enemy) {
-          this.damageNumbers.spawn(endPoint, this.spec.salvoDamage);
-          const killed = enemy.applyFrequencyHit(this.spec.salvoDamage);
-          if (killed) {
-            this.enemies.registerKill();
-            this.onKill?.(enemy);
-          }
-        }
-      } else {
-        endPoint = origin.clone().add(dir.clone().multiplyScalar(this.spec.range));
+      const enemy = hit && getEnemy(hit.object);
+      if (enemy) {
+        const dmg = damageForDistance(hit.distance, this.spec.salvoDamage, this.spec.falloff);
+        this.damageNumbers.spawn(endPoint, dmg);
+        if (enemy.applyFrequencyHit(dmg)) this.enemies.registerKill();
       }
 
       this.spawnBeamVisual(muzzle, endPoint);
@@ -156,43 +114,16 @@ export class SpecialBarrage {
     aimDir: THREE.Vector3,
     max: number
   ): { mesh: THREE.Object3D; dir: THREE.Vector3; dist: number }[] {
+    // aliveWorldPositions 와 hitMeshes 는 동일 순서 → nearestInCone 의 index 로 메시 역참조 가능
     const meshes = this.enemies.hitMeshes;
-    const tmp = new THREE.Vector3();
-    const positions = meshes.map((mesh) => {
-      mesh.getWorldPosition(tmp);
-      return { x: tmp.x, y: tmp.y, z: tmp.z };
-    });
-    return nearestInCone(origin, aimDir, positions, this.spec.range, this.coneCos, max).map((t) => ({
+    return nearestInCone(origin, aimDir, this.enemies.aliveWorldPositions, this.spec.range, this.coneCos, max).map((t) => ({
       mesh: meshes[t.index],
       dir: new THREE.Vector3(t.dir.x, t.dir.y, t.dir.z),
       dist: t.dist,
     }));
   }
 
-  private updateBeams(dt: number) {
-    for (let i = this.beams.length - 1; i >= 0; i--) {
-      const b = this.beams[i];
-      b.life -= dt;
-      const t = Math.max(0, b.life / this.spec.beamLifetime);
-      (b.line.material as THREE.MeshBasicMaterial).opacity = t;
-      b.glow.material.opacity = t;
-      b.glow.scale.setScalar(2 + (1 - t) * 5);
-      if (b.life <= 0) {
-        this.scene.remove(b.line, b.glow);
-        b.line.geometry.dispose();
-        (b.line.material as THREE.Material).dispose();
-        this.beams.splice(i, 1);
-      }
-    }
-  }
-
   private spawnBeamVisual(from: THREE.Vector3, to: THREE.Vector3) {
-    const { line, glow } = spawnBeam(this.scene, this.glowTexture, from, to, {
-      beamColor: this.colorBeam,
-      glowColor: this.colorGlow,
-      radius: 0.07,
-      glowScale: 2.8,
-    });
-    this.beams.push({ line, glow, life: this.spec.beamLifetime });
+    this.beamPool.spawn(from, to, this.style);
   }
 }

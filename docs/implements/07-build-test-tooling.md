@@ -24,22 +24,24 @@
   controlFlowFlattening·selfDefending·debugProtection 등 위험/무거운 옵션은 **비활성**(기능/성능 보존).
 - 데이터(`public/*.json`)는 정적 자산이라 그대로 노출됨 — 민감 로직은 데이터에 두지 않음.
 
-## 테스트 스위트 (Vitest — 16파일 / 115테스트, node 환경)
+## 테스트 스위트 (Vitest — 23파일 / 196테스트, node 환경)
 
 핵심 로직을 **순수 함수로 빼서** 부수효과 없이 가드한다.
 
 | 영역 | 파일 | 가드 |
 | :--- | :--- | :--- |
-| 플레이어 | `PlayerController` `spawn` | 점프 적분 · 비행/보행 스폰 높이 · 적 스폰 고도 분포 |
-| 적 | `pursue` | 3D 추적(전 방향 동일 속도·정지거리·순수) |
-| 무기 | `targeting` `WeaponSpec` | 콘 조준 선별 · 거리 비례 데미지 |
+| 공용 | `math` | clamp/lerp/parseHexColor |
+| 플레이어 | `PlayerController` `spawn` | 점프 적분 · **방향별 이동속도(dirSpeedMult)** · **천장/5km캡(maxRiseAltitude)** · **피해전이(applyDamage 무적·사망 게이트)** · 스폰 높이/고도 분포 |
+| 적 | `pursue` `seedEnemy` `plasmoidSpec` | 3D 추적(순수) · **상태기계/태깅/자가회복** · **온도→색·체력·크기·속도·스폰분포·고도가중·접촉흡수피해** |
+| 무기 | `targeting` `WeaponSpec` `beamFx` `drainCycle` | 콘 조준 · 거리감쇠·쿨다운진행률 · **머즐/끝점·측면벡터(sideVector)·발사관합산(emitterDamage)** · **소진형 특수 상태기계** |
 | 모바일 | `mobileJoystick` | 데드존·8방향·속도 4단계 |
-| 월드 | `CollisionWorld` `SpatialGrid` `terrainField` `precinct` `geo` `StructureBuilder` | 충돌/격자/지형 질의/권역 양식/지오 유틸/랜드마크 |
-| 데이터 | `specs` | 드론·무기·맵 JSON 필수 필드 + 교차참조 + 권역 스키마 |
-| 투영/데이터 | `worldMap` `osm` `introHelpers` | equirectangular 투영 · OSM 변환(scripts/osm.mjs) · 컷씬 헬퍼 |
+| 월드 | `CollisionWorld` `SpatialGrid` `terrainField` `precinct` `geo` `StructureBuilder` | 충돌/격자/지형 질의(가우시안·도심마스크·오목경계)/권역 양식/지오 유틸/랜드마크 |
+| 데이터 | `specs` `loader` | 드론·무기·**적(플라즈모이드)**·맵 JSON 필수필드 + 교차참조 · 로더 fetch 성공/에러경로 |
+| UI/FX | `targetBrackets` | 코너 브래킷 거리 페이드 · **화면투영(projectToScreen)·체력라벨(labelText)** |
+| 투영/데이터 | `worldMap` `osm` `introHelpers` | equirectangular 투영 · OSM 변환 · 컷씬 헬퍼(ease/rng/fallFrag/track 등) |
 
-> 데이터 검증(`specs.test.ts`)은 tsc가 못 보는 `public/*.json`의 누락/오타/dangling 참조(무기·맵 id)와
-> 권역 스키마를 빌드 타임에 차단한다.
+> 데이터 검증(`specs.test.ts`)은 tsc가 못 보는 `public/*.json`의 누락/오타/dangling 참조(무기·맵·적 id)와
+> 권역 스키마를 빌드 타임에 차단한다. `DEFAULT_PLASMOID ≡ plasmoid.json` 동치도 테스트로 고정(드리프트 방지).
 
 ## e2e 스모크 — [tests/e2e/smoke.mjs](../../tests/e2e/smoke.mjs)
 

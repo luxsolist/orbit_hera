@@ -1,11 +1,19 @@
 import * as THREE from "three";
 import type { CutScene } from "./CinematicPlayer";
+import type { Frag } from "./helpers";
 import {
   ease, rng, lump, track, spinAlong, makeSwarm, updateSwarm,
   starfield, sun, oumuamua, lights, underLights,
-  earth, moon, seabed, makeCore, plasmoidSwarm, beachHouse, makeSeed,
-  SEED_ORANGE, SPACE_COL, DEEP_COL, SPIN_RATE, FWD1,
+  earth, moon, seabed, makeCore, plasmoidSwarm, beachHouse, fallFrag, makeSeed,
+  setState, getState, SEED_ORANGE, CORE_TEMP, SPACE_COL, DEEP_COL, SPIN_RATE, FWD1,
 } from "./helpers";
+
+// 인트로 군집 userData 상태(병렬 Float32Array) — setState/getState 로 타입 안전 접근.
+interface SeedSwarmState { birth: Float32Array; vel: Float32Array; off: Float32Array; }
+interface VelState { vel: Float32Array; }
+interface DebrisState { sx: Float32Array; delay: Float32Array; travel: Float32Array; }
+interface RiseSwarmState { py: Float32Array; px: Float32Array; pz: Float32Array; sp: Float32Array; sz: Float32Array; ph: Float32Array; }
+interface HouseState { wallFrags: Frag[]; roofFrags: Frag[]; }
 
 // 인트로 컷씬(스펙 4장 1~6번). 공용 빌딩블록은 helpers.ts, 여기는 씬별 연출/타임라인만.
 
@@ -92,7 +100,7 @@ export const sceneDispersal: CutScene = {
       off[i * 3 + 2] = rdz * 0.9;
       inst.setMatrixAt(i, hidden);
     }
-    inst.userData = { birth, vel, off };
+    setState<SeedSwarmState>(inst, { birth, vel, off });
     ctx.scene.add(inst);
   },
   update(t, _dt, ctx) {
@@ -101,9 +109,7 @@ export const sceneDispersal: CutScene = {
     spinAlong(rock, FWD, SPIN_RATE * t); // 긴 축 = 비행 방향, 그 축 둘레로 천천히 스크류 회전
 
     const inst = ctx.scene.getObjectByName("seeds") as THREE.InstancedMesh;
-    const birth = inst.userData.birth as Float32Array;
-    const vel = inst.userData.vel as Float32Array;
-    const off = inst.userData.off as Float32Array;
+    const { birth, vel, off } = getState<SeedSwarmState>(inst);
     updateSwarm(inst, (i, m4) => {
       const age = t - birth[i];
       if (age <= 0) {
@@ -187,7 +193,7 @@ export const sceneSplash: CutScene = {
       vel[i * 3 + 2] = Math.sin(a) * out;
       sp.setMatrixAt(i, hidden);
     }
-    sp.userData = { vel };
+    setState<VelState>(sp, { vel });
     ctx.scene.add(sp);
   },
   update(t, _dt, ctx) {
@@ -198,7 +204,7 @@ export const sceneSplash: CutScene = {
     seed.visible = sy > -1.6;
     (seed.material as THREE.MeshStandardMaterial).emissiveIntensity = sy > 0 ? 2.0 : 0.6;
     const sp = ctx.scene.getObjectByName("splash") as THREE.InstancedMesh;
-    const vel = sp.userData.vel as Float32Array, age = t - splashT;
+    const { vel } = getState<VelState>(sp), age = t - splashT;
     updateSwarm(sp, (i, m4) => {
       if (age <= 0) m4.makeScale(0, 0, 0);
       else {
@@ -252,7 +258,7 @@ export const sceneCore: CutScene = {
     const sb = seabed();
     sb.position.y = -6;
     ctx.scene.add(sb);
-    ctx.scene.add(makeCore(1.2, 0xff4a1e));
+    ctx.scene.add(makeCore(1.2, CORE_TEMP));
     const deb = makeSwarm(new THREE.IcosahedronGeometry(0.55, 0), new THREE.MeshStandardMaterial({ color: 0x2a2620, roughness: 1, flatShading: true }), DEBRIS, "debris");
     const sx = new Float32Array(DEBRIS * 3), delay = new Float32Array(DEBRIS), travel = new Float32Array(DEBRIS);
     const r = rng(51), m4 = new THREE.Matrix4();
@@ -265,7 +271,7 @@ export const sceneCore: CutScene = {
       travel[i] = 2.6 + r() * 2.2;
       deb.setMatrixAt(i, m4.setPosition(sx[i * 3], sx[i * 3 + 1], sx[i * 3 + 2]));
     }
-    deb.userData = { sx, delay, travel };
+    setState<DebrisState>(deb, { sx, delay, travel });
     ctx.scene.add(deb);
   },
   update(t, _dt, ctx) {
@@ -275,7 +281,7 @@ export const sceneCore: CutScene = {
     core.scale.setScalar(grow * (1 + Math.sin(t * 4) * 0.04)); // 성장 + 박동
     (core.material as THREE.MeshStandardMaterial).emissiveIntensity = 2.2 + Math.sin(t * 5) * 0.8;
     const deb = ctx.scene.getObjectByName("debris") as THREE.InstancedMesh;
-    const sx = deb.userData.sx as Float32Array, delay = deb.userData.delay as Float32Array, travel = deb.userData.travel as Float32Array;
+    const { sx, delay, travel } = getState<DebrisState>(deb);
     updateSwarm(deb, (i, m4) => {
       const u = Math.min(1, Math.max(0, (t - delay[i]) / travel[i])); // 0 시작 → 1 흡수
       const e = ease(u);
@@ -345,6 +351,7 @@ export const sceneRise: CutScene = {
 
     // 다수의 작은 플라즈모이드 — 해구선을 따라 솟아 해수면으로 상승
     const sw = plasmoidSwarm(PLAS, 77);
+    const { wn } = getState<{ wn: Float32Array }>(sw); // 시스템 정규화 가중치(0=적색~1=청백) — 강할수록 크게
     const py = new Float32Array(PLAS), px = new Float32Array(PLAS), pz = new Float32Array(PLAS), sp = new Float32Array(PLAS), sz = new Float32Array(PLAS), ph = new Float32Array(PLAS);
     const r2 = rng(77), mm = new THREE.Matrix4();
     for (let i = 0; i < PLAS; i++) {
@@ -352,20 +359,19 @@ export const sceneRise: CutScene = {
       pz[i] = (r2() - 0.5) * 14;
       py[i] = -8 + r2() * 7;
       sp[i] = 5 + r2() * 7;
-      sz[i] = 0.6 + r2() * 0.7;
+      sz[i] = 0.55 + wn[i] * 1.0 + r2() * 0.15; // 색(강함)에 비례한 크기 + 미세 변주
       ph[i] = r2() * Math.PI * 2;
       mm.makeScale(sz[i], sz[i], sz[i]).setPosition(px[i], py[i], pz[i]);
       sw.setMatrixAt(i, mm);
     }
-    sw.userData = { py, px, pz, sp, sz, ph };
+    setState<RiseSwarmState>(sw, { py, px, pz, sp, sz, ph });
     ctx.scene.add(sw);
   },
   update(t, _dt, ctx) {
     const core = ctx.scene.getObjectByName("core") as THREE.InstancedMesh;
     (core.material as THREE.MeshStandardMaterial).emissiveIntensity = 1.6 + Math.sin(t * 1.8) * 0.5;
     const sw = ctx.scene.getObjectByName("plasmoids") as THREE.InstancedMesh;
-    const py = sw.userData.py as Float32Array, px = sw.userData.px as Float32Array, pz = sw.userData.pz as Float32Array;
-    const sp = sw.userData.sp as Float32Array, sz = sw.userData.sz as Float32Array, ph = sw.userData.ph as Float32Array;
+    const { py, px, pz, sp, sz, ph } = getState<RiseSwarmState>(sw);
     updateSwarm(sw, (i, m4) => {
       const s = sz[i] * (1 + Math.sin(t * 4 + ph[i]) * 0.2);
       m4.makeScale(s, s, s).setPosition(
@@ -412,15 +418,12 @@ export const sceneHouse: CutScene = {
     const plas = ctx.scene.getObjectByName("plas6")!;
     plas.position.set(-11 + (t / DUR6) * 22, 2.2, 0); // 집을 가로질러 통과
     const house = ctx.scene.getObjectByName("house") as THREE.Group;
-    const ud = house.userData as { walls: { g: THREE.Group; axis: "x" | "z"; ang: number }[]; roof: THREE.Mesh };
-    // 통과 시 나머지 벽이 한 번에 쓰러짐(TC6 ~ +0.8s)
-    const wallE = ease(Math.min(1, Math.max(0, (t - TC6) / 0.8)));
-    for (const w of ud.walls) w.g.rotation[w.axis] = w.ang * wallE;
-    // 1초 뒤 지붕이 한 번에 내려앉음(TC6+1 ~ +0.8s) — 오른쪽 벽에 기댄 듯 기울며
-    const roofE = ease(Math.min(1, Math.max(0, (t - (TC6 + 1)) / 0.8)));
-    ud.roof.position.y = 4.3 - roofE * 2.7;
-    ud.roof.rotation.x = roofE * -0.45; // 앞벽(가까운 벽) 쪽이 높게 기대며 내려앉음
-    // 카메라: 측상방에서 — 남은 앞벽 너머로 무너지는 지붕·벽이 보이도록
+    const ud = getState<HouseState>(house);
+    // 통과 시 벽이 제자리에서 다수 조각으로 갈라져 와르르 무너져 내림(TC6 기점)
+    for (const f of ud.wallFrags) fallFrag(f, t - TC6);
+    // 약간 뒤 지붕이 잘게 파사삭 부서져 내림(TC6+0.5 기점)
+    for (const f of ud.roofFrags) fallFrag(f, t - (TC6 + 0.5));
+    // 카메라: 측상방에서 — 무너져 내리는 벽·지붕과 잔해 더미가 보이도록
     track(ctx, t / DUR6, [-13, 8, 16], [-3, 6.5, 12.5], _look.set(0, 1.5, -1));
   },
 };

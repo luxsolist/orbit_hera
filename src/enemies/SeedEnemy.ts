@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { createDissolveMaterial, type DissolveMaterial } from "../fx/dissolve";
+import type { Vec3 } from "../core/math";
 
 const SHELL_GEO = new THREE.IcosahedronGeometry(1, 2); // 부드러운 유기적 곡면(스펙 1장)
 const CORE_GEO = new THREE.IcosahedronGeometry(0.42, 1);
@@ -11,10 +12,11 @@ const STOP_DIST = 2.2; // 이 거리 이내면 추적 정지(접촉 교전 거�
 
 export type EnemyState = "alive" | "dissolving" | "dead";
 
-export interface Vec3 {
-  x: number;
-  y: number;
-  z: number;
+/** 플라즈모이드 외형/체력 — PlasmoidSpec 시스템(온도·크기)에서 산출해 주입한다. */
+export interface SeedAppearance {
+  maxHp: number; // 체력(= plasmoidHp)
+  diameter: number; // 렌더 지름 m(= visualDiameter) — 지오메트리 지름 2 기준 baseScale = d/2
+  color: number; // 발광/표면 색(= colorAt) 0xRRGGBB
 }
 
 /**
@@ -42,8 +44,8 @@ export class SeedEnemy {
   private coreMat: THREE.MeshStandardMaterial;
 
   state: EnemyState = "alive";
-  maxHp = 100;
-  hp = 100;
+  maxHp: number;
+  hp: number;
 
   private dissolveProgress = 0;
   private hitFlash = 0; // 피격 순간 1 → 빠르게 감쇠하며 흰색 번쩍임
@@ -53,25 +55,31 @@ export class SeedEnemy {
   private attackCooldown = 0;
   private baseScale: number;
 
-  constructor(position: THREE.Vector3, scale = 1.4, speed = 4.5) {
-    this.baseScale = scale;
+  constructor(position: THREE.Vector3, appearance: SeedAppearance, speed = 4.5) {
+    this.baseScale = appearance.diameter / 2; // 지오메트리 지름 2(반지름 1) → 실제 지름 = scale·2
     this.speed = speed;
+    this.maxHp = appearance.maxHp;
+    this.hp = appearance.maxHp;
 
-    this.shellMat = createDissolveMaterial(0xb8324a, 0xff6a3b);
+    // 표면/코어 색을 온도색(colorAt)에서 파생 — 적색 약체 → 청백 강체로 통일
+    const col = new THREE.Color(appearance.color);
+    const base = col.clone().multiplyScalar(0.42); // 어두운 본체
+    const edge = col.clone().lerp(new THREE.Color(0xffffff), 0.25); // 밝은 디졸브 가장자리
+    this.shellMat = createDissolveMaterial(base, edge);
     this.hitMesh = new THREE.Mesh(SHELL_GEO, this.shellMat);
     this.hitMesh.castShadow = true;
-    this.hitMesh.userData.enemy = this; // 레이캐스트 → 적 역참조
+    tagEnemy(this.hitMesh, this); // 레이캐스트 → 적 역참조
     this.group.add(this.hitMesh);
 
     this.coreMat = new THREE.MeshStandardMaterial({
-      color: 0x2a0008,
-      emissive: 0xff3b4e,
+      color: col.clone().multiplyScalar(0.12),
+      emissive: appearance.color,
       emissiveIntensity: 2.2,
     });
     this.core = new THREE.Mesh(CORE_GEO, this.coreMat);
     this.group.add(this.core);
 
-    this.group.scale.setScalar(scale);
+    this.group.scale.setScalar(this.baseScale);
     this.group.position.copy(position);
   }
 
@@ -92,10 +100,16 @@ export class SeedEnemy {
     return false;
   }
 
-  update(dt: number, target: THREE.Vector3) {
+  /** 접촉으로 흡수한 에너지만큼 자가 회복(체력 ↑, 최대치 한도). 살아있을 때만. */
+  absorbEnergy(amount: number): void {
+    if (this.state !== "alive") return;
+    this.hp = Math.min(this.maxHp, this.hp + amount);
+  }
+
+  update(dt: number, target: THREE.Vector3, speedScale = 1) {
     this.pulsePhase += dt * PULSE_RATE;
     this.bobPhase += dt * BOB_RATE;
-    if (this.updateVisual(dt)) this.updateMotion(dt, target); // 소멸 중이 아니면 이동
+    if (this.updateVisual(dt)) this.updateMotion(dt, target, speedScale); // 소멸 중이 아니면 이동
   }
 
   /** FX 갱신 — 피격 플래시·디졸브·박동/스케일. 살아있으면 true(이동 처리 진행). */
@@ -129,10 +143,10 @@ export class SeedEnemy {
     return true;
   }
 
-  /** 추적 AI — 플레이어를 향해 3D 이동(상하 포함) + 자유 부유. 지형/물체와 무관하게 떠서 다가옴. */
-  private updateMotion(dt: number, target: THREE.Vector3) {
+  /** 추적 AI — 플레이어를 향해 3D 이동(상하 포함) + 자유 부유. speedScale=고도 가중. */
+  private updateMotion(dt: number, target: THREE.Vector3, speedScale: number) {
     const pos = this.group.position;
-    const next = pursueStep(pos, target, this.speed, dt, STOP_DIST);
+    const next = pursueStep(pos, target, this.speed * speedScale, dt, STOP_DIST);
     pos.set(next.x, next.y, next.z);
     pos.y += BOB_AMPLITUDE * BOB_RATE * Math.cos(this.bobPhase) * dt; // 누적 X 미세 흔들림
 
@@ -154,4 +168,14 @@ export class SeedEnemy {
     this.shellMat.dispose();
     this.coreMat.dispose();
   }
+}
+
+const ENEMY_KEY = "enemy";
+/** 레이캐스트 역참조 태깅 — userData 접근을 한 곳으로(타입 안전). */
+export function tagEnemy(mesh: THREE.Object3D, enemy: SeedEnemy): void {
+  mesh.userData[ENEMY_KEY] = enemy;
+}
+/** 레이캐스트 적중 오브젝트 → 적(없으면 undefined). */
+export function getEnemy(obj: THREE.Object3D): SeedEnemy | undefined {
+  return obj.userData[ENEMY_KEY] as SeedEnemy | undefined;
 }

@@ -3,13 +3,28 @@
 
 type AudioCtor = typeof AudioContext;
 
+/**
+ * 기본 빔 = 특수(barrage)의 **단발 기준** 파라미터(단일 출처). beam()은 여기에 f0 지터만,
+ * barrage()는 빔 수(m)에 비례한 저음·길이·강도 가산을 얹는다. 둘이 손으로 따로 적히면 드리프트하므로 공유.
+ */
+const BEAM_BASE = {
+  f0: 52,
+  sweepFrom: 6.4,
+  sweepTime: 0.12,
+  dur: 0.4,
+  peak: 0.34,
+  crackGain: 0.85,
+  ringGain: 0.26,
+  subGain: 1.8,
+} as const;
+
 /** 발사·타격 등 짧은 효과음을 즉석 합성해 재생하는 경량 오디오 버스. */
 export class Sfx {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
-  private noiseBuf: AudioBuffer | null = null;
+  private noiseBuf: AudioBuffer | null = null; // 짧은 감쇠 노이즈(어택 클릭)
+  private noiseBufLong: AudioBuffer | null = null; // 긴 평탄 노이즈(폭발 본체 — 엔벨로프/필터로 성형)
   private enabled = true;
-  private recentBeams: number[] = []; // 최근 발사 시각들 → 동시발사 수 산출(묵직함 가중)
 
   constructor(private volume = 0.5) {}
 
@@ -27,12 +42,19 @@ export class Sfx {
       const comp = this.ctx.createDynamicsCompressor();
       master.connect(comp).connect(this.ctx.destination);
       this.master = master;
-      // 어택 트랜지언트용 노이즈 버퍼(한 번만 생성)
-      const len = (this.ctx.sampleRate * 0.02) | 0;
-      const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const sr = this.ctx.sampleRate;
+      // 어택 트랜지언트용 짧은 감쇠 노이즈 버퍼(한 번만 생성)
+      const len = (sr * 0.02) | 0;
+      const buf = this.ctx.createBuffer(1, len, sr);
       const ch = buf.getChannelData(0);
       for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / len); // 감쇠 화이트노이즈
       this.noiseBuf = buf;
+      // 폭발 본체용 긴 평탄 노이즈(엔벨로프·필터로 성형) — 광대역 현실감의 핵심
+      const len2 = (sr * 0.3) | 0;
+      const buf2 = this.ctx.createBuffer(1, len2, sr);
+      const ch2 = buf2.getChannelData(0);
+      for (let i = 0; i < len2; i++) ch2[i] = Math.random() * 2 - 1; // 평탄 화이트노이즈
+      this.noiseBufLong = buf2;
     }
     if (this.ctx.state === "suspended") void this.ctx.resume();
   }
@@ -44,38 +66,96 @@ export class Sfx {
   }
 
   /**
-   * 에너지 주파수 빔 발사음 — 스타크래프트 시즈탱크(탱크 모드) 포격 느낌:
-   * 빠른 하강 스윕("뚜움") + 저역 thump + 금속 링 + 머즐 크랙. manual=수동(묵직)/false=자동(약간 높게).
-   * 짧은 시간 창(BEAM_WINDOW) 안의 동시발사 수에 비례해 더 낮고 둔탁해진다.
+   * 기본 무기(주파수 빔) 발사음 — 모든 드론(워커/플라이어) 공통. 워커 특수(barrage)와 **동일한** 캐논 포격음
+   * (BEAM_BASE = barrage 의 단발 기준). 특수(barrage)는 동일 음을 빔 수에 비례해 더 낮고·크게 키운 것.
    */
-  beam(manual = true): void {
+  beam(): void {
     const ctx = this.ctx;
     if (!ctx || !this.master || ctx.state !== "running") return;
-    const now = ctx.currentTime;
-
-    // 동시발사 가중 w(0..1) — 최근 창 안의 발사 수가 많을수록 ↑
-    const BEAM_WINDOW = 0.22;
-    while (this.recentBeams.length && this.recentBeams[0] < now - BEAM_WINDOW) this.recentBeams.shift();
-    this.recentBeams.push(now);
-    const w = Math.min(1, (this.recentBeams.length - 1) / 5); // 6발 동시쯤 포화
-
-    const jitter = 0.95 + Math.random() * 0.1; // 발당 미세 피치 흔들림 → 기계음 방지
-    const heavy = (1 - 0.18 * w) * jitter; // 동시발사 ↑ → 더 낮게
-    this.shot({
-      f0: (manual ? 98 : 134) * heavy, // 착지(바디) 주파수 — 더 큰 포(낮게)
-      sweepFrom: manual ? 5.2 : 4.4, // 하강 스윕 시작 배수("뚜→움")
-      sweepTime: manual ? 0.085 : 0.065,
-      dur: (manual ? 0.26 : 0.18) + 0.05 * w, // 더 긴 잔향(큰 포)
-      peak: manual ? 0.3 : 0.22,
-      crackGain: 0.8, // 머즐 크랙(금속성 어택)
-      ringGain: 0.26 - 0.1 * w, // 동시발사 ↑ → 금속 링 ↓(둔탁)
-      subGain: 0.9 + 0.4 * w, // 깊은 저역 강조
-    });
+    const jitter = 0.96 + Math.random() * 0.08;
+    this.shot({ ...BEAM_BASE, f0: BEAM_BASE.f0 * jitter });
   }
 
   /**
-   * 특수무기 일제사격음 — 더 깊고 큰 포격. beamCount(이번 살포의 빔 수)에 비례해
-   * 더 낮고·두껍고·강하게 들린다.
+   * 플라즈모이드 접촉 피해음 — 달군 철판에 물이 닿아 기화하는 "치익" 스팀 버스트.
+   * (1) 어택 "츳"(광대역) (2) 증기 히스(밴드패스 하강 스윕) (3) 케틀 휘슬 힌트(고Q 하강). 노이즈 주도·짧음.
+   */
+  sizzle(): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.master || ctx.state !== "running") return;
+    const now = ctx.currentTime;
+    const master = this.master;
+    const peak = 0.28;
+
+    // (0) 저역 퀜치 바디 — 차가운 물이 닿는 순간의 깊은 "쿰"(깊이감). 피치-드롭 사인.
+    const body = ctx.createOscillator();
+    body.type = "sine";
+    body.frequency.setValueAtTime(96, now);
+    body.frequency.exponentialRampToValueAtTime(52, now + 0.06);
+    const bg = ctx.createGain();
+    bg.gain.setValueAtTime(0.0001, now);
+    bg.gain.exponentialRampToValueAtTime(peak * 0.75, now + 0.006);
+    bg.gain.exponentialRampToValueAtTime(0.0004, now + 0.2);
+    body.connect(bg).connect(master);
+    body.start(now);
+    body.stop(now + 0.22);
+
+    // (1) 어택 "츳" — 짧은 광대역 노이즈(물이 닿는 순간)
+    if (this.noiseBuf) {
+      const n = ctx.createBufferSource();
+      n.buffer = this.noiseBuf;
+      const hp = ctx.createBiquadFilter();
+      hp.type = "highpass";
+      hp.frequency.value = 3200;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(peak, now);
+      g.gain.exponentialRampToValueAtTime(0.0004, now + 0.05);
+      n.connect(hp).connect(g).connect(master);
+      n.start(now);
+      n.stop(now + 0.06);
+    }
+
+    // (2) 증기 히스 본체 — 밴드패스가 5.2k→1.2k 로 하강하며 "치이익"(김 빠짐)
+    if (this.noiseBufLong) {
+      const n = ctx.createBufferSource();
+      n.buffer = this.noiseBufLong;
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.Q.value = 1.1;
+      bp.frequency.setValueAtTime(5200, now);
+      bp.frequency.exponentialRampToValueAtTime(820, now + 0.32); // 더 낮게 내려가 두툼한 증기(깊이감)
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(peak * 0.9, now + 0.012); // 빠른 어택
+      g.gain.exponentialRampToValueAtTime(0.0004, now + 0.34); // 증기 빠지듯 감쇠(조금 더 길게)
+      n.loop = true; // 0.3s 버퍼를 넘겨 증기 꼬리가 끊기지 않게
+      n.connect(bp).connect(g).connect(master);
+      n.start(now);
+      n.stop(now + 0.36);
+    }
+
+    // (3) 케틀 휘슬 힌트 — 고Q 밴드패스 하강(증기 휘파람), 낮게 깔아 "기화" 색채
+    if (this.noiseBufLong) {
+      const n = ctx.createBufferSource();
+      n.buffer = this.noiseBufLong;
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.Q.value = 9;
+      bp.frequency.setValueAtTime(4200, now);
+      bp.frequency.exponentialRampToValueAtTime(2100, now + 0.22);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(peak * 0.3, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0004, now + 0.24);
+      n.connect(bp).connect(g).connect(master);
+      n.start(now);
+      n.stop(now + 0.25);
+    }
+  }
+
+  /**
+   * 특수무기 일제사격음 — 기본 빔(beam)보다 **더 낮고 묵직한 대구경 저음 포격**. 같은 shot() 코어.
+   * beamCount(이번 살포의 빔 수)에 비례해 더 낮고·두껍고·강하게 들린다.
    */
   barrage(beamCount: number): void {
     const ctx = this.ctx;
@@ -84,14 +164,31 @@ export class Sfx {
     const jitter = 0.96 + Math.random() * 0.08;
     const k = (1 - 0.2 * m) * jitter; // 빔 많을수록 더 낮게
     this.shot({
-      f0: 78 * k, // 기본 빔보다 낮은 대구경 포격(특수 구분)
-      sweepFrom: 5.8,
-      sweepTime: 0.1,
-      dur: 0.32 + 0.06 * m, // 더 길고 큰 포성
-      peak: 0.3 + 0.12 * m,
-      crackGain: 0.85,
-      ringGain: 0.3,
-      subGain: 1.1 + 0.4 * m,
+      ...BEAM_BASE,
+      f0: BEAM_BASE.f0 * k, // 기본 빔과 동일 기준(m↑ → 더 낮은 묵직한 저음 포격)
+      dur: BEAM_BASE.dur + 0.08 * m, // 더 길고 큰 포성
+      peak: BEAM_BASE.peak + 0.12 * m,
+      subGain: BEAM_BASE.subGain + 0.6 * m, // 서브 저음 대폭 강화 → 더 묵직
+    });
+  }
+
+  /**
+   * 오버드라이브(플라이어 특수) 연사음 — 기본 빔보다 낮고 묵직하되 **짧게**.
+   * 0.09s 간격 연사에 포성 꼬리가 누적돼 뭉개지지 않도록 dur·금속 링을 줄여 타이트한 "둥둥둥" 저음.
+   */
+  overdrive(): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.master || ctx.state !== "running") return;
+    const jitter = 0.94 + Math.random() * 0.12; // 발당 미세 변주(기계음 방지)
+    this.shot({
+      f0: 46 * jitter, // 기본 빔(52)보다 더 낮은 묵직한 저음
+      sweepFrom: 5.5,
+      sweepTime: 0.06,
+      dur: 0.14, // 짧게 — 0.09s 연사 겹침 최소
+      peak: 0.3,
+      crackGain: 0.6,
+      ringGain: 0.1, // 금속 링 최소(꼬리 누적 방지)
+      subGain: 1.9, // 기본 빔(BEAM_BASE.subGain 1.8) 이상 — 더 깊은 저역, 단 짧아서 뭉개지지 않음
     });
   }
 

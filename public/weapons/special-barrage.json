@@ -12,5 +12,6 @@
   "salvoDamage": 16,
   "beamLifetime": 0.13,
   "colorBeam": "0xffb648",
-  "colorGlow": "0xffd58a"
+  "colorGlow": "0xffd58a",
+  "falloff": { "refDist": 40, "maxMult": 1.8, "minMult": 0.75 }
 }

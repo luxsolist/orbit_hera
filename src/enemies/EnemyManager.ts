@@ -3,9 +3,11 @@ import { SeedEnemy } from "./SeedEnemy";
 import type { World } from "../world/World";
 import type { PlayerController } from "../player/PlayerController";
 import { TERRAIN_HALF } from "../world/World";
+import { DEFAULT_PLASMOID, rollAppearance, altitudeSpeedMult, contactDamage, type PlasmoidSpec } from "./PlasmoidSpec";
+import type { Vec3 } from "../core/math";
 
-const ATTACK_RANGE = 3.2;
-const ATTACK_DAMAGE = 9;
+const ATTACK_RANGE = 3.2; // 접촉 교전 거리(피해는 PlasmoidSpec.contact 로 산출)
+// 일반 플라즈모이드 전투 밴드 상한 = 비행드론 천장과 동일(300m). 이 위 고도는 향후 항공모함·보스급 전용.
 export const SPAWN_CEILING = 300; // 적 공중 스폰 최대 고도(지면 대비, m)
 export const SPAWN_BIAS = 2.5; // 스폰 고도 지수 가중(>1 일수록 지상 편향 강함)
 
@@ -26,6 +28,7 @@ export class EnemyManager {
   private scene: THREE.Scene;
   private world: World;
   private player: PlayerController;
+  private spec: PlasmoidSpec;
 
   wave = 0;
   killCount = 0;
@@ -36,15 +39,38 @@ export class EnemyManager {
   onPlayerHit?: (damage: number) => void;
   onWaveChange?: (wave: number) => void;
 
-  constructor(scene: THREE.Scene, world: World, player: PlayerController) {
+  constructor(scene: THREE.Scene, world: World, player: PlayerController, spec: PlasmoidSpec = DEFAULT_PLASMOID) {
     this.scene = scene;
     this.world = world;
     this.player = player;
+    this.spec = spec;
   }
 
   /** 레이캐스트 대상 메쉬 목록(살아있는 적) */
   get hitMeshes(): THREE.Object3D[] {
     return this.enemies.filter((e) => e.state === "alive").map((e) => e.hitMesh);
+  }
+
+  /** 무기 콘 조준 입력용 — 살아있는 적의 월드 좌표(평문). hitMeshes 와 동일 순서(인덱스 정합). */
+  get aliveWorldPositions(): Vec3[] {
+    const out: Vec3[] = [];
+    const tmp = new THREE.Vector3();
+    for (const e of this.enemies) {
+      if (e.state === "alive") {
+        e.hitMesh.getWorldPosition(tmp);
+        out.push({ x: tmp.x, y: tmp.y, z: tmp.z });
+      }
+    }
+    return out;
+  }
+
+  /** 코너 브래킷·체력표시용 — 살아있는 적의 월드 위치 + 시각 반경(= group.scale) + 현재 체력. */
+  get aliveMarkers(): readonly { pos: THREE.Vector3; radius: number; hp: number }[] {
+    const out: { pos: THREE.Vector3; radius: number; hp: number }[] = [];
+    for (const e of this.enemies) {
+      if (e.state === "alive") out.push({ pos: e.group.position, radius: e.group.scale.x, hp: e.hp });
+    }
+    return out;
   }
 
   /** 미니맵용 살아있는 적 위치 스냅샷(읽기 전용) */
@@ -89,9 +115,9 @@ export class EnemyManager {
     // 공중 투입 — 지면 대비 0~300m 랜덤 고도(지상에 가까울수록 빈도 ↑). spawnAltitude 참조.
     const y = this.world.heightAt(x, z) + spawnAltitude(Math.random());
 
-    const scale = 1.2 + Math.random() * 0.8;
-    const speed = 4.5 + this.wave * 0.4 + Math.random();
-    const enemy = new SeedEnemy(new THREE.Vector3(x, y, z), scale, speed);
+    // 외형/속도 — 온도(웨이브별·저온편향) → 체력·렌더크기·색·속도(강함 반비례). 분리형 시스템.
+    const { maxHp, diameter, color, speed } = rollAppearance(this.spec, this.wave, Math.random);
+    const enemy = new SeedEnemy(new THREE.Vector3(x, y, z), { maxHp, diameter, color }, speed);
     this.enemies.push(enemy);
     this.scene.add(enemy.group);
   }
@@ -110,11 +136,18 @@ export class EnemyManager {
     const playerPos = this.player.worldPosition;
 
     for (const enemy of this.enemies) {
-      enemy.update(dt, playerPos);
+      // 고도 가중 — 지면 대비 높이로 속도 배수(공중↑/수중·지하↓). 영역별 드론 추격 균형.
+      const p = enemy.group.position;
+      const altitude = p.y - this.world.heightAt(p.x, p.z);
+      enemy.update(dt, playerPos, altitudeSpeedMult(this.spec, altitude));
 
       if (enemy.tryAttack(playerPos, ATTACK_RANGE)) {
-        this.player.takeDamage(ATTACK_DAMAGE);
-        this.onPlayerHit?.(ATTACK_DAMAGE);
+        // 접촉(에너지 흡수) — 강함 비례·고도 약화. 흡수량만큼 플레이어 HP 피해 + 적 자가 회복.
+        const absorb = contactDamage(this.spec, enemy.maxHp, altitude);
+        if (this.player.takeDamage(absorb)) {
+          enemy.absorbEnergy(absorb); // 빨아들인 에너지로 체력 회복
+          this.onPlayerHit?.(absorb);
+        }
       }
     }
 

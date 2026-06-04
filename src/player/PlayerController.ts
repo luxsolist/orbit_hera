@@ -7,6 +7,21 @@ import type { DroneSpec, DroneMove, JumpSpec, FlyMove } from "./DroneSpec";
 const PITCH_LIMIT = Math.PI / 2 - 0.05;
 const MOVE_MAX_STEP = 0.8; // 수평 이동 1스텝 최대 거리 — 고속(대시) 터널링 방지 서브스테핑
 const ROLL_RATE = 6; // 비행 롤(뱅킹) 보간 응답속도
+const CEIL_FALL_RATE = 2.5; // 지표면 상대 천장이 낮아질 때(고지대→저지대) 부드럽게 하강하는 응답속도
+export const HARD_CEILING = 5000; // 절대 최고 고도(m) — 지표 무관, 어떤 기체/콘텐츠(항공모함 포함)도 이 위로 못 올라감
+// 방향별 이동속도 배수(시선 기준) — 전진 1.0 / 옆 0.85 / 후진 0.6. 무한 백페달 카이팅 억제.
+const STRAFE_MULT = 0.85, BACK_MULT = 0.6;
+
+/**
+ * 이동 방향(mx,mz)과 시선 수평벡터(fwd)의 정렬도로 속도 배수 산출 — 순수 함수.
+ * 전진(정렬 1)=1.0, 옆(0)=STRAFE_MULT, 후진(-1)=BACK_MULT. 입력 없으면 1.
+ */
+export function dirSpeedMult(mx: number, mz: number, fwd: { x: number; z: number }): number {
+  const len = Math.hypot(mx, mz);
+  if (len < 1e-6) return 1;
+  const dot = (mx * fwd.x + mz * fwd.z) / len; // -1..1
+  return dot >= 0 ? STRAFE_MULT + (1 - STRAFE_MULT) * dot : STRAFE_MULT + (STRAFE_MULT - BACK_MULT) * dot;
+}
 
 /**
  * 수직 속도 1스텝 적분(보행 드론 점프/중력) — 상승: 정점까지 감속(riseGravity) /
@@ -23,6 +38,26 @@ export function stepVerticalVelocity(vy: number, dt: number, j: JumpSpec): numbe
  */
 export function spawnHeightAboveGround(move: DroneMove, eye: number): number {
   return move.mode === "fly" ? Math.min(move.spawnHeight, move.ceiling) : eye;
+}
+
+export const MERCY_INVULN = 0.6; // 피격 후 무적 시간(s) — 연속 흡수 데미지 완화
+
+/**
+ * 피해 적용 순수 전이 — 머시 무적(invuln>0) 또는 사망(hp<=0) 중이면 무시(applied:false, 상태 불변).
+ * 적용 시 hp 를 0 하한으로 차감하고 무적을 MERCY_INVULN 으로 충전. applied 는 적 회복·HUD 게이트.
+ */
+export function applyDamage(hp: number, invuln: number, amount: number): { hp: number; invuln: number; applied: boolean } {
+  if (invuln > 0 || hp <= 0) return { hp, invuln, applied: false };
+  return { hp: Math.max(0, hp - amount), invuln: MERCY_INVULN, applied: true };
+}
+
+/**
+ * 최고 상승 고도(눈높이 기준) — 보행 점프·비행 천장 공통. 발밑 지표면(standY) + 기체별 상승
+ * 한도(rise) + 눈높이(eye)를 더하고 절대 하드리밋(HARD_CEILING 5km)으로 클램프. standY 가
+ * 위치마다 바뀌므로(고지대/저지대) 캡도 동적으로 조정된다.
+ */
+export function maxRiseAltitude(standY: number, rise: number, eye: number): number {
+  return Math.min(HARD_CEILING, standY + rise + eye);
 }
 
 /**
@@ -109,10 +144,12 @@ export class PlayerController {
     return this.camera.getWorldDirection(target);
   }
 
-  takeDamage(amount: number) {
-    if (this.invuln > 0 || this.hp <= 0) return;
-    this.hp = Math.max(0, this.hp - amount);
-    this.invuln = 0.6;
+  /** 피해 적용. 머시 무적/사망 중엔 무시. 반환: 실제 적용 여부(접촉 시 적 회복·HUD 연출 게이트). */
+  takeDamage(amount: number): boolean {
+    const r = applyDamage(this.hp, this.invuln, amount);
+    this.hp = r.hp;
+    this.invuln = r.invuln;
+    return r.applied;
   }
 
   get isDead(): boolean {
@@ -172,14 +209,14 @@ export class PlayerController {
       let mvx = f3x * fb + rightH.x * lr, mvy = f3y * fb, mvz = f3z * fb + rightH.z * lr;
       const ml = Math.hypot(mvx, mvy, mvz);
       if (ml > 1e-6) { mvx /= ml; mvy /= ml; mvz /= ml; } // 3D 단위 → 방향 무관 동일 최고속
-      const spd = move.speed * this.input.moveScale; // 조이스틱 변위 비례 속도
+      const spd = move.speed * this.input.moveScale * dirSpeedMult(mvx, mvz, fwdH); // 방향별 속도(후진 페널티)
       const t = 1 - Math.exp(-move.accel * dt);
       this.hVel.x += (mvx * spd - this.hVel.x) * t;
       this.hVel.z += (mvz * spd - this.hVel.z) * t;
       lookClimb = mvy * spd;
     } else {
       // 보행: 지상/공중 응답 구분
-      const spd = move.speed * this.input.moveScale; // 조이스틱 변위 비례 속도
+      const spd = move.speed * this.input.moveScale * dirSpeedMult(wishH.x, wishH.z, fwdH); // 방향별 속도(후진 페널티)
       const rate = this.grounded ? move.groundAccel : move.airAccel;
       const t = 1 - Math.exp(-rate * dt);
       this.hVel.x += (wishH.x * spd - this.hVel.x) * t;
@@ -191,6 +228,7 @@ export class PlayerController {
     // --- 수직(이동 형태별) ---
     if (move.mode === "walk") this.updateWalkVertical(dt, move.jump);
     else this.updateFlyVertical(dt, move, lookClimb);
+    this.position.y = Math.min(this.position.y, HARD_CEILING); // 절대 하드리밋(5km) — 모든 기체 공통
 
     // --- 주파수 재충전 --- (특수 무기 발동 중에는 외부에서 억제)
     if (!this.freqRegenSuppressed) {
@@ -241,11 +279,11 @@ export class PlayerController {
     if (this.grounded) this.coyote = jump.coyoteTime;
     else if (this.coyote > 0) this.coyote -= dt;
 
-    // 점프: 지상/코요테 점프 + 공중 재점프. 디딘 지면보다 maxRiseHeight 이상이면 추가 점프 금지.
+    // 점프: 지상/코요테 점프 + 공중 재점프. 지표면 상대 상한(비행 천장과 공통 함수) 미만에서만 추가 점프 허용.
     if (this.input.wasPressed("Space")) {
       const curFeetY = this.position.y - this.eye;
       const groundBelow = this.standSurfaceY(this.position.x, this.position.z, curFeetY);
-      if (this.grounded || this.coyote > 0 || curFeetY - groundBelow < jump.maxRiseHeight) {
+      if (this.grounded || this.coyote > 0 || this.position.y < maxRiseAltitude(groundBelow, jump.maxRiseHeight, this.eye)) {
         this.velocityY = jump.velocity;
         this.grounded = false;
         this.coyote = 0;
@@ -268,11 +306,14 @@ export class PlayerController {
 
   /**
    * 비행: 무중력 호버. 수직 속도 = 시선 방향 전진 성분(lookClimb) + 호버 추력 버튼(Space 상승 /
-   * Shift 하강). 둘 다 없으면 0(호버). 지면(바닥)~천장(ceiling) 사이로 클램프.
+   * Shift 하강). 둘 다 없으면 0(호버). 바닥/천장은 모두 **발밑 지표면 상대**(standSurfaceY 기준):
+   * 1km 절벽 위에선 천장 +ceiling(1.3km), 해수면 위에선 0.3km. 매 프레임 (x,z)에서 재계산 →
+   * 수평 이동·동적 맵 로딩 시 고저차가 자동 반영. 고지대→저지대로 캡이 낮아질 땐 부드럽게 하강.
    */
   private updateFlyVertical(dt: number, move: FlyMove, lookClimb: number) {
     const up = this.input.isDown("Space") ? 1 : 0;
-    const down = this.input.isDown("ShiftLeft") || this.input.isDown("ShiftRight") ? 1 : 0;
+    // 하강: Shift(좌/우) + 대체키 C — Shift+WASD 키보드 고스팅(N-key rollover) 회피용
+    const down = this.input.isDown("ShiftLeft") || this.input.isDown("ShiftRight") || this.input.isDown("KeyC") ? 1 : 0;
     const target = lookClimb + (up - down) * move.verticalSpeed;
     const t = 1 - Math.exp(-move.accel * dt);
     this.velocityY += (target - this.velocityY) * t; // 목표 수직 속도로 가/감속(입력 없으면 0=호버)
@@ -280,14 +321,17 @@ export class PlayerController {
 
     const feetY = this.position.y - this.eye;
     const standY = this.standSurfaceY(this.position.x, this.position.z, feetY);
-    const floorY = standY + this.eye; // 지면 바로 위
+    const floorY = standY + this.eye + (move.minAltitude ?? 0); // 지면 + 비행 하한(지상 안전지대 차단)
     if (this.position.y < floorY) {
       this.position.y = floorY;
       if (this.velocityY < 0) this.velocityY = 0;
     }
-    const ceilY = standY + move.ceiling + this.eye; // 지면 대비 최대 고도
+    const ceilY = maxRiseAltitude(standY, move.ceiling, this.eye); // 지표면 상대 천장(+절대 5km 캡) — 보행 점프와 공통
     if (this.position.y > ceilY) {
-      this.position.y = ceilY;
+      // 캡 초과(고지대→저지대 이동 등) — 즉시 스냅 대신 부드럽게 하강(다이나믹 고도 캡)
+      const k = 1 - Math.exp(-CEIL_FALL_RATE * dt);
+      this.position.y += (ceilY - this.position.y) * k;
+      if (this.position.y - ceilY < 0.5) this.position.y = ceilY; // 근접 시 안착
       if (this.velocityY > 0) this.velocityY = 0;
     }
     this.grounded = this.position.y <= floorY + 0.02;

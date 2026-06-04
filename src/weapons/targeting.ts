@@ -2,11 +2,8 @@
 // origin 에서 aimDir 을 축으로 하는 콘(코사인 ≥ coneCos) + 사거리(range) 안의 적을 고른다.
 // THREE 비의존(plain {x,y,z}) → 부수효과 없이 테스트 가능. 호출부가 좌표만 넘긴다.
 
-export interface Vec3 {
-  x: number;
-  y: number;
-  z: number;
-}
+import type { Vec3 } from "../core/math";
+export type { Vec3 };
 
 export interface ConeTarget {
   /** origin→타깃 정규화 방향 */

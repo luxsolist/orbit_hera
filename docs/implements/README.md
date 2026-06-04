@@ -5,7 +5,7 @@
 [../spec/](../spec/01-data-schemas.md), 사용자용 요약은 [../../README.md](../../README.md)를 참고한다.
 
 > 기준 버전: `package.json` v0.3.0 · 스택: Three.js(WebGL2) + Vite + TypeScript(strict)
-> 테스트: Vitest 단위 **115개** + Playwright e2e 스모크(4맵)
+> 테스트: Vitest 단위 **196개**(23파일) + Playwright e2e 스모크(4맵)
 
 ## 핵심 설계 원칙
 
@@ -22,8 +22,8 @@
 | [01-architecture.md](01-architecture.md) | Game 오케스트레이터 · 상태 머신 · 프레임 루프 · 데이터 구동 로딩 · 렌더 셋업 |
 | [02-input-and-player.md](02-input-and-player.md) | 입력(Pointer Lock/키보드) · 보행/비행 컨트롤러 · 충돌 서브스테핑 · 모바일 컨트롤 |
 | [03-world.md](03-world.md) | World 빌더 · TerrainField · SkyEnvironment · CollisionWorld · 특수 권역(precinct) |
-| [04-weapons.md](04-weapons.md) | 주파수 빔 · 다중 빔 살포 · 콘 조준 통합 · 데미지 모델 · 절차적 사운드 |
-| [05-enemies.md](05-enemies.md) | 플라즈모이드(공중 스폰·3D 추적·디졸브) · 웨이브 매니저 |
+| [04-weapons.md](04-weapons.md) | 드론별 빔(중주파/경주파·듀얼 발사관) · 특수(살포/오버드라이브 스트림) · 360°오토+수동조준 · 데미지/감쇠/쿨다운 · 공유 발사·상태기계 · 절차적 사운드 |
+| [05-enemies.md](05-enemies.md) | 플라즈모이드 **온도(T) 데이터 시스템**(색·체력·크기·속도·스폰분포·고도가중) · SeedEnemy(주입형 외형·3D 추적·디졸브) · 웨이브 매니저 |
 | [06-ui-menu-intro.md](06-ui-menu-intro.md) | 세계지도 메뉴 · HUD · 미니맵/후방뷰 · 인트로 컷씬/메뉴 배경 · FX |
 | [07-build-test-tooling.md](07-build-test-tooling.md) | Vite(소스맵 hidden + 난독화) · 테스트 스위트 · e2e · 월드맵 생성기 |
 
@@ -36,22 +36,28 @@ src/
     Game.ts                  루프/상태/세션 오케스트레이션
     Input.ts                 키보드 + Pointer Lock + 합성 입력
     MobileControls.ts        가상 조이스틱 + 버튼 클러스터(가로 전용)
-    Sfx.ts                   절차적 발사음(Web Audio)
+    Sfx.ts                   절차적 발사음(Web Audio — 노이즈 주도 에너지 방전음)
     loader.ts                제네릭 JSON 카탈로그 로더
+    math.ts                  공용 순수 유틸(clamp/lerp/Vec3/parseHexColor)
+    Diagnostics.ts           온디바이스 진단(?diag — 컨텍스트손실/에러/메모리/하트비트)
   player/
     DroneSpec.ts             드론 데이터 타입(보행/비행)
     PlayerController.ts       데이터 구동 FPS 컨트롤러(보행/비행) + 순수 헬퍼
     drones.ts                드론 카탈로그/스펙 fetch
   weapons/
-    WeaponSpec.ts            무기 타입 + damageForDistance
-    FrequencyBeam.ts          히트스캔 빔(자동/수동/어시스트)
-    SpecialBarrage.ts         다중 빔 살포(특수)
+    WeaponSpec.ts            무기 타입(beam/barrage/stream) + damageForDistance/cooldownReadyFrac
+    FrequencyBeam.ts          히트스캔 빔(360°오토+수동, 듀얼 발사관)
+    SpecialBarrage.ts         다중 빔 살포(콘 다중타깃 특수)
+    SpecialStream.ts          오버드라이브(듀얼 발사관 집중 연사 특수)
+    DrainCycle.ts            소진형 특수 상태기계(발동/소진/사용후쿨다운, 순수)
     targeting.ts             공유 콘 조준(순수)
-    beamFx.ts                빔/글로우 비주얼 공통
+    beamFx.ts                빔/글로우 비주얼 + 공유 발사(fireEmitters)·컴포저 해제
     weapons.ts               무기 카탈로그/스펙 fetch
   enemies/
-    SeedEnemy.ts             플라즈모이드(3D 추적·자유 부유·디졸브)
-    EnemyManager.ts          공중 스폰/웨이브/집계 + spawnAltitude(순수)
+    PlasmoidSpec.ts          온도(T)→색/체력/크기/속도/스폰분포/고도가중(순수 시스템)
+    SeedEnemy.ts             플라즈모이드(주입형 외형·3D 추적·디졸브·태깅)
+    EnemyManager.ts          공중 스폰(rollAppearance)/웨이브/집계 + spawnAltitude(순수)
+    plasmoids.ts             적 카탈로그/스펙 fetch
   world/
     World.ts                 전장 메시 빌더(지형/건물/도로/수역/랜드마크/담장)
     TerrainField.ts          지형 높이·도심/경계 마스크(순수 질의)
@@ -66,9 +72,9 @@ src/
     MenuScreen.ts            세계지도 전장 선택 메뉴 + 팝업
     HUD.ts, Minimap.ts, RearView.ts, worldMapSvg.ts, styles.css
   fx/
-    dissolve.ts, postprocessing.ts, damageNumbers.ts
+    dissolve.ts, postprocessing.ts(disposeComposer), damageNumbers.ts, TargetBrackets.ts
   intro/
     CinematicPlayer.ts, scenes.ts, helpers.ts, MenuBackground.ts
 index.html                   캔버스 + HUD/오버레이/메뉴 정적 마크업
-public/{drones,weapons,maps}/  런타임 데이터(JSON)
+public/{drones,weapons,maps,enemies}/  런타임 데이터(JSON)
 ```

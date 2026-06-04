@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveBuildingStyle } from "../src/world/precinct";
+import { resolveBuildingStyle, buildingBaseColor } from "../src/world/precinct";
 import type { PrecinctBuilding } from "../src/world/MapData";
 
 // 데이터 구동 권역 건물 양식 해석 — 경복궁 마이그레이션(층고 상한·지붕·생략·색) 회귀 가드.
@@ -52,5 +52,20 @@ describe("resolveBuildingStyle", () => {
     const s = resolveBuildingStyle(true, 8, 500, { color: "0xcc5a28", maxHeight: 8 });
     expect(s.roofThick).toBe(0);
     expect(s.roofTop).toBe(8);
+  });
+});
+
+describe("buildingBaseColor — 높이별 도심 팔레트 / 권역 양식색", () => {
+  it("권역색 지정 시 높이 무관 그 색", () => {
+    expect(buildingBaseColor(5, 0x123456)).toBe(0x123456);
+    expect(buildingBaseColor(99, 0x123456)).toBe(0x123456);
+  });
+  it("높이 밴드 경계(<9/<22/<45/그외)", () => {
+    expect(buildingBaseColor(8, null)).toBe(0xe6c23a);
+    expect(buildingBaseColor(9, null)).toBe(0x3fb56a); // 경계 포함 윗밴드
+    expect(buildingBaseColor(21, null)).toBe(0x3fb56a);
+    expect(buildingBaseColor(22, null)).toBe(0x3a82e0);
+    expect(buildingBaseColor(44, null)).toBe(0x3a82e0);
+    expect(buildingBaseColor(45, null)).toBe(0x2fcadf);
   });
 });

@@ -1,4 +1,6 @@
 [
-  { "id": "frequency-beam", "name": "주파수 빔 / FREQUENCY BEAM", "type": "beam" },
-  { "id": "special-barrage", "name": "다중 빔 살포 / BARRAGE", "type": "barrage" }
+  { "id": "frequency-beam-heavy", "name": "중주파 빔 / HEAVY BEAM", "type": "beam" },
+  { "id": "frequency-beam-light", "name": "경주파 빔 / LIGHT BEAM", "type": "beam" },
+  { "id": "special-barrage", "name": "다중 빔 살포 / BARRAGE", "type": "barrage" },
+  { "id": "special-overdrive", "name": "오버드라이브 / OVERDRIVE", "type": "stream" }
 ]

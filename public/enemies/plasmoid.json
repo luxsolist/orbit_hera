@@ -1,0 +1,44 @@
+{
+  "id": "plasmoid",
+  "name": "플라즈모이드 / PLASMOID",
+  "hp": {
+    "basePerArea": 100,
+    "minDiameter": 0.5,
+    "maxDiameter": 60
+  },
+  "color": {
+    "stops": [
+      { "temp": 3000,  "color": "0xff3b30", "weight": 1.0 },
+      { "temp": 4500,  "color": "0xff8a3b", "weight": 1.6 },
+      { "temp": 6000,  "color": "0xfff2c8", "weight": 2.6 },
+      { "temp": 8000,  "color": "0xcfe2ff", "weight": 3.6 },
+      { "temp": 12000, "color": "0x4aa6ff", "weight": 5.0 }
+    ]
+  },
+  "visual": {
+    "minDiameter": 1.0,
+    "maxDiameter": 300,
+    "anchorHp": 200000,
+    "anchorDiameter": 250,
+    "exponent": 0.82
+  },
+  "spawn": {
+    "tempAlpha": 2,
+    "speedMax": 13.5,
+    "speedMin": 3.75,
+    "hpFloor": 100,
+    "hpCeil": 200000
+  },
+  "altitude": {
+    "airRef": 220,
+    "depthRef": 50,
+    "airBoostMax": 4.52,
+    "depthSlowMax": 0.6
+  },
+  "contact": {
+    "hpDamage": 9,
+    "strengthMul": 2.0,
+    "altWeakRef": 250,
+    "altWeakMin": 0.3
+  }
+}

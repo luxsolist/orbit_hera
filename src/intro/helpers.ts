@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import type { SceneCtx } from "./CinematicPlayer";
+import { DEFAULT_PLASMOID, colorAt, colorWeight, sampleTemp } from "../enemies/PlasmoidSpec";
+import { lerp } from "../core/math";
 
 // 인트로 공용 헬퍼 — 순수 수학(ease/rng/lump), 카메라/회전, 메시 팩토리, 군집(InstancedMesh) 유틸.
 // 씬별 로직은 scenes.ts 가 보유하고, 여기서 재사용 가능한 빌딩블록만 제공한다.
@@ -27,7 +29,12 @@ export function lump(x: number, y: number, z: number): number {
 
 // ─────────────────────────── 공용 상수 ───────────────────────────
 
-export const SEED_ORANGE = 0xdf7a2c; // 외계 씨앗 통일 색(오렌지) — 씬2 분산·씬3 낙하 공통
+// 플라즈모이드 색·강함 시스템(PlasmoidSpec)과 공유하는 색 stop. 인트로의 씨앗/코어/군집 색을 여기서 파생.
+const PLAS_STOPS = DEFAULT_PLASMOID.color.stops;
+const PLAS_WMAX = PLAS_STOPS[PLAS_STOPS.length - 1].weight;
+export const SEED_TEMP = 4500; // 씨앗 통일 온도(오렌지 stop)
+export const CORE_TEMP = 3200; // 코어 온도(가장 차가운 적색 근처)
+export const SEED_ORANGE = colorAt(PLAS_STOPS, SEED_TEMP); // 외계 씨앗 통일 색 — 시스템(온도→색)에서 산출. 씬2 분산·씬3 낙하 공통
 export const SPACE_COL = new THREE.Color(0x04060c);
 export const DEEP_COL = new THREE.Color(0x0e3a4e); // 심해(현실보다 밝게 — 배경이 보이도록)
 export const SPIN_RATE = 0.55; // rad/s — 럭비공처럼 긴 축 둘레로 천천히 스크류 회전
@@ -68,6 +75,10 @@ export function makeSwarm(
   inst.frustumCulled = false;
   return inst;
 }
+
+/** Object3D.userData 를 타입 T 로 쓰기/읽기 — 군집 상태(병렬 Float32Array 등) 캐스트를 한 곳으로. */
+export const setState = <T extends object>(o: THREE.Object3D, state: T): T => ((o.userData = state), state);
+export const getState = <T>(o: THREE.Object3D): T => o.userData as T;
 
 const _swarmM4 = new THREE.Matrix4();
 /** 군집의 각 인스턴스를 place(i, m4)로 배치 → setMatrixAt + needsUpdate(매 프레임 Matrix4 재사용). */
@@ -237,8 +248,8 @@ export function seabed(): THREE.Mesh {
   return new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x16242c, roughness: 1, flatShading: true }));
 }
 
-/** 박동하는 발광 코어(유기 구체). */
-export function makeCore(radius: number, hex: number): THREE.Mesh {
+/** 박동하는 발광 코어(유기 구체). 발광색은 온도(temp)→colorAt 시스템에서 파생. */
+export function makeCore(radius: number, temp: number, emis = 2.4): THREE.Mesh {
   const g = new THREE.IcosahedronGeometry(radius, 3);
   const pos = g.attributes.position as THREE.BufferAttribute, v = new THREE.Vector3();
   for (let i = 0; i < pos.count; i++) {
@@ -247,16 +258,29 @@ export function makeCore(radius: number, hex: number): THREE.Mesh {
     pos.setXYZ(i, v.x, v.y, v.z);
   }
   g.computeVertexNormals();
-  const mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x3a0a08, emissive: hex, emissiveIntensity: 2.4, roughness: 0.5, flatShading: true }));
+  const mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x3a0a08, emissive: colorAt(PLAS_STOPS, temp), emissiveIntensity: emis, roughness: 0.5, flatShading: true }));
   mesh.name = "core";
   return mesh;
 }
 
-/** 플라즈모이드 군집 — 발광 구체(약=빨강/강=파랑), instanceColor + Basic → Bloom. */
+/**
+ * 플라즈모이드 군집 — 색·강함을 PlasmoidSpec 시스템에서 산출(약=적색/강=청백).
+ * 인스턴스마다 온도를 저온(약체) 편향으로 뽑아 colorAt 으로 발광색을 정하고,
+ * 정규화 가중치 wn(0=적색~1=청백)을 userData 에 실어 씬이 크기에 반영(강할수록 크게)한다.
+ */
 export function plasmoidSwarm(n: number, seed: number): THREE.InstancedMesh {
   const inst = makeSwarm(new THREE.IcosahedronGeometry(0.6, 1), new THREE.MeshBasicMaterial(), n, "plasmoids");
-  const r = rng(seed), red = new THREE.Color(0xff3b30), blue = new THREE.Color(0x4aa6ff), c = new THREE.Color();
-  for (let i = 0; i < n; i++) inst.setColorAt(i, c.copy(r() < 0.65 ? red : blue).multiplyScalar(1.5));
+  const r = rng(seed), c = new THREE.Color();
+  const tMin = PLAS_STOPS[0].temp, tMax = PLAS_STOPS[PLAS_STOPS.length - 1].temp;
+  const alpha = DEFAULT_PLASMOID.spawn.tempAlpha;
+  const wn = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const temp = sampleTemp(tMin, tMax, alpha, r()); // f(T)∝T^-α — 저온(약체·적색) 다수, 고온(청백) 희귀
+    c.set(colorAt(PLAS_STOPS, temp)).multiplyScalar(1.5); // Bloom 발광
+    inst.setColorAt(i, c);
+    wn[i] = (colorWeight(PLAS_STOPS, temp) - 1) / (PLAS_WMAX - 1); // 0..1
+  }
+  inst.userData = { wn };
   return inst;
 }
 
@@ -268,39 +292,169 @@ export function underLights(scene: THREE.Scene): void {
   scene.add(top);
 }
 
-/** 로우폴리 해변 집(붕괴용 조각 모음) — userData 에 원위치/낙하 파라미터. */
+/** 붕괴 조각 1개 — 원위치(home)에서 잔해위치(rest)로 중력 낙하 + 텀블. 결정적 파라미터. */
+export interface Frag {
+  mesh: THREE.Mesh;
+  home: THREE.Vector3; // 무너지기 전 제자리
+  rest: THREE.Vector3; // 다 무너진 뒤 잔해 더미 위치
+  axis: THREE.Vector3; // 텀블 회전축
+  spin: number; // 총 회전량(rad)
+  delay: number; // 붕괴 트리거 후 시작 지연(조각마다 어긋나게 → "와르르")
+  fall: number; // 낙하 소요 시간
+}
+
+/**
+ * 박스 영역을 nx×ny×nz 격자 조각으로 쪼개 group 에 추가하고 Frag[] 반환.
+ * 각 조각은 제자리에서 중력으로 떨어져(수직 가속) 약간 흩어지며 잔해 더미로 쌓인다(선물상자식 회전 ✗).
+ */
+export function shatterBox(
+  group: THREE.Group,
+  mat: THREE.Material,
+  center: [number, number, number],
+  size: [number, number, number],
+  grid: [number, number, number],
+  r: () => number,
+  opts: { scatter: number; rubbleY: number; spin: number; stagger: number; fallMin: number; fallMax: number }
+): Frag[] {
+  const [cx, cy, cz] = center;
+  const [sx, sy, sz] = size;
+  const [nx, ny, nz] = grid;
+  const fx = sx / nx, fy = sy / ny, fz = sz / nz;
+  const frags: Frag[] = [];
+  for (let i = 0; i < nx; i++)
+    for (let j = 0; j < ny; j++)
+      for (let k = 0; k < nz; k++) {
+        // 격자에 빈틈없이 딱 맞는 크기 → 무너지기 전엔 매끈한 한 면으로 보이고, 붕괴 시에만 갈라짐
+        const m = new THREE.Mesh(new THREE.BoxGeometry(fx, fy, fz), mat);
+        const hx = cx - sx / 2 + fx * (i + 0.5);
+        const hy = cy - sy / 2 + fy * (j + 0.5);
+        const hz = cz - sz / 2 + fz * (k + 0.5);
+        m.position.set(hx, hy, hz);
+        group.add(m);
+        frags.push({
+          mesh: m,
+          home: new THREE.Vector3(hx, hy, hz),
+          rest: new THREE.Vector3(
+            hx + (r() * 2 - 1) * opts.scatter, // 좌우로 약간 흩어지며
+            opts.rubbleY * (0.35 + r() * 1.0), // 바닥 잔해 더미 높이
+            hz + (r() * 2 - 1) * opts.scatter
+          ),
+          axis: new THREE.Vector3(r() * 2 - 1, r() * 2 - 1, r() * 2 - 1).normalize(),
+          spin: opts.spin * (0.4 + r() * 1.0),
+          // 높은 조각일수록 살짝 먼저 떨어지게(윗부분부터 무너져 내림)
+          delay: r() * opts.stagger * (1 - 0.4 * (hy / Math.max(0.001, cy + sy / 2))),
+          fall: opts.fallMin + r() * (opts.fallMax - opts.fallMin),
+        });
+      }
+  return frags;
+}
+
+/** 한 조각을 경과시간 te(초)에 맞춰 배치 — 수직은 중력 가속(p²), 수평/회전은 부드럽게 정착(ease). */
+export function fallFrag(f: Frag, te: number): void {
+  const p = Math.min(1, Math.max(0, (te - f.delay) / f.fall));
+  if (p <= 0) return; // 트리거 전 — 제자리 유지
+  const pv = p * p; // 중력 가속 낙하
+  const ph = ease(p); // 수평 산포·텀블은 정착감 있게
+  f.mesh.position.set(lerp(f.home.x, f.rest.x, ph), lerp(f.home.y, f.rest.y, pv), lerp(f.home.z, f.rest.z, ph));
+  f.mesh.quaternion.setFromAxisAngle(f.axis, f.spin * ph);
+}
+
+/**
+ * 비스듬한 사각/삼각 지붕면(네 꼭짓점 c00·c10·c01·c11 의 쌍선형 패치)을 nu×nv 슬래브 조각으로 쪼갠다.
+ * 각 조각의 외곽면이 이상적 지붕면 위에 정확히 놓여 인접 셀과 매끈히 맞물림 → 무너지기 전엔 한 장의 경사면.
+ * (c01==c11 이면 위 모서리가 한 점으로 모이는 삼각면 = 모임지붕 측면.)
+ */
+function roofFace(
+  group: THREE.Group,
+  mat: THREE.Material,
+  c00: THREE.Vector3,
+  c10: THREE.Vector3,
+  c01: THREE.Vector3,
+  c11: THREE.Vector3,
+  nu: number,
+  nv: number,
+  thick: number,
+  r: () => number,
+  opts: { scatter: number; rubbleY: number; spin: number; stagger: number; fallMin: number; fallMax: number }
+): Frag[] {
+  const frags: Frag[] = [];
+  const P = (u: number, v: number) => {
+    const ax = c00.x + (c10.x - c00.x) * u, ay = c00.y + (c10.y - c00.y) * u, az = c00.z + (c10.z - c00.z) * u;
+    const bx = c01.x + (c11.x - c01.x) * u, by = c01.y + (c11.y - c01.y) * u, bz = c01.z + (c11.z - c01.z) * u;
+    return new THREE.Vector3(ax + (bx - ax) * v, ay + (by - ay) * v, az + (bz - az) * v);
+  };
+  const IDX = [0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7];
+  for (let i = 0; i < nu; i++)
+    for (let j = 0; j < nv; j++) {
+      const o0 = P(i / nu, j / nv), o1 = P((i + 1) / nu, j / nv);
+      const o2 = P((i + 1) / nu, (j + 1) / nv), o3 = P(i / nu, (j + 1) / nv);
+      const n = new THREE.Vector3().subVectors(o1, o0).cross(new THREE.Vector3().subVectors(o3, o0));
+      if (n.lengthSq() < 1e-8) continue; // 퇴화 셀(꼭짓점) 건너뜀
+      n.normalize().multiplyScalar(-thick); // 두께를 안쪽(지붕면 아래)으로
+      const pts = [o0, o1, o2, o3, o0.clone().add(n), o1.clone().add(n), o2.clone().add(n), o3.clone().add(n)];
+      const C = new THREE.Vector3();
+      for (const p of pts) C.add(p);
+      C.multiplyScalar(1 / 8); // 조각 중심 → mesh.position(텀블 회전축의 원점)
+      const pos = new Float32Array(24);
+      for (let k = 0; k < 8; k++) {
+        pos[k * 3] = pts[k].x - C.x;
+        pos[k * 3 + 1] = pts[k].y - C.y;
+        pos[k * 3 + 2] = pts[k].z - C.z;
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      g.setIndex(IDX);
+      g.computeVertexNormals();
+      const m = new THREE.Mesh(g, mat);
+      m.position.copy(C);
+      group.add(m);
+      frags.push({
+        mesh: m,
+        home: C.clone(),
+        rest: new THREE.Vector3(C.x + (r() * 2 - 1) * opts.scatter, opts.rubbleY * (0.35 + r() * 1.0), C.z + (r() * 2 - 1) * opts.scatter),
+        axis: new THREE.Vector3(r() * 2 - 1, r() * 2 - 1, r() * 2 - 1).normalize(),
+        spin: opts.spin * (0.4 + r() * 1.0),
+        delay: r() * opts.stagger,
+        fall: opts.fallMin + r() * (opts.fallMax - opts.fallMin),
+      });
+    }
+  return frags;
+}
+
+/** 로우폴리 해변 집(붕괴용 조각 모음) — userData 에 벽/지붕 조각 배열(Frag[]). */
 export function beachHouse(): THREE.Group {
   const house = new THREE.Group();
   house.name = "house";
   const wallMat = new THREE.MeshStandardMaterial({ color: 0xd8c9ad, roughness: 0.95, flatShading: true });
-  const roofMat = new THREE.MeshStandardMaterial({ color: 0x7c3b2b, roughness: 0.95, flatShading: true });
+  const roofMat = new THREE.MeshStandardMaterial({ color: 0x7c3b2b, roughness: 0.95, flatShading: true, side: THREE.DoubleSide });
+  const r = rng(0x5eed6); // 재생마다 동일한 붕괴 패턴
   const floor = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.4, 5.6), wallMat);
   floor.position.set(0, 0.2, 0);
   house.add(floor);
-  // 쓰러질 벽(밑변 피벗 그룹 — 한 번의 회전으로 바깥쪽으로 넘어감)
-  const walls: { g: THREE.Group; axis: "x" | "z"; ang: number }[] = [];
-  const topWall = (w: number, h: number, d: number, px: number, pz: number, axis: "x" | "z", ang: number) => {
-    const g = new THREE.Group();
-    g.position.set(px, 0, pz); // 밑변에 피벗
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wallMat);
-    m.position.set(0, h / 2, 0);
-    g.add(m);
-    house.add(g);
-    walls.push({ g, axis, ang });
-  };
-  const Q = (Math.PI / 2) * 0.96;
-  topWall(6, 4, 0.3, 0, -2.5, "x", -Q); // 뒤벽 → -z
-  topWall(0.3, 4, 5, -3, 0, "z", Q); // 왼벽 → -x
-  topWall(0.3, 4, 5, 3, 0, "z", -Q); // 오른벽 → +x
-  // 유저(카메라)에 가까운 앞벽(쓰러지지 않고 유지)
-  const front = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 0.3), wallMat);
-  front.position.set(0, 2, 2.5);
-  house.add(front);
-  // 지붕
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(6.8, 0.5, 5.6), roofMat);
-  roof.position.set(0, 4.3, 0);
-  house.add(roof);
-  house.userData = { walls, roof };
+
+  // 4면 벽 — 각 면을 10조각 이상으로 쪼개 제자리에서 와르르 무너지게
+  const wallOpt = { scatter: 0.7, rubbleY: 0.45, spin: 2.6, stagger: 0.45, fallMin: 0.5, fallMax: 0.95 };
+  const wallFrags: Frag[] = [
+    ...shatterBox(house, wallMat, [0, 2, -2.5], [6, 4, 0.3], [5, 3, 1], r, wallOpt), // 뒤벽 15
+    ...shatterBox(house, wallMat, [-3, 2, 0], [0.3, 4, 5], [1, 3, 5], r, wallOpt), // 왼벽 15
+    ...shatterBox(house, wallMat, [3, 2, 0], [0.3, 4, 5], [1, 3, 5], r, wallOpt), // 오른벽 15
+    ...shatterBox(house, wallMat, [0, 2, 2.5], [6, 4, 0.3], [5, 3, 1], r, wallOpt), // 앞벽 15
+  ];
+
+  // 지붕 — 모임지붕(4면이 비스듬히 능선으로 모임). 각 면을 슬래브 조각으로 쪼개 파사삭 부서져 내림.
+  const eaveY = 4.0, ridgeY = 5.7, hx = 3.4, hz = 2.8, rx = hx - hz; // 처마/능선 높이·지붕 반폭(능선은 x로 ±rx)
+  const A = new THREE.Vector3(-hx, eaveY, hz), B = new THREE.Vector3(hx, eaveY, hz); // 앞 처마 모서리(좌·우)
+  const Cc = new THREE.Vector3(hx, eaveY, -hz), D = new THREE.Vector3(-hx, eaveY, -hz); // 뒤 처마 모서리(우·좌)
+  const RL = new THREE.Vector3(-rx, ridgeY, 0), RR = new THREE.Vector3(rx, ridgeY, 0); // 능선 양끝
+  const roofOpt = { scatter: 0.5, rubbleY: 0.55, spin: 3.2, stagger: 0.4, fallMin: 0.35, fallMax: 0.7 };
+  const roofFrags: Frag[] = [
+    ...roofFace(house, roofMat, A, B, RL, RR, 4, 2, 0.18, r, roofOpt), // 앞면(+z) 사다리꼴 8
+    ...roofFace(house, roofMat, Cc, D, RR, RL, 4, 2, 0.18, r, roofOpt), // 뒷면(-z) 사다리꼴 8
+    ...roofFace(house, roofMat, D, A, RL, RL, 3, 2, 0.18, r, roofOpt), // 왼면(-x) 삼각 6
+    ...roofFace(house, roofMat, B, Cc, RR, RR, 3, 2, 0.18, r, roofOpt), // 오른면(+x) 삼각 6
+  ];
+
+  house.userData = { wallFrags, roofFrags };
   return house;
 }
 

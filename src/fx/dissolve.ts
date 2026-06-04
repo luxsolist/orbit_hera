@@ -73,8 +73,8 @@ const fragmentShader = /* glsl */ `
     // 소멸이 진행될수록 경계가 더 강하게 타오르도록
     col += uEdgeColor * (1.0 - edge) * (0.5 + uProgress);
 
-    // 피격 순간 표면 전체가 흰색으로 번쩍(타격감) — Bloom과 결합해 강하게 터짐
-    col += vec3(2.0) * uFlash;
+    // 피격 순간 표면이 자기 색조로 강하게 번쩍(타격감) — 순백 대신 색조 유지로 적색(약)/청백(강) 가독성 보존
+    col += uEdgeColor * 2.6 * uFlash;
 
     gl_FragColor = vec4(col, 1.0);
   }
@@ -87,6 +87,7 @@ export function createDissolveMaterial(
   const mat = new THREE.ShaderMaterial({
     vertexShader,
     fragmentShader,
+    side: THREE.DoubleSide, // 큰 적이 STOP_DIST(2.2m)까지 다가와 카메라를 감싸도 내부→레이캐스트 적중 등록(코앞 무피해 버그 방지)
     uniforms: {
       uBaseColor: { value: new THREE.Color(baseColor) },
       uEdgeColor: { value: new THREE.Color(edgeColor) },

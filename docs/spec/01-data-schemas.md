@@ -9,6 +9,7 @@ SEED의 전투 드론·무기·전장은 모두 **런타임에 내려받는 JSON
 
 소스 타입: [`src/player/DroneSpec.ts`](../../src/player/DroneSpec.ts) ·
 [`src/weapons/WeaponSpec.ts`](../../src/weapons/WeaponSpec.ts) ·
+[`src/enemies/PlasmoidSpec.ts`](../../src/enemies/PlasmoidSpec.ts) ·
 [`src/world/MapData.ts`](../../src/world/MapData.ts)
 
 ---
@@ -47,7 +48,8 @@ SEED의 전투 드론·무기·전장은 모두 **런타임에 내려받는 JSON
 fallGravity, fallTerminal, maxRiseHeight, coyoteTime }`.
 
 **`FlyMove`** (`mode: "fly"`): `speed`, `accel`, `verticalSpeed`, `ceiling`(지면 대비 최대 고도),
-`rollDeg`(좌우 이동 뱅킹 각), `spawnHeight`(지면 대비 스폰 고도, ceiling 내로 클램프).
+`rollDeg`(좌우 이동 뱅킹 각), `spawnHeight`(지면 대비 스폰 고도, ceiling 내로 클램프),
+`minAltitude?`(비행 하한 고도 — 지면 대비, 지상 안전지대로 못 내려오게. 없으면 0).
 
 **`ActionButton`**: `{ label, key, desc }` — `key`는 `KeyboardEvent.code`. 모바일 버튼을 누르는 동안
 그 키를 합성(hold). 배열 순서 = `[ACT1(우상), ACT2(우하=엄지 홈)]`.
@@ -59,11 +61,14 @@ fallGravity, fallTerminal, maxRiseHeight, coyoteTime }`.
 ### `index.json` — 카탈로그
 ```jsonc
 [
-  { "id": "frequency-beam", "name": "주파수 빔 / FREQUENCY BEAM", "type": "beam" },
-  { "id": "special-barrage","name": "다중 빔 살포 / BARRAGE",    "type": "barrage" }
+  { "id": "frequency-beam-heavy", "name": "중주파 빔 / HEAVY BEAM", "type": "beam" },
+  { "id": "frequency-beam-light", "name": "경주파 빔 / LIGHT BEAM", "type": "beam" },
+  { "id": "special-barrage",      "name": "다중 빔 살포 / BARRAGE", "type": "barrage" },
+  { "id": "special-overdrive",    "name": "오버드라이브 / OVERDRIVE","type": "stream" }
 ]
 ```
-`type`은 `"beam" | "barrage"`.
+`type`은 `"beam" | "barrage" | "stream"`. 기본무기는 드론별로 다르다(walker=heavy, flyer=light).
+`WeaponSpec` 유니온 = `BeamSpec | BarrageSpec | StreamSpec`.
 
 ### `BeamSpec` (`type: "beam"`)
 | 필드 | 의미 |
@@ -72,9 +77,12 @@ fallGravity, fallTerminal, maxRiseHeight, coyoteTime }`.
 | `range` | 사거리 m |
 | `color` | 빔 색 |
 | `beamLifetime` | 빔 잔상 수명 s |
+| `muzzleOffsets?` | 발사관 측면 오프셋 배열 m — 없으면 단발(`[0]`), `[-x,x]`면 듀얼 발사관(데미지는 **발사관당** 적용) |
 | `manual{ damage, freqCost, fireInterval, assistConeDeg }` | 좌클릭 수동 사격(에임 어시스트 콘) |
-| `auto{ damage, freqCost, fireInterval, range, coneDeg }` | 근거리 자동발사 |
+| `auto{ damage, freqCost, fireInterval, range }` | 근거리 360° 오토파이어(콘 없음 — 최근접 소프트락) |
 | `falloff{ refDist, maxMult, minMult }` | 거리 비례 위력(아래 [02](02-drones-weapons.md#데미지-모델)) |
+
+오토와 수동은 **독립 쿨다운**으로 같은 프레임에 동시 발사 가능하다(`auto.coneDeg`는 360° 전환으로 제거됨).
 
 ### `BarrageSpec` (`type: "barrage"`)
 | 필드 | 의미 |
@@ -83,16 +91,74 @@ fallGravity, fallTerminal, maxRiseHeight, coyoteTime }`.
 | `maxBeams` | 동시 타깃(빔) 최대 수 |
 | `coneDeg` | 전방 살포 콘 |
 | `range` | 사거리 m |
-| `cooldown` | 발동 쿨다운 s |
+| `cooldown` | 사용 종료 후 쿨다운 s |
 | `drainRate` | 발동 중 초당 주파수 소모 |
 | `salvoInterval` | 살포 간격 s |
 | `salvoDamage` | 살포 1회 빔당 데미지 |
 | `beamLifetime` | 빔 잔상 수명 s |
 | `colorBeam`, `colorGlow` | 빔/글로우 색 |
+| `falloff{ refDist, maxMult, minMult }` | 거리 비례 위력(특수는 일반보다 완만) |
+
+### `StreamSpec` (`type: "stream"`)
+오버드라이브 — 발동 시 게이지가 닳을 때까지 듀얼 발사관으로 전방 연속 사격.
+
+| 필드 | 의미 |
+| :--- | :--- |
+| `abbr` | 짧은 라벨 |
+| `range` | 사거리 m |
+| `cooldown` | 사용 종료 후 쿨다운 s |
+| `drainRate` | 발동 중 초당 주파수 소모 |
+| `fireInterval` | 사격 간격 s |
+| `damage` | 발사관당 타격(거리 falloff 적용) |
+| `assistConeDeg` | 에임 어시스트 콘 |
+| `muzzleOffsets` | 발사관 측면 오프셋 배열(듀얼) |
+| `beamLifetime` | 빔 잔상 수명 s |
+| `colorBeam`, `colorGlow` | 빔/글로우 색 |
+| `falloff{ refDist, maxMult, minMult }` | 거리 비례 위력(특수는 일반보다 완만) |
+
+특수무기(`barrage`/`stream`)는 공통 `SpecialWeapon` 인터페이스(update/reset/cooldownReady/
+cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(사용 종료) 후부터** 시작한다.
 
 ---
 
-## 3. 전장 (`public/maps/`)
+## 3. 적 (`public/enemies/`)
+
+### `index.json` — 카탈로그
+```jsonc
+[ { "id": "plasmoid", "name": "플라즈모이드 / PLASMOID" } ]
+```
+`id`마다 `public/enemies/<id>.json` 상세 파일이 존재해야 한다.
+
+### `<id>.json` — PlasmoidSpec
+체력(밸런스)과 보이는 크기(연출)를 분리하는 "분리형" 모델. 색은 별 표면온도(K)에 묶인다.
+
+| 필드 | 타입 | 의미 |
+| :--- | :--- | :--- |
+| `id`, `name` | string | 카탈로그 id / 표시명 |
+| `hp.basePerArea` | number | 가장 낮은 색·지름 1m 기준 HP (`HP = basePerArea × 지름² × 색가중치`) |
+| `hp.minDiameter` / `hp.maxDiameter` | number | 체력 산정용 지름 하한/상한 m |
+| `color.stops[]` | `ColorStop[]` | 온도-색-가중치 기준점(저온 적색·최약 → 고온 청백·최강) |
+| `visual.minDiameter` / `visual.maxDiameter` | number | 렌더 지름 하한 / 소프트캡 m |
+| `visual.anchorHp` / `visual.anchorDiameter` | number | 앵커(이 HP일 때 이 렌더 지름)로 크기 곡선 역산 |
+| `visual.exponent` | number | 크기 곡선 가파름(0.7~1.0, 클수록 보스가 거대) |
+| `spawn.tempAlpha` | number | 온도 희귀도 지수 α (`f(T) ∝ T^-α`, 클수록 고온 희귀) |
+| `spawn.speedMax` / `spawn.speedMin` | number | 최약(적색) / 최강(청백) 개체 이동속도 |
+| `spawn.hpFloor` / `spawn.hpCeil` | number | '강함' 정규화 하한/상한 HP |
+| `altitude.airRef` / `altitude.depthRef` | number | 공중 가속 포화 고도(현 220, 0–300m 전투 밴드 전체에 걸침) / 수중·지하 감속 포화 깊이 m |
+| `altitude.airBoostMax` / `altitude.depthSlowMax` | number | 공중 최대 가속 비율 / 수중·지하 최대 감속 비율 |
+| `contact.hpDamage` | number | 약체(s=0)·지표 접촉 시 흡수 에너지 = 플레이어 HP 피해 = 적 회복량 |
+| `contact.strengthMul` | number | 강함 s=1 추가 배수 → `×(1+strengthMul·s)` |
+| `contact.altWeakRef` | number | 이 고도(m)에서 접촉 약화가 하한에 도달 |
+| `contact.altWeakMin` | number | 고고도 피해 하한 배수(고공일수록 약화 → 빠른 공중전 유도) |
+
+**`ColorStop`**: `{ temp(K), color("0xRRGGBB"), weight(체력 가중치, 최저색=1.0 기준) }`.
+
+순수 산출식(체력·색·렌더크기·속도·온도 샘플)은 [`PlasmoidSpec.ts`](../../src/enemies/PlasmoidSpec.ts)에
+모듈로 분리되어 있고, 내장 `DEFAULT_PLASMOID`가 JSON과 동치임을 테스트가 검증한다.
+
+---
+
+## 4. 전장 (`public/maps/`)
 
 ### `index.json` — 카탈로그 (`MapCatalogEntry`)
 `{ id, name, subtitle, bytes?, buildings?, lat?, lon? }`. `lat/lon`은 세계지도 점 표시용(equirectangular).
@@ -135,6 +201,7 @@ fallGravity, fallTerminal, maxRiseHeight, coyoteTime }`.
 
 - **드론**: `public/drones/<id>.json` 작성 + `index.json`에 한 줄. `mode`로 보행/비행 자동 분기.
 - **무기**: `public/weapons/<id>.json` 작성 + `index.json`. 드론의 `weapons.{primary,special}`에서 참조.
+- **적**: `public/enemies/<id>.json` 작성 + `index.json`. 체력·색·크기·속도가 데이터로 산출된다.
 - **전장**: `public/maps/<id>.json` + `index.json`(lat/lon 포함). 특수 권역은 `precinct`로 기술.
 
 추가 즉시 [`tests/specs.test.ts`](../../tests/specs.test.ts)가 필수 필드·교차참조(dangling 무기/맵 id)·
