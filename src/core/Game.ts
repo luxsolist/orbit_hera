@@ -19,6 +19,7 @@ import { SpecialStream } from "../weapons/SpecialStream";
 import { HUD } from "../ui/HUD";
 import { RearView } from "../ui/RearView";
 import { Minimap } from "../ui/Minimap";
+import { hudSizesFor, hudComponentsFor } from "../ui/hudLayout";
 import { MenuScreen } from "../ui/MenuScreen";
 import { createComposer, disposeComposer } from "../fx/postprocessing";
 import { TargetBrackets } from "../fx/TargetBrackets";
@@ -104,6 +105,7 @@ export class Game {
       onPlayIntro: () => this.playIntro(),
     });
 
+    this.applyHudLayout(); // 화면 비례 HUD 위젯 크기/위치 초기 적용
     window.addEventListener("resize", () => this.onResize());
     document.addEventListener("pointerlockchange", () => this.onPointerLockChange());
     // 페이지 이탈(맵 변경=reload 등) 시 GPU 컨텍스트 즉시 반납 — iOS가 다음 페이지에 컨텍스트를 빨리 내주게 해
@@ -236,6 +238,7 @@ export class Game {
     const minimap = new Minimap(player, enemies, world);
     const brackets = new TargetBrackets(this.scene);
     this.session = { world, player, enemies, beam, special, composer, rearView, minimap, brackets };
+    this.applyHudLayout(); // 새 미니맵을 현재 화면 비례로 동기화
     this.diag.snapshot(this.renderer, "battle-built"); // 세션(컴포저 등) 생성 직후 — 누수 추적 핵심 지점
     this.wireEvents(this.session);
     this.beginPlay();
@@ -401,6 +404,57 @@ export class Game {
     this.intro?.setSize(w, h);
     this.menuBg?.setSize(w, h);
     this.renderer.setSize(w, h);
+    this.applyHudLayout();
+  }
+
+  /**
+   * 전투 HUD 위젯(후방화면·미니맵·코너 텍스트)을 화면 비례 크기/위치로 배치(hudSizesFor 단일 출처).
+   * 후방 GL 뷰포트(RearView)·미니맵 캔버스 해상도(Minimap)는 같은 공식을 직접 쓰고, 여기선 CSS 박스 정렬 담당.
+   */
+  private applyHudLayout() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const { minimap, rearW, rearH, margin } = hudSizesFor(w, h);
+    const c = hudComponentsFor(w, h);
+    const px = (n: number) => `${n}px`;
+
+    const rear = document.querySelector(".hud__rear") as HTMLElement | null;
+    if (rear) {
+      rear.style.width = px(rearW);
+      rear.style.height = px(rearH);
+      rear.style.top = px(margin);
+      rear.style.left = px(margin);
+    }
+    const mm = document.getElementById("minimap");
+    if (mm) {
+      mm.style.top = px(margin);
+      mm.style.right = px(margin);
+    }
+    this.session?.minimap.resize(minimap);
+
+    // 코너 텍스트는 각 위젯 아래로 내려 겹치지 않게(좌=후방 아래, 우=미니맵 아래)
+    const tl = document.querySelector(".hud__corner--tl") as HTMLElement | null;
+    if (tl) tl.style.top = px(margin + rearH + 22);
+    const tr = document.querySelector(".hud__corner--tr") as HTMLElement | null;
+    if (tr) tr.style.top = px(margin + minimap + 10);
+
+    // 상단 중앙 게이지(가로 좁은 비율에서 축소된 폭 적용) — CSS clamp 를 인라인으로 덮어씀
+    const gauges = document.querySelector(".hud__gauges") as HTMLElement | null;
+    if (gauges) {
+      gauges.style.top = px(c.gaugeTop);
+      gauges.style.gap = px(c.gaugeGap);
+      gauges.querySelectorAll<HTMLElement>(".hud__bar").forEach((b) => (b.style.width = px(c.bar)));
+    }
+
+    // 우하단 터치 버튼 클러스터(존재 시 = 터치 기기)
+    const btns = document.querySelector(".tc__buttons") as HTMLElement | null;
+    if (btns) {
+      btns.style.gridTemplateColumns = `repeat(2, ${c.btn}px)`;
+      btns.style.gridTemplateRows = `repeat(2, ${c.btn}px)`;
+      btns.style.gap = px(c.btnGap);
+      btns.style.right = px(c.btnInset);
+      btns.style.bottom = px(c.btnInset);
+    }
   }
 }
 

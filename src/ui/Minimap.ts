@@ -1,9 +1,8 @@
 import type { PlayerController } from "../player/PlayerController";
 import type { EnemyManager } from "../enemies/EnemyManager";
 import type { World, MinimapSink } from "../world/World";
+import { hudSizesFor } from "./hudLayout";
 
-const SIZE = 180; // 캔버스 픽셀(정사각)
-const HALF = SIZE / 2;
 const WORLD_RADIUS = 70; // 미니맵 가장자리가 표현하는 월드 반경(유닛)
 
 // 희미한 지형/건물 레이어 색(배경 위, 마커 아래)
@@ -23,7 +22,9 @@ export class Minimap implements MinimapSink {
   private player: PlayerController;
   private enemies: EnemyManager;
   private world: World;
-  private scale: number;
+  private scale!: number; // 픽셀/월드유닛 (configureCanvas 에서 설정)
+  private size!: number; // 캔버스 한 변(px, 화면 비례)
+  private half!: number;
 
   // 현재 프레임 투영 상태(싱크 콜백에서 사용)
   private px = 0;
@@ -36,28 +37,40 @@ export class Minimap implements MinimapSink {
   constructor(player: PlayerController, enemies: EnemyManager, world: World) {
     this.canvas = document.getElementById("minimap") as HTMLCanvasElement;
     if (!this.canvas) throw new Error("#minimap canvas not found");
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.canvas.width = SIZE * dpr;
-    this.canvas.height = SIZE * dpr;
-    this.canvas.style.width = `${SIZE}px`;
-    this.canvas.style.height = `${SIZE}px`;
     const ctx = this.canvas.getContext("2d");
     if (!ctx) throw new Error("2D context unavailable");
     this.ctx = ctx;
-    this.ctx.scale(dpr, dpr);
 
     this.player = player;
     this.enemies = enemies;
     this.world = world;
-    this.scale = HALF / WORLD_RADIUS; // 픽셀/월드유닛
+    this.configureCanvas(hudSizesFor(window.innerWidth, window.innerHeight).minimap);
+  }
+
+  /** 화면 크기 변화 시 캔버스/스케일 갱신(Game.onResize 에서 호출). */
+  resize(size: number): void {
+    this.configureCanvas(size);
+  }
+
+  /** 캔버스 백킹 해상도(DPR)·CSS 크기·월드 스케일을 size(px)에 맞춰 설정. */
+  private configureCanvas(size: number): void {
+    this.size = size;
+    this.half = size / 2;
+    this.scale = this.half / WORLD_RADIUS; // 픽셀/월드유닛
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.canvas.width = size * dpr;
+    this.canvas.height = size * dpr;
+    this.canvas.style.width = `${size}px`;
+    this.canvas.style.height = `${size}px`;
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 리사이즈로 변환 초기화 후 DPR 재적용
   }
 
   /** 월드(wx,wz) → 미니맵 픽셀(bx,by). 시점 정렬(위=시선). 할당 없이 필드에 기록. */
   private project(wx: number, wz: number): void {
     const dx = wx - this.px;
     const dz = wz - this.pz;
-    this.bx = HALF + (dx * this.cos - dz * this.sin) * this.scale;
-    this.by = HALF + (dx * this.sin + dz * this.cos) * this.scale;
+    this.bx = this.half + (dx * this.cos - dz * this.sin) * this.scale;
+    this.by = this.half + (dx * this.sin + dz * this.cos) * this.scale;
   }
 
   // ── MinimapSink: World.queryMinimap 이 근처 형상마다 호출 ──
@@ -120,18 +133,20 @@ export class Minimap implements MinimapSink {
 
   render() {
     const ctx = this.ctx;
-    const cx = HALF;
-    const cy = HALF;
+    const half = this.half;
+    const size = this.size;
+    const cx = half;
+    const cy = half;
 
     // ---- 배경: 원형 클리핑 + 어두운 청록 ----
-    ctx.clearRect(0, 0, SIZE, SIZE);
+    ctx.clearRect(0, 0, size, size);
     ctx.save();
     ctx.beginPath();
-    ctx.arc(cx, cy, HALF - 1, 0, Math.PI * 2);
+    ctx.arc(cx, cy, half - 1, 0, Math.PI * 2);
     ctx.closePath();
     ctx.clip();
     ctx.fillStyle = "rgba(5, 12, 18, 0.78)";
-    ctx.fillRect(0, 0, SIZE, SIZE);
+    ctx.fillRect(0, 0, size, size);
 
     const yaw = this.player.viewYaw;
     this.px = this.player.worldPosition.x;
@@ -155,7 +170,7 @@ export class Minimap implements MinimapSink {
 
     // ---- 시야 콘(위쪽 부채꼴) ----
     const fovHalf = (72 * Math.PI) / 180 / 2; // 메인 카메라 FOV 의 절반
-    const coneR = HALF - 4;
+    const coneR = half - 4;
     ctx.fillStyle = "rgba(52, 245, 255, 0.10)";
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -171,8 +186,8 @@ export class Minimap implements MinimapSink {
       const dist = Math.hypot(lp.x, lp.y);
       if (dist > WORLD_RADIUS) {
         const a = Math.atan2(lp.y, lp.x);
-        const ex = cx + Math.cos(a) * (HALF - 8);
-        const ey = cy + Math.sin(a) * (HALF - 8);
+        const ex = cx + Math.cos(a) * (half - 8);
+        const ey = cy + Math.sin(a) * (half - 8);
         ctx.fillStyle = "rgba(255, 59, 78, 0.55)";
         ctx.beginPath();
         ctx.arc(ex, ey, 2.5, 0, Math.PI * 2);
@@ -212,16 +227,16 @@ export class Minimap implements MinimapSink {
     ctx.strokeStyle = "rgba(52, 245, 255, 0.55)";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(cx, cy, HALF - 1, 0, Math.PI * 2);
+    ctx.arc(cx, cy, half - 1, 0, Math.PI * 2);
     ctx.stroke();
     // 십자선
     ctx.strokeStyle = "rgba(52, 245, 255, 0.18)";
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(cx, 0);
-    ctx.lineTo(cx, SIZE);
+    ctx.lineTo(cx, size);
     ctx.moveTo(0, cy);
-    ctx.lineTo(SIZE, cy);
+    ctx.lineTo(size, cy);
     ctx.stroke();
   }
 

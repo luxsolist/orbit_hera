@@ -20,15 +20,28 @@
 
 ## HUD
 
-체력/주파수 게이지, 크로스헤어(발사 점멸 `flashFire`), 처치 수/웨이브, 특수무기 쿨다운 링(진행률·
-잔여초·발동중), 피격 비네팅(`flashDamage`), 유닛명. DOM은 [index.html](../../index.html)에 정적 배치,
-런타임에 갱신.
+체력/주파수 게이지(**화면 상단 가운데** `.hud__gauges`, 좌우 나란히), 크로스헤어(발사 점멸 `flashFire`),
+처치 수/웨이브, 특수무기 쿨다운 링(진행률·잔여초·발동중), 피격 비네팅(`flashDamage`), 유닛명. DOM은
+[index.html](../../index.html)에 정적 배치, 런타임에 갱신.
+
+## 화면 비례 레이아웃 (hudLayout)
+
+후방화면·미니맵·여백·코너 텍스트·우하단 버튼이 **화면 짧은 변**(`min(가로,세로)`)에 비례해 크기 조정 —
+작은 폰은 작게, 큰 태블릿/데스크톱은 크게(아이폰 과대·아이패드 과소 문제 해소).
+- 순수 `hudSizes(shortSide)` / `hudSizesFor(w,h)` → `{minimap, rearW, rearH, margin}`(상·하한 클램프,
+  후방=미니맵 비례). **단일 출처**: JS(후방 GL 뷰포트·미니맵 캔버스 해상도)와 CSS 박스 정렬이 같은 값을 씀.
+  ([tests/hudLayout.test.ts](../../tests/hudLayout.test.ts))
+- `Game.applyHudLayout()` 가 init/리사이즈/세션생성 시 `.hud__rear`·`#minimap` CSS 박스와 코너 텍스트
+  `top` 을 배치하고 `Minimap.resize()` 호출. 순수 CSS 요소(게이지 폭·버튼 크기)는 `vmin`+`clamp()`로 직접 비례.
+- 우하단 터치 버튼(`.tc__buttons`)은 `clamp(76px,13vmin,104px)`로 키움(기존 64px).
 
 ## Minimap · RearView
 
 - **Minimap** — 플레이어 주변을 `world.queryMinimap(cx,cz,r,sink)`로 받아 캔버스에 지형/도로/수역/
-  건물/적/콜라이더를 위에서 내려다본 뷰로 그림. 플레이어 yaw로 회전.
-- **RearView** — 후방 카메라를 별도 렌더 타깃에 그려 HUD에 후방 시야 위젯 제공.
+  건물/적/콜라이더를 위에서 내려다본 뷰로 그림. 플레이어 yaw로 회전. 캔버스 크기/DPR은 `configureCanvas(size)`
+  로 화면 비례 설정, `resize(size)`로 리사이즈 대응.
+- **RearView** — 후방 카메라를 메인 캔버스 좌상단에 viewport/scissor로 덧그림. 박스 크기/여백/종횡비는
+  매 프레임 `hudSizesFor`로 산출(CSS 테두리 박스와 동일 공식 → 정렬).
 
 ## 인트로 / 메뉴 배경
 

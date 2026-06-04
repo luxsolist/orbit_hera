@@ -61,13 +61,16 @@
 - 디졸브 셸 머티리얼은 `DoubleSide` — 거대 개체가 `STOP_DIST`(2.2m)까지 다가와 카메라를 감싸도 내부 면이 레이캐스트에 적중 등록(코앞에서 무피해이던 버그 수정).
 - 피격 플래시는 순백 대신 셸 자기 색조로 번쩍여 적색(약체)/청백(강체) 가독성을 보존(`dissolve` 프래그먼트 셰이더 `uFlash`).
 
-`update(dt, target, speedScale=1)`는 두 책임으로 분리(가독성):
+`update(dt, target, speedScale=1, steer?)`는 두 책임으로 분리(가독성):
 - **`updateVisual(dt)`** — 피격 플래시(제곱 감쇠) · 디졸브 진행 · 박동(pulse) 스케일/발광. 소멸 중이면 `false` 반환 → 이동 생략.
-- **`updateMotion(dt, target, speedScale)`** — 3D 추적 + 자유 부유 + 공격 쿨다운. `speedScale`은 고도 가중(`altitudeSpeedMult`).
+- **`updateMotion(dt, target, speedScale, steer?)`** — 3D 추적 + 자유 부유 + 공격 쿨다운. `speedScale`은 고도 가중(`altitudeSpeedMult`). `steer` 제공 시 예측 요격 + 분리 조향.
 
-### 이동 — 자유 부유 + 3D 추적
+### 이동 — 자유 부유 + 3D 추적 (군집 조향)
 - **지형/물체와 충돌하지 않고** 자유롭게 떠다닌다(지표면 지향성·강하 없음).
-- 플레이어를 향해 **상하 포함 3D**로 다가온다 — 순수 `pursueStep(from, to, speed, dt, stopDist)`. `STOP_DIST=2.2m` 이내면 정지(접촉 교전 거리). ([tests/pursue.test.ts](../../tests/pursue.test.ts))
+- 플레이어를 향해 **상하 포함 3D**로 다가온다. `steer` 없으면 단순 호밍 `pursueStep`, 있으면 아래 군집 조향을 합성. `STOP_DIST=2.2m` 이내면 추격 정지(접촉 교전 거리). ([tests/pursue.test.ts](../../tests/pursue.test.ts))
+- **예측 요격(`interceptPoint`)** — 현재 위치가 아니라 플레이어의 **예상 미래 위치**(현위치 + 속도×리드, `LEAD_MAX=1s`)로 향함. 플레이어가 원을 그려도 안쪽을 가로질러 끊고 들어와, 뒤로 모아 한 덩어리로 만드는 카이팅을 차단.
+- **분리(`separationVector`)** — 반경(자기+상대 반경+`SEP_MARGIN=2`) 안의 동료를 거리 반비례로 밀어냄(`SEP_GAIN=0.7`). 한 점에 겹쳐 쌓이지 않고 플레이어 주위로 퍼진 무리(링)가 됨. `STOP_DIST` 이내에서도 적용.
+- 추격+분리는 `steerVelocity`로 합성 후 **최고속도(speed)로 클램프**. 플레이어 속도는 `EnemyManager`가 프레임 변위 EMA(`dt·8`)로 추정하며, 동료 스냅샷(`boids`)은 프레임 시작 시점으로 고정(순서 무관).
 - 미세 상하 흔들림(`BOB_AMPLITUDE=0.4`, `BOB_RATE=2`, 누적 없는 진동)으로 부유감.
 
 ### 전투
@@ -86,8 +89,9 @@
 - `SPAWN_CEILING=300`은 일반 플라즈모이드 전투 밴드 상한 = 비행드론 천장(300m)과 일치. 300m **위** 고도는 향후 항공모함·보스급 콘텐츠 전용으로 비워 둔다.
 - 외형/속도는 `rollAppearance(spec, wave, Math.random)` → `SeedEnemy(pos, {maxHp,diameter,color}, speed)`.
 
-### 매 프레임 고도 가중 (`update`)
-- 각 적의 `altitude = enemy.y − world.heightAt(x,z)`를 계산해 `enemy.update(dt, playerPos, altitudeSpeedMult(spec, altitude))`로 속도 배수 전달(영역별 드론 추격 균형).
+### 매 프레임 고도 가중 + 군집 조향 (`update`)
+- 각 적의 `altitude = enemy.y − world.heightAt(x,z)`를 계산해 `altitudeSpeedMult(spec, altitude)`로 속도 배수 전달(영역별 드론 추격 균형).
+- 프레임 시작 시 플레이어 속도(EMA)·살아있는 적 스냅샷(`boids`)을 갱신하고, alive 적에 `{vel, boids, index}`를 `steer`로 넘겨 **예측 요격 + 분리**를 적용(원돌기·뭉침 방지). 디졸브 중인 적은 비주얼만 진행. 재입장(`clear`) 시 속도 추정 리셋(순간이동 스파이크 방지).
 - 접촉 시 `tryAttack(playerPos, ATTACK_RANGE=3.2)` → `contactDamage(spec, enemy.maxHp, altitude)`로 흡수량 산출 → `player.takeDamage(absorb)`가 적용되면 `enemy.absorbEnergy(absorb)`로 **적이 같은 양만큼 체력 회복** + `onPlayerHit(absorb)`. 즉 플라즈모이드가 닿게 두면 적이 회복한다.
 - `SeedEnemy.absorbEnergy(amount)` — `hp`를 `maxHp` 한도 내에서 회복(살아있을 때만).
 

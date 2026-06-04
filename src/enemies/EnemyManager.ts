@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { SeedEnemy } from "./SeedEnemy";
+import { SeedEnemy, type Boid } from "./SeedEnemy";
 import type { World } from "../world/World";
 import type { PlayerController } from "../player/PlayerController";
 import { TERRAIN_HALF } from "../world/World";
@@ -34,6 +34,11 @@ export class EnemyManager {
   killCount = 0;
   private spawnTimer = 0;
   private pendingSpawns = 0;
+  // 군집 조향용 — 플레이어 속도 추정(예측 요격) + 살아있는 적 스냅샷(분리)
+  private prevPlayer = new THREE.Vector3();
+  private hasPrevPlayer = false;
+  private playerVel: Vec3 = { x: 0, y: 0, z: 0 };
+  private boids: Boid[] = [];
 
   onKill?: () => void;
   onPlayerHit?: (damage: number) => void;
@@ -135,11 +140,38 @@ export class EnemyManager {
 
     const playerPos = this.player.worldPosition;
 
+    // 플레이어 속도 추정(예측 요격용) — 프레임 변위 EMA 평활
+    if (this.hasPrevPlayer && dt > 1e-4) {
+      const a = Math.min(1, dt * 8);
+      this.playerVel.x += ((playerPos.x - this.prevPlayer.x) / dt - this.playerVel.x) * a;
+      this.playerVel.y += ((playerPos.y - this.prevPlayer.y) / dt - this.playerVel.y) * a;
+      this.playerVel.z += ((playerPos.z - this.prevPlayer.z) / dt - this.playerVel.z) * a;
+    }
+    this.prevPlayer.copy(playerPos);
+    this.hasPrevPlayer = true;
+
+    // 살아있는 적 스냅샷(분리용) — enemies 의 alive 부분과 같은 순서 → 아래 루프의 bi 와 인덱스 정합.
+    const boids = this.boids;
+    boids.length = 0;
+    for (const e of this.enemies) {
+      if (e.state === "alive") {
+        const p = e.group.position;
+        boids.push({ x: p.x, y: p.y, z: p.z, r: e.group.scale.x });
+      }
+    }
+
+    let bi = 0; // boids 인덱스(alive 순회 동기)
     for (const enemy of this.enemies) {
       // 고도 가중 — 지면 대비 높이로 속도 배수(공중↑/수중·지하↓). 영역별 드론 추격 균형.
       const p = enemy.group.position;
       const altitude = p.y - this.world.heightAt(p.x, p.z);
-      enemy.update(dt, playerPos, altitudeSpeedMult(this.spec, altitude));
+      if (enemy.state !== "alive") {
+        enemy.update(dt, playerPos, 1); // 디졸브 비주얼만 진행(이동/공격 없음)
+        continue;
+      }
+      // 예측 요격 + 분리 조향(원돌기·뭉침 방지)
+      enemy.update(dt, playerPos, altitudeSpeedMult(this.spec, altitude), { vel: this.playerVel, boids, index: bi });
+      bi++;
 
       if (enemy.tryAttack(playerPos, ATTACK_RANGE)) {
         // 접촉(에너지 흡수) — 강함 비례·고도 약화. 흡수량만큼 플레이어 HP 피해 + 적 자가 회복.
@@ -178,5 +210,7 @@ export class EnemyManager {
     }
     this.enemies = [];
     this.pendingSpawns = 0;
+    this.hasPrevPlayer = false; // 재입장 시 순간이동 변위로 인한 가짜 속도 스파이크 방지
+    this.playerVel.x = this.playerVel.y = this.playerVel.z = 0;
   }
 }

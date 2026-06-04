@@ -86,10 +86,22 @@ body.is-touch {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
 }
-/* 위젯(후방 카메라/미니맵) 아래로 내려 텍스트가 겹치지 않게 한다. */
+/* 위젯(후방 카메라/미니맵) 아래로 내려 텍스트가 겹치지 않게 한다(top 은 JS applyHudLayout 이 화면 비례로 덮어씀). */
 .hud__corner--tl { top: 168px; left: 0; }
 .hud__corner--tr { top: 208px; right: 0; text-align: right; }
-.hud__corner--bl { bottom: 0; left: 0; }
+
+/* 상단 가운데 게이지(체력/주파수) — 좌우로 나란히. 폭은 화면 짧은변(vmin) 비례. */
+.hud__gauges {
+  position: absolute;
+  top: clamp(10px, 2vmin, 18px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: clamp(14px, 3vmin, 28px);
+  align-items: flex-start;
+  pointer-events: none;
+}
+.hud__gauges .hud__bar { margin-top: 0; width: clamp(116px, 22vmin, 240px); }
 
 /* ---------------- 후방 카메라 프레임 ---------------- */
 /* 실제 영상은 메인 캔버스의 좌상단 영역에 viewport 로 그려진다.
@@ -178,12 +190,13 @@ body.is-touch {
 /* 버튼 클러스터: 우하단 삼각 배치 (특수 위, 점프 아래우, 대시 아래좌) */
 .tc__buttons {
   position: absolute;
-  right: 24px;
-  bottom: 24px;
+  right: clamp(20px, 3vmin, 36px);
+  bottom: clamp(20px, 3vmin, 36px);
   display: grid;
-  grid-template-columns: 64px 64px;
-  grid-template-rows: 64px 64px;
-  gap: 14px;
+  /* 화면 짧은변 비례로 키움(폰=약간 크게, 태블릿=더 크게). 기존 64 → 76~104 */
+  grid-template-columns: repeat(2, clamp(76px, 13vmin, 104px));
+  grid-template-rows: repeat(2, clamp(76px, 13vmin, 104px));
+  gap: clamp(14px, 2.4vmin, 22px);
 }
 .tc__btn {
   position: relative;
@@ -191,7 +204,7 @@ body.is-touch {
   background: rgba(5, 12, 18, 0.55);
   border: 1px solid rgba(52, 245, 255, 0.55);
   color: var(--seed-cyan);
-  font-size: 12px;
+  font-size: clamp(13px, 2vmin, 16px);
   font-weight: 700;
   letter-spacing: 0.12em;
   display: flex;
@@ -210,8 +223,8 @@ body.is-touch {
 /* 전투(좌측 열): 기본무기 수동발사(좌상) / 특수(좌하) */
 .tc__btn--fire { grid-column: 1; grid-row: 1; }
 /* 드론 동작(우측 열, 엄지 근처): ACT1(우상) / ACT2(우하 = 엄지 홈) */
-.tc__btn--act1 { grid-column: 2; grid-row: 1; font-size: 18px; letter-spacing: 0; }
-.tc__btn--act2 { grid-column: 2; grid-row: 2; font-size: 18px; letter-spacing: 0; }
+.tc__btn--act1 { grid-column: 2; grid-row: 1; font-size: clamp(18px, 3vmin, 24px); letter-spacing: 0; }
+.tc__btn--act2 { grid-column: 2; grid-row: 2; font-size: clamp(18px, 3vmin, 24px); letter-spacing: 0; }
 .tc__btn--special {
   grid-column: 1;
   grid-row: 2;
@@ -260,8 +273,6 @@ body.is-touch {
 
 /* 모바일 전용 분기 */
 body.is-touch .hud__special { display: none; } /* 우하단 버튼 자체가 인디케이터 역할 */
-body.is-touch .hud__corner--bl { padding: 14px 16px; }
-body.is-touch .hud__bar { width: 180px; }
 .overlay__controls--touch { display: none; }
 body.is-touch .overlay__controls--mouse { display: none; }
 body.is-touch .overlay__controls--touch { display: block; }
@@ -328,6 +339,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 }
 
 .hud__bar { margin-top: 10px; width: 230px; }
+.hud__gauges .hud__label { text-align: center; }
 .hud__bar-track {
   margin-top: 4px;
   height: 9px;

@@ -5,7 +5,7 @@
 [../spec/](../spec/01-data-schemas.md), 사용자용 요약은 [../../README.md](../../README.md)를 참고한다.
 
 > 기준 버전: `package.json` v0.3.0 · 스택: Three.js(WebGL2) + Vite + TypeScript(strict)
-> 테스트: Vitest 단위 **196개**(23파일) + Playwright e2e 스모크(4맵)
+> 테스트: Vitest 단위 **403개**(25파일) + Playwright e2e 스모크(4맵)
 
 ## 핵심 설계 원칙
 
@@ -70,7 +70,7 @@ src/
     maps.ts / geo.ts         맵 fetch / 지오메트리 색 유틸
   ui/
     MenuScreen.ts            세계지도 전장 선택 메뉴 + 팝업
-    HUD.ts, Minimap.ts, RearView.ts, worldMapSvg.ts, styles.css
+    HUD.ts, Minimap.ts, RearView.ts, hudLayout.ts(화면비례 위젯 기하·순수), worldMapSvg.ts, styles.css
   fx/
     dissolve.ts, postprocessing.ts(disposeComposer), damageNumbers.ts, TargetBrackets.ts
   intro/
