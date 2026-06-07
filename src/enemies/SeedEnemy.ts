@@ -3,7 +3,7 @@ import { createDissolveMaterial, type DissolveMaterial } from "../fx/dissolve";
 import type { Vec3 } from "../core/math";
 
 const SHELL_GEO = new THREE.IcosahedronGeometry(1, 2); // 부드러운 유기적 곡면(스펙 1장)
-const CORE_GEO = new THREE.IcosahedronGeometry(0.42, 1);
+export const CORE_GEO = new THREE.IcosahedronGeometry(0.42, 1); // 발광 코어 — EnemyManager 가 InstancedMesh 로 일괄 렌더
 
 const PULSE_RATE = 4; // 박동 위상 속도(rad/s)
 const BOB_RATE = 2; // 자유 부유 위상 속도(rad/s)
@@ -280,10 +280,11 @@ export function kiterVelocity(
  */
 export class SeedEnemy {
   readonly group = new THREE.Group();
-  readonly hitMesh: THREE.Mesh; // 레이캐스트 대상
-  private core: THREE.Mesh;
+  readonly hitMesh: THREE.Mesh; // 레이캐스트 대상(셸)
   private shellMat: DissolveMaterial;
-  private coreMat: THREE.MeshStandardMaterial;
+  // 발광 코어는 메시를 갖지 않고 시각 상태만 보유 — EnemyManager 가 InstancedMesh 로 일괄 렌더(드로우콜 절감).
+  coreScale = 1; // 코어 상대 크기(1=정상, 디졸브 시 0으로 수축)
+  coreBright = 2.2; // 코어 발광 세기(박동/피격/디졸브로 변동)
 
   state: EnemyState = "alive";
   maxHp: number;
@@ -322,14 +323,6 @@ export class SeedEnemy {
     tagEnemy(this.hitMesh, this); // 레이캐스트 → 적 역참조
     this.group.add(this.hitMesh);
 
-    this.coreMat = new THREE.MeshStandardMaterial({
-      color: col.clone().multiplyScalar(0.12),
-      emissive: appearance.color,
-      emissiveIntensity: 2.2,
-    });
-    this.core = new THREE.Mesh(CORE_GEO, this.coreMat);
-    this.group.add(this.core);
-
     this.group.scale.setScalar(this.baseScale);
     this.group.position.copy(position);
   }
@@ -340,7 +333,7 @@ export class SeedEnemy {
     this.hp -= damage;
 
     // 박동 발광 강화 + 피격 순간 표면 전체가 흰색으로 번쩍(타격감)
-    this.coreMat.emissiveIntensity = 6.5;
+    this.coreBright = 6.5;
     this.hitFlash = 1;
 
     if (this.hp <= 0) {
@@ -395,8 +388,8 @@ export class SeedEnemy {
     if (this.state === "dissolving") {
       this.dissolveProgress += dt * 1.8;
       this.shellMat.setProgress(this.dissolveProgress);
-      this.core.scale.setScalar(Math.max(0, 1 - this.dissolveProgress * 1.2));
-      this.coreMat.emissiveIntensity = 4.5 * (1 - this.dissolveProgress);
+      this.coreScale = Math.max(0, 1 - this.dissolveProgress * 1.2); // 코어 수축(인스턴스로 렌더)
+      this.coreBright = 4.5 * (1 - this.dissolveProgress);
       if (this.dissolveProgress >= 1) this.state = "dead";
       return false;
     }
@@ -407,11 +400,8 @@ export class SeedEnemy {
     const pulse = 1 + Math.sin(this.pulsePhase) * 0.06;
     this.group.scale.setScalar(this.baseScale * shrink * pulse);
     this.shellMat.setPulse((Math.sin(this.pulsePhase) + 1) * 0.5);
-    this.coreMat.emissiveIntensity = THREE.MathUtils.lerp(
-      this.coreMat.emissiveIntensity,
-      1.8 + Math.sin(this.pulsePhase) * 0.8,
-      0.1
-    );
+    this.coreScale = 1;
+    this.coreBright = THREE.MathUtils.lerp(this.coreBright, 1.8 + Math.sin(this.pulsePhase) * 0.8, 0.1);
     return true;
   }
 
@@ -461,7 +451,6 @@ export class SeedEnemy {
 
   dispose() {
     this.shellMat.dispose();
-    this.coreMat.dispose();
   }
 }
 

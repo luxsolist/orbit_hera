@@ -61,13 +61,15 @@
   - 셀 ≥ 최대 reach 라 **전수 계산과 결과가 정확히 동일**(누락·중복 0, jitter 없음). 동등성 단위 테스트로 고정(`pursue.test.ts`)
   - `EnemyManager.update`가 grid 빌드 후 `steer.grid` 로 주입(거머리/모기 공통). 분리 비용 ~187K→~선형
 
-- [ ] **⭐⭐⭐ InstancedMesh 전환 — 남은 GPU 게이트(1000 렌더의 핵심)** (`SeedEnemy`/`EnemyManager`/`weapons`)
-  - 개체당 draw call 2개(셸+코어)×N → **셸/코어 InstancedMesh 2개로** 감소. CPU(분리·조향)는 이미 그리드+프레임분산으로 해결됐고, **1000을 60fps로 렌더하려면 이게 필수.**
-  - **작업 범위(주의 — 전투·시각 회귀 위험, 별도 집중 패스 + e2e/육안 검증 권장):**
-    1. 렌더 소유권 이전: `SeedEnemy`는 상태(pos/hp/scale/color/dissolve)만, `EnemyManager`가 매 프레임 `setMatrixAt`/`setColorAt` 로 InstancedMesh 갱신.
-    2. **디졸브 인스턴싱**: `fx/dissolve.ts` 정점셰이더에 `instanceMatrix`(월드좌표) + 인스턴스 속성 `aProgress/aPulse/aFlash` 추가(개체별 uniform → instanced attribute). 또는 단순화(스케일·발광 페이드)로 셰이더 인스턴싱 회피(시각 약간 변경).
-    3. **레이캐스트**: `beamFx`/`SpecialBarrage`/`SpecialStream` 의 `intersectObjects(hitMeshes)` → 셸 InstancedMesh 1개 레이캐스트 후 `instanceId`→enemy 매핑. 배러지의 개체별 `t.mesh` 레이캐스트는 표적 위치 기반으로 대체.
-  - 예상 공수: 3~5일
+- [x] **⭐⭐⭐ 코어 InstancedMesh** (`SeedEnemy.coreScale/coreBright` + `EnemyManager.updateCoreInstances`) ✅
+  - 발광 코어를 개체별 메시 → `EnemyManager` 소유 **InstancedMesh 1개**로 일괄 렌더(매 프레임 상태에서 `setMatrixAt`/`setColorAt`). 코어 드로우콜 N→1.
+  - 순수 시각 요소(레이캐스트 비대상)라 **전투 코드 무변경** → 안전. e2e 4맵 PASS(렌더·비블랙·에러0). 인스턴싱 파이프라인 구축 완료.
+  - 비고: 코어 발광은 `MeshBasic instanceColor = color·coreBright·0.55`(Bloom) — 글로우 톤은 육안 튜닝 필요할 수 있음(`CORE_BLOOM`).
+
+- [ ] **⭐⭐⭐ 셸 InstancedMesh — 남은 GPU 게이트(전투·레이캐스트)** (`SeedEnemy`/`EnemyManager`/`weapons`)
+  - 셸(본체·그림자·**레이캐스트 대상**·디졸브)을 인스턴싱해야 1000을 60fps로 렌더. 코어 파이프라인 재사용.
+  - **위험(자동검증 불가 — 반드시 플레이테스트):** (1) 셸 InstancedMesh 레이캐스트 → `instanceId`→enemy 매핑(`beamFx`/`SpecialStream`), (2) `SpecialBarrage` 개체별 `t.mesh` 레이캐스트 → 표적 위치 기반 직접 적용, (3) 디졸브는 **하이브리드**(살아있는 셸=인스턴스드 라이트 머티리얼 / 디졸브 중 소수=개별 디졸브 셰이더 메시)로 셰이더 인스턴싱 회피.
+  - 예상 공수: 2~3일
 
 - [ ] **⭐⭐ 화면 밖·원거리 sleep** — frustum + 원거리 개체는 AI(이동·조향·표적선택) 스킵
   - 모기 `turnToward`/수직회피 삼각함수 비용도 함께 절감. 예상 공수: 1일
