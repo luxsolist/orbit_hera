@@ -26,7 +26,7 @@ import { TargetBrackets } from "../fx/TargetBrackets";
 import { CinematicPlayer } from "../intro/CinematicPlayer";
 import { MenuBackground } from "../intro/MenuBackground";
 import { introScenes } from "../intro/scenes";
-import { fetchMap } from "../world/maps";
+import { fetchMap, loadTerrainHeights } from "../world/maps";
 
 type GameState = "intro" | "menu" | "loading" | "playing" | "paused" | "dead";
 
@@ -216,7 +216,8 @@ export class Game {
     // 다음 프레임으로 넘겨 UI 가 갱신되도록
     await new Promise((r) => setTimeout(r, 16));
 
-    const world = new World(this.scene, map);
+    const terrainHeights = await loadTerrainHeights(map); // DEM 하이트맵(있으면) — 없으면 null → 절차적 폴백
+    const world = new World(this.scene, map, terrainHeights);
     const aspect = window.innerWidth / window.innerHeight;
     const player = new PlayerController(this.input, world, aspect, drone);
     this.hud.setUnitName(drone.name);

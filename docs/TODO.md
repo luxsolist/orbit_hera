@@ -104,16 +104,15 @@
 
 ## 2. 지형 시스템 — 실제 랜드마크 맵
 
-**현황**: 지형은 Gaussian 봉우리 합산만 가능. 최대 높이 ~250m, 협곡·절벽 불가, 지형 콜리전 미완성.
+**현황**: 맵 데이터는 **섹션형 스키마 v2**(terrain/objects/underground). 지형은 **DEM 하이트맵(Float32 .bin) 바이리니어 샘플** 시스템 + **절차적 폴백**(가우시안). 실측 DEM **데이터 취득**만 남음(아래).
 
 ### 개선 항목
 
-- [ ] **⭐⭐⭐ TerrainField → NASA DEM 하이트맵 교체** (`TerrainField.ts:82`)
-  - `heightAt(x,z)`를 Float32 PNG 바이리니어 샘플링으로 교체
-  - NASA SRTM 90m DEM 사용 (공개 무료, GeoTIFF → Float32 변환)
-  - 효과: 에베레스트(8,848m)·후지산(3,776m)·그랜드 캐니언 실제 형태 구현
-  - 성능: heightAt() 비용 100µs → 0.5µs (200배), 지형 메모리 26.7MB → 1MB
-  - 예상 공수: 1~2일
+- [x] **⭐⭐⭐ DEM 하이트맵 지형 시스템 + 섹션형 맵 스키마** ✅ (`MapData`/`TerrainField`/`maps.ts`/`build-terrain.mjs`)
+  - **섹션형 스키마 v2**: 한 JSON 안에 `terrain`(높이장/해수면/수역) · `objects`(건물/도로/랜드마크/경계) · `underground`(예약) 독립 섹션 → 맵 에디터에서 레이어별 커스텀 대비. 순수 `normalizeMapData(raw)` 가 **평면(v1)·섹션(v2) 모두 수용**(무중단 마이그레이션).
+  - **하이트맵**: `terrain.heightmap`(Float32 raw `.bin`, src/size/meters/origin) → `sampleHeightmap` 바이리니어(− seaLevel). 없으면 **절차적 폴백**. 런타임 `loadTerrainHeights`(fetch→Float32Array, 실패 시 폴백). `TerrainField` 가 우선순위 처리.
+  - **빌드 파이프라인**: `build-maps.mjs` 가 v2 섹션형 출력. `build-terrain.mjs synthetic <id>` 로 .bin 생성(런타임 경로 검증 완료). 테스트: `mapData.test.ts`(정규화·샘플), `terrainField.test.ts`(DEM·폴백).
+  - **남은 것(데이터 취득, 별도)**: 실 NASA SRTM 90m / AWS Terrarium → `.bin` 변환(네트워크·PNG/GeoTIFF 디코드 의존). `build-terrain.mjs` 의 `sampleElevation` 교체 + 맵별 `heightmap` 스펙 추가 + `camera.far` 확장(에베레스트 조망). 예상 공수: 1~2일
 
 - [ ] **⭐⭐⭐ 지형 콜리전 완성** (`PlayerController.ts:350`)
   - `standSurfaceY()`가 이미 `heightAt()`를 ground로 사용 중 — 절반 구현됨
@@ -235,12 +234,40 @@ interface SubLayer {
 
 **현황**: 맵 1장 = JSON 전체 로드, ±3km 하드 경계(`PlayerController.ts:248`). Float32 좌표는 ±3km 넘으면 정밀도 저하.
 
+### 청크 크기 + 고속/고공 churn 분석
+
+맵 데이터는 §2의 **섹션형 스키마(terrain/objects/underground)** 를 청크 좌표로 분할. 청크변 `C`, 로드 반경 `R`, 속도 `v` 일 때:
+
+> **로드율 = 2·R·v / C²** (1/C에 **제곱** 비례 → 작은 청크 + 고속이 치명적). 실측 맨해튼 밀도 ~716동/km²·147KB/km².
+
+| 청크변 | 시야 내(R=3km) | 동/청크 | KB/청크 | v=1000m/s 로드율 |
+|---|--:|--:|--:|--:|
+| 512 m | ~169 | ~190 | ~39 | **22.9/s** (히치) |
+| **1024 m** ⭐ | ~49 | ~750 | ~154 | 5.7/s |
+| 2048 m | ~16 | ~3,000 | ~616 | 1.4/s |
+
+- **진짜 비용은 fetch 가 아니라 동기 빌드**(`mergeGeometries` 건물 압출 + 콜리전 삽입) — 청크당 수~수십 ms → 초당 몇 개만 돼도 프레임 히치.
+- **고공/고속은 건물 디테일이 보이지도·필요하지도 않음** → 단순히 청크를 키우는 게 아니라 **고도/속도 적응 LOD** 가 핵심.
+
+### 권장 설계
+
+- **기본 청크 1024 m**(2의 거듭제곱 → 인덱스 `floor(x/1024)`, DEM 64²@16m 텍스처 친화). 모바일도 1024(반경 축소로 대응 — 512는 고속과 상충).
+- **고도/속도 적응 LOD**: 저고도·저속 = 세밀 청크 1024m(건물+지형, 작은 반경) / 고고도·고속 = **거친 지형 타일 4096m(건물 생략)**, 큰 반경. 고공 v=1000·R=20km 라도 거친 타일만 → 초당 ~2.4(값싼 DEM).
+- **비동기·시간예산 빌드**: 프레임당 ≤~4ms 큐로 빌드 분할(또는 Web Worker) → 청크 크기 무관하게 히치를 구조적으로 제거(가장 중요).
+- **히스테리시스**(로드 R / 언로드 R+밴드) — 경계 호버 thrash 차단. **속도방향 프리페치**(창을 v·lead 만큼 전진) — 도착 전 준비. **LRU 캐시** — 빠른 왕복 재빌드 회피.
+
 ### 개선 항목 (순서 의존성 있음)
 
+- [x] **⭐⭐ ChunkStreamer 스켈레톤** ([chunkStream.ts](../../src/world/chunkStream.ts)) ✅ — 고도/속도 적응 LOD·속도방향 프리페치·히스테리시스·시간예산 빌드 큐·동시fetch 상한·LRU 캐시. 순수 결정 로직(`desiredLoad`/`keepSet`/`fineActive`) + 주입형 `ChunkIO`(fetch/build/dispose) 오케스트레이터. **실 청크 데이터/메시 빌드 배선은 미연결**(IO 훅만). 테스트: [chunkStream.test.ts](../../tests/chunkStream.test.ts).
 - [ ] **⭐⭐⭐ Floating Origin** — 플레이어를 항상 (0,0,0) 근처에 유지, 청크를 상대좌표로 배치. `PlayerController` + `CollisionWorld` + 렌더러 전반. 가장 큰 변경.
 - [ ] **⭐⭐⭐ 동적 CollisionWorld** — `SpatialGrid` 정적 빌드(`CollisionWorld.ts:129`)를 청크 로드/언로드 시 collider 추가·제거 가능하도록 재작성.
-- [ ] **⭐⭐ 청크 기반 스트리밍** — 위경도 기반 타일 포맷, 반경 n km 로드, 방향 예측 프리페치, 이탈 청크 dispose.
-- [ ] **⭐⭐ 지하·수중 레이어** — 4번과 연동, Y축 멀티레이어.
+- [x] **⭐⭐ 전지구 타일 월드 생성기 (DEM+OSM 결합)** ([build-world.mjs](../../scripts/build-world.mjs) · [chunkManifest.ts](../../src/world/chunkManifest.ts) · [mapLocator.ts](../../src/world/mapLocator.ts)) ✅
+  - **위경도 셀 디렉터리** `maps/<floor(lat)>/<floor(lon)>/` 안에 **1024m 청크 파일 `<cx>_<cz>.json`** — 한 파일에 **지형(DEM 하이트맵 재샘플 33²) + 오브젝트(OSM 건물 centroid·도로 세그먼트·수역) + `underground:null`(추후 병합)** 결합. 셀 원점 = NW 모서리(`cell+1, cell`), 좌표는 셀-로컬 m로 재투영.
+  - **셀 매니페스트** `tiles.json`(존재 청크 + 격자 파라미터) + **전역** `maps/landmarks.json`(랜드마크 → 위경도/셀/청크). 위치 조회: 순수 `cellChunkOf(lat,lon)` + `fetchWorldChunkAt(lat,lon)`/`fetchLandmarkLocation`(mapLocator).
+  - 경복궁 생성·검증: `maps/37/126/`(99 청크, 10 오브젝트/99 지형, 북한산 청크 550m) + tiles.json + landmarks.json. 테스트: chunkManifest·mapLocator.
+  - **기존 `maps/<id>.json` 모놀리식 보존**(레거시, 향후 삭제). 직전 per-id 청크 레이아웃은 이 타일 월드로 대체(build-chunks 제거).
+- [ ] **⭐⭐ ChunkStreamer ↔ 타일 월드 배선** — `ChunkIO` 구현(fetch=tiles.json + `<cx>_<cz>.json`, build=청크→메시(지형+오브젝트), dispose) + 게임 진입을 `cellChunkOf`/`fetchWorldChunkAt` 로 전환. Floating Origin(셀-로컬 좌표가 km대라 필수) 과 함께. *현재는 모놀리식 `<id>.json` 렌더(타일은 생성·조회 함수만).*
+- [ ] **⭐⭐ 지하·수중 레이어** — 4번과 연동, Y축 멀티레이어(`underground` 섹션).
 
 ### 단계별 예상 공수
 

@@ -8,10 +8,18 @@
 `World`는 한때 724줄 god-class였으나 책임을 3개 모듈로 분리했다: **TerrainField**(공간 질의),
 **SkyEnvironment**(대기/조명), **precinct**(권역 양식 해석). `World`는 메시 빌더 + 조율에 집중.
 
+## 맵 데이터 — 섹션형 스키마 v2 + 정규화
+
+맵 JSON은 **`terrain` / `objects` / `underground`** 독립 섹션(맵 에디터 레이어별 커스텀 대비). 로더가 순수
+`normalizeMapData(raw)`([MapData.ts](../../src/world/MapData.ts))로 **평면(v1)·섹션(v2) 모두** canonical 섹션형
+(`NormalizedMap`)으로 변환 → `World`/`TerrainField`는 `map.terrain.*`/`map.objects.*`만 소비. 기존 평면 맵 무수정 동작.
+([tests/mapData.test.ts](../../tests/mapData.test.ts))
+
 ## World — 전장 메시 빌더
 
-생성자에서 순서대로 빌드(= 의존 순서): `field` → 지형 → 도로 → 차선 → 수역 → 건물 → 랜드마크 →
-권역 담장 → `collision.finalize()` → `sky`. 빌더별 역할은 [spec/03-maps.md](../spec/03-maps.md#렌더-구성-요소).
+생성자 `(scene, map: NormalizedMap, terrainHeights?)` — 순서대로 빌드(= 의존 순서): `field` → 지형 → 도로 →
+차선 → 수역 → 건물 → 랜드마크 → 권역 담장 → `collision.finalize()` → `sky`. `terrainHeights`(DEM `.bin`)는
+`Game`이 `loadTerrainHeights`로 로드해 주입(없으면 절차적 폴백). 빌더별 역할은 [spec/03-maps.md](../spec/03-maps.md#렌더-구성-요소).
 
 외부 API: `heightAt(x,z)`(→ field 위임), `resolveCollision`/`topAt`(→ collision 위임),
 `queryMinimap(cx,cz,r,sink)`(미니맵용 근처 형상 방문), `update(px,pz)`(→ sky 태양 추종).
@@ -21,9 +29,11 @@
 맵 데이터로부터 연속 공간 함수를 해석적으로 계산. 같은 (x,z)엔 항상 같은 값(부수효과 없음 →
 테스트 가능, [tests/terrainField.test.ts](../../tests/terrainField.test.ts)).
 
-- `heightAt(x,z)` — 산세(가우시안 봉우리 합) + 완만한 기복, **도심 평탄 영역에서 0으로 수렴**.
+- `heightAt(x,z)` — **DEM 하이트맵 우선**: `terrain.heightmap` + 로드된 `heights` 있으면 `sampleHeightmap`
+  바이리니어(− `seaLevel`); 없으면 **절차적 폴백**(가우시안 봉우리 합 + 완만 기복, 도심 평탄 영역에서 0 수렴).
 - `cityMask(x,z)` — 건물 분포 bbox 안=1 → 가장자리 산지=0(smoothstep).
-- `inPalace(x,z)` — 경계 폴리곤 내부 판정(레이캐스팅). 권역/담장/도로억제의 기하 게이트.
+- `inPalace(x,z)` — 경계 폴리곤(`objects.boundary`) 내부 판정(레이캐스팅). 권역/담장/도로억제의 기하 게이트.
+- 하이트맵 빌드: `scripts/build-terrain.mjs`(Float32 raw `.bin`) — 합성 생성기 + 실 DEM 가이드.
 
 ## SkyEnvironment — 대기/조명
 

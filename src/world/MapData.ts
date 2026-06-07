@@ -147,3 +147,140 @@ export interface PrecinctSpec {
   /** 둘레 담장 */
   wall?: PrecinctWall;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 섹션형 스키마 v2 — 지형 / 오브젝트 / 지하를 한 JSON 안의 **독립 섹션**으로 분리.
+// 맵 에디터에서 각 레이어(지형·건물·지하)를 따로 커스텀하기 위함. 하위호환은 normalizeMapData 가 담당.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** DEM 기반 하이트맵 — Float32 raw(.bin, size×size, row-major) 를 로컬 격자에 매핑. */
+export interface HeightmapSpec {
+  src: string; // public 경로(Float32 raw little-endian, size*size 개)
+  size: number; // 격자 한 변 텍셀 수 N (N×N)
+  meters: number; // 커버 변 길이(m) — 텍셀당 = meters/(size-1)
+  originX?: number; // 좌상단(최소 x) 로컬 m. 기본 -meters/2
+  originZ?: number; // 좌상단(최소 z) 로컬 m. 기본 -meters/2
+}
+
+/** 절차적 지형(하이트맵 없을 때 폴백) — 현 가우시안 봉우리 + 완만 기복 + 도심 평탄화. */
+export interface ProceduralTerrain {
+  mountains?: Mountain[];
+  flattenCity?: boolean; // 도심(건물 bbox) 평탄화. 기본 true
+  ripple?: number; // 완만한 기복 진폭(m). 기본 3
+}
+
+/** 지형 섹션 — 지표면 높이장 + 해수면 + 수역. (에디터: 지형 레이어) */
+export interface TerrainSpec {
+  seaLevel?: number; // 해수면 Y(m). 기본 0
+  heightmap?: HeightmapSpec; // 있으면 DEM 샘플, 없으면 procedural
+  procedural?: ProceduralTerrain;
+  water?: Ring[]; // 수역 폴리곤
+}
+
+/** 지표 위 오브젝트 섹션 — 건물·도로·랜드마크·경계. (에디터: 오브젝트 레이어) */
+export interface ObjectsSpec {
+  buildings: Ring[];
+  roads: Ring[];
+  landmarks?: Landmark[];
+  boundary?: number[];
+  gates?: { x: number; z: number; r: number }[];
+  precinct?: PrecinctSpec;
+}
+
+/** 지하 섹션 — §4 지하 공간 시스템 대비 골격(현재 예약). (에디터: 지하 레이어) */
+export interface UndergroundSpec {
+  layers?: unknown[]; // 추후: 터널/역/동굴 레이어(top/bottom 콜라이더 포함)
+}
+
+/** 정규화된 전장 데이터(섹션형 canonical) — World/TerrainField 가 소비. */
+export interface NormalizedMap {
+  id: string;
+  name: string;
+  subtitle: string;
+  meta: { lat0: number; lon0: number; source: string; schema: number };
+  terrain: TerrainSpec;
+  objects: ObjectsSpec;
+  underground?: UndergroundSpec;
+  spawn: SpawnPoint;
+}
+
+/**
+ * 평면(v1) 또는 섹션(v2) 원본 JSON → 섹션형 canonical(`NormalizedMap`). 순수.
+ * - v2(`objects` 존재): 섹션을 그대로 쓰되 누락 기본값 채움.
+ * - v1(평면): 최상위 `buildings/roads/...` → `objects`, `water/mountains` → `terrain`으로 끌어올림.
+ */
+export function normalizeMapData(raw: any): NormalizedMap {
+  const meta = {
+    lat0: raw?.meta?.lat0 ?? 0,
+    lon0: raw?.meta?.lon0 ?? 0,
+    source: raw?.meta?.source ?? "",
+    schema: raw?.meta?.schema ?? (raw?.objects ? 2 : 1),
+  };
+  const spawn: SpawnPoint = raw?.spawn ?? { x: 0, z: 0, yaw: 0 };
+
+  if (raw?.objects) {
+    // v2 — 섹션형. 기본값만 보강.
+    const t = raw.terrain ?? {};
+    return {
+      id: raw.id, name: raw.name, subtitle: raw.subtitle, meta, spawn,
+      terrain: {
+        seaLevel: t.seaLevel ?? 0,
+        heightmap: t.heightmap,
+        procedural: t.procedural ?? { flattenCity: true, ripple: 3 },
+        water: t.water ?? [],
+      },
+      objects: {
+        buildings: raw.objects.buildings ?? [],
+        roads: raw.objects.roads ?? [],
+        landmarks: raw.objects.landmarks,
+        boundary: raw.objects.boundary,
+        gates: raw.objects.gates,
+        precinct: raw.objects.precinct,
+      },
+      underground: raw.underground,
+    };
+  }
+
+  // v1 — 평면. 끌어올려 섹션화.
+  return {
+    id: raw.id, name: raw.name, subtitle: raw.subtitle, meta, spawn,
+    terrain: {
+      seaLevel: 0,
+      procedural: { mountains: raw.mountains ?? [], flattenCity: true, ripple: 3 },
+      water: raw.water ?? [],
+    },
+    objects: {
+      buildings: raw.buildings ?? [],
+      roads: raw.roads ?? [],
+      landmarks: raw.landmarks,
+      boundary: raw.boundary,
+      gates: raw.gates,
+      precinct: raw.precinct,
+    },
+    underground: raw.underground,
+  };
+}
+
+/**
+ * 하이트맵 바이리니어 샘플 — 로컬 (x,z) 의 지표 높이(m). 격자 밖은 가장자리 클램프. 순수.
+ * heights: Float32 row-major size×size, 행=z 증가, 열=x 증가. originX/Z = 좌상단(최소) 로컬 m.
+ */
+export function sampleHeightmap(
+  heights: Float32Array, size: number, meters: number,
+  originX: number, originZ: number, x: number, z: number
+): number {
+  const step = meters / (size - 1);
+  // 격자 좌표(부동)
+  const gx = (x - originX) / step;
+  const gz = (z - originZ) / step;
+  const cx = Math.min(size - 1, Math.max(0, gx));
+  const cz = Math.min(size - 1, Math.max(0, gz));
+  const x0 = Math.floor(cx), z0 = Math.floor(cz);
+  const x1 = Math.min(size - 1, x0 + 1), z1 = Math.min(size - 1, z0 + 1);
+  const fx = cx - x0, fz = cz - z0;
+  const h00 = heights[z0 * size + x0], h10 = heights[z0 * size + x1];
+  const h01 = heights[z1 * size + x0], h11 = heights[z1 * size + x1];
+  const top = h00 + (h10 - h00) * fx;
+  const bot = h01 + (h11 - h01) * fx;
+  return top + (bot - top) * fz;
+}

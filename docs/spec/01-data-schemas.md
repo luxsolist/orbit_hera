@@ -177,20 +177,30 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 ### `index.json` — 카탈로그 (`MapCatalogEntry`)
 `{ id, name, subtitle, bytes?, buildings?, lat?, lon? }`. `lat/lon`은 세계지도 점 표시용(equirectangular).
 
-### `<id>.json` — MapData
-| 필드 | 의미 |
+### `<id>.json` — 섹션형 스키마 v2 (`NormalizedMap`)
+
+한 JSON 안에 **지형 / 오브젝트 / 지하**를 독립 섹션으로 분리(맵 에디터 레이어별 커스텀 대비). 로더(`fetchMap`)가
+순수 `normalizeMapData(raw)`로 **평면(v1)·섹션(v2) 모두 수용**해 canonical 섹션형으로 변환한다(기존 평면 맵 무수정 동작).
+
+| 섹션 / 필드 | 의미 |
 | :--- | :--- |
-| `id`, `name`, `subtitle` | 식별/표시 |
-| `meta{ lat0, lon0, source }` | 투영 원점 + 출처(OSM ODbL) |
-| `buildings: Ring[]` | 건물 윤곽(`p:[x,z,...]`, `h` 높이) |
-| `roads: Ring[]` | 도로 폴리라인(`w` 폭) |
-| `water: Ring[]` | 수역 폴리곤 |
-| `boundary?: number[]` | 닫힌 경계 폴리곤(특수 권역/담장 기준) |
-| `gates?` | 담장 개구부(문) `{x,z,r}[]` |
-| `landmarks?: Landmark[]` | 데이터 구동 양식화 구조물(전부 `type:"structure"`) |
-| `mountains?: Mountain[]` | 배경 산세(가우시안 봉우리 `{x,z,h,r}`) |
+| `meta{ lat0, lon0, source, schema }` | 투영 원점 + 출처(OSM ODbL) + 스키마 버전(2) |
+| **`terrain`** | 지형 레이어 — 높이장·해수면·수역 |
+| `terrain.seaLevel?` | 해수면 Y(m), 기본 0 |
+| `terrain.heightmap?{ src, size, meters, originX?, originZ? }` | **DEM 하이트맵**(Float32 raw `.bin`, size×size). 있으면 바이리니어 샘플(− seaLevel) |
+| `terrain.procedural?{ mountains?, flattenCity?, ripple? }` | 하이트맵 없을 때 폴백(가우시안 봉우리 + 기복 + 도심 평탄화) |
+| `terrain.water?: Ring[]` | 수역 폴리곤 |
+| **`objects`** | 오브젝트 레이어 — 지표 위 구조물 |
+| `objects.buildings: Ring[]` | 건물 윤곽(`p:[x,z,...]`, `h` 높이) |
+| `objects.roads: Ring[]` | 도로 폴리라인(`w` 폭) |
+| `objects.landmarks?: Landmark[]` | 데이터 구동 양식화 구조물(전부 `type:"structure"`) |
+| `objects.boundary?: number[]` | 닫힌 경계 폴리곤(특수 권역/담장 기준) |
+| `objects.gates?` | 담장 개구부(문) `{x,z,r}[]` |
+| `objects.precinct?: PrecinctSpec` | 경계 내부 특수 권역 양식(아래) |
+| **`underground?`** | 지하 레이어 — §4 지하 공간 대비 골격(예약, `layers[]`) |
 | `spawn?: { x, z, yaw }` | 플레이어 스폰(없으면 원점) |
-| `precinct?: PrecinctSpec` | 경계 내부 특수 권역 양식(아래) |
+
+> **하이트맵 빌드**: `node scripts/build-terrain.mjs synthetic <id> [size] [meters]` → `public/maps/<id>.terrain.bin`. 실 DEM은 `sampleElevation` 교체(SRTM/Terrarium). 런타임은 `loadTerrainHeights`로 fetch(실패 시 폴백).
 
 ### `PrecinctSpec` — 권역 일반화 (예: 궁궐 경내)
 경계(`boundary`) 내부를 코드 분기 없이 데이터로 특수 처리한다.
@@ -208,6 +218,24 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 }
 ```
 `Landmark.excludeR`: 이 반경 안 OSM 건물을 생략하고 양식화 메시로 대체.
+
+### 전지구 타일 월드 — DEM+OSM 결합 1024m 청크 (`chunkManifest.ts`)
+
+대규모/전지구는 **위경도 정수도 셀 디렉터리**(`maps/<floor(lat)>/<floor(lon)>/`)를 타고 들어가 그 위치의 **1024m 청크**를
+읽는다. 한 청크 파일 = **지형(DEM)+오브젝트(OSM)+지하** 결합. 빌드: `node scripts/build-world.mjs <id> [chunkSize=1024] [terrainSize=33]`.
+계약: [`chunkManifest.ts`](../../src/world/chunkManifest.ts), 조회: [`mapLocator.ts`](../../src/world/mapLocator.ts).
+
+```
+public/maps/landmarks.json                       # 전역 랜드마크 → 위치: { "<name>": { mapId, lat, lon, cell, cx, cz } }
+public/maps/<latCell>/<lonCell>/tiles.json       # 셀 청크 인덱스: { cell, originLat/Lon, chunkSize, terrainSize, mLon, chunks:[{cx,cz,objects,terrain}] }
+public/maps/<latCell>/<lonCell>/<cx>_<cz>.json   # 1024m 청크(결합):
+   { cx, cz, terrain:{ size, seaLevel, heights[size²] }, objects:{ buildings, roads, water }, underground:null }
+```
+
+- 셀 = `floor(lat)/floor(lon)`(1°≈111km). **셀 원점 = NW 모서리**(lat=cell+1, lon=cell); 청크 좌표 = 셀-로컬 m(재투영, x동/z남 ≥0), `cx=floor(x/1024)`.
+- **위치 조회**(순수 `cellChunkOf(lat,lon)` → 셀+청크): `fetchWorldChunkAt(lat,lon)`(그 1024m 청크), `fetchLandmarkLocation(name)`(랜드마크 위치).
+- 청크변 1024m(TODO §5 — churn ∝ v·R/C²). 좌표가 km대 → 런타임은 Floating Origin 필요(§5).
+- **레거시**: 기존 `maps/<id>.json` 모놀리식은 보존(현재 게임 렌더가 사용). 타일 월드는 생성·조회 함수만 — 스트리밍 배선은 §5(`ChunkStreamer.ChunkIO`).
 
 ---
 

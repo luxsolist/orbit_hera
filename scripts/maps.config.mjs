@@ -16,6 +16,8 @@ export const MAPS = [
     // 이미 빌드된 맵 자신을 소스로 재사용(OSM 데이터는 그대로 통과, 랜드마크/문/스폰만 재베이킹).
     // 최초/전체 재수집이 필요하면 from 을 지우면 bbox 로 Overpass 수집한다.
     local: { from: "public/maps/gyeongbokgung.json" },
+    // 테스트용 10km×10km 합성 DEM(서울 산세). 생성: node scripts/build-terrain.mjs synthetic gyeongbokgung 512 10000
+    heightmap: { src: "maps/gyeongbokgung.terrain.bin", size: 512, meters: 10000 },
     mountains: [
       { x: 120, z: -1250, h: 250, r: 300 }, // 북악산
       { x: -1150, z: -260, h: 220, r: 320 }, // 인왕산

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import type { MapData, SpawnPoint } from "./MapData";
+import type { NormalizedMap, SpawnPoint } from "./MapData";
 import { CollisionWorld } from "./CollisionWorld";
 import { StructureBuilder } from "./StructureBuilder";
 import { TerrainField } from "./TerrainField";
@@ -37,7 +37,7 @@ export class World {
   readonly group = new THREE.Group();
   /** 플레이어 스폰(맵 데이터 기준) */
   readonly spawn: SpawnPoint;
-  private map: MapData;
+  private map: NormalizedMap;
   /** 지형 높이·도심/경계 마스크 등 연속 공간 질의 계층. */
   private readonly field: TerrainField;
   /** 충돌 세계 — 원기둥/건물 OBB/오목 삼각형/궁장 박스 + 격자 브로드페이즈. */
@@ -47,10 +47,10 @@ export class World {
   /** 대기/조명(태양 그림자 추종 포함). */
   private readonly sky: SkyEnvironment;
 
-  constructor(scene: THREE.Scene, map: MapData) {
+  constructor(scene: THREE.Scene, map: NormalizedMap, terrainHeights: Float32Array | null = null) {
     this.map = map;
     this.spawn = map.spawn ?? { x: 0, z: 0, yaw: 0 };
-    this.field = new TerrainField(map);
+    this.field = new TerrainField(map, terrainHeights);
     this.buildTerrain();
     this.buildRoads();
     this.buildLaneMarkings();
@@ -76,7 +76,7 @@ export class World {
   /** 미니맵 등 표현 레이어: 시야 반경 내 지형/건물/콜라이더를 (내부 노출 없이) 싱크로 방문. */
   queryMinimap(cx: number, cz: number, radius: number, sink: MinimapSink): void {
     // 수역(폴리곤) — 개수 적어 선형 + 중심 컬링
-    for (const w of this.map.water) {
+    for (const w of this.map.terrain.water ?? []) {
       const q = w.p;
       const m = q.length / 2;
       if (m < 3) continue;
@@ -86,7 +86,7 @@ export class World {
       sink.water(q);
     }
     // 도로(세그먼트) — 중점 컬링
-    for (const r of this.map.roads) {
+    for (const r of this.map.objects.roads) {
       const q = r.p;
       const n = q.length / 2;
       if (n < 2) continue;
@@ -126,7 +126,7 @@ export class World {
     const granite = new THREE.Color(0xa8b2be); // 밝은 한색 화강암
     const urban = new THREE.Color(0xc2bdb0); // 도심 지표(밝은 포장 콘크리트)
     // 특수 권역(경계 내부) 바닥색 — 데이터 구동. 없으면 권역 맨땅 처리 안 함.
-    const bareGround = this.map.precinct?.groundColor ? new THREE.Color(Number(this.map.precinct.groundColor)) : null;
+    const bareGround = this.map.objects.precinct?.groundColor ? new THREE.Color(Number(this.map.objects.precinct.groundColor)) : null;
     const m = new THREE.Color();
 
     for (let i = 0; i < pos.count; i++) {
@@ -202,7 +202,7 @@ export class World {
 
   /** 랜드마크 제외 반경(excludeR) 안의 OSM 건물은 생략하고 양식화 메시로 대체 — 전부 데이터 구동. */
   private inLandmark(x: number, z: number): boolean {
-    for (const l of this.map.landmarks ?? []) {
+    for (const l of this.map.objects.landmarks ?? []) {
       const r = l.excludeR ?? 0;
       if ((x - l.x) ** 2 + (z - l.z) ** 2 < r * r) return true;
     }
@@ -211,7 +211,7 @@ export class World {
 
   /** 담장 개구부(문) — 맵 데이터 기준 */
   private get gates() {
-    return this.map.gates ?? [];
+    return this.map.objects.gates ?? [];
   }
 
   /** (x,z) 가 어느 문 개구부 안인가(여유 margin 포함) */
@@ -226,12 +226,12 @@ export class World {
   }
 
   private buildCity() {
-    const buildings = this.map.buildings;
+    const buildings = this.map.objects.buildings;
     const geos: THREE.BufferGeometry[] = [];
     const roofGeos: THREE.BufferGeometry[] = []; // 특수 권역 지붕 슬래브(예: 경복궁 기와)
     const col = new THREE.Color();
     // 특수 권역 건물 양식(데이터 구동). boundary 내부 건물에만 적용.
-    const pb = this.map.precinct?.building;
+    const pb = this.map.objects.precinct?.building;
     const precinctColor = pb ? parseHexColor(pb.color) : null;
     const roofColor = pb?.roof ? new THREE.Color(parseHexColor(pb.roof.color)) : null;
 
@@ -324,10 +324,10 @@ export class World {
   }
 
   private buildRoads() {
-    const roads = this.map.roads;
+    const roads = this.map.objects.roads;
     const geos: THREE.BufferGeometry[] = [];
     const Y = 0.25;
-    const suppressInPrecinct = this.map.precinct?.suppressRoads ?? false;
+    const suppressInPrecinct = this.map.objects.precinct?.suppressRoads ?? false;
     for (const r of roads) {
       const p = r.p;
       const half = (r.w ?? 6) / 2;
@@ -384,10 +384,10 @@ export class World {
    * 아스팔트 위(y=0.32)에 얇은 리본으로 깐다.
    */
   private buildLaneMarkings() {
-    const roads = this.map.roads;
+    const roads = this.map.objects.roads;
     const Y = 0.32;
     const MARK = 0.12; // 차선 폭(m) — 더 가늘게
-    const suppressInPrecinct = this.map.precinct?.suppressRoads ?? false;
+    const suppressInPrecinct = this.map.objects.precinct?.suppressRoads ?? false;
 
     const yellow: number[] = [];
 
@@ -461,7 +461,7 @@ export class World {
   }
 
   private buildWater() {
-    const water = this.map.water;
+    const water = this.map.terrain.water ?? [];
     const mat = new THREE.MeshStandardMaterial({
       color: 0x1f8cf0,
       transparent: true,
@@ -503,7 +503,7 @@ export class World {
 
   /** 맵 데이터의 landmarks 를 배치 — 전부 데이터 구동(structure) 공통 렌더. */
   private buildLandmarks() {
-    for (const lm of this.map.landmarks ?? [])
+    for (const lm of this.map.objects.landmarks ?? [])
       if (lm.type === "structure") this.structures.build(lm, this.group, this.collision);
   }
 
@@ -515,8 +515,8 @@ export class World {
    * gates 개구부는 비운다. (예: 경복궁 궁장 — 사대문 광화문·신무문·건춘문·영추문)
    */
   private buildPrecinctWalls() {
-    const wall = this.map.precinct?.wall;
-    const B = this.map.boundary;
+    const wall = this.map.objects.precinct?.wall;
+    const B = this.map.objects.boundary;
     if (!wall || !B || B.length < 6) return; // 담장 양식 또는 경계 없으면 담장 없음
 
     const WALL_H = wall.height;

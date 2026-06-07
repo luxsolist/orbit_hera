@@ -1,0 +1,123 @@
+{
+ "geunjeongjeon": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.579697808120734,
+  "lon": 126.977,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 45
+ },
+ "gwanghwamun": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.57589795185052,
+  "lon": 126.9768979866608,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 46
+ },
+ "gyeonghoeru": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.58011103126123,
+  "lon": 126.97592319253067,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 45
+ },
+ "statue-sejong": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.572861660079056,
+  "lon": 126.97687531702987,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 46
+ },
+ "statue-yi": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.57096622349982,
+  "lon": 126.97695466073813,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 46
+ },
+ "blue-house": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.58663277039167,
+  "lon": 126.97617255847094,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 44
+ },
+ "folk-museum": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.58158426158822,
+  "lon": 126.97906293641495,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 45
+ },
+ "mmca": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.579015091627745,
+  "lon": 126.98070648465762,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 45
+ },
+ "sejong-center": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.57232267337406,
+  "lon": 126.9756058176976,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 46
+ },
+ "dongsipjagak": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.576113546532525,
+  "lon": 126.97942565050988,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 46
+ },
+ "jogyesa": {
+  "mapId": "gyeongbokgung",
+  "lat": 37.57413726194754,
+  "lon": 126.98202132325176,
+  "cell": [
+   37,
+   126
+  ],
+  "cx": 84,
+  "cz": 46
+ }
+}

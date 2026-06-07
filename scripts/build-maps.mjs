@@ -115,37 +115,53 @@ for (const m of MAPS) {
   console.error(`== ${m.id} (${m.name}) ==`);
   const proj = projFns(m.lat0, m.lon0);
 
-  let core, boundary;
+  let core, boundary, precinct;
   if (m.local?.from) {
-    // 이미 빌드된 맵 자신을 소스로(OSM 데이터 그대로 통과, 나머지는 config 로 재베이킹)
+    // 이미 빌드된 맵 자신을 소스로(OSM 데이터 그대로 통과, 나머지는 config 로 재베이킹).
+    // 소스가 평면(v1) 또는 섹션(v2) 둘 다 수용.
     const src = JSON.parse(readFileSync(m.local.from, "utf8"));
-    core = { buildings: src.buildings, roads: src.roads, water: src.water };
-    boundary = src.boundary;
+    if (src.objects) {
+      core = { buildings: src.objects.buildings, roads: src.objects.roads, water: src.terrain?.water ?? [] };
+      boundary = src.objects.boundary;
+      precinct = src.objects.precinct;
+    } else {
+      core = { buildings: src.buildings, roads: src.roads, water: src.water };
+      boundary = src.boundary;
+      precinct = src.precinct;
+    }
   } else {
     core = processOSM(fetchOSM(m.id, m.bbox), proj);
   }
+  precinct = m.precinct ?? precinct; // config 우선
 
+  // 섹션형 스키마 v2 — terrain(지형/해수면/수역) · objects(건물/도로/랜드마크/경계) · (예약)underground.
   const data = {
     id: m.id,
     name: m.name,
     subtitle: m.subtitle,
-    meta: { lat0: m.lat0, lon0: m.lon0, source: "OpenStreetMap ODbL" },
-    buildings: core.buildings,
-    roads: core.roads,
-    water: core.water,
-    ...(boundary ? { boundary } : {}),
-    ...(m.gates ? { gates: m.gates } : {}),
-    ...(m.landmarks ? { landmarks: bakeLandmarks(m.landmarks) } : {}),
-    ...(m.mountains ? { mountains: m.mountains } : {}),
+    meta: { lat0: m.lat0, lon0: m.lon0, source: "OpenStreetMap ODbL", schema: 2 },
+    terrain: {
+      seaLevel: m.seaLevel ?? 0,
+      ...(m.heightmap ? { heightmap: m.heightmap } : {}),
+      procedural: { ...(m.mountains ? { mountains: m.mountains } : {}), flattenCity: true },
+      water: core.water,
+    },
+    objects: {
+      buildings: core.buildings,
+      roads: core.roads,
+      ...(boundary ? { boundary } : {}),
+      ...(m.gates ? { gates: m.gates } : {}),
+      ...(m.landmarks ? { landmarks: bakeLandmarks(m.landmarks) } : {}),
+      ...(precinct ? { precinct } : {}),
+    },
     ...(m.spawn ? { spawn: m.spawn } : {}),
-    ...(m.bare ? { bare: true } : {}),
   };
 
   const path = `${OUT_DIR}/${m.id}.json`;
   writeFileSync(path, JSON.stringify(data));
   const bytes = statSync(path).size;
   console.error(`  wrote ${path}: ${core.buildings.length} buildings, ${core.roads.length} roads, ${(bytes / 1024).toFixed(0)}KB`);
-  catalog.push({ id: m.id, name: m.name, subtitle: m.subtitle, bytes, buildings: core.buildings.length });
+  catalog.push({ id: m.id, name: m.name, subtitle: m.subtitle, bytes, buildings: core.buildings.length, lat: m.lat0, lon: m.lon0 });
 }
 
 // 카탈로그는 빌드한 맵만 갱신하지 않고, 빌드 안 한 기존 항목도 보존
