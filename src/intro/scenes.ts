@@ -5,7 +5,7 @@ import {
   ease, rng, lump, track, spinAlong, makeSwarm, updateSwarm,
   starfield, sun, oumuamua, lights, underLights,
   earth, moon, seabed, makeCore, plasmoidSwarm, beachHouse, fallFrag, makeSeed,
-  setState, getState, SEED_ORANGE, CORE_TEMP, SPACE_COL, DEEP_COL, SPIN_RATE, FWD1,
+  setState, getState, SEED_ORANGE, PLAS_STRONG, CORE_TEMP, SPACE_COL, DEEP_COL, SPIN_RATE, FWD1,
 } from "./helpers";
 
 // 인트로 군집 userData 상태(병렬 Float32Array) — setState/getState 로 타입 안전 접근.
@@ -73,9 +73,10 @@ export const sceneDispersal: CutScene = {
     rock.position.copy(START2);
     ctx.scene.add(rock);
 
-    // 매우 작고 빛나지 않는 소수의 씨앗(오렌지). 회전 결을 따라 나선으로 방출 → 서서히 멀어짐.
-    const mat = new THREE.MeshStandardMaterial({ color: SEED_ORANGE, roughness: 1, metalness: 0 });
-    const inst = makeSwarm(new THREE.IcosahedronGeometry(0.03, 0), mat, SEEDS, "seeds"); // 씨앗 10cm급 — 미세 먼지 크기(최소 가시)
+    // 소수의 씨앗 — 크기는 미세 먼지급 유지하되 밝은 오렌지로 발광(낙하/입수/침강 씨앗과 통일). 회전 결 나선 방출 → 서서히 멀어짐.
+    const orange = new THREE.Color(SEED_ORANGE);
+    const mat = new THREE.MeshStandardMaterial({ color: orange.clone().multiplyScalar(0.2), emissive: SEED_ORANGE, emissiveIntensity: 2.2, roughness: 0.5, metalness: 0 });
+    const inst = makeSwarm(new THREE.IcosahedronGeometry(0.03, 0), mat, SEEDS, "seeds"); // 씨앗 10cm급 — 크기 유지(최소 가시)
     const birth = new Float32Array(SEEDS);
     const vel = new Float32Array(SEEDS * 3); // 전진(같은 방향) + 반경(서서히 멀어짐) + 접선(회전 결)
     const off = new Float32Array(SEEDS * 3); // 방출점: 긴 축 둘레 표면(각도 phi)
@@ -233,7 +234,7 @@ export const sceneSink: CutScene = {
     const sb = seabed(); // 마리아나 해구(멀리 보임)
     sb.position.set(0, -26, -34);
     ctx.scene.add(sb);
-    ctx.scene.add(makeSeed(0.6, 0.45)); // 수중 → 발광 약하게
+    ctx.scene.add(makeSeed(0.6, 1.8)); // 수중이지만 밝은 오렌지 통일(낙하·입수와 동일 톤)
   },
   update(t, _dt, ctx) {
     const seed = ctx.scene.getObjectByName("seed3")!;
@@ -410,7 +411,10 @@ export const sceneHouse: CutScene = {
     sea.position.set(0, 0.05, -60);
     ctx.scene.add(sea);
     ctx.scene.add(beachHouse());
-    const plas = new THREE.Mesh(new THREE.IcosahedronGeometry(0.8, 2), new THREE.MeshBasicMaterial({ color: 0xff7a20 })); // 빛나는 오렌지
+    const plas = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.8, 2),
+      new THREE.MeshStandardMaterial({ color: new THREE.Color(PLAS_STRONG).multiplyScalar(0.1), emissive: PLAS_STRONG, emissiveIntensity: 0.8, roughness: 0.6 })
+    ); // 가장 강한 개체(청백) — 희미하게 발광
     plas.name = "plas6";
     ctx.scene.add(plas);
   },

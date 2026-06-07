@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { createComposer, disposeComposer } from "../fx/postprocessing";
+import { CinematicAudio } from "./CinematicAudio";
 
 /** 컷씬이 채우고 갱신하는 렌더 컨텍스트(전용 씬/카메라). */
 export interface SceneCtx {
@@ -18,7 +19,18 @@ export interface CutScene {
 }
 
 const FADE_IN = 0.8;
-const FADE_OUT = 0.45;
+const FADE_OUT = 0.45; // 클릭 스킵 — 즉각적으로 짧게
+const END_FADE_OUT = 2.0; // 마지막 씬 자연 종료 — 부드럽게 길게
+
+/**
+ * 페이드 오버레이 불투명도(0=씬 보임, 1=검은 화면). 순수.
+ * 종료 중: finishT/fadeOut 으로 0→1(클램프). 시작 페이드인: elapsed<fadeIn 동안 1→0. 그 외 0.
+ */
+export function fadeOpacity(elapsed: number, finishing: boolean, finishT: number, fadeIn: number, fadeOut: number): number {
+  if (finishing) return Math.min(1, finishT / fadeOut);
+  if (elapsed < fadeIn) return 1 - elapsed / fadeIn;
+  return 0;
+}
 
 /**
  * 인트로 시네마틱 플레이어 — 전용 씬/카메라 + Bloom 컴포저로 컷씬 타임라인을 재생.
@@ -35,7 +47,9 @@ export class CinematicPlayer {
   private elapsed = 0; // 전체 경과(페이드인용)
   private finishing = false;
   private finishT = 0;
+  private fadeOutDur = FADE_OUT; // 이번 페이드아웃 길이(클릭 스킵 vs 자연 종료)
   private _done = false;
+  private audio?: CinematicAudio; // 절차적 사운드트랙(생성 실패 시 무음으로 진행)
   private fade: HTMLDivElement;
   private hint: HTMLDivElement;
   private onSkip = (e: Event) => {
@@ -64,7 +78,14 @@ export class CinematicPlayer {
 
     window.addEventListener("keydown", this.onSkip);
     window.addEventListener("pointerdown", this.onSkip);
+    // 사운드트랙 — 메뉴 버튼 클릭(사용자 제스처) 안에서 생성되므로 오디오 재생 허용. 실패해도 시각은 진행.
+    try {
+      this.audio = new CinematicAudio();
+    } catch {
+      this.audio = undefined;
+    }
     this.scenes[this.idx].build(this.ctx);
+    this.audio?.enterScene(this.scenes[this.idx].name);
   }
 
   get done(): boolean {
@@ -81,11 +102,18 @@ export class CinematicPlayer {
     this.composer.setSize(w, h);
   }
 
+  /** 클릭 스킵 — 즉각적인 짧은 페이드아웃. */
   skip(): void {
-    if (!this.finishing) {
-      this.finishing = true;
-      this.finishT = 0;
-    }
+    this.finish(FADE_OUT);
+  }
+
+  /** 페이드아웃 시작(멱등) — fade 초에 걸쳐 검은 화면으로. 음악도 같은 길이로 잦아듦. */
+  private finish(fade: number): void {
+    if (this.finishing) return;
+    this.finishing = true;
+    this.finishT = 0;
+    this.fadeOutDur = fade;
+    this.audio?.stop(fade);
   }
 
   /** 즉시 종료(페이드 없이) — Esc. 다음 프레임에 Game 이 done 을 감지해 메뉴 복귀. */
@@ -108,9 +136,10 @@ export class CinematicPlayer {
           this.idx++;
           this.t = 0;
           this.scenes[this.idx].build(this.ctx);
+          this.audio?.enterScene(this.scenes[this.idx].name); // 장면 전환 → 음악 무드 모핑 + SFX 예약
           cur = this.scenes[this.idx];
         } else {
-          this.skip(); // 마지막 씬 종료 → 페이드아웃
+          this.finish(END_FADE_OUT); // 마지막 씬 종료 → 자연스러운 긴 페이드아웃
         }
       }
       if (!this.finishing) cur.update(Math.min(this.t, cur.duration), dt, this.ctx);
@@ -123,17 +152,14 @@ export class CinematicPlayer {
   }
 
   private updateFade(): void {
-    let o = 0;
+    const o = fadeOpacity(this.elapsed, this.finishing, this.finishT, FADE_IN, this.fadeOutDur);
     if (this.finishing) {
-      o = Math.min(1, this.finishT / FADE_OUT);
       this.hint.style.opacity = "0";
-      if (this.finishT >= FADE_OUT) {
+      if (this.finishT >= this.fadeOutDur) {
         this._done = true;
         this.dispose();
         return;
       }
-    } else if (this.elapsed < FADE_IN) {
-      o = 1 - this.elapsed / FADE_IN;
     }
     this.fade.style.opacity = o.toFixed(3);
   }
@@ -151,6 +177,8 @@ export class CinematicPlayer {
   dispose(): void {
     window.removeEventListener("keydown", this.onSkip);
     window.removeEventListener("pointerdown", this.onSkip);
+    this.audio?.dispose(); // 오디오 컨텍스트 종료(모든 예약 SFX/패드 해제)
+    this.audio = undefined;
     this.fade.remove();
     this.hint.remove();
     this.clearScene();

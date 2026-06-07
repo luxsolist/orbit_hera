@@ -3,7 +3,9 @@ import * as THREE from "three";
 import {
   ease, rng, lump, spinAlong, makeSwarm, updateSwarm, fallFrag, track,
   oumuamua, moon, seabed, makeCore, makeSeed, beachHouse, plasmoidSwarm, type Frag,
+  SEED_TEMP, CORE_TEMP, SEED_ORANGE, PLAS_STRONG,
 } from "../src/intro/helpers";
+import { DEFAULT_PLASMOID, colorAt, highestColor } from "../src/enemies/PlasmoidSpec";
 
 /** 지오메트리의 모든 정점 좌표가 유한한지(NaN/Infinity 없음) — 블랙스크린 회귀 가드. */
 function allFinite(geo: THREE.BufferGeometry): boolean {
@@ -178,5 +180,20 @@ describe("track — 카메라 이징 이동", () => {
     expect(cam.position.x).toBeCloseTo(5, 6);
     track(ctx, 2, [0, 0, 0], [10, 0, 0], look); // 클램프 → 10
     expect(cam.position.x).toBeCloseTo(10, 6);
+  });
+});
+
+describe("인트로 색 — PlasmoidSpec 시스템 파생 불변식", () => {
+  const stops = DEFAULT_PLASMOID.color.stops;
+  it("씨앗 오렌지 = 시스템 colorAt(SEED_TEMP 4500)", () => {
+    expect(SEED_TEMP).toBe(4500);
+    expect(SEED_ORANGE).toBe(colorAt(stops, SEED_TEMP));
+  });
+  it("코어 시작색 = 씨앗과 동일(밝은 오렌지 연속성)", () => {
+    expect(CORE_TEMP).toBe(SEED_TEMP);
+  });
+  it("가장 강한 개체색 = 최고 온도 stop(청백) — 집 붕괴 플라즈모이드", () => {
+    expect(PLAS_STRONG).toBe(colorAt(stops, stops[stops.length - 1].temp));
+    expect(PLAS_STRONG).toBe(Number(highestColor(DEFAULT_PLASMOID).color));
   });
 });

@@ -33,8 +33,9 @@ export function lump(x: number, y: number, z: number): number {
 const PLAS_STOPS = DEFAULT_PLASMOID.color.stops;
 const PLAS_WMAX = PLAS_STOPS[PLAS_STOPS.length - 1].weight;
 export const SEED_TEMP = 4500; // 씨앗 통일 온도(오렌지 stop)
-export const CORE_TEMP = 3200; // 코어 온도(가장 차가운 적색 근처)
-export const SEED_ORANGE = colorAt(PLAS_STOPS, SEED_TEMP); // 외계 씨앗 통일 색 — 시스템(온도→색)에서 산출. 씬2 분산·씬3 낙하 공통
+export const CORE_TEMP = SEED_TEMP; // 코어 시작 색 — 씨앗과 동일한 밝은 오렌지(성장 시작 전 연속성)
+export const SEED_ORANGE = colorAt(PLAS_STOPS, SEED_TEMP); // 외계 씨앗 통일 색(밝은 오렌지) — 시스템(온도→색)에서 산출. 씬2 분산~씬3 낙하/입수/침강 공통
+export const PLAS_STRONG = colorAt(PLAS_STOPS, PLAS_STOPS[PLAS_STOPS.length - 1].temp); // 가장 강한 개체 색(최고 온도=청백) — 시스템 산출. 씬6 집 붕괴 플라즈모이드
 export const SPACE_COL = new THREE.Color(0x04060c);
 export const DEEP_COL = new THREE.Color(0x0e3a4e); // 심해(현실보다 밝게 — 배경이 보이도록)
 export const SPIN_RATE = 0.55; // rad/s — 럭비공처럼 긴 축 둘레로 천천히 스크류 회전
