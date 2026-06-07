@@ -66,10 +66,11 @@
   - 순수 시각 요소(레이캐스트 비대상)라 **전투 코드 무변경** → 안전. e2e 4맵 PASS(렌더·비블랙·에러0). 인스턴싱 파이프라인 구축 완료.
   - 비고: 코어 발광은 `MeshBasic instanceColor = color·coreBright·0.55`(Bloom) — 글로우 톤은 육안 튜닝 필요할 수 있음(`CORE_BLOOM`).
 
-- [ ] **⭐⭐⭐ 셸 InstancedMesh — 남은 GPU 게이트(전투·레이캐스트)** (`SeedEnemy`/`EnemyManager`/`weapons`)
-  - 셸(본체·그림자·**레이캐스트 대상**·디졸브)을 인스턴싱해야 1000을 60fps로 렌더. 코어 파이프라인 재사용.
-  - **위험(자동검증 불가 — 반드시 플레이테스트):** (1) 셸 InstancedMesh 레이캐스트 → `instanceId`→enemy 매핑(`beamFx`/`SpecialStream`), (2) `SpecialBarrage` 개체별 `t.mesh` 레이캐스트 → 표적 위치 기반 직접 적용, (3) 디졸브는 **하이브리드**(살아있는 셸=인스턴스드 라이트 머티리얼 / 디졸브 중 소수=개별 디졸브 셰이더 메시)로 셰이더 인스턴싱 회피.
-  - 예상 공수: 2~3일
+- [x] **⭐⭐⭐ 셸 InstancedMesh — GPU 게이트(전투·레이캐스트)** (`SeedEnemy`/`EnemyManager`/`weapons`) ✅
+  - 살아있는 셸 = `EnemyManager` 소유 InstancedMesh(MeshStandard, DoubleSide, castShadow) — 매 프레임 상태에서 행렬·색 기록. **개체당 2 draw call → 셸/코어 2 draw call**(드로우콜 ~2N→2).
+  - 레이캐스트: `hitMeshes=[shellInst]` → `enemyFromHit(hit.instanceId)` 역참조(`beamFx`/`SpecialStream` 공유). `SpecialBarrage` 는 콘 표적(`aliveEnemies`)에 위치 기반 직접 적용(레이캐스트 제거).
+  - 디졸브 = **하이브리드**: 살아있는 셸은 인스턴스드, 디졸브 시작 시 개별 그룹(디졸브 셰이더)을 씬에 추가 → 셰이더 인스턴싱 회피.
+  - 검증: 타입체크·457 단위테스트·e2e 4맵 렌더 PASS(에러 0). **단, 전투 적중(raycast)은 헤드리스(포인터락 게이트)에서 검증 불가 → 플레이테스트 필요.**
 
 - [ ] **⭐⭐ 화면 밖·원거리 sleep** — frustum + 원거리 개체는 AI(이동·조향·표적선택) 스킵
   - 모기 `turnToward`/수직회피 삼각함수 비용도 함께 절감. 예상 공수: 1일

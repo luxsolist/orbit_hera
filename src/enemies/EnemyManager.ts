@@ -1,11 +1,11 @@
 import * as THREE from "three";
-import { SeedEnemy, chooseTarget, buildBoidGrid, recomputeSteer, CORE_GEO, type Boid } from "./SeedEnemy";
+import { SeedEnemy, chooseTarget, buildBoidGrid, recomputeSteer, CORE_GEO, SHELL_GEO, type Boid } from "./SeedEnemy";
 import type { World } from "../world/World";
 import type { PlayerController } from "../player/PlayerController";
 import { TERRAIN_HALF } from "../world/World";
 import { DrainBeams } from "../fx/DrainBeams";
 import {
-  DEFAULT_PLASMOID, rollAppearance, contactDamage, archetypeCount, pickSpawnType,
+  DEFAULT_PLASMOID, rollAppearance, contactDamage, archetypeCount, pickSpawnType, colorWeight,
   type PlasmoidSpec, type PlasmoidKiterArchetype, type PlasmoidArchetype,
 } from "./PlasmoidSpec";
 import type { Vec3 } from "../core/math";
@@ -16,13 +16,16 @@ const KITER_GROUND_CLEARANCE = 1.5; // 도주형이 가라앉지 않는 지면 �
 const KITER_CEILING = 1020; // 도주형 상승 상한(지면 대비, m) — 비행 천장(1000) 근처까지 추격 가능(고고도 이탈 방지)
 const TARGET_HYSTERESIS = 1.2; // 표적 교체 문턱 — 현재 표적이 최근접의 1.2배 이내면 유지(깜빡임 방지)
 const STEER_STRIDE = 3; // 원거리 적 조향 재계산 주기(프레임) — 라운드로빈 분산
-const NEAR_DIST = 130; // 이 거리(m) 이내는 매 프레임 재계산(교전 감각 유지)
+const NEAR_DIST = 250; // 이 거리(m) 이내는 매 프레임 재계산(교전 감각 — 스폰 반경 전체 커버, 끊김 방지)
 const NEAR_DIST_SQ = NEAR_DIST * NEAR_DIST;
-const CORE_CAP = 2048; // 발광 코어 InstancedMesh 최대 인스턴스 수
-const CORE_BLOOM = 0.55; // 코어 발광 세기 → instanceColor 배수(블룸 임계 초과용)
+const INST_CAP = 2048; // 셸/코어 InstancedMesh 최대 인스턴스 수
+const CORE_BLOOM = 0.55; // 코어 발광 세기 → instanceColor 배수(코어 단독 인스턴싱 때 승인된 값 유지)
+const SHELL_BASE = 0.5; // 셸 본체 기조(개체색 배수, 자체발광)
+const SHELL_FLASH = 2.6; // 피격 번쩍임 시 셸 색 가산(색조 유지)
+const GLOW_STRENGTH = 2.0; // 색 강도 비례 발광 가산 — glow = 1 + 2·g01 (청백일수록 밝게 빛남/블룸)
 
-const _coreM4 = new THREE.Matrix4(); // 코어 인스턴스 행렬 임시
-const _coreCol = new THREE.Color(); // 코어 인스턴스 색 임시
+const _m4 = new THREE.Matrix4(); // 인스턴스 행렬 임시
+const _col = new THREE.Color(); // 인스턴스 색 임시
 const AGGRO_PENALTY = 0.4; // 어그로 분산 — 이미 표적이 된 플레이어당 거리 점수 가산(한 명에게 몰빵 방지)
 
 const _centroid = new THREE.Vector3(); // 스폰 무게중심 임시(프레임당 동기 사용)
@@ -48,7 +51,9 @@ export class EnemyManager {
   private spec: PlasmoidSpec;
   private kiterArche: PlasmoidKiterArchetype; // 카이터 공격 파라미터(전 개체 공유)
   private drain: DrainBeams;
-  private coreInst: THREE.InstancedMesh; // 발광 코어 일괄 렌더(개체별 메시 대신 — 드로우콜 1개)
+  private coreInst: THREE.InstancedMesh; // 발광 코어 일괄 렌더(드로우콜 1개)
+  private shellInst: THREE.InstancedMesh; // 살아있는 셸 일괄 렌더 + 레이캐스트(드로우콜 1개)
+  private instanceEnemies: SeedEnemy[] = []; // 셸 인스턴스 슬롯 → 적(레이캐스트 instanceId 역참조)
 
   wave = 0;
   killCount = 0;
@@ -81,45 +86,85 @@ export class EnemyManager {
     this.kiterArche = spec.archetypes.kiter;
     this.drain = new DrainBeams(scene);
 
-    // 발광 코어 InstancedMesh — 살아있는/디졸브 중 개체의 코어를 매 프레임 일괄 기록(드로우콜 1개).
-    const coreMat = new THREE.MeshBasicMaterial(); // instanceColor 로 개체색·발광 세기 전달(Bloom)
-    this.coreInst = new THREE.InstancedMesh(CORE_GEO, coreMat, CORE_CAP);
-    this.coreInst.frustumCulled = false; // 인스턴스가 플레이어 주변에 산재 — 배치 컬링 방지
+    // 코어 InstancedMesh — 살아있는/디졸브 개체 코어 일괄 렌더(MeshBasic + instanceColor = 발광).
+    this.coreInst = new THREE.InstancedMesh(CORE_GEO, new THREE.MeshBasicMaterial(), INST_CAP);
+    this.coreInst.frustumCulled = false;
     this.coreInst.count = 0;
     scene.add(this.coreInst);
+
+    // 셸 InstancedMesh — 살아있는 적 본체 일괄 렌더 + 레이캐스트 대상. 자체발광(MeshBasic — 조명에 탁해지지 않게)
+    // + DoubleSide(코앞 적 내부 적중) + 그림자.
+    const shellMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+    this.shellInst = new THREE.InstancedMesh(SHELL_GEO, shellMat, INST_CAP);
+    this.shellInst.frustumCulled = false;
+    this.shellInst.castShadow = true;
+    this.shellInst.count = 0;
+    scene.add(this.shellInst);
   }
 
-  /** 살아있는/디졸브 중 개체의 코어를 InstancedMesh 버퍼에 기록(위치·크기·발광색). 매 프레임 마지막. */
-  private updateCoreInstances() {
-    let ci = 0;
+  /**
+   * 인스턴스 버퍼 일괄 기록(매 프레임 마지막):
+   *  - 셸: 살아있는 적만(레이캐스트 대상) → instanceEnemies 로 instanceId 역참조. 색 = 개체색·SHELL_BASE(+피격 가산).
+   *  - 코어: 살아있는+디졸브 개체 → 발광색(coreBright). 디졸브 중 셸은 개별 메시(디졸브 셰이더).
+   */
+  private updateInstances() {
+    const inst = this.instanceEnemies;
+    inst.length = 0;
+    let si = 0, ci = 0;
     for (const e of this.enemies) {
-      if (e.state === "dead" || ci >= CORE_CAP) continue;
-      const p = e.group.position;
-      const s = e.group.scale.x * e.coreScale; // group.scale = baseScale·shrink·pulse, CORE_GEO 반지름 0.42 기준
-      _coreM4.makeScale(s, s, s).setPosition(p.x, p.y, p.z);
-      this.coreInst.setMatrixAt(ci, _coreM4);
-      _coreCol.set(e.color).multiplyScalar(Math.max(0, e.coreBright) * CORE_BLOOM);
-      this.coreInst.setColorAt(ci, _coreCol);
-      ci++;
+      if (e.state === "dead") continue;
+      const p = e.group.position, scale = e.group.scale.x;
+      // 코어(살아있는 + 디졸브 — 디졸브 시 coreScale 수축)
+      if (ci < INST_CAP) {
+        const cs = scale * e.coreScale;
+        _m4.makeScale(cs, cs, cs).setPosition(p.x, p.y, p.z);
+        this.coreInst.setMatrixAt(ci, _m4);
+        _col.set(e.color).multiplyScalar(Math.max(0, e.coreBright) * CORE_BLOOM * e.glow); // 강체일수록 밝게(블룸)
+        this.coreInst.setColorAt(ci, _col);
+        ci++;
+      }
+      // 셸은 살아있는 적만 인스턴스(디졸브 중은 개별 메시가 그림)
+      if (e.state === "alive" && si < INST_CAP) {
+        _m4.makeScale(scale, scale, scale).setPosition(p.x, p.y, p.z);
+        this.shellInst.setMatrixAt(si, _m4);
+        _col.set(e.color).multiplyScalar(SHELL_BASE * e.glow + SHELL_FLASH * e.flash); // 강체 발광 + 피격 가산
+        this.shellInst.setColorAt(si, _col);
+        this.shellInst.setColorAt(si, _col);
+        inst[si] = e;
+        si++;
+      }
     }
+    this.shellInst.count = si;
+    this.shellInst.instanceMatrix.needsUpdate = true;
+    if (this.shellInst.instanceColor) this.shellInst.instanceColor.needsUpdate = true;
+    this.shellInst.boundingSphere = null; // 적이 매 프레임 이동 → 레이캐스트 광역검사용 경계구 재계산(데미지 적중)
     this.coreInst.count = ci;
     this.coreInst.instanceMatrix.needsUpdate = true;
     if (this.coreInst.instanceColor) this.coreInst.instanceColor.needsUpdate = true;
   }
 
-  /** 레이캐스트 대상 메쉬 목록(살아있는 적) */
-  get hitMeshes(): THREE.Object3D[] {
-    return this.enemies.filter((e) => e.state === "alive").map((e) => e.hitMesh);
+  /** 레이캐스트 적중 → 적(셸 InstancedMesh 의 instanceId 역참조). 없으면 undefined. */
+  enemyFromHit(hit: THREE.Intersection): SeedEnemy | undefined {
+    return hit.instanceId !== undefined ? this.instanceEnemies[hit.instanceId] : undefined;
   }
 
-  /** 무기 콘 조준 입력용 — 살아있는 적의 월드 좌표(평문). hitMeshes 와 동일 순서(인덱스 정합). */
+  /** 살아있는 적 목록(aliveWorldPositions 와 동일 순서) — 콘 조준 index 역참조용. */
+  get aliveEnemies(): readonly SeedEnemy[] {
+    return this.enemies.filter((e) => e.state === "alive");
+  }
+
+  /** 레이캐스트 대상 — 살아있는 적은 셸 InstancedMesh 1개(instanceId 로 역참조). */
+  get hitMeshes(): THREE.Object3D[] {
+    return [this.shellInst];
+  }
+
+  /** 무기 콘 조준 입력용 — 살아있는 적의 월드 좌표(평문). aliveEnemies 와 동일 순서(인덱스 정합). */
   get aliveWorldPositions(): Vec3[] {
     const out: Vec3[] = [];
-    const tmp = new THREE.Vector3();
     for (const e of this.enemies) {
       if (e.state === "alive") {
-        e.hitMesh.getWorldPosition(tmp);
-        out.push({ x: tmp.x, y: tmp.y, z: tmp.z });
+        const p = e.group.position; // 살아있는 그룹은 씬 밖(인스턴스 렌더) — position 이 곧 월드좌표(부모 없음)
+        out.push({ x: p.x, y: p.y, z: p.z });
       }
     }
     return out;
@@ -196,27 +241,36 @@ export class EnemyManager {
     // 외형/체력/색 — 온도(웨이브별·저온편향) 시스템 유지(색·크기·흡수성장 다양성).
     const roll = rollAppearance(this.spec, this.wave, Math.random);
     const app = { maxHp: roll.maxHp, diameter: roll.diameter, color: roll.color };
+    // 색 강도 g01(0=적색/약, 1=청백/강) — 색·속도·발광을 한 노브로(온도→색가중치 정규화).
+    const stops = this.spec.color.stops;
+    const wmax = stops[stops.length - 1].weight;
+    const g01 = (colorWeight(stops, roll.temp) - 1) / Math.max(1e-6, wmax - 1);
+    const spd = arche.speed + (arche.speedMin - arche.speed) * g01; // 적색=speed(최고), 청백=speedMin(최저)
     let enemy: SeedEnemy;
     if (type === "kiter") {
       const k = a.kiter;
       enemy = new SeedEnemy(new THREE.Vector3(x, y, z), app);
+      // 개체 고유 방위(구면 균등 무작위 단위벡터) — keepDist 구 위 이 방향을 향해 xy·z 고르게 분산(z 위/아래 무작위).
+      const cz = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.max(0, 1 - cz * cz));
       enemy.setKiter({
-        speed: k.speed * (0.9 + Math.random() * 0.2), // 개체별 미세 변주(±10%)
+        speed: spd,
         turnRate: THREE.MathUtils.degToRad(k.turnRateDeg),
         keepDist: k.keepDist,
         keepBand: k.keepBand,
         strafeMix: k.strafeMix,
         orbitRef: k.orbitRef,
         evadeGain: k.evadeGain,
+        homeDir: { x: rr * Math.cos(th), y: cz, z: rr * Math.sin(th) },
       });
     } else {
-      // 러셔 — 추격+접촉. rollAppearance 속도 × speedMul(더 빠른 돌격). setKiter 미호출 → isKiter false.
-      enemy = new SeedEnemy(new THREE.Vector3(x, y, z), app, roll.speed * a.rusher.speedMul);
+      // 러셔 — 추격+접촉(setKiter 미호출 → isKiter false).
+      enemy = new SeedEnemy(new THREE.Vector3(x, y, z), app, spd);
     }
+    enemy.glow = 1 + GLOW_STRENGTH * g01; // 청백(강)일수록 밝게 빛남(블룸)
     enemy.killRefund = arche.killRefund;
     enemy.archetypeName = arche.name;
     this.enemies.push(enemy);
-    this.scene.add(enemy.group);
+    // 살아있는 동안은 셸 InstancedMesh 로 렌더 — 그룹(개별 메시)은 디졸브 시작 시에만 씬에 추가.
   }
 
   /** 도주형 고도 클램프 — 지면 아래로 가라앉지 않고(시인성), 수직 회피로 천장 위로 달아나지 않게(추격 가능). */
@@ -330,6 +384,8 @@ export class EnemyManager {
     for (const enemy of this.enemies) {
       const p = enemy.group.position;
       if (enemy.state !== "alive") {
+        // 디졸브 시작 → 개별 메시(디졸브 셰이더)로 렌더하도록 씬에 추가(살아있을 땐 인스턴스드라 씬 밖).
+        if (enemy.state === "dissolving" && enemy.group.parent === null) this.scene.add(enemy.group);
         enemy.update(dt, p, 1); // 디졸브 비주얼만 진행(이동/공격 없음)
         continue;
       }
@@ -364,7 +420,7 @@ export class EnemyManager {
       }
     }
 
-    this.updateCoreInstances(); // 살아있는/디졸브 개체 코어 일괄 렌더
+    this.updateInstances(); // 살아있는 셸 + 코어 일괄 렌더(InstancedMesh)
 
     // 웨이브 종료 판정
     if (this.pendingRusher + this.pendingKiter === 0 && this.enemies.length === 0) {
@@ -386,8 +442,11 @@ export class EnemyManager {
     }
     this.enemies = [];
     this.drain.clear();
-    this.coreInst.count = 0; // 코어 인스턴스 비우기(재입장 시 잔상 방지)
+    this.instanceEnemies.length = 0; // 인스턴스 비우기(재입장 시 잔상 방지)
+    this.coreInst.count = 0;
     this.coreInst.instanceMatrix.needsUpdate = true;
+    this.shellInst.count = 0;
+    this.shellInst.instanceMatrix.needsUpdate = true;
     this.pendingRusher = 0;
     this.pendingKiter = 0;
     this.hasPrev = false; // 재입장 시 순간이동 변위로 인한 가짜 속도 스파이크 방지

@@ -1,20 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { bracketOpacity, RANGE, projectToScreen, labelText } from "../src/fx/TargetBrackets";
 
-// 코너 브래킷 거리 페이드(근접 진하게 ~ RANGE 흐리게, 양끝 클램프) 순수 가드.
+// 코너 브래킷 투명도 — 거리 무관 일정(거리별 농도/색 변화 제거) 순수 가드.
 
-describe("bracketOpacity — 거리 페이드", () => {
-  it("근접(0) > 중간(RANGE/2) > 원거리(RANGE)", () => {
-    const near = bracketOpacity(0);
-    const mid = bracketOpacity(RANGE / 2);
-    const far = bracketOpacity(RANGE);
-    expect(near).toBeGreaterThan(mid);
-    expect(mid).toBeGreaterThan(far);
-    expect(mid).toBeCloseTo((near + far) / 2, 6); // 선형
+describe("bracketOpacity — 거리 무관 일정(페이드 제거)", () => {
+  it("거리에 상관없이 동일한 투명도", () => {
+    const a = bracketOpacity(0);
+    expect(bracketOpacity(RANGE / 2)).toBe(a);
+    expect(bracketOpacity(RANGE)).toBe(a);
+    expect(bracketOpacity(RANGE * 3)).toBe(a);
+    expect(bracketOpacity(-50)).toBe(a);
   });
-  it("음수/초과는 클램프(0→근접, RANGE 초과→원거리값 유지)", () => {
-    expect(bracketOpacity(-50)).toBeCloseTo(bracketOpacity(0), 6);
-    expect(bracketOpacity(RANGE * 3)).toBeCloseTo(bracketOpacity(RANGE), 6);
+  it("양수 투명도(보임)", () => {
+    expect(bracketOpacity(0)).toBeGreaterThan(0);
   });
 });
 

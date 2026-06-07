@@ -1,21 +1,20 @@
 import * as THREE from "three";
 
-// 근거리 플라즈모이드 표식 — 카메라를 향하는 빌보드 "코너 브래킷"(네 모서리만 선).
-// 대상 크기에 맞춘 사각 프레임. HDR 시안-화이트로 블룸에 걸려 또렷이 빛난다(조준/식별 HUD). 거리 페이드.
+// 플라즈모이드 표식 — 카메라를 향하는 빌보드 "코너 브래킷"(네 모서리만 선).
+// 대상 크기에 맞춘 사각 프레임. HDR 붉은색으로 블룸에 걸려 가늘지만 밝게 빛난다(조준/식별 HUD). 거리 페이드.
 
-export const RANGE = 800; // 이 거리(m) 이내의 적만 표시(고고도 교전 가시성)
+export const RANGE = 2000; // 이 거리(m) 이내의 적 모두 표시(2km)
 const CORNER_LEN = 0.45; // 변 절반(=1) 대비 코너 선 길이
-const MARGIN = 1.3; // 대상보다 살짝 바깥으로 프레임
+const MARGIN = 1.56; // 대상 반경 대비 프레임 반경(대상을 둘러쌈) — 기존 1.3 +20%
 const MAX = 64; // 동시 표시 상한(풀)
-const NEAR_OPACITY = 0.95; // 최근접 투명도
-const FAR_OPACITY = 0.35; // RANGE 거리에서의 투명도(0 까지 안 떨어뜨려 원거리도 식별)
-// HDR(>1) 시안-화이트 — ACES 톤매핑·블룸 임계(0.75) 를 넘겨 얇은 선도 또렷이 빛나게.
-const BRACKET_COLOR = new THREE.Color(0x9fe6ff).multiplyScalar(1.6);
+const BRACKET_OPACITY = 0.9; // 투명도(거리 무관 일정 — 거리별 색/농도 변화 없음)
+const THICK_SCREEN = 0.006; // 코너 선 절반 두께 = THICK_SCREEN·거리(m) → 화면상 두께 일정(타깃 크기·거리 무관). 클수록 두껍게
+const MAX_T_FRAC = 0.35; // 두께/프레임반경 상한 — 멀어 두께가 커지면 프레임에 최소 크기 부여(코너 뾰족점이 항상 바깥 향하도록)
+const BRACKET_COLOR = new THREE.Color(0xb00000); // 어두운 붉은색(블룸 임계 미만 — 솔리드)
 
-/** 거리 → 브래킷 투명도(근접 NEAR_OPACITY ~ RANGE FAR_OPACITY 선형, 양끝 클램프). 순수. */
-export function bracketOpacity(dist: number): number {
-  const k = Math.min(1, Math.max(0, dist / RANGE));
-  return NEAR_OPACITY + (FAR_OPACITY - NEAR_OPACITY) * k;
+/** 브래킷 투명도 — 거리 무관 일정(거리별 농도/색 변화 제거). 순수. */
+export function bracketOpacity(_dist: number): number {
+  return BRACKET_OPACITY;
 }
 
 /**
@@ -31,18 +30,36 @@ export function labelText(hp: number): string {
   return String(Math.max(0, Math.ceil(hp)));
 }
 
-/** ±1 정사각형의 네 모서리에만 ㄱ자 선을 둔 LineSegments 지오메트리. */
+const CORNERS = [[1, 1], [-1, 1], [-1, -1], [1, -1]] as const;
+const VERTS = CORNERS.length * 2 * 6; // 코너 4 × (수평+수직) × 삼각형2(6정점)
+
+/** 빈(0으로 채운) 코너 브래킷 지오메트리 — 매 프레임 writeBracketGeo 로 채운다(슬롯별 개별 지오메트리). */
 function makeBracketGeo(): THREE.BufferGeometry {
-  const L = CORNER_LEN;
-  const v: number[] = [];
-  for (const [cx, cy] of [[1, 1], [-1, 1], [-1, -1], [1, -1]] as const) {
-    const sx = Math.sign(cx), sy = Math.sign(cy);
-    v.push(cx, cy, 0, cx - sx * L, cy, 0); // 수평 코너 선
-    v.push(cx, cy, 0, cx, cy - sy * L, 0); // 수직 코너 선
-  }
   const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.Float32BufferAttribute(v, 3));
+  g.setAttribute("position", new THREE.Float32BufferAttribute(new Float32Array(VERTS * 3), 3));
   return g;
+}
+
+/**
+ * 코너 브래킷을 (프레임 반경 e, 절반 두께 t) 로 다시 쓴다 — 선이 아니라 채워진 쿼드.
+ * 외곽 꼭짓점(X,Y)에 ㄱ자 두 팔이 맞물리고 **두께는 안쪽으로만** 들어간다 → 뾰족한 점이 항상 바깥(프레임 모서리)을 향함.
+ * e 는 타깃 크기(프레임 크기), t 는 거리 비례(화면상 두께 일정).
+ */
+function writeBracketGeo(geo: THREE.BufferGeometry, e: number, t: number): void {
+  const arr = (geo.getAttribute("position") as THREE.BufferAttribute).array as Float32Array;
+  const L = CORNER_LEN * e; // 팔 길이는 프레임에 비례
+  let o = 0;
+  // (x0,y0)~(x1,y1) 대각 두 점으로 사각형(순서 무관, DoubleSide).
+  const quad = (x0: number, y0: number, x1: number, y1: number) => {
+    arr[o++] = x0; arr[o++] = y0; arr[o++] = 0; arr[o++] = x1; arr[o++] = y0; arr[o++] = 0; arr[o++] = x1; arr[o++] = y1; arr[o++] = 0;
+    arr[o++] = x0; arr[o++] = y0; arr[o++] = 0; arr[o++] = x1; arr[o++] = y1; arr[o++] = 0; arr[o++] = x0; arr[o++] = y1; arr[o++] = 0;
+  };
+  for (const [cx, cy] of CORNERS) {
+    const X = cx * e, Y = cy * e, sx = Math.sign(cx), sy = Math.sign(cy);
+    quad(X, Y, X - sx * L, Y - sy * t); // 수평 팔 — 외곽(X,Y)에서 안쪽으로 길이 L, 두께는 안쪽으로 t
+    quad(X, Y, X - sx * t, Y - sy * L); // 수직 팔 — 외곽(X,Y)에서 안쪽으로 길이 L, 두께는 안쪽으로 t
+  }
+  (geo.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
 }
 
 /** 적 위치+시각 반경(월드)+체력 표식 입력. */
@@ -60,9 +77,8 @@ const _top = new THREE.Vector3(); // 박스 상단(라벨 위치) 투영용
 /** 근거리 적에 코너 브래킷 + 체력 수치를 씌우는 경량 풀. 브래킷은 씬(3D), 체력 라벨은 DOM 오버레이. */
 export class TargetBrackets {
   private group = new THREE.Group();
-  private geo = makeBracketGeo();
-  private pool: THREE.LineSegments[] = [];
-  private mats: THREE.LineBasicMaterial[] = []; // 개체별 투명도(거리 페이드)용 — 슬롯마다 개별 머티리얼
+  private pool: THREE.Mesh[] = [];
+  private mats: THREE.MeshBasicMaterial[] = []; // 개체별 투명도(거리 페이드)용 — 슬롯마다 개별 머티리얼
   private layer: HTMLDivElement | null = null; // 체력 라벨 DOM 컨테이너
   private labels: HTMLDivElement[] = [];
 
@@ -92,13 +108,17 @@ export class TargetBrackets {
       const d2 = m.pos.distanceToSquared(_camPos);
       if (d2 > r2) continue;
       const i = n++;
-      const op = bracketOpacity(Math.sqrt(d2)); // 멀수록 흐리되 하한 유지
+      const dist = Math.sqrt(d2);
+      const op = BRACKET_OPACITY; // 거리 무관 일정
 
       const b = this.acquire(i);
       b.visible = true;
       b.position.copy(m.pos);
       b.quaternion.copy(_camQuat); // 카메라 정면을 향함 → 화면상 정사각 프레임
-      b.scale.setScalar(m.radius * MARGIN);
+      b.scale.setScalar(1); // 스케일 대신 지오메트리로 직접 크기 지정(두께를 크기와 분리)
+      const t = THICK_SCREEN * dist; // 절반 두께(화면상 일정)
+      const e = Math.max(m.radius * MARGIN, t / MAX_T_FRAC); // 프레임=타깃 크기, 단 두께 대비 최소 크기 보장(코너 외향)
+      writeBracketGeo(b.geometry, e, t);
       this.mats[i].opacity = op;
 
       // 체력 수치 — 박스 상단을 화면에 투영해 라벨 배치(카메라 뒤면 숨김)
@@ -124,13 +144,13 @@ export class TargetBrackets {
     }
   }
 
-  private acquire(i: number): THREE.LineSegments {
+  private acquire(i: number): THREE.Mesh {
     let b = this.pool[i];
     if (!b) {
-      const mat = new THREE.LineBasicMaterial({ color: BRACKET_COLOR, transparent: true, opacity: NEAR_OPACITY, depthTest: false, depthWrite: false });
-      b = new THREE.LineSegments(this.geo, mat);
+      const mat = new THREE.MeshBasicMaterial({ color: BRACKET_COLOR, transparent: true, opacity: BRACKET_OPACITY, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
+      b = new THREE.Mesh(makeBracketGeo(), mat); // 슬롯별 개별 지오메트리(매 프레임 크기·두께 갱신)
       b.frustumCulled = false;
-      b.renderOrder = 3; // 장면 위에 얇게 올림
+      b.renderOrder = 3; // 장면 위에 올림
       this.group.add(b);
       this.pool[i] = b;
       this.mats[i] = mat;
@@ -159,7 +179,7 @@ export class TargetBrackets {
   }
 
   dispose(): void {
-    this.geo.dispose();
+    for (const b of this.pool) b.geometry.dispose();
     for (const m of this.mats) m?.dispose();
     this.layer?.remove();
   }

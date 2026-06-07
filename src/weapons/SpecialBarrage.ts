@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import type { PlayerController } from "../player/PlayerController";
 import type { EnemyManager } from "../enemies/EnemyManager";
-import { getEnemy } from "../enemies/SeedEnemy";
+import type { SeedEnemy } from "../enemies/SeedEnemy";
 import type { Sfx } from "../core/Sfx";
 import { DamageNumbers } from "../fx/damageNumbers";
 import type { BarrageSpec, SpecialWeapon } from "./WeaponSpec";
 import { damageForDistance } from "./WeaponSpec";
-import { makeGlowTexture, muzzleFrom, beamEnd, BeamPool, type BeamStyle } from "./beamFx";
+import { makeGlowTexture, muzzleFrom, BeamPool, type BeamStyle } from "./beamFx";
 import { DrainCycle } from "./DrainCycle";
 import { parseHexColor } from "../core/math";
 import { nearestInCone } from "./targeting";
@@ -22,7 +22,6 @@ const TRIGGER_FLOOR = 5; // 발동 최소 freq
  * 자연 회복은 발동 동안 억제(PlayerController.freqRegenSuppressed).
  */
 export class SpecialBarrage implements SpecialWeapon {
-  private raycaster = new THREE.Raycaster();
   private beamPool: BeamPool;
   private damageNumbers: DamageNumbers;
   private glowTexture: THREE.Texture;
@@ -41,7 +40,6 @@ export class SpecialBarrage implements SpecialWeapon {
     private spec: BarrageSpec,
     private sfx?: Sfx
   ) {
-    this.raycaster.far = spec.range;
     this.coneCos = Math.cos(THREE.MathUtils.degToRad(spec.coneDeg));
     this.style = { beamColor: parseHexColor(spec.colorBeam), glowColor: parseHexColor(spec.colorGlow), radius: 0.07, glowScale: 2.8 };
     this.damageNumbers = new DamageNumbers(scene);
@@ -89,18 +87,14 @@ export class SpecialBarrage implements SpecialWeapon {
     const muzzle = muzzleFrom(origin, aimDir);
 
     for (const t of targets) {
-      const dir = t.dir;
-      this.raycaster.set(origin, dir);
-      const hit = this.raycaster.intersectObject(t.mesh, false)[0];
-      const endPoint = beamEnd(hit, origin, dir, this.spec.range);
-
-      const enemy = hit && getEnemy(hit.object);
-      if (enemy) {
-        const dmg = damageForDistance(hit.distance, this.spec.salvoDamage, this.spec.falloff);
+      // 콘 표적이 곧 적 — 셸 인스턴싱으로 개체별 메시가 없어 표적 위치로 직접 적용(레이캐스트 불요).
+      const endPoint = origin.clone().addScaledVector(t.dir, t.dist);
+      const enemy = t.enemy;
+      if (enemy.state === "alive") {
+        const dmg = damageForDistance(t.dist, this.spec.salvoDamage, this.spec.falloff);
         this.damageNumbers.spawn(endPoint, dmg);
         if (enemy.applyFrequencyHit(dmg)) this.enemies.registerKill(enemy);
       }
-
       this.spawnBeamVisual(muzzle, endPoint);
     }
 
@@ -108,16 +102,16 @@ export class SpecialBarrage implements SpecialWeapon {
     this.onFired?.();
   }
 
-  /** 전방 콘 안의 살아있는 적을 거리 오름차순으로 max 개까지(raycast 용 mesh 동봉). */
+  /** 전방 콘 안의 살아있는 적을 거리 오름차순으로 max 개까지(적 참조 동봉). */
   private acquireTargets(
     origin: THREE.Vector3,
     aimDir: THREE.Vector3,
     max: number
-  ): { mesh: THREE.Object3D; dir: THREE.Vector3; dist: number }[] {
-    // aliveWorldPositions 와 hitMeshes 는 동일 순서 → nearestInCone 의 index 로 메시 역참조 가능
-    const meshes = this.enemies.hitMeshes;
+  ): { enemy: SeedEnemy; dir: THREE.Vector3; dist: number }[] {
+    // aliveWorldPositions 와 aliveEnemies 는 동일 순서 → nearestInCone 의 index 로 적 역참조 가능
+    const list = this.enemies.aliveEnemies;
     return nearestInCone(origin, aimDir, this.enemies.aliveWorldPositions, this.spec.range, this.coneCos, max).map((t) => ({
-      mesh: meshes[t.index],
+      enemy: list[t.index],
       dir: new THREE.Vector3(t.dir.x, t.dir.y, t.dir.z),
       dist: t.dist,
     }));

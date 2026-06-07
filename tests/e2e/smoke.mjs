@@ -116,6 +116,8 @@ try {
     if (size === 0) console.log("  · WebGL 캡처 불가(플레이크) — 블랙 검사 건너뜀");
     else ok(size > 3000, `메인 화면 비-블랙(PNG ${size}B > 3000)`);
 
+    // (참고) 전투(자동빔 적중)는 포인터락이 필요한 playing 업데이트 게이트라 헤드리스에서 검증 불가 → 플레이테스트로 확인.
+
     // (1) 에러 0
     ok(errors.length === 0, `콘솔/페이지 에러 0${errors.length ? " — " + errors.slice(0, 3).join(" | ") : ""}`);
   }

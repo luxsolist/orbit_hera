@@ -41,7 +41,8 @@
       "countBase": 6,
       "countCap": 12,
       "killRefund": 5,
-      "speedMul": 1.5
+      "speed": 17,
+      "speedMin": 12
     },
     "kiter": {
       "name": "모기 플라즈모이드 / SKEETER",
@@ -50,7 +51,8 @@
       "countBase": 3,
       "countCap": 5,
       "killRefund": 8,
-      "speed": 52,
+      "speed": 89,
+      "speedMin": 67,
       "turnRateDeg": 100,
       "keepDist": 60,
       "keepBand": 12,

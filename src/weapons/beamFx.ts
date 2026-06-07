@@ -1,6 +1,5 @@
 import * as THREE from "three";
 import type { EnemyManager } from "../enemies/EnemyManager";
-import { getEnemy } from "../enemies/SeedEnemy";
 import type { DamageNumbers } from "../fx/damageNumbers";
 import { damageForDistance, type DamageFalloff } from "./WeaponSpec";
 
@@ -134,7 +133,7 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
   ctx.raycaster.set(shot.origin, shot.dir);
   const hit = ctx.raycaster.intersectObjects(ctx.enemies.hitMeshes, false)[0];
   const endPoint = beamEnd(hit, shot.origin, shot.dir, shot.range);
-  const enemy = hit && getEnemy(hit.object);
+  const enemy = hit && ctx.enemies.enemyFromHit(hit); // 셸 InstancedMesh → instanceId → 적
   if (enemy) {
     const dmg = emitterDamage(hit.distance, shot.baseDamage, n, shot.falloff); // 발사관 수만큼 합산
     ctx.damageNumbers.spawn(endPoint, dmg);

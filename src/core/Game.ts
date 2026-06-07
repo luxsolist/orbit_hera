@@ -227,7 +227,17 @@ export class Game {
       specialLabel: specialWeapon.abbr,
     });
     const enemies = new EnemyManager(this.scene, world, [player], plasmoidSpec); // MP 대응: 플레이어 배열(현재 1인)
-    const beam = new FrequencyBeam(this.scene, player, enemies, primaryWeapon as BeamSpec, this.sfx);
+    // 모바일 플라이어 — 자동조준(에임어시스트 콘)·자동사격(360° 사거리/범위)을 1.5배(터치 조준 난도 보정). 스펙 캐시 보호 위해 복제.
+    let primarySpec = primaryWeapon as BeamSpec;
+    if (this.mobile.enabled && drone.move.mode === "fly") {
+      const m = 2.0;
+      primarySpec = {
+        ...primarySpec,
+        manual: { ...primarySpec.manual, assistConeDeg: primarySpec.manual.assistConeDeg * m },
+        auto: { ...primarySpec.auto, range: primarySpec.auto.range * m },
+      };
+    }
+    const beam = new FrequencyBeam(this.scene, player, enemies, primarySpec, this.sfx);
     // 특수무기 타입별 구동 — barrage(콘 살포) / stream(오버드라이브 듀얼 연사). 판별 유니온 내로잉(캐스트 X).
     let special: SpecialWeapon;
     if (specialWeapon.type === "stream") special = new SpecialStream(this.scene, player, enemies, specialWeapon, this.sfx);

@@ -60,6 +60,8 @@ export interface PlasmoidArchetypeBase {
   countBase: number; // 웨이브1 동시 개체 수(매칭 드론 1인 기준)
   countCap: number; // 웨이브 증가분 상한(1인 기준)
   killRefund: number; // 처치 시 플레이어 HP 환수(흡수당한 물질 회수)
+  speed: number; // 가장 빠른(약체·적색) 개체 속도
+  speedMin: number; // 가장 느린(강체·청백) 개체 속도 — 색 강도 g01 로 speed↔speedMin 보간
 }
 
 /**
@@ -67,7 +69,6 @@ export interface PlasmoidArchetypeBase {
  * 높이 떠 빠르게 도망 → 주로 플라이어와 교전(자기정렬). turnRate 는 °, 런타임에 rad 변환.
  */
 export interface PlasmoidKiterArchetype extends PlasmoidArchetypeBase {
-  speed: number; // 선형 이동속도(도주/접근/선회 공통)
   turnRateDeg: number; // 속도벡터 선회 상한(°/s)
   keepDist: number; // 유지하려는 적정 거리(m)
   keepBand: number; // 히스테리시스 반폭(m)
@@ -80,9 +81,7 @@ export interface PlasmoidKiterArchetype extends PlasmoidArchetypeBase {
 }
 
 /** 러셔(지상 돌격형) 아키타입 — 적극 접근 + 접촉 흡수(spec.contact). 주로 워커와 교전. */
-export interface PlasmoidRusherArchetype extends PlasmoidArchetypeBase {
-  speedMul: number; // rollAppearance 속도에 곱(↑=더 빠른 돌격, 플레이어 압박)
-}
+export type PlasmoidRusherArchetype = PlasmoidArchetypeBase;
 
 /** 개체 고유 아키타입 묶음 — 어느 드론이 플레이하든 무관(MP 혼합 전장 대응). */
 export interface PlasmoidArchetypesSpec {
@@ -262,12 +261,12 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
   archetypes: {
     rusher: {
       name: "거머리 플라즈모이드 / LEECH",
-      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 12, killRefund: 5, speedMul: 1.5,
+      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 12, killRefund: 5, speed: 17, speedMin: 12,
     },
     kiter: {
       name: "모기 플라즈모이드 / SKEETER",
-      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, killRefund: 8,
-      speed: 52, turnRateDeg: 100, keepDist: 60, keepBand: 12, strafeMix: 0, orbitRef: 35, evadeGain: 0.85,
+      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, killRefund: 8, speed: 89, speedMin: 67,
+      turnRateDeg: 100, keepDist: 60, keepBand: 12, strafeMix: 0, orbitRef: 35, evadeGain: 0.85,
       attackRange: 95, drainDamage: 1.4, drainInterval: 1.5,
     },
   },

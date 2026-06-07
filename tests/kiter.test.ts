@@ -83,6 +83,24 @@ describe("kiterVelocity — 선회(원돌기) 수직 회피", () => {
   });
 });
 
+describe("kiterVelocity — homeDir 3D 분산(개체 고유 방위, z 위/아래 무작위)", () => {
+  it("homeDir 위(+y) → keepDist 구의 위쪽 방위로 향함(상승)", () => {
+    const up: KiterParams = { ...P, homeDir: { x: 0, y: 1, z: 0 } };
+    const v = kiterVelocity(O, { x: 30, y: 0, z: 0 }, O, O, up, 1, solo, 0, 2, 0.7); // 플레이어 30m(밴드 밖)
+    expect(v.y).toBeGreaterThan(0);
+  });
+  it("homeDir 아래(−y) → 아래쪽 방위로 향함(하강) — 위/아래 무작위", () => {
+    const down: KiterParams = { ...P, homeDir: { x: 0, y: -1, z: 0 } };
+    const v = kiterVelocity(O, { x: 30, y: 0, z: 0 }, O, O, down, 1, solo, 0, 2, 0.7);
+    expect(v.y).toBeLessThan(0);
+  });
+  it("homeDir 있어도 너무 가까우면 도주가 우선(안전)", () => {
+    const up: KiterParams = { ...P, homeDir: { x: 0, y: 1, z: 0 } };
+    const v = kiterVelocity(O, { x: 5, y: 0, z: 0 }, O, O, up, 1, solo, 0, 2, 0.7); // 5m < keepDist-band(17)
+    expect(v.x).toBeLessThan(0); // 플레이어(+x) 반대로 도주
+  });
+});
+
 describe("stickyMinIndex — 멀티타깃 최근접 선택(히스테리시스)", () => {
   it("현재 표적 없으면(-1) 최소 점수 인덱스", () => {
     expect(stickyMinIndex([30, 10, 20], -1, 1.2)).toBe(1);

@@ -2,8 +2,8 @@ import type { Input } from "./Input";
 import type { ActionButton } from "../player/DroneSpec";
 
 // 룩 감도(픽셀당 입력 누적). PlayerController 의 MOUSE_SENSITIVITY=0.0022 와 곱해
-// 모바일 시야 민감도 배수(데스크탑 포인터락은 미적용). 라디안/픽셀 ≒ 0.0105.
-const LOOK_SCALE = 4.8;
+// 모바일 시야 민감도 배수(데스크탑 포인터락은 미적용). 라디안/픽셀 ≒ 0.021.
+const LOOK_SCALE = 9.6;
 const KNOB_MAX_DIST = 56; // 조이스틱 중심에서 노브가 갈 수 있는 최대 거리(px)
 const DEADZONE = 0.2;
 

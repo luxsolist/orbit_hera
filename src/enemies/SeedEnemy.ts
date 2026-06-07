@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { createDissolveMaterial, type DissolveMaterial } from "../fx/dissolve";
 import type { Vec3 } from "../core/math";
 
-const SHELL_GEO = new THREE.IcosahedronGeometry(1, 2); // 부드러운 유기적 곡면(스펙 1장)
+export const SHELL_GEO = new THREE.IcosahedronGeometry(1, 2); // 셸(본체·레이캐스트) — 살아있는 적은 InstancedMesh 로 일괄 렌더
 export const CORE_GEO = new THREE.IcosahedronGeometry(0.42, 1); // 발광 코어 — EnemyManager 가 InstancedMesh 로 일괄 렌더
 
 const PULSE_RATE = 4; // 박동 위상 속도(rad/s)
@@ -13,6 +13,7 @@ const LEAD_MAX = 1.0; // 예측 요격 최대 리드 시간(s) — 너무 멀리
 export const SEP_MARGIN = 2.0; // 분리 여유 간격(m) — 자기+상대 반경에 더한 밀어내기 반경
 const SEP_GAIN = 0.7; // 분리 가중(추격 대비) — 겹치면 강하게 밀어내 링 형태로 퍼짐
 const KITER_FLEE_LEAD = 0.35; // 카이터가 플레이어 미래 위치를 예측해 회피하는 리드(s) — 원돌기 무력화
+const HOME_WANDER = 2.0; // 카이터 방위(homeDir) 무작위 표류 속도 — 살아있는 동안 xyz 전 방향으로 자유 이동(구면 랜덤워크)
 const _pred = { x: 0, y: 0, z: 0 }; // 예측 위치 임시(프레임당 동기 사용)
 
 export type EnemyState = "alive" | "dissolving" | "dead";
@@ -189,9 +190,10 @@ export interface KiterParams {
   turnRate: number; // 선회 상한(rad/s)
   keepDist: number;
   keepBand: number;
-  strafeMix?: number; // 적정거리 밴드 내 거동: 1=접선 선회(제자리 공전, 워커), 0=도주(거리 벌림, 플라이어). 기본 1. (멀면 양쪽 다 접근)
+  strafeMix?: number; // (homeDir 없을 때 폴백) 밴드 내 거동: 1=접선 선회, 0=도주. 기본 1.
   orbitRef?: number; // 이 접선속도(m/s)에서 회피가 최대(플레이어 선회 감지 기준). 기본 35.
-  evadeGain?: number; // 선회 감지 시 궤도면 이탈(주로 상승) 강도(0=없음, ~1=강함). 기본 0.
+  evadeGain?: number; // 선회 감지 시 궤도면 이탈 강도(0=없음, ~1=강함). 기본 0.
+  homeDir?: Vec3; // 개체 고유 방위(단위벡터) — keepDist 구 위 이 방향을 향함 → 3D 고른 분산(z 무작위 위/아래). 없으면 폴백(반경 도주/선회).
 }
 
 /**
@@ -230,18 +232,25 @@ export function kiterVelocity(
   const ux = dx / dist, uy = dy / dist, uz = dz / dist; // 적→플레이어 단위(접근 방향)
   let desX: number, desY: number, desZ: number;
   if (dist < p.keepDist - p.keepBand) {
-    desX = -ux; desY = -uy; desZ = -uz; // 너무 가까움 → 도주
+    desX = -ux; desY = -uy; desZ = -uz; // 너무 가까움 → 도주(플레이어 반대)
+  } else if (p.homeDir) {
+    // keepDist 구 위 자기 고유 방위(homeDir)로 향함 → 무리가 xy·z 모두 고르게 분산(z 무작위 위/아래).
+    const tx = target.x + p.homeDir.x * p.keepDist - pos.x;
+    const ty = target.y + p.homeDir.y * p.keepDist - pos.y;
+    const tz = target.z + p.homeDir.z * p.keepDist - pos.z;
+    const tl = Math.hypot(tx, ty, tz) || 1e-3;
+    desX = tx / tl; desY = ty / tl; desZ = tz / tl;
   } else if (dist > p.keepDist + p.keepBand) {
-    desX = ux; desY = uy; desZ = uz; // 너무 멀음 → 다가와서 사거리 진입(공격)
+    desX = ux; desY = uy; desZ = uz; // (폴백) 다가와서 사거리 진입
   } else {
-    // 밴드 내 → 접선 선회(strafeMix=1: 제자리 공전)와 도주(strafeMix=0: 계속 멀어져 플레이어 전진 유도)를 블렌딩.
+    // (폴백) 밴드 내 접선 선회(strafeMix=1)와 도주(strafeMix=0) 블렌딩.
     const sgn = (index & 1) ? 1 : -1;
     let tx = -uz * sgn, tz = ux * sgn;
     const tl = Math.hypot(tx, tz) || 1e-3;
     tx /= tl; tz /= tl;
     const mix = p.strafeMix ?? 1;
     desX = tx * mix - ux * (1 - mix);
-    desY = -uy * (1 - mix); // 도주 성분은 3D(수직 포함)
+    desY = -uy * (1 - mix);
     desZ = tz * mix - uz * (1 - mix);
     const dl = Math.hypot(desX, desY, desZ) || 1e-3;
     desX /= dl; desY /= dl; desZ /= dl;
@@ -262,7 +271,9 @@ export function kiterVelocity(
       let nx = uy * tvz - uz * tvy, ny = uz * tvx - ux * tvz, nz = ux * tvy - uy * tvx;
       const nl = Math.hypot(nx, ny, nz) || 1;
       nx /= nl; ny /= nl; nz /= nl;
-      if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
+      // 개체 고유 수직 부호(homeDir 의 위/아래)로 회피 → 모기마다 위 또는 아래로 무작위 이탈. homeDir 없으면 위로.
+      const vsign = p.homeDir && p.homeDir.y < 0 ? -1 : 1;
+      if (ny * vsign < 0) { nx = -nx; ny = -ny; nz = -nz; }
       const e = orbit * evadeGain * p.speed;
       vx += nx * e; vy += ny * e; vz += nz * e;
     }
@@ -285,6 +296,7 @@ export class SeedEnemy {
   // 발광 코어는 메시를 갖지 않고 시각 상태만 보유 — EnemyManager 가 InstancedMesh 로 일괄 렌더(드로우콜 절감).
   coreScale = 1; // 코어 상대 크기(1=정상, 디졸브 시 0으로 수축)
   coreBright = 2.2; // 코어 발광 세기(박동/피격/디졸브로 변동)
+  glow = 1; // 강함 비례 발광 배수(강체=청백일수록 ↑) — 셸·코어 인스턴스 색 가산(스폰 시 주입)
 
   state: EnemyState = "alive";
   maxHp: number;
@@ -360,6 +372,11 @@ export class SeedEnemy {
     return !!this.kiter;
   }
 
+  /** 피격 번쩍임(0..1, 제곱) — 셸 인스턴스 색 모듈레이션용(매니저). */
+  get flash(): number {
+    return this.hitFlash * this.hitFlash;
+  }
+
   /**
    * 흡수=성장 — 빨아들인 에너지로 최대체력↑·현재체력↑, 시각 크기도 상한(maxScale)까지 점증.
    * 방치하면 더 크고 탱키해져(잡기 어려워져) 쫓아갈 동기를 만든다. 살아있을 때만.
@@ -418,6 +435,14 @@ export class SeedEnemy {
       if (this.kiter) {
         // 도주형 — keepDist 유지 + 선회 캡 + 분리. 미래 위치(속도·리드) 기준 회피로 원돌기를 가로질러 빠져나감.
         if (recompute) {
+          // 방위(homeDir) 무작위 표류 — 한 개체도 죽기 전까지 xyz 전 방향으로 자유롭게 떠돈다(구면 랜덤워크).
+          const h = this.kiter.homeDir;
+          if (h) {
+            const w = HOME_WANDER * dt;
+            h.x += (Math.random() - 0.5) * w; h.y += (Math.random() - 0.5) * w; h.z += (Math.random() - 0.5) * w;
+            const hl = Math.hypot(h.x, h.y, h.z) || 1e-3;
+            h.x /= hl; h.y /= hl; h.z /= hl;
+          }
           _pred.x = target.x + steer.vel.x * KITER_FLEE_LEAD;
           _pred.y = target.y + steer.vel.y * KITER_FLEE_LEAD;
           _pred.z = target.z + steer.vel.z * KITER_FLEE_LEAD;
