@@ -226,7 +226,7 @@ export class Game {
       fireLabel: primaryWeapon.abbr, // abbr 은 모든 무기 타입 공통 → 캐스트 불필요
       specialLabel: specialWeapon.abbr,
     });
-    const enemies = new EnemyManager(this.scene, world, player, plasmoidSpec);
+    const enemies = new EnemyManager(this.scene, world, [player], plasmoidSpec); // MP 대응: 플레이어 배열(현재 1인)
     const beam = new FrequencyBeam(this.scene, player, enemies, primaryWeapon as BeamSpec, this.sfx);
     // 특수무기 타입별 구동 — barrage(콘 살포) / stream(오버드라이브 듀얼 연사). 판별 유니온 내로잉(캐스트 X).
     let special: SpecialWeapon;
@@ -341,7 +341,8 @@ export class Game {
       s.beam.update(dt, this.input.fireHeld);
       s.special.update(dt, this.input.specialPressed);
       s.enemies.update(dt);
-      s.brackets.update(s.player.camera, s.enemies.aliveMarkers); // 500m 이내 적에 코너 브래킷
+      s.brackets.update(s.player.camera, s.enemies.aliveMarkers); // 근거리 적에 코너 브래킷(TargetBrackets.RANGE)
+      this.hud.setEnemyDirections(s.player.camera, s.enemies.aliveWorldPositions); // 조준선 둘레 방향 화살표
       this.hud.update(dt);
 
       this.hud.setHp(s.player.hp, s.player.maxHp);
@@ -367,6 +368,7 @@ export class Game {
     this.state = "dead";
     this.setPlayActive(false);
     s?.brackets.hide(); // 사망 화면에 브래킷·체력수치 잔상 방지
+    this.hud.clearEnemyDirections(); // 적 방향 화살표 잔상 방지
     // 실제 포인터락은 데스크탑만 사용(모바일은 합성 락). iPad WebKit 은 exitPointerLock 미지원/실패 가능 →
     // 가드 없이 호출하면 예외로 showPanel 이 건너뛰어져 버튼이 안 뜸. 모바일은 호출 생략 + 옵셔널 체이닝.
     if (!this.mobile.enabled) document.exitPointerLock?.();

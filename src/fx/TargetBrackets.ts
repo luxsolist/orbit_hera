@@ -3,7 +3,7 @@ import * as THREE from "three";
 // 근거리 플라즈모이드 표식 — 카메라를 향하는 빌보드 "코너 브래킷"(네 모서리만 선).
 // 대상 크기에 맞춘 사각 프레임. HDR 시안-화이트로 블룸에 걸려 또렷이 빛난다(조준/식별 HUD). 거리 페이드.
 
-export const RANGE = 500; // 이 거리(m) 이내의 적만 표시
+export const RANGE = 800; // 이 거리(m) 이내의 적만 표시(고고도 교전 가시성)
 const CORNER_LEN = 0.45; // 변 절반(=1) 대비 코너 선 길이
 const MARGIN = 1.3; // 대상보다 살짝 바깥으로 프레임
 const MAX = 64; // 동시 표시 상한(풀)

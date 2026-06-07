@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   colorWeight, colorAt, plasmoidHp, visualDiameter, lowestColor, highestColor,
-  strength, speedForStrength, sampleTemp, altitudeSpeedMult, rollAppearance, contactDamage,
+  strength, speedForStrength, sampleTemp, rollAppearance, contactDamage,
   DEFAULT_PLASMOID, type PlasmoidSpec,
 } from "../src/enemies/PlasmoidSpec";
 
@@ -105,37 +105,16 @@ describe("강함(s)·속도·스폰 희귀도", () => {
     expect(sampleTemp(tMin, tCap, a, 0.5)).toBeLessThan((tMin + tCap) / 2);
     expect(sampleTemp(tMin, tMin, a, 0.5)).toBe(tMin); // 폭 0 가드
   });
-  it("altitudeSpeedMult: 지표=1, 공중↑(상한), 수중·지하↓(하한), 단조", () => {
-    const al = spec.altitude;
-    expect(altitudeSpeedMult(spec, 0)).toBeCloseTo(1, 5);
-    expect(altitudeSpeedMult(spec, al.airRef)).toBeCloseTo(1 + al.airBoostMax, 5);
-    expect(altitudeSpeedMult(spec, al.airRef * 5)).toBeCloseTo(1 + al.airBoostMax, 5); // 공중 상한 클램프
-    expect(altitudeSpeedMult(spec, -al.depthRef)).toBeCloseTo(1 - al.depthSlowMax, 5);
-    expect(altitudeSpeedMult(spec, -al.depthRef * 5)).toBeCloseTo(1 - al.depthSlowMax, 5); // 수중 하한 클램프
-    expect(altitudeSpeedMult(spec, 60)).toBeGreaterThan(altitudeSpeedMult(spec, 0));
-    expect(altitudeSpeedMult(spec, -20)).toBeLessThan(altitudeSpeedMult(spec, 0));
-  });
 });
 
-describe("접촉 흡수 에너지 — 강함 비례·고도 약화(= HP 피해 = 적 회복)", () => {
+describe("접촉 흡수 에너지 — 강함 비례(= HP 피해 = 적 회복)", () => {
   const c = spec.contact;
   const floor = spec.spawn.hpFloor, ceil = spec.spawn.hpCeil;
-  it("약체·지표 = 기본값(hpDamage)", () => {
-    expect(contactDamage(spec, floor, 0)).toBeCloseTo(c.hpDamage, 5);
+  it("약체 = 기본값(hpDamage)", () => {
+    expect(contactDamage(spec, floor)).toBeCloseTo(c.hpDamage, 5);
   });
   it("강체일수록 큼 = ×(1+strengthMul)", () => {
-    expect(contactDamage(spec, ceil, 0)).toBeCloseTo(c.hpDamage * (1 + c.strengthMul), 5);
-  });
-  it("고도가 높을수록 약화 → altWeakRef 에서 하한(altWeakMin), 그 이상 클램프", () => {
-    const ground = contactDamage(spec, ceil, 0);
-    const high = contactDamage(spec, ceil, c.altWeakRef);
-    expect(high).toBeCloseTo(ground * c.altWeakMin, 5);
-    expect(contactDamage(spec, ceil, c.altWeakRef * 3)).toBeCloseTo(high, 5); // 하한 클램프
-    expect(contactDamage(spec, ceil, c.altWeakRef * 0.5)).toBeLessThan(ground); // 단조 감소
-    expect(contactDamage(spec, ceil, c.altWeakRef * 0.5)).toBeGreaterThan(high);
-  });
-  it("지하/수중(음수 고도)은 약화 없음(×1)", () => {
-    expect(contactDamage(spec, floor, -30)).toBeCloseTo(c.hpDamage, 5);
+    expect(contactDamage(spec, ceil)).toBeCloseTo(c.hpDamage * (1 + c.strengthMul), 5);
   });
 });
 

@@ -31,7 +31,7 @@ export interface PlasmoidVisualSpec {
   exponent: number; // 곡선 가파름(0.7~1.0 권장, 클수록 보스가 더 거대)
 }
 
-/** 스폰 분포·이동속도 파라미터 — '강함(s)' 하나로 희귀도와 속도를 함께 묶는다. */
+/** 스폰 분포·이동속도 파라미터 — '강함(s)' 하나로 희귀도와 속도를 함께 묶는다. (물량은 아키타입별) */
 export interface PlasmoidSpawnSpec {
   tempAlpha: number; // 온도 희귀도 지수 α (f(T) ∝ T^-α). 클수록 고온(강체) 희귀.
   speedMax: number; // 가장 약한(적색) 개체 이동속도
@@ -40,23 +40,54 @@ export interface PlasmoidSpawnSpec {
   hpCeil: number; // 강함 정규화 상한 HP (s=1)
 }
 
-/** 고도(지면 대비) 속도 가중 — 영역별(수중/지표/공중) 드론과의 추격 균형용. */
-export interface PlasmoidAltitudeSpec {
-  airRef: number; // 이 고도(m, 지면 위)에서 공중 가속이 상한에 도달
-  depthRef: number; // 이 깊이(m, 지면 아래)에서 감속이 하한에 도달
-  airBoostMax: number; // 공중 최대 가속 비율(예 1.6 = +160%)
-  depthSlowMax: number; // 수중/지하 최대 감속 비율(예 0.6 = -60%)
-}
-
 /**
  * 접촉(에너지 흡수) 피해 — 플라즈모이드가 물체에서 에너지를 빨아들여 약화시키고(인트로의 집 붕괴 원인)
  * 그만큼 자기 체력을 회복하는 설정. 흡수량 = 플레이어 HP 피해 = 플라즈모이드 회복량.
  */
 export interface PlasmoidContactSpec {
-  hpDamage: number; // 약체(s=0)·지표 접촉 시 흡수 에너지(= 플레이어 HP 피해 = 적 회복량)
+  hpDamage: number; // 약체(s=0) 접촉 시 흡수 에너지(= 플레이어 HP 피해 = 적 회복량)
   strengthMul: number; // 강함 s=1 일 때 추가 배수 → ×(1+strengthMul)
-  altWeakRef: number; // 이 고도(m)에서 약화가 하한에 도달
-  altWeakMin: number; // 고고도 피해 하한 배수(고공일수록 약해져 빠른 공중전 유도)
+}
+
+/**
+ * 아키타입 공통 — 표시명·스폰 고도 밴드·물량(매칭 드론 1인 기준)·처치 환수.
+ * 행동(드론 선택)에서 분리된 개체 고유 속성. 물량은 아키타입별 독립 예산이라 거머리/모기를 따로 조절.
+ */
+export interface PlasmoidArchetypeBase {
+  name: string; // 표시명 "국문 / ENGLISH" (모기 / SKEETER, 거머리 / LEECH)
+  spawnAltMin: number; // 스폰 고도 하한(지면 대비 m)
+  spawnAltMax: number; // 스폰 고도 상한(지면 대비 m)
+  countBase: number; // 웨이브1 동시 개체 수(매칭 드론 1인 기준)
+  countCap: number; // 웨이브 증가분 상한(1인 기준)
+  killRefund: number; // 처치 시 플레이어 HP 환수(흡수당한 물질 회수)
+}
+
+/**
+ * 카이터(공중 도주형) 아키타입 — keepDist 유지·도망·원거리 드레인·선회 수직 회피.
+ * 높이 떠 빠르게 도망 → 주로 플라이어와 교전(자기정렬). turnRate 는 °, 런타임에 rad 변환.
+ */
+export interface PlasmoidKiterArchetype extends PlasmoidArchetypeBase {
+  speed: number; // 선형 이동속도(도주/접근/선회 공통)
+  turnRateDeg: number; // 속도벡터 선회 상한(°/s)
+  keepDist: number; // 유지하려는 적정 거리(m)
+  keepBand: number; // 히스테리시스 반폭(m)
+  strafeMix: number; // 밴드 내 거동: 1=접선 선회 / 0=도주(전진 유도)
+  orbitRef: number; // 이 접선속도(m/s)에서 선회 회피 최대
+  evadeGain: number; // 선회 감지 시 궤도면 이탈(주로 상승) 강도
+  attackRange: number; // 원거리 드레인 사거리(m)
+  drainDamage: number; // 1틱 흡수량(= 플레이어 HP 피해 = 적 성장량)
+  drainInterval: number; // 드레인 틱 간격(s)
+}
+
+/** 러셔(지상 돌격형) 아키타입 — 적극 접근 + 접촉 흡수(spec.contact). 주로 워커와 교전. */
+export interface PlasmoidRusherArchetype extends PlasmoidArchetypeBase {
+  speedMul: number; // rollAppearance 속도에 곱(↑=더 빠른 돌격, 플레이어 압박)
+}
+
+/** 개체 고유 아키타입 묶음 — 어느 드론이 플레이하든 무관(MP 혼합 전장 대응). */
+export interface PlasmoidArchetypesSpec {
+  rusher: PlasmoidRusherArchetype;
+  kiter: PlasmoidKiterArchetype;
 }
 
 /** 플라즈모이드 1종 스펙. */
@@ -67,9 +98,12 @@ export interface PlasmoidSpec {
   color: { stops: ColorStop[] };
   visual: PlasmoidVisualSpec;
   spawn: PlasmoidSpawnSpec;
-  altitude: PlasmoidAltitudeSpec;
   contact: PlasmoidContactSpec;
+  archetypes: PlasmoidArchetypesSpec;
 }
+
+/** 플라즈모이드 아키타입 식별자. */
+export type PlasmoidArchetype = "rusher" | "kiter";
 
 // ─────────────────────────── 순수 산출 유틸(테스트 분리) ───────────────────────────
 
@@ -138,16 +172,6 @@ export function sampleTemp(tMin: number, tCap: number, alpha: number, u: number)
   return Math.pow(lo + u * (hi - lo), 1 / a);
 }
 
-/**
- * 고도(지면 대비 m) → 이동속도 배수. 지표=1.0, 공중↑(+, 상한 1+airBoostMax),
- * 지하/수중↓(−, 하한 1−depthSlowMax). airRef/depthRef 에서 가중이 포화(상·하한 클램프).
- */
-export function altitudeSpeedMult(spec: PlasmoidSpec, altitude: number): number {
-  const a = spec.altitude;
-  if (altitude >= 0) return 1 + a.airBoostMax * Math.min(1, altitude / a.airRef);
-  return 1 - a.depthSlowMax * Math.min(1, -altitude / a.depthRef);
-}
-
 // 스폰 롤 튜닝 상수(밸런스) — 외형/속도 산출에만 쓰임. 변형별 데이터가 아니라 모듈 상수로 둠.
 const WAVE_TEMP_STEP = 900; // 웨이브당 해금되는 최고 온도 상승폭(K) — 점점 강한 청백 개체 등장
 const NOMINAL_MIN = 0.8, NOMINAL_SPAN = 0.8, NOMINAL_WAVE_GROW = 0.04; // 체력 산정용 노미널 지름(m)
@@ -160,7 +184,7 @@ export interface SpawnRoll {
   maxHp: number;
   diameter: number; // 렌더 지름
   color: number; // 0xRRGGBB
-  speed: number; // 기본 이동속도(고도 가중 전)
+  speed: number; // 기본 이동속도
 }
 
 /**
@@ -180,19 +204,34 @@ export function rollAppearance(spec: PlasmoidSpec, wave: number, rand: () => num
   return { temp, maxHp, diameter, color, speed };
 }
 
-/** 고도 약화 배수(접촉 피해용) — 지표=1, 고고도일수록 ↓(altWeakRef 에서 altWeakMin 도달). */
-function contactAltWeaken(c: PlasmoidContactSpec, altitude: number): number {
-  if (altitude <= 0) return 1;
-  return 1 - (1 - c.altWeakMin) * Math.min(1, altitude / c.altWeakRef);
+/**
+ * 접촉 흡수 에너지 — 강함(s)에 비례. 이 값이 곧 플레이어 HP 피해이자 적의 회복량.
+ * 강체일수록 크게(×(1+strengthMul·s)).
+ */
+export function contactDamage(spec: PlasmoidSpec, hp: number): number {
+  const c = spec.contact;
+  return c.hpDamage * (1 + c.strengthMul * strength(spec, hp));
 }
 
 /**
- * 접촉 흡수 에너지 — 강함(s)에 비례·고도가 높을수록 약화. 이 값이 곧 플레이어 HP 피해이자 적의 회복량.
- * 강체일수록 크게(×(1+strengthMul·s)), 고공일수록 약하게(×altWeaken) → 저공=묵직/고공=경쾌.
+ * 아키타입별 웨이브 동시 개체 수 — (기본 + 2웨이브당 +1, countCap 상한) × 매칭 드론 수.
+ * 매칭 드론(러셔=워커/카이터=플라이어)이 0이면 0 → 단일 구성은 자기 타입만(자기정렬·언윈너블 방지). 순수.
  */
-export function contactDamage(spec: PlasmoidSpec, hp: number, altitude: number): number {
-  const c = spec.contact;
-  return c.hpDamage * (1 + c.strengthMul * strength(spec, hp)) * contactAltWeaken(c, altitude);
+export function archetypeCount(arche: PlasmoidArchetypeBase, wave: number, matchingPlayers: number): number {
+  if (matchingPlayers <= 0) return 0;
+  const per = Math.min(arche.countCap, arche.countBase + Math.floor(Math.max(0, wave - 1) / 2));
+  return per * matchingPlayers;
+}
+
+/**
+ * 잔여 예산에서 이번에 스폰할 아키타입 — 남은 수에 비례한 가중 추첨(한 종이 0이면 다른 종, 둘 다 0이면 null).
+ * 두 예산이 웨이브 내내 잔여 비율대로 섞여 투입되게 한다. rand: ()=>[0,1). 순수.
+ */
+export function pickSpawnType(pendingRusher: number, pendingKiter: number, rand: () => number): PlasmoidArchetype | null {
+  const total = pendingRusher + pendingKiter;
+  if (total <= 0) return null;
+  if (pendingRusher > 0 && (pendingKiter <= 0 || rand() * total < pendingRusher)) return "rusher";
+  return "kiter";
 }
 
 /** 가장 낮은(가장 차가운·최약) 색 stop. */
@@ -219,6 +258,17 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
   },
   visual: { minDiameter: 1.0, maxDiameter: 300, anchorHp: 200000, anchorDiameter: 250, exponent: 0.82 },
   spawn: { tempAlpha: 2, speedMax: 13.5, speedMin: 3.75, hpFloor: 100, hpCeil: 200000 },
-  altitude: { airRef: 220, depthRef: 50, airBoostMax: 4.52, depthSlowMax: 0.6 },
-  contact: { hpDamage: 9, strengthMul: 2.0, altWeakRef: 250, altWeakMin: 0.3 },
+  contact: { hpDamage: 10, strengthMul: 2.0 },
+  archetypes: {
+    rusher: {
+      name: "거머리 플라즈모이드 / LEECH",
+      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 12, killRefund: 5, speedMul: 1.5,
+    },
+    kiter: {
+      name: "모기 플라즈모이드 / SKEETER",
+      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, killRefund: 8,
+      speed: 52, turnRateDeg: 100, keepDist: 60, keepBand: 12, strafeMix: 0, orbitRef: 35, evadeGain: 0.85,
+      attackRange: 95, drainDamage: 1.4, drainInterval: 1.5,
+    },
+  },
 };

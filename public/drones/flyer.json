@@ -10,7 +10,7 @@
     "speed": 111.11,
     "accel": 9,
     "verticalSpeed": 45,
-    "ceiling": 300,
+    "ceiling": 1000,
     "rollDeg": 16,
     "spawnHeight": 100,
     "minAltitude": 18

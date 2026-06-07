@@ -1,6 +1,14 @@
+import * as THREE from "three";
+import type { Vec3 } from "../core/math";
+import { aimArrow, arrowOffset } from "./aimArrows";
+
+const ARROW_RING_RADIUS = 26; // 조준선 둘레 화살표 반경(px) — 크로스헤어(34px) 바로 바깥
+const ARROW_DEAD_CONE_TAN = Math.tan((9 * Math.PI) / 180); // 정면 중앙 9° 데드콘(이미 보이는 적은 숨김)
+const ARROW_MAX = 16; // 화살표 동시 표시 상한(풀)
+
 /**
  * 원격 접속 HUD 오버레이 제어.
- * DOM 요소를 직접 갱신(체력/주파수/처치/웨이브/크로스헤어/피격 플래시).
+ * DOM 요소를 직접 갱신(체력/주파수/처치/웨이브/크로스헤어/피격 플래시 + 적 방향 화살표).
  */
 export class HUD {
   private root: HTMLElement;
@@ -11,6 +19,10 @@ export class HUD {
   private unitName: HTMLElement;
   private crosshair: HTMLElement;
   private damage: HTMLElement;
+
+  private arrowLayer: HTMLDivElement; // 조준선 중심에 위치한 화살표 컨테이너(0 크기 원점)
+  private arrows: HTMLDivElement[] = [];
+  private _v = new THREE.Vector3();
 
   private fireFlashTimer = 0;
   private damageFlashTimer = 0;
@@ -37,6 +49,12 @@ export class HUD {
     this.damage = document.createElement("div");
     this.damage.className = "hud__damage";
     this.root.appendChild(this.damage);
+
+    // 적 방향 화살표 레이어 — 화면 중심(조준선)을 원점으로 하는 0 크기 컨테이너
+    this.arrowLayer = document.createElement("div");
+    this.arrowLayer.style.cssText =
+      "position:fixed;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:4";
+    this.root.appendChild(this.arrowLayer);
   }
 
   setActive(active: boolean) {
@@ -79,6 +97,47 @@ export class HUD {
     if (active) this.specialLabel.textContent = "FIRE";
     else if (r >= 1) this.specialLabel.textContent = "RMB";
     else this.specialLabel.textContent = String(Math.ceil(remainingSec));
+  }
+
+  /**
+   * 조준선 둘레에 적(플라즈모이드) 방향 붉은 화살표 배치 — 적 수만큼. 비행 중 적 위치 식별용.
+   * 정면 중앙(이미 보이는 적)은 데드콘으로 생략. 후방 포함 전 방향 표시.
+   */
+  setEnemyDirections(camera: THREE.Camera, positions: readonly Vec3[]) {
+    camera.updateMatrixWorld();
+    let n = 0;
+    for (const p of positions) {
+      if (n >= ARROW_MAX) break;
+      this._v.set(p.x, p.y, p.z);
+      camera.worldToLocal(this._v); // 카메라 로컬(오른쪽 +x, 위 +y, 정면 -z)
+      const { angle, hidden } = aimArrow(this._v.x, this._v.y, this._v.z, ARROW_DEAD_CONE_TAN);
+      if (hidden) continue;
+      const { x, y } = arrowOffset(angle, ARROW_RING_RADIUS);
+      const el = this.acquireArrow(n++);
+      el.style.display = "block";
+      el.style.transform = `translate(-50%,-50%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${angle.toFixed(3)}rad)`;
+    }
+    for (let i = n; i < this.arrows.length; i++) this.arrows[i].style.display = "none";
+  }
+
+  /** 적 방향 화살표 전부 숨김(사망/일시정지 — 잔상 방지). */
+  clearEnemyDirections() {
+    for (const a of this.arrows) a.style.display = "none";
+  }
+
+  private acquireArrow(i: number): HTMLDivElement {
+    let el = this.arrows[i];
+    if (!el) {
+      el = document.createElement("div");
+      // CSS 삼각형(위 방향) — rotate 로 적 방향을 가리킴. 붉은색 + 글로우.
+      el.style.cssText =
+        "position:absolute;left:0;top:0;width:0;height:0;transform-origin:center;" +
+        "border-left:4px solid transparent;border-right:4px solid transparent;" +
+        "border-bottom:7px solid #ff3b30;filter:drop-shadow(0 0 2px #ff3b30);will-change:transform";
+      this.arrowLayer.appendChild(el);
+      this.arrows[i] = el;
+    }
+    return el;
   }
 
   flashFire() {

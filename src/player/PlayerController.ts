@@ -52,6 +52,15 @@ export function applyDamage(hp: number, invuln: number, amount: number): { hp: n
 }
 
 /**
+ * 회복 적용 순수 전이 — 사망(hp<=0) 또는 비양수 회복이면 불변. 그 외엔 maxHp 한도로 가산.
+ * (카이터 처치 환수 등 — 부활은 불가, 살아있을 때만 회복)
+ */
+export function applyHeal(hp: number, maxHp: number, amount: number): number {
+  if (hp <= 0 || amount <= 0) return hp;
+  return Math.min(maxHp, hp + amount);
+}
+
+/**
  * 최고 상승 고도(눈높이 기준) — 보행 점프·비행 천장 공통. 발밑 지표면(standY) + 기체별 상승
  * 한도(rise) + 눈높이(eye)를 더하고 절대 하드리밋(HARD_CEILING 5km)으로 클램프. standY 가
  * 위치마다 바뀌므로(고지대/저지대) 캡도 동적으로 조정된다.
@@ -154,6 +163,11 @@ export class PlayerController {
 
   get isDead(): boolean {
     return this.hp <= 0;
+  }
+
+  /** 체력 회복(최대치 한도). 사망 시 무시 — 카이터 처치 환수 등. */
+  heal(amount: number): void {
+    this.hp = applyHeal(this.hp, this.maxHp, amount);
   }
 
   /** 빔 발사 시 주파수 소모. 충분치 않으면 false */

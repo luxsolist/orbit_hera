@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { spawnHeightAboveGround } from "../src/player/PlayerController";
-import { spawnAltitude, SPAWN_CEILING, SPAWN_BIAS } from "../src/enemies/EnemyManager";
+import { archetypeCount, pickSpawnType, DEFAULT_PLASMOID } from "../src/enemies/PlasmoidSpec";
 import type { WalkMove, FlyMove } from "../src/player/DroneSpec";
 
-// 최근 추가한 스폰 고도 로직(비행 드론 공중 투입 · 적 지면 편향 스폰)의 순수 함수 가드.
+// 스폰 로직 — 드론 시작 높이 + 인원/웨이브별 물량 + 구성 비례 아키타입(MP) 순수 함수 가드.
 
 const WALK: WalkMove = {
   mode: "walk",
@@ -26,28 +26,38 @@ describe("spawnHeightAboveGround — 스폰 시 지면 대비 시작 높이", ()
   });
 });
 
-describe("spawnAltitude — 적 지면 편향 공중 스폰 고도", () => {
-  it("경계: u=0 → 0, u=1 → SPAWN_CEILING", () => {
-    expect(spawnAltitude(0)).toBe(0);
-    expect(spawnAltitude(1)).toBeCloseTo(SPAWN_CEILING, 9);
+describe("archetypeCount — 아키타입별 웨이브·인원 비례 물량", () => {
+  const rusher = DEFAULT_PLASMOID.archetypes.rusher; // 거머리: countBase 6, cap 12
+  const kiter = DEFAULT_PLASMOID.archetypes.kiter; // 모기: countBase 3, cap 5
+  it("웨이브1·매칭 1인 = countBase (거머리>모기)", () => {
+    expect(archetypeCount(rusher, 1, 1)).toBe(6);
+    expect(archetypeCount(kiter, 1, 1)).toBe(3);
   });
-  it("범위: 모든 u∈[0,1) 에서 0 ≤ 고도 < SPAWN_CEILING", () => {
-    for (let u = 0; u < 1; u += 0.05) {
-      const a = spawnAltitude(u);
-      expect(a).toBeGreaterThanOrEqual(0);
-      expect(a).toBeLessThan(SPAWN_CEILING);
-    }
+  it("2웨이브당 +1", () => {
+    expect(archetypeCount(rusher, 3, 1)).toBe(7);
+    expect(archetypeCount(kiter, 5, 1)).toBe(5);
   });
-  it("단조 증가", () => {
-    let prev = -1;
-    for (let u = 0; u <= 1; u += 0.05) {
-      const a = spawnAltitude(u);
-      expect(a).toBeGreaterThanOrEqual(prev);
-      prev = a;
-    }
+  it("countCap 상한", () => {
+    expect(archetypeCount(rusher, 99, 1)).toBe(12);
+    expect(archetypeCount(kiter, 99, 1)).toBe(5);
   });
-  it("지상 편향: 중앙값(u=0.5) 이 고도 중점보다 한참 아래", () => {
-    expect(SPAWN_BIAS).toBeGreaterThan(1); // 편향 전제
-    expect(spawnAltitude(0.5)).toBeLessThan(SPAWN_CEILING / 2);
+  it("매칭 드론 수 비례(×N)", () => expect(archetypeCount(rusher, 1, 3)).toBe(18));
+  it("매칭 드론 0이면 0 (자기정렬 — 단일 구성은 자기 타입만)", () => {
+    expect(archetypeCount(rusher, 5, 0)).toBe(0);
+    expect(archetypeCount(kiter, 5, 0)).toBe(0);
   });
+});
+
+describe("pickSpawnType — 잔여 예산 비율 가중 추첨", () => {
+  it("한 종만 남으면 그 종(난수 무관)", () => {
+    expect(pickSpawnType(6, 0, () => 0.0)).toBe("rusher");
+    expect(pickSpawnType(6, 0, () => 0.99)).toBe("rusher");
+    expect(pickSpawnType(0, 3, () => 0.0)).toBe("kiter");
+  });
+  it("둘 다 남으면 잔여 비율로 분기", () => {
+    // 잔여 [3,1] → total 4: rand·4<3 이면 러셔
+    expect(pickSpawnType(3, 1, () => 0.1)).toBe("rusher"); // 0.4 < 3
+    expect(pickSpawnType(3, 1, () => 0.99)).toBe("kiter"); // 3.96 ≥ 3
+  });
+  it("둘 다 0이면 null", () => expect(pickSpawnType(0, 0, () => 0.5)).toBeNull());
 });

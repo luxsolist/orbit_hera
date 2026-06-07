@@ -12,6 +12,8 @@ const STOP_DIST = 2.2; // 이 거리 이내면 추적 정지(접촉 교전 거�
 const LEAD_MAX = 1.0; // 예측 요격 최대 리드 시간(s) — 너무 멀리 조준하지 않도록 상한
 const SEP_MARGIN = 2.0; // 분리 여유 간격(m) — 자기+상대 반경에 더한 밀어내기 반경
 const SEP_GAIN = 0.7; // 분리 가중(추격 대비) — 겹치면 강하게 밀어내 링 형태로 퍼짐
+const KITER_FLEE_LEAD = 0.35; // 카이터가 플레이어 미래 위치를 예측해 회피하는 리드(s) — 원돌기 무력화
+const _pred = { x: 0, y: 0, z: 0 }; // 예측 위치 임시(프레임당 동기 사용)
 
 export type EnemyState = "alive" | "dissolving" | "dead";
 
@@ -98,8 +100,126 @@ export function steerVelocity(
 }
 
 /**
+ * 점수(거리·어그로 부하 가중) 배열에서 최소 인덱스 — 단, 현재 대상이 최소의 hysteresis 배 이내면 유지(깜빡임 방지).
+ * MP 멀티타깃 선택용. 빈 배열은 -1. 순수.
+ */
+export function stickyMinIndex(scores: readonly number[], currentIdx: number, hysteresis: number): number {
+  if (scores.length === 0) return -1;
+  let mi = 0;
+  for (let i = 1; i < scores.length; i++) if (scores[i] < scores[mi]) mi = i;
+  if (currentIdx >= 0 && currentIdx < scores.length && scores[currentIdx] <= scores[mi] * hysteresis) return currentIdx;
+  return mi;
+}
+
+/**
+ * 멀티타깃 표적 선택 — 점수 = 거리 × (1 + aggroPenalty·부하). 최소 점수(현 표적은 히스테리시스로 유지).
+ * dist=Infinity(사망/부재)는 제외, 유효 표적 없으면 -1. scores 는 재사용 스크래치(할당 회피). 순수.
+ */
+export function chooseTarget(
+  dists: readonly number[], load: readonly number[], currentIdx: number,
+  aggroPenalty: number, hysteresis: number, scores: number[]
+): number {
+  scores.length = dists.length;
+  for (let i = 0; i < dists.length; i++) {
+    scores[i] = dists[i] === Infinity ? Infinity : dists[i] * (1 + aggroPenalty * load[i]);
+  }
+  const idx = stickyMinIndex(scores, currentIdx, hysteresis);
+  return idx >= 0 && scores[idx] !== Infinity ? idx : -1;
+}
+
+/** 도주형(카이터) 조향 파라미터 — turnRate 는 rad/s. */
+export interface KiterParams {
+  speed: number;
+  turnRate: number; // 선회 상한(rad/s)
+  keepDist: number;
+  keepBand: number;
+  strafeMix?: number; // 적정거리 밴드 내 거동: 1=접선 선회(제자리 공전, 워커), 0=도주(거리 벌림, 플라이어). 기본 1. (멀면 양쪽 다 접근)
+  orbitRef?: number; // 이 접선속도(m/s)에서 회피가 최대(플레이어 선회 감지 기준). 기본 35.
+  evadeGain?: number; // 선회 감지 시 궤도면 이탈(주로 상승) 강도(0=없음, ~1=강함). 기본 0.
+}
+
+/**
+ * 속도벡터를 cur 방향에서 desired 방향으로 maxRad 만큼만 회전(구면보간). 크기는 desired 크기를 따른다.
+ * cur 이 0(정지)이면 즉시 desired 방향. 급반전을 막아 "빠르되 읽히는" 선회를 만든다.
+ */
+export function turnToward(cur: Vec3, desired: Vec3, maxRad: number): Vec3 {
+  const dl = Math.hypot(desired.x, desired.y, desired.z);
+  if (dl < 1e-6) return { x: 0, y: 0, z: 0 };
+  const dnx = desired.x / dl, dny = desired.y / dl, dnz = desired.z / dl;
+  const cl = Math.hypot(cur.x, cur.y, cur.z);
+  if (cl < 1e-6) return { x: dnx * dl, y: dny * dl, z: dnz * dl };
+  const cnx = cur.x / cl, cny = cur.y / cl, cnz = cur.z / cl;
+  const dot = Math.max(-1, Math.min(1, cnx * dnx + cny * dny + cnz * dnz));
+  const ang = Math.acos(dot);
+  const sinA = Math.sin(ang);
+  // 같은 방향(ang≈0, maxRad 안) 또는 정반대(ang≈π, sinA≈0 → 보간 불가)면 목표 방향으로 스냅.
+  if (ang <= maxRad || ang < 1e-6 || sinA < 1e-6) return { x: dnx * dl, y: dny * dl, z: dnz * dl };
+  const t = maxRad / ang;
+  const w1 = Math.sin((1 - t) * ang) / sinA, w2 = Math.sin(t * ang) / sinA;
+  let nx = cnx * w1 + dnx * w2, ny = cny * w1 + dny * w2, nz = cnz * w1 + dnz * w2;
+  const nl = Math.hypot(nx, ny, nz) || 1e-3;
+  return { x: (nx / nl) * dl, y: (ny / nl) * dl, z: (nz / nl) * dl };
+}
+
+/**
+ * 도주형(카이터) 속도 — keepDist 유지: 가까우면 도주(플레이어 반대), 멀면 접근, 밴드 내면 수평 선회 스트레이프.
+ * 분리(동료 밀어냄) 합성 → speed 클램프 → 선회속도(turnRate) 캡. 고도 가중은 적용하지 않는다(예측 가능한 추격).
+ */
+export function kiterVelocity(
+  pos: Vec3, target: Vec3, targetVel: Vec3, curVel: Vec3, p: KiterParams, dt: number,
+  boids: readonly Boid[], index: number, sepMargin: number, sepGain: number
+): Vec3 {
+  const dx = target.x - pos.x, dy = target.y - pos.y, dz = target.z - pos.z;
+  const dist = Math.hypot(dx, dy, dz) || 1e-3;
+  const ux = dx / dist, uy = dy / dist, uz = dz / dist; // 적→플레이어 단위(접근 방향)
+  let desX: number, desY: number, desZ: number;
+  if (dist < p.keepDist - p.keepBand) {
+    desX = -ux; desY = -uy; desZ = -uz; // 너무 가까움 → 도주
+  } else if (dist > p.keepDist + p.keepBand) {
+    desX = ux; desY = uy; desZ = uz; // 너무 멀음 → 다가와서 사거리 진입(공격)
+  } else {
+    // 밴드 내 → 접선 선회(strafeMix=1: 제자리 공전)와 도주(strafeMix=0: 계속 멀어져 플레이어 전진 유도)를 블렌딩.
+    const sgn = (index & 1) ? 1 : -1;
+    let tx = -uz * sgn, tz = ux * sgn;
+    const tl = Math.hypot(tx, tz) || 1e-3;
+    tx /= tl; tz /= tl;
+    const mix = p.strafeMix ?? 1;
+    desX = tx * mix - ux * (1 - mix);
+    desY = -uy * (1 - mix); // 도주 성분은 3D(수직 포함)
+    desZ = tz * mix - uz * (1 - mix);
+    const dl = Math.hypot(desX, desY, desZ) || 1e-3;
+    desX /= dl; desY /= dl; desZ /= dl;
+  }
+  let vx = desX * p.speed, vy = desY * p.speed, vz = desZ * p.speed;
+  const sep = separationVector(boids, index, sepMargin);
+  vx += sep.x * p.speed * sepGain; vy += sep.y * p.speed * sepGain; vz += sep.z * p.speed * sepGain;
+
+  // 원돌기 대응 — 플레이어의 접선(궤도) 속도가 크면 그 궤도 평면을 벗어나는 방향(수평 선회 → 주로 수직)으로 탈출.
+  const evadeGain = p.evadeGain ?? 0;
+  if (evadeGain > 0) {
+    const vr = targetVel.x * ux + targetVel.y * uy + targetVel.z * uz; // 시선 방향 성분(접근/이탈)
+    const tvx = targetVel.x - vr * ux, tvy = targetVel.y - vr * uy, tvz = targetVel.z - vr * uz; // 접선(선회) 성분
+    const tvLen = Math.hypot(tvx, tvy, tvz);
+    if (tvLen > 1e-3) {
+      const orbit = Math.min(1, tvLen / (p.orbitRef ?? 35));
+      // 궤도 평면 법선 = u × 접선(수평 궤도면이면 ≈ 수직). 위로 빠지도록 부호 보정.
+      let nx = uy * tvz - uz * tvy, ny = uz * tvx - ux * tvz, nz = ux * tvy - uy * tvx;
+      const nl = Math.hypot(nx, ny, nz) || 1;
+      nx /= nl; ny /= nl; nz /= nl;
+      if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; }
+      const e = orbit * evadeGain * p.speed;
+      vx += nx * e; vy += ny * e; vz += nz * e;
+    }
+  }
+
+  const m = Math.hypot(vx, vy, vz);
+  if (m > p.speed) { const s = p.speed / m; vx *= s; vy *= s; vz *= s; }
+  return turnToward(curVel, { x: vx, y: vy, z: vz }, p.turnRate * dt);
+}
+
+/**
  * 외계 씨앗 적 유닛.
- * - 박동(pulse)하며 플레이어를 추적.
+ * - 박동(pulse)하며 플레이어를 추적(또는 카이터: 도주+원거리 드레인).
  * - 주파수 빔에 맞으면 쪼그라들고(shrink), 체력 소진 시 디졸브 소멸(스펙 5/6장).
  */
 export class SeedEnemy {
@@ -112,6 +232,10 @@ export class SeedEnemy {
   state: EnemyState = "alive";
   maxHp: number;
   hp: number;
+  readonly color: number; // 발광/표면 색(드레인 빔 연출 등에서 참조)
+  killRefund = 0; // 처치 시 플레이어 HP 환수(아키타입에서 주입)
+  archetypeName = ""; // 아키타입 표시명(모기/거머리 …) — HUD/로그용
+  targetIndex = -1; // 현재 추적 대상 플레이어 인덱스(MP 멀티타깃 — 매니저가 관리, 히스테리시스)
 
   private dissolveProgress = 0;
   private hitFlash = 0; // 피격 순간 1 → 빠르게 감쇠하며 흰색 번쩍임
@@ -120,12 +244,17 @@ export class SeedEnemy {
   private speed: number;
   private attackCooldown = 0;
   private baseScale: number;
+  private maxScale: number; // 흡수 성장 시각 상한(초기 baseScale 의 1.5배)
+  private vel: Vec3 = { x: 0, y: 0, z: 0 }; // 카이터 속도 상태(선회 캡용)
+  private kiter?: KiterParams; // 설정 시 도주형 행동
 
   constructor(position: THREE.Vector3, appearance: SeedAppearance, speed = 4.5) {
     this.baseScale = appearance.diameter / 2; // 지오메트리 지름 2(반지름 1) → 실제 지름 = scale·2
+    this.maxScale = this.baseScale * 1.5;
     this.speed = speed;
     this.maxHp = appearance.maxHp;
     this.hp = appearance.maxHp;
+    this.color = appearance.color;
 
     // 표면/코어 색을 온도색(colorAt)에서 파생 — 적색 약체 → 청백 강체로 통일
     const col = new THREE.Color(appearance.color);
@@ -172,6 +301,27 @@ export class SeedEnemy {
     this.hp = Math.min(this.maxHp, this.hp + amount);
   }
 
+  /** 도주형(카이터) 행동 활성화 — 도주+선회+원거리 드레인. */
+  setKiter(params: KiterParams): void {
+    this.kiter = params;
+  }
+
+  /** 카이터 여부(매니저가 드레인/접촉 경로를 분기). */
+  get isKiter(): boolean {
+    return !!this.kiter;
+  }
+
+  /**
+   * 흡수=성장 — 빨아들인 에너지로 최대체력↑·현재체력↑, 시각 크기도 상한(maxScale)까지 점증.
+   * 방치하면 더 크고 탱키해져(잡기 어려워져) 쫓아갈 동기를 만든다. 살아있을 때만.
+   */
+  grow(amount: number): void {
+    if (this.state !== "alive" || amount <= 0) return;
+    this.maxHp += amount;
+    this.hp = Math.min(this.maxHp, this.hp + amount);
+    this.baseScale = Math.min(this.maxScale, this.baseScale * (1 + amount / Math.max(1, this.maxHp)));
+  }
+
   update(dt: number, target: THREE.Vector3, speedScale = 1, steer?: SteerInput) {
     this.pulsePhase += dt * PULSE_RATE;
     this.bobPhase += dt * BOB_RATE;
@@ -214,27 +364,38 @@ export class SeedEnemy {
    * steer 제공 시 **예측 요격**(원돌기 가로채기) + **분리**(동료 밀어내기, 한 점에 뭉침 방지). 없으면 단순 호밍.
    */
   private updateMotion(dt: number, target: THREE.Vector3, speedScale: number, steer?: SteerInput) {
+    if (this.attackCooldown > 0) this.attackCooldown -= dt;
+
     const pos = this.group.position;
-    const speed = this.speed * speedScale;
-    if (steer) {
-      const aim = interceptPoint(target, steer.vel, pos, speed, LEAD_MAX);
-      const v = steerVelocity(pos, aim, speed, STOP_DIST, steer.boids, steer.index, SEP_MARGIN, SEP_GAIN);
+    if (this.kiter && steer) {
+      // 도주형 — keepDist 유지 + 선회 캡 + 분리. 고도 가중 미적용(kiter.speed 그대로).
+      // 플레이어 미래 위치(현위치 + 속도·리드)를 기준으로 회피 → 제자리 원돌기를 가로질러 빠져나감.
+      _pred.x = target.x + steer.vel.x * KITER_FLEE_LEAD;
+      _pred.y = target.y + steer.vel.y * KITER_FLEE_LEAD;
+      _pred.z = target.z + steer.vel.z * KITER_FLEE_LEAD;
+      const v = kiterVelocity(pos, _pred, steer.vel, this.vel, this.kiter, dt, steer.boids, steer.index, SEP_MARGIN, SEP_GAIN);
+      this.vel = v;
       pos.x += v.x * dt; pos.y += v.y * dt; pos.z += v.z * dt;
     } else {
-      const next = pursueStep(pos, target, speed, dt, STOP_DIST);
-      pos.set(next.x, next.y, next.z);
+      const speed = this.speed * speedScale;
+      if (steer) {
+        const aim = interceptPoint(target, steer.vel, pos, speed, LEAD_MAX);
+        const v = steerVelocity(pos, aim, speed, STOP_DIST, steer.boids, steer.index, SEP_MARGIN, SEP_GAIN);
+        pos.x += v.x * dt; pos.y += v.y * dt; pos.z += v.z * dt;
+      } else {
+        const next = pursueStep(pos, target, speed, dt, STOP_DIST);
+        pos.set(next.x, next.y, next.z);
+      }
     }
     pos.y += BOB_AMPLITUDE * BOB_RATE * Math.cos(this.bobPhase) * dt; // 누적 X 미세 흔들림
-
-    if (this.attackCooldown > 0) this.attackCooldown -= dt;
   }
 
-  /** 플레이어와 접촉 시 공격 가능 여부 (쿨다운 관리) */
-  tryAttack(playerPos: THREE.Vector3, range: number): boolean {
+  /** 공격 가능 여부 (사거리 + 쿨다운 게이트). cooldown 으로 접촉(1s)/카이터 드레인 간격을 분기. */
+  tryAttack(playerPos: THREE.Vector3, range: number, cooldown = 1.0): boolean {
     if (this.state !== "alive" || this.attackCooldown > 0) return false;
     const d = this.group.position.distanceTo(playerPos);
     if (d <= range) {
-      this.attackCooldown = 1.0;
+      this.attackCooldown = cooldown;
       return true;
     }
     return false;

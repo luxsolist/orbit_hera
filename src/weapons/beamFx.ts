@@ -139,7 +139,7 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
     const dmg = emitterDamage(hit.distance, shot.baseDamage, n, shot.falloff); // 발사관 수만큼 합산
     ctx.damageNumbers.spawn(endPoint, dmg);
     shot.onHit?.(endPoint, hit, shot.dir);
-    if (enemy.applyFrequencyHit(dmg)) ctx.enemies.registerKill();
+    if (enemy.applyFrequencyHit(dmg)) ctx.enemies.registerKill(enemy);
   }
   // (2) 시각 — 발사관마다 좌우 오프셋에서 적중점으로 수렴하는 빔
   const side = sideVector(shot.dir, _side);

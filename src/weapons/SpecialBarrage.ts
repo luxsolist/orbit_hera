@@ -98,7 +98,7 @@ export class SpecialBarrage implements SpecialWeapon {
       if (enemy) {
         const dmg = damageForDistance(hit.distance, this.spec.salvoDamage, this.spec.falloff);
         this.damageNumbers.spawn(endPoint, dmg);
-        if (enemy.applyFrequencyHit(dmg)) this.enemies.registerKill();
+        if (enemy.applyFrequencyHit(dmg)) this.enemies.registerKill(enemy);
       }
 
       this.spawnBeamVisual(muzzle, endPoint);

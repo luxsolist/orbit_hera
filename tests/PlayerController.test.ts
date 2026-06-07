@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stepVerticalVelocity, dirSpeedMult, maxRiseAltitude, HARD_CEILING, applyDamage, MERCY_INVULN } from "../src/player/PlayerController";
+import { stepVerticalVelocity, dirSpeedMult, maxRiseAltitude, HARD_CEILING, applyDamage, applyHeal, MERCY_INVULN } from "../src/player/PlayerController";
 import type { JumpSpec } from "../src/player/DroneSpec";
 
 // walker.json 의 jump 스펙(다이나믹 튜닝)을 기준으로 적분기 가드.
@@ -104,5 +104,21 @@ describe("applyDamage — 피해 전이(머시 무적·사망 게이트)", () =>
     const r = applyDamage(20, 0, 50);
     expect(r.hp).toBe(0);
     expect(r.applied).toBe(true);
+  });
+});
+
+describe("applyHeal — 회복 전이(최대치 한도·사망 게이트)", () => {
+  it("정상 회복: maxHp 한도로 가산", () => {
+    expect(applyHeal(50, 120, 30)).toBe(80);
+  });
+  it("최대치 초과는 maxHp 로 클램프", () => {
+    expect(applyHeal(110, 120, 30)).toBe(120);
+  });
+  it("이미 사망(hp<=0)이면 부활 불가 — 불변", () => {
+    expect(applyHeal(0, 120, 30)).toBe(0);
+  });
+  it("비양수 회복은 무시 — 불변", () => {
+    expect(applyHeal(50, 120, 0)).toBe(50);
+    expect(applyHeal(50, 120, -10)).toBe(50);
   });
 });
