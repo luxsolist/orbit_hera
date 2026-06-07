@@ -17,10 +17,14 @@
   + 경복궁 **특수 권역**(마사토 바닥·전통 건물·궁장)까지 데이터로 일반화.
 - **드론 2종** — 보행(점프·회피 대시) / 비행(시선결합 비행·호버·뱅킹 롤). 데이터로 분기.
 - **무기 2종** — 주파수 빔(자동발사 + 에임 어시스트 수동) + 다중 빔 살포(특수, 콘 다중 타깃).
-- **적(플라즈모이드)** — 공중(0~300m, 지상 편향) 스폰 + 지형 무시 3D 추적 + 디졸브 소멸 + 점증 웨이브.
-- **연출** — 절차적 로우폴리 + 라이팅/그림자 + **Bloom** + 디졸브 셰이더 + 절차적 발사음(Web Audio).
-- **모바일** — 가로 모드 가상 조이스틱 + 드론/무기별 버튼 클러스터.
-- **품질** — Vitest 단위 **115개** + Playwright e2e 스모크(4맵), 빌드 시 소스맵 hidden + 난독화.
+- **적(플라즈모이드)** — 드론 선택과 무관한 두 **아키타입**: **모기/SKEETER**(공중 카이터 — 도망다니며
+  원거리 **드레인 빔**으로 흡수, 플레이어가 선회하면 수직 회피, 소수정예) / **거머리/LEECH**(지상 러셔 —
+  적극 접근해 **접촉 흡수**, 더 빠르고 떼로 몰림). 멀티타깃 어그로 + 구성 비례 자기정렬 + 디졸브 소멸 + 점증 웨이브.
+- **연출** — 절차적 로우폴리 + 라이팅/그림자 + **Bloom** + 디졸브 셰이더 + 절차적 발사음(Web Audio) +
+  인트로 절차적 **배경음악**(Web Audio 앰비언트 스코어 — 장면별 무드 모핑 + 리버브, 외부 음원 0).
+- **모바일** — 가로 모드 가상 조이스틱 + 드론/무기별 버튼 클러스터(시야 민감도 데스크탑 수준).
+- **HUD** — 조준선 둘레에 적 방향 **붉은 화살표**(오프스크린 포함) 표시.
+- **품질** — Vitest 단위 **443개** + Playwright e2e 스모크(4맵), 빌드 시 소스맵 hidden + 난독화.
 
 ## 조작
 
@@ -64,11 +68,11 @@ src/
   core/                         Game(루프/상태) · Input · MobileControls · Sfx · loader
   player/                       DroneSpec · PlayerController(보행/비행) · drones
   weapons/                      FrequencyBeam · SpecialBarrage · targeting · WeaponSpec · beamFx
-  enemies/                      SeedEnemy(3D 추적·디졸브) · EnemyManager(공중 스폰/웨이브)
+  enemies/                      SeedEnemy(3D 추적·아키타입·디졸브) · EnemyManager(멀티타깃 어그로/스폰/웨이브)
   world/                        World · TerrainField · SkyEnvironment · CollisionWorld · precinct
   ui/                           MenuScreen(세계지도) · HUD · Minimap · RearView
-  fx/                           dissolve · postprocessing(Bloom) · damageNumbers
-  intro/                        CinematicPlayer · scenes · MenuBackground
+  fx/                           dissolve · postprocessing(Bloom) · damageNumbers · DrainBeams
+  intro/                        CinematicPlayer · scenes · CinematicAudio(절차적 배경음악) · MenuBackground
 public/{drones,weapons,maps}/   런타임 데이터(JSON)
 docs/{spec,implements}/         명세 · 구현 문서
 ```

@@ -31,6 +31,8 @@
   ([tests/PlayerController.test.ts](../../tests/PlayerController.test.ts))
 - `spawnHeightAboveGround(move, eye)` — 스폰 시 지면 대비 높이: 비행 `min(spawnHeight, ceiling)`,
   보행 `eye`. ([tests/spawn.test.ts](../../tests/spawn.test.ts))
+- `applyHeal(hp, maxHp, amount)` — 회복 순수 전이: **사망(hp≤0) 또는 비양수 회복이면 불변**(부활 불가),
+  그 외엔 `min(maxHp, hp+amount)`로 가산(최대치 한도 클램프).
 
 ### update 파이프라인
 1. 무적 타이머 감쇠
@@ -66,8 +68,8 @@
   "최고 상승 고도(지표면 기준)"를 산출한다.
 - **`HARD_CEILING = 5000`(export)** — 지표 무관 절대 최고 고도(m). 향후 항공모함·보스급 콘텐츠도 못 넘는
   글로벌 상한. 수직 적분 직후 `position.y`에 일괄 클램프(`min(position.y, HARD_CEILING)`).
-- **천장은 지면 대비(`standSurfaceY` 기준)** — 1km 절벽 위에선 +`ceiling`로 ~1.3km, 해수면 위에선 0.3km까지
-  도달. 매 프레임 (x,z)에서 `standSurfaceY`를 재계산 → 수평 이동·동적 맵 지형에 자동 적응.
+- **천장은 지면 대비(`standSurfaceY` 기준)** — 비행 `ceiling` 1km 기준, 1km 절벽 위에선 ~2km, 해수면 위에선 1km까지
+  도달(절대 `HARD_CEILING` 5km 클램프). 매 프레임 (x,z)에서 `standSurfaceY`를 재계산 → 수평 이동·동적 맵 지형에 자동 적응.
 - **하강 스무딩** — 고지대→저지대 이동으로 캡이 낮아질 땐 즉시 스냅하지 않고 `CEIL_FALL_RATE=2.5`로
   부드럽게 하강(0.5m 근접 시 안착).
 
@@ -78,6 +80,10 @@
 
 - **`takeDamage(amount): boolean`** — 0.6s 머시 무적/사망 중이면 무시하고 `false`, 적용 시 `true` 반환.
   반환값으로 적 접촉 회복(`absorbEnergy`)·HUD 피격 연출을 게이트한다(무적 중 회복/연출 차단).
+
+- **`heal(amount)`** — 순수 `applyHeal`을 위임. **카이터/거머리 처치 시 흡수당했던 물질 HP 환수**
+  (`EnemyManager.registerKill`의 `killRefund`)에 사용. 사망 시 부활 불가, `maxHp` 한도 클램프, 비양수 무시.
+  ※ 아직 패시브 HP 자연 회복은 없다(향후 업그레이드 시스템 항목).
 
 - **사망 시 포인터락 해제 가드** — `Game.onDeath()`는 데스크톱일 때만 `document.exitPointerLock?.()` 호출.
   모바일은 합성 락이라 생략하고 옵셔널 체이닝을 써, iPad WebKit에서 `exitPointerLock` 미지원/실패로
@@ -92,7 +98,7 @@
 | `speed` | 19.44 (≒70 km/h) | 111.11 (≒400 km/h) |
 | `maxHp` | 120 | 60 |
 | `maxFreq` / `freqRegen` | 120 / 28 | 90 / 16 |
-| 수직 | 점프 `jump.velocity` 28, `maxRiseHeight` 100 | `verticalSpeed` 45, `ceiling` 300, `minAltitude` 18, `spawnHeight` 100 |
+| 수직 | 점프 `jump.velocity` 28, `maxRiseHeight` 100 | `verticalSpeed` 45, `ceiling` 1000, `minAltitude` 18, `spawnHeight` 100 |
 | 대시 | `dash{192, 0.16, 2.0}` | 없음 |
 | 무기 | primary `frequency-beam-heavy` / special `special-barrage` | primary `frequency-beam-light` / special `special-overdrive` |
 
@@ -105,4 +111,7 @@
   데드존 0.2 밖 축만 키로(8방향). ([tests/mobileJoystick.test.ts](../../tests/mobileJoystick.test.ts))
 - **버튼 템플릿** — 우하단 2×2: FIRE/SP(고정, 무기 `abbr` 라벨) + ACT1/ACT2(드론 `actions`).
   누르는 동안 `actions[].key`를 합성. `configure()`가 드론/무기별로 라벨·키를 주입.
+- **시야 드래그(룩)** — 우반쪽 빈 공간 스와이프 변위에 `LOOK_SCALE=3.2`를 곱해 `addLookDelta()`로
+  전달(PlayerController의 `mouseSensitivity` 0.0022와 다시 곱해져 라디안/픽셀 ≒ 0.007). 모바일 전용
+  민감도 배수로, **데스크탑 포인터락은 미적용**(데스크탑은 원시 `movementX/Y`만 사용해 동일).
 - 세로 모드면 안내 + 입력 차단(`isBlocked`).

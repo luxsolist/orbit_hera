@@ -144,16 +144,29 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 | `spawn.tempAlpha` | number | 온도 희귀도 지수 α (`f(T) ∝ T^-α`, 클수록 고온 희귀) |
 | `spawn.speedMax` / `spawn.speedMin` | number | 최약(적색) / 최강(청백) 개체 이동속도 |
 | `spawn.hpFloor` / `spawn.hpCeil` | number | '강함' 정규화 하한/상한 HP |
-| `altitude.airRef` / `altitude.depthRef` | number | 공중 가속 포화 고도(현 220, 0–300m 전투 밴드 전체에 걸침) / 수중·지하 감속 포화 깊이 m |
-| `altitude.airBoostMax` / `altitude.depthSlowMax` | number | 공중 최대 가속 비율 / 수중·지하 최대 감속 비율 |
-| `contact.hpDamage` | number | 약체(s=0)·지표 접촉 시 흡수 에너지 = 플레이어 HP 피해 = 적 회복량 |
+| `contact.hpDamage` | number | 약체(s=0) 접촉 시 흡수 에너지 = 플레이어 HP 피해 = 적 회복량(러셔 전용) |
 | `contact.strengthMul` | number | 강함 s=1 추가 배수 → `×(1+strengthMul·s)` |
-| `contact.altWeakRef` | number | 이 고도(m)에서 접촉 약화가 하한에 도달 |
-| `contact.altWeakMin` | number | 고고도 피해 하한 배수(고공일수록 약화 → 빠른 공중전 유도) |
+| `archetypes.rusher` | `RusherArchetype` | 지상 돌격형(거머리) — 접근+접촉 흡수 |
+| `archetypes.kiter` | `KiterArchetype` | 공중 도주형(모기) — 거리 유지+원거리 드레인 |
 
 **`ColorStop`**: `{ temp(K), color("0xRRGGBB"), weight(체력 가중치, 최저색=1.0 기준) }`.
 
-순수 산출식(체력·색·렌더크기·속도·온도 샘플)은 [`PlasmoidSpec.ts`](../../src/enemies/PlasmoidSpec.ts)에
+이동 난이도는 더 이상 고도에 의존하지 않는다 — 과거 `altitude` 블록과 `contact.altWeakRef/altWeakMin`는
+제거됐다. 개체 행동은 드론과 무관한 **고유 아키타입**(`archetypes`)으로 정의한다.
+
+**공통 베이스**(rusher·kiter 모두): `name`("국문 / ENGLISH" 표시명),
+`spawnAltMin`/`spawnAltMax`(지면 대비 스폰 고도 밴드 m), `countBase`(웨이브1 동시 수, 매칭 드론 1인 기준),
+`countCap`(웨이브 증가분 상한, 1인 기준), `killRefund`(처치 시 플레이어 HP 환수). 물량은 매칭 드론 수에
+비례(러셔=워커, 카이터=플라이어).
+
+**`RusherArchetype`** (위 + ): `speedMul`(`rollAppearance` 속도에 곱 — ↑=더 빠른 돌격).
+
+**`KiterArchetype`** (위 + ): `speed`(선형 이동속도), `turnRateDeg`(선회 상한 °/s), `keepDist`(유지 적정거리 m),
+`keepBand`(히스테리시스 반폭 m), `strafeMix`(밴드 내 거동: 1=접선 선회 / 0=도주), `orbitRef`(이 접선속도 m/s에서
+선회 회피 최대), `evadeGain`(선회 감지 시 궤도면 이탈=주로 상승 강도), `attackRange`(원거리 드레인 사거리 m),
+`drainDamage`(1틱 흡수량=플레이어 HP 피해=적 성장량), `drainInterval`(드레인 틱 간격 s).
+
+순수 산출식(체력·색·렌더크기·속도·온도 샘플·아키타입 물량)은 [`PlasmoidSpec.ts`](../../src/enemies/PlasmoidSpec.ts)에
 모듈로 분리되어 있고, 내장 `DEFAULT_PLASMOID`가 JSON과 동치임을 테스트가 검증한다.
 
 ---

@@ -24,6 +24,17 @@
 처치 수/웨이브, 특수무기 쿨다운 링(진행률·잔여초·발동중), 피격 비네팅(`flashDamage`), 유닛명. DOM은
 [index.html](../../index.html)에 정적 배치, 런타임에 갱신.
 
+### 적 방향 화살표 ([aimArrows.ts](../../src/ui/aimArrows.ts))
+
+조준선(크로스헤어) 둘레에 **살아있는 플라즈모이드 수만큼 작은 붉은 화살표**를 그 방향으로 배치 — 비행 중
+적이 "어느 방향"에 있는지 식별. 카메라 로컬 좌표 기준이라 **후방/화면 밖 적도 포함**해 둘레로 표시하고,
+정면 중앙 데드콘(약 9°) 안의 적(이미 보임)은 생략.
+- 순수 헬퍼 `aimArrow(lx,ly,lz,deadConeTan)`(둘레 각도 + 숨김 판정) / `arrowOffset(angle,radius)`(중심 기준
+  px 오프셋) — THREE 비의존 → 단위 테스트 가능.
+- `HUD.setEnemyDirections(camera, positions)` 가 적 월드 좌표를 카메라 로컬로 변환해 화살표를 갱신(풀링,
+  상한 16개), `clearEnemyDirections()` 로 전부 숨김. Game 플레이 루프가 `enemies.aliveWorldPositions`로
+  매 프레임 갱신하고, 사망/일시정지 시 clear(잔상 방지).
+
 ## 화면 비례 레이아웃 (hudLayout)
 
 후방화면·미니맵·여백·코너 텍스트·우하단 버튼이 **화면 짧은 변**(`min(가로,세로)`)에 비례해 크기 조정 —
@@ -52,6 +63,16 @@
   인트로의 씨앗/코어/플라즈모이드 색은 **플라즈모이드 온도 시스템**(`colorAt`)에서 파생([tests/introHelpers.test.ts](../../tests/introHelpers.test.ts)).
 - **MenuBackground** — 메뉴(전장 선택) 배경으로 인트로 장면 중 하나를 랜덤 재생, 끝나면 다른 장면으로
   교체하며 사이를 **검정 페이드(0.7s)** 전환. 페이드 div는 캔버스 위·메뉴 오버레이 아래. 이탈 시 컴포저 해제.
+- **CinematicAudio** ([intro/CinematicAudio.ts](../../src/intro/CinematicAudio.ts)) — 인트로 컷씬 전용
+  **절차적 배경음악(앰비언트 스코어)**. Web Audio API 로 즉석 합성, 외부 음원 0(게임 전반의 무에셋 기조 =
+  `core/Sfx.ts`). **효과음 없이 배경음악만**(SFX 미포함). 구성: 옥타브를 아우르는 **디튠 톱니 패드 드론** +
+  항시 **서브 저역** + **컨볼버 리버브**(절차적 임펄스 응답) + 느린 **필터 LFO**(호흡감). 8개 인트로 컷씬마다
+  **무드 모핑** — `enterScene(name)`이 루트음을 retune(글라이드)하고 패드 필터 컷오프/게인·서브 게인을 그 장면
+  무드로 램프. 불길한 장면(`rise`)엔 **트라이톤(증4도) 불협 보이스**를 올림. 마스터 페이드 인(0.8s)/아웃이 시각
+  페이드와 동조.
+  - `CinematicPlayer`가 생성자(사용자 제스처 = 인트로 버튼 클릭) 안에서 생성하고, 장면 진입마다 `enterScene`,
+    스킵/종료 페이드 시 `stop(fade)`, 종료 시 `dispose()`(AudioContext close 로 모든 노드 일괄 해제).
+    오디오 생성 실패해도 시각은 진행(`try/catch` → 무음).
 
 ## FX
 
@@ -69,7 +90,7 @@
   적중부 연출을 "에너지 **중화**" 룩으로(빔이 플라즈모이드 에너지를 무력화 → 검게 탐): 일반 블렌딩의
   거의 검정(`0x05060a`) 어두운 버스트 + 가산 시안 "중화 링"(`makeRingTexture` 환형이라 어두운 배경에서도
   보임) + 어두운 잔재 스파크 파편. 확장·페이드 애니메이션은 공유.
-- **TargetBrackets** ([fx/TargetBrackets.ts](../../src/fx/TargetBrackets.ts)) — 500m 이내 플라즈모이드에
+- **TargetBrackets** ([fx/TargetBrackets.ts](../../src/fx/TargetBrackets.ts)) — 800m 이내 플라즈모이드에
   카메라 빌보드 **코너 브래킷**(네 모서리 ㄱ자선)을 대상 크기에 맞춰 표시. HDR 시안으로 블룸에 걸려 또렷,
   거리 페이드(`bracketOpacity` 근접 0.95→원거리 0.35, [tests/targetBrackets.test.ts](../../tests/targetBrackets.test.ts)).
   브래킷(3D LineSegments) 위에 적의 **현재 체력 수치**(`marker.hp`)를 DOM 라벨로 박스 상단에 표시 — 화면
