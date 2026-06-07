@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pursueStep, interceptPoint, separationVector, steerVelocity, type Boid } from "../src/enemies/SeedEnemy";
+import { pursueStep, interceptPoint, separationVector, steerVelocity, buildBoidGrid, recomputeSteer, SEP_MARGIN, type Boid } from "../src/enemies/SeedEnemy";
 
 // 플라즈모이드 3D 추적(상하 포함, 지형/물체 무시)의 순수 스텝 가드.
 
@@ -110,5 +110,63 @@ describe("steerVelocity — 추격+분리 합성(speed 클램프)", () => {
     ];
     const v = steerVelocity(O, { x: 0, y: 0, z: 100 }, 10, 2.2, crowd, 0, 2, 5);
     expect(Math.hypot(v.x, v.y, v.z)).toBeLessThanOrEqual(10 + 1e-6);
+  });
+});
+
+describe("buildBoidGrid + separationVector(grid) — 공간 해시 가속(전수와 결과 동일)", () => {
+  // 결정적 LCG 로 난수 boid 군집 생성(겹침·다양한 반경 포함) → grid == 전수 동등성 검증.
+  function makeBoids(n: number, seed: number): Boid[] {
+    let s = seed >>> 0;
+    const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+    const b: Boid[] = [];
+    for (let i = 0; i < n; i++) {
+      b.push({ x: (rnd() - 0.5) * 60, y: (rnd() - 0.5) * 30, z: (rnd() - 0.5) * 60, r: 0.5 + rnd() * 2.5 });
+    }
+    // 완전 중첩 쌍(0除算 분기) + 동일 셀 밀집 클러스터(이웃 누락 검출)
+    b.push({ x: b[0].x, y: b[0].y, z: b[0].z, r: 1 });
+    for (let i = 0; i < 6; i++) b.push({ x: 5 + rnd() * 2, y: 1, z: -5 + rnd() * 2, r: 1.5 });
+    return b;
+  }
+
+  it("모든 개체에서 grid 분리 = 전수 분리(겹침·다양한 반경 포함)", () => {
+    const boids = makeBoids(120, 12345);
+    const grid = buildBoidGrid(boids);
+    for (let i = 0; i < boids.length; i++) {
+      const full = separationVector(boids, i, SEP_MARGIN);
+      const fast = separationVector(boids, i, SEP_MARGIN, grid);
+      expect(fast.x).toBeCloseTo(full.x, 9);
+      expect(fast.y).toBeCloseTo(full.y, 9);
+      expect(fast.z).toBeCloseTo(full.z, 9);
+    }
+  });
+
+  it("cell = 2·최대반경 + SEP_MARGIN ≥ 최대 reach (이웃 누락 0 보장)", () => {
+    const boids = makeBoids(40, 777);
+    const maxR = Math.max(...boids.map((b) => b.r));
+    expect(buildBoidGrid(boids).cell).toBeCloseTo(2 * maxR + SEP_MARGIN, 9);
+  });
+
+  it("빈 군집/단일 개체도 안전", () => {
+    expect(buildBoidGrid([]).map.size).toBe(0);
+    const one: Boid[] = [{ x: 1, y: 2, z: 3, r: 1 }];
+    expect(separationVector(one, 0, SEP_MARGIN, buildBoidGrid(one))).toEqual({ x: 0, y: 0, z: 0 });
+  });
+});
+
+describe("recomputeSteer — 프레임 분산 재계산 판정(근접=매프레임, 원거리=k주기)", () => {
+  const NEAR = 130 * 130, STRIDE = 3;
+  it("근접(NEAR 이내)은 위상 무관 항상 재계산", () => {
+    for (let f = 0; f < 6; f++) expect(recomputeSteer(50 * 50, NEAR, f, 1, STRIDE)).toBe(true);
+  });
+  it("원거리는 (frame+idx)%stride==0 일 때만 재계산", () => {
+    expect(recomputeSteer(300 * 300, NEAR, 0, 0, STRIDE)).toBe(true);  // 0%3==0
+    expect(recomputeSteer(300 * 300, NEAR, 1, 0, STRIDE)).toBe(false);
+    expect(recomputeSteer(300 * 300, NEAR, 2, 0, STRIDE)).toBe(false);
+    expect(recomputeSteer(300 * 300, NEAR, 2, 1, STRIDE)).toBe(true);  // (2+1)%3==0
+  });
+  it("원거리도 stride 안에서 정확히 1/stride 프레임만 재계산", () => {
+    let hits = 0;
+    for (let f = 0; f < 30; f++) if (recomputeSteer(300 * 300, NEAR, f, 7, STRIDE)) hits++;
+    expect(hits).toBe(10); // 30/3
   });
 });

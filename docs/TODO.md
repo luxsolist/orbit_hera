@@ -37,56 +37,54 @@
 
 ## 1. 플라즈모이드 군집 성능
 
-**현황**: 안정적 전투 가능 한계 약 100~150개. 그 이상은 프레임 드롭.
+**현황**: 안정적 전투 가능 한계 약 100~150개. 그 이상은 프레임 드롭. 적은 이제 모기(SKEETER)/거머리(LEECH) 2 아키타입 + 멀티타깃 어그로(§7.0)지만, **군집 성능 병목 구조는 동일**(separation O(n²) + 개체별 mesh). 신규 거동이 개체당 상수 비용을 약간 키움.
 
 ### 병목 원인
 
 | 병목 | 위치 | 복잡도 |
 |------|------|--------|
-| 분리 연산 (separation) | `SeedEnemy.ts:66` | O(n²) — 조기종료 있으나 밀집 시 무력화 |
-| 개별 Mesh + Material | `SeedEnemy.ts:135` | 플라즈모이드 1개 = draw call 2개, 고유 Material 2개 |
-| 공간 분할 없음 | `EnemyManager.ts:27` | 단순 배열, 이웃 탐색 전수 순회 |
+| 분리 연산 (separation) | `SeedEnemy.ts:65` `separationVector` | O(n²) — 조기종료 있으나 밀집 시 무력화. **두 아키타입 공통**(거머리 `steerVelocity` / 모기 `kiterVelocity`) |
+| 개별 Mesh + Material | `SeedEnemy.ts:264` | 개체당 draw call 2개(셸+코어), 고유 Material 2개 |
+| 공간 분할 없음 | `EnemyManager.ts` (`enemies` 배열) | 이웃 탐색·표적 거리 전수 순회 |
+| 모기 조향 삼각함수 | `SeedEnemy.ts:153` `turnToward`(acos/sin), 수직회피(cross/sqrt `:206`) | 개체당 상수 비용↑ — 추격형보다 무겁고, 다수 모기 시 가중 |
+| 멀티타깃 선택 | `EnemyManager.pickTarget` | O(n×players) — 1인 플레이는 무시 가능, MP 다인에서 누적 |
 
 ### 개선 항목
 
-- [ ] **⭐⭐⭐ round-robin 프레임 분산** (`EnemyManager.ts` + `SeedEnemy.ts`) — 가장 빠른 개선
-  - `separationCache[]`에 마지막 계산 결과 저장
-  - 플라즈모이드 i는 `frame % k === i % k`인 프레임에만 재계산, 나머지는 캐시 재사용
-  - k=3이면 비용 1/3, 60fps 기준 33ms 지연 → 육안으로 절대 안 보임
-  - 예상 공수: 반나절, ~10줄 수정
+- [x] **⭐⭐⭐ round-robin 프레임 분산** (`SeedEnemy.recomputeSteer` + `EnemyManager`) ✅
+  - 조향 속도(`this.vel`) 캐시 — **근접(≤130m, 교전)은 매 프레임 재계산(감각 불변)**, 원거리는 `(frame+idx)%3==0` 일 때만(직선 접근이라 무체감)
+  - 원거리 군집의 모기 조향(turnToward·수직회피)·분리 비용 ~1/3. `recomputeSteer` 순수 테스트(`pursue.test.ts`)
+  - 재계산=true 시 거동 비트 동일(근접 전투 무변경)
 
-- [ ] **⭐⭐⭐ 격자 셀 반발로 분리 연산 교체** (`SeedEnemy.ts:66`) — O(n²) → O(n)
-  - 셀 크기 = 플라즈모이드 직경 × 2 (예: 20m), 해시맵으로 관리
-  - 같은 셀에 다른 플라즈모이드 있으면 셀 중심 기준으로 밀어내기, 혼자면 0
-  - 거리 계산 없음. 격자형 분산이지만 흩뜨리기 목적엔 충분
-  - 단점: 셀 경계 진동(jitter) — 소프트 가중치로 완화 가능
-  - 예상 공수: 1일, ~30줄 추가
+- [x] **⭐⭐⭐ 공간 해시로 분리 연산 가속** (`SeedEnemy.ts` `buildBoidGrid`/`separationVector(…, grid)`) — O(n²) → O(n) ✅
+  - 매 프레임 `buildBoidGrid(boids)`(셀 = 2·최대반경 + SEP_MARGIN, 충돌 없는 패킹 키) → 각 개체는 3×3×3 이웃 셀만 순회
+  - 셀 ≥ 최대 reach 라 **전수 계산과 결과가 정확히 동일**(누락·중복 0, jitter 없음). 동등성 단위 테스트로 고정(`pursue.test.ts`)
+  - `EnemyManager.update`가 grid 빌드 후 `steer.grid` 로 주입(거머리/모기 공통). 분리 비용 ~187K→~선형
 
-- [ ] **⭐⭐⭐ InstancedMesh 전환** (`SeedEnemy.ts:135`)
-  - 현재 플라즈모이드당 draw call 2개 → 전체 2 draw call로 감소
-  - 색상·스케일은 인스턴스 attribute로 전달. 재구조화 필요
+- [ ] **⭐⭐⭐ InstancedMesh 전환 — 남은 GPU 게이트(1000 렌더의 핵심)** (`SeedEnemy`/`EnemyManager`/`weapons`)
+  - 개체당 draw call 2개(셸+코어)×N → **셸/코어 InstancedMesh 2개로** 감소. CPU(분리·조향)는 이미 그리드+프레임분산으로 해결됐고, **1000을 60fps로 렌더하려면 이게 필수.**
+  - **작업 범위(주의 — 전투·시각 회귀 위험, 별도 집중 패스 + e2e/육안 검증 권장):**
+    1. 렌더 소유권 이전: `SeedEnemy`는 상태(pos/hp/scale/color/dissolve)만, `EnemyManager`가 매 프레임 `setMatrixAt`/`setColorAt` 로 InstancedMesh 갱신.
+    2. **디졸브 인스턴싱**: `fx/dissolve.ts` 정점셰이더에 `instanceMatrix`(월드좌표) + 인스턴스 속성 `aProgress/aPulse/aFlash` 추가(개체별 uniform → instanced attribute). 또는 단순화(스케일·발광 페이드)로 셰이더 인스턴싱 회피(시각 약간 변경).
+    3. **레이캐스트**: `beamFx`/`SpecialBarrage`/`SpecialStream` 의 `intersectObjects(hitMeshes)` → 셸 InstancedMesh 1개 레이캐스트 후 `instanceId`→enemy 매핑. 배러지의 개체별 `t.mesh` 레이캐스트는 표적 위치 기반으로 대체.
   - 예상 공수: 3~5일
 
-- [ ] **⭐⭐ 카이팅 방지 — 포위각 분산** (`EnemyManager.ts`)
-  - 각 플라즈모이드에 `roleAngle = (index / totalAlive) × 2π` 부여
-  - 목표점 = 플레이어 위치 + rotate(앞방향 × 50m, roleAngle)
-  - 인덱스 0=정면, n/4=왼쪽, n/2=뒤, 3n/4=오른쪽 → 어느 방향 도망쳐도 일부가 앞을 막음
-  - 추가 비용: 삼각함수 2회/플라즈모이드 — 무시 가능. 예상 공수: 반나절
+- [ ] **⭐⭐ 화면 밖·원거리 sleep** — frustum + 원거리 개체는 AI(이동·조향·표적선택) 스킵
+  - 모기 `turnToward`/수직회피 삼각함수 비용도 함께 절감. 예상 공수: 1일
 
-- [ ] **⭐⭐ 카이팅 방지 — 거리 기반 속도 급등** (`EnemyManager.ts`)
-  - >150m: speed × 2.5 / >80m: speed × 1.5 / <50m: speed × 1.0
-  - 현재 `altitudeSpeedMult()`와 같은 방식으로 1줄 추가. 예상 공수: 1시간
+- [ ] **⭐⭐ 멀티타깃 선택 공간화** (`EnemyManager.pickTarget`, MP 전용)
+  - 다인 전장에서 전체 플레이어 전수 거리(O(n×players)) 대신 **근처 플레이어만 후보**로(AOI/`SpatialGrid`)
+  - 1인 플레이엔 영향 없음. 6번 멀티플레이와 함께. 예상 공수: 1~2일
 
-- [ ] **⭐⭐ 카이팅 방지 — 원거리 이탈 시 재스폰** (`EnemyManager.ts`)
-  - 200m 이상 이탈 상태 5초 지속 시 플레이어 진행방향 앞 50~100m에 재등장
-  - CPU 비용 0에 가깝고 무한 카이팅 구조적 차단. 스폰 이펙트 필요
-  - 예상 공수: 반나절
+- [ ] **⭐ DrainBeams 지오메트리 풀링** (`fx/DrainBeams.ts`)
+  - 드레인마다 `CylinderGeometry` 생성·해제 → 길이만 스케일하는 단위 실린더 1개 재사용
+  - 다수 모기 동시 드레인 시 GC 완화. 예상 공수: 1~2시간
 
-- [ ] **⭐ 화면 밖 플라즈모이드 sleep** — frustum 밖은 AI 업데이트 스킵. 예상 공수: 1일
+> **폐기/구현됨 — 옛 "카이팅 방지" 3항목**: 거리기반 속도급등(`altitudeSpeedMult` 사용 — **제거됨**), 포위각 분산(roleAngle), 원거리 재스폰은 모두 **아키타입 재설계로 대체**. 지금은 *적이* 플레이어를 카이팅(모기 도주+예측 리드+수직 회피)하고, 군집 분산은 멀티타깃 어그로(`chooseTarget` `AGGRO_PENALTY`) + separation 이 담당 → 별도 작업 불요.
 
 ### 최적화 경로 및 수용 한계
 
-**권장 순서**: 프레임 분산(반나절) → 격자 셀 교체(1일) → InstancedMesh(3~5일) → 카이팅 방지(1일)
+**권장 순서**: 프레임 분산(반나절) → 격자 셀 교체(1일) → InstancedMesh(3~5일) → sleep(1일)
 
 | 개선 단계 | 분리 연산 비용 (n=500) | 수용 가능 개수 |
 |---------|-------------------|------------|
@@ -94,8 +92,10 @@
 | + 프레임 분산 k=3 | ~62K ops/frame | ~260개 |
 | + 격자 셀 교체 | ~500 ops/frame | ~600개 |
 | + InstancedMesh | ~500 ops/frame | ~1,000개 |
-| + 카이팅 방지 + sleep | ~500 ops/frame | **~1,000~2,000개** |
+| + sleep(원거리·화면밖) | ~500 ops/frame | **~1,000~2,000개** |
 | 10,000개 동시 | — | 현실적으로 불가 (WebGL 한계) |
+
+> 카이팅 방지는 더 이상 별도 단계 아님(아키타입으로 구현). MP 다인 시 표적선택 공간화가 추가 변수.
 
 ---
 

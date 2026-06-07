@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { SeedEnemy, chooseTarget, type Boid } from "./SeedEnemy";
+import { SeedEnemy, chooseTarget, buildBoidGrid, recomputeSteer, type Boid } from "./SeedEnemy";
 import type { World } from "../world/World";
 import type { PlayerController } from "../player/PlayerController";
 import { TERRAIN_HALF } from "../world/World";
@@ -15,6 +15,9 @@ const SPAWN_INTERVAL = 0.35; // 개체 점진 스폰 간격(s)
 const KITER_GROUND_CLEARANCE = 1.5; // 도주형이 가라앉지 않는 지면 위 최소 높이(m)
 const KITER_CEILING = 1020; // 도주형 상승 상한(지면 대비, m) — 비행 천장(1000) 근처까지 추격 가능(고고도 이탈 방지)
 const TARGET_HYSTERESIS = 1.2; // 표적 교체 문턱 — 현재 표적이 최근접의 1.2배 이내면 유지(깜빡임 방지)
+const STEER_STRIDE = 3; // 원거리 적 조향 재계산 주기(프레임) — 라운드로빈 분산
+const NEAR_DIST = 130; // 이 거리(m) 이내는 매 프레임 재계산(교전 감각 유지)
+const NEAR_DIST_SQ = NEAR_DIST * NEAR_DIST;
 const AGGRO_PENALTY = 0.4; // 어그로 분산 — 이미 표적이 된 플레이어당 거리 점수 가산(한 명에게 몰빵 방지)
 
 const _centroid = new THREE.Vector3(); // 스폰 무게중심 임시(프레임당 동기 사용)
@@ -43,6 +46,7 @@ export class EnemyManager {
 
   wave = 0;
   killCount = 0;
+  private frame = 0; // 프레임 분산 라운드로빈 위상
   private spawnTimer = 0;
   private pendingRusher = 0; // 아키타입별 잔여 스폰 예산(거머리 떼 / 모기 소수정예 독립 조절)
   private pendingKiter = 0;
@@ -270,6 +274,7 @@ export class EnemyManager {
   }
 
   update(dt: number) {
+    this.frame++;
     this.tickSpawns(dt);
     this.buildTargets(dt);
     const targets = this.targets;
@@ -283,6 +288,7 @@ export class EnemyManager {
         boids.push({ x: p.x, y: p.y, z: p.z, r: e.group.scale.x });
       }
     }
+    const grid = boids.length ? buildBoidGrid(boids) : undefined; // 분리 O(n²)→O(n) 공간 해시
 
     // 어그로 부하 초기화(이번 프레임 표적별 피추적 수)
     const load = this.load;
@@ -302,7 +308,8 @@ export class EnemyManager {
       load[idx]++;
       enemy.targetIndex = idx;
       const t = targets[idx];
-      const steer = { vel: t.vel, boids, index: myIdx };
+      const recompute = recomputeSteer(p.distanceToSquared(t.pos), NEAR_DIST_SQ, this.frame, myIdx, STEER_STRIDE);
+      const steer = { vel: t.vel, boids, index: myIdx, grid, recompute };
       if (enemy.isKiter) {
         // 도주형 — 지면 아래로 가라앉지 않게 고정 후 원거리 드레인.
         enemy.update(dt, t.pos, 1, steer);

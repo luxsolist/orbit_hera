@@ -10,7 +10,7 @@ const BOB_RATE = 2; // 자유 부유 위상 속도(rad/s)
 const BOB_AMPLITUDE = 0.4; // 자유 부유 상하 진폭(m)
 const STOP_DIST = 2.2; // 이 거리 이내면 추적 정지(접촉 교전 거리)
 const LEAD_MAX = 1.0; // 예측 요격 최대 리드 시간(s) — 너무 멀리 조준하지 않도록 상한
-const SEP_MARGIN = 2.0; // 분리 여유 간격(m) — 자기+상대 반경에 더한 밀어내기 반경
+export const SEP_MARGIN = 2.0; // 분리 여유 간격(m) — 자기+상대 반경에 더한 밀어내기 반경
 const SEP_GAIN = 0.7; // 분리 가중(추격 대비) — 겹치면 강하게 밀어내 링 형태로 퍼짐
 const KITER_FLEE_LEAD = 0.35; // 카이터가 플레이어 미래 위치를 예측해 회피하는 리드(s) — 원돌기 무력화
 const _pred = { x: 0, y: 0, z: 0 }; // 예측 위치 임시(프레임당 동기 사용)
@@ -22,6 +22,16 @@ export interface SteerInput {
   vel: Vec3; // 표적(플레이어) 속도
   boids: readonly Boid[]; // 살아있는 적 위치+반경
   index: number; // boids 내 자기 인덱스
+  grid?: BoidGrid; // 분리 가속용 공간 해시(있으면 O(n))
+  recompute?: boolean; // false 면 직전 조향속도(this.vel) 재사용(프레임 분산). 기본 true.
+}
+
+/**
+ * 이번 프레임에 조향을 재계산할지 — 근접(교전) 개체는 항상(감각 불변), 원거리는 (frame+idx)%stride==0 일 때만.
+ * 원거리 적은 직선 접근이라 k프레임 캐시해도 무체감. 순수.
+ */
+export function recomputeSteer(distSq: number, nearDistSq: number, frame: number, idx: number, stride: number): boolean {
+  return distSq <= nearDistSq || ((frame + idx) % stride) === 0;
 }
 
 /** 플라즈모이드 외형/체력 — PlasmoidSpec 시스템(온도·크기)에서 산출해 주입한다. */
@@ -59,25 +69,71 @@ export function interceptPoint(target: Vec3, targetVel: Vec3, from: Vec3, speed:
 }
 
 /**
- * 분리(separation) 조향 — boids[i] 를 반경(자기+상대 반경+margin) 안의 동료들로부터 밀어내는 단위성 벡터의 합.
- * 가까울수록(겹칠수록) 강하게 민다. 모두가 한 점(플레이어)으로 호밍해 쌓이는 현상을 막아 무리를 퍼뜨린다.
+ * 군집 분리 가속용 공간 해시 — boids 를 cell 격자 버킷에 담는다(O(n) 분리 조회용).
+ * cell = 2·maxR + SEP_MARGIN ≥ 최대 reach 라, 어떤 개체든 reach 내 동료는 모두 자기 셀의
+ * 3×3×3 이웃 안에 있다 → 그 27셀만 보면 전수 계산과 **결과가 정확히 동일**하다(누락·중복 없음).
  */
-export function separationVector(boids: readonly Boid[], i: number, margin: number): Vec3 {
-  const self = boids[i];
-  let x = 0, y = 0, z = 0;
-  for (let k = 0; k < boids.length; k++) {
-    if (k === i) continue;
-    const nb = boids[k];
-    const dx = self.x - nb.x, dy = self.y - nb.y, dz = self.z - nb.z;
-    const d2 = dx * dx + dy * dy + dz * dz;
-    const reach = self.r + nb.r + margin;
-    if (d2 > reach * reach) continue;
-    const d = Math.sqrt(d2);
-    if (d < 1e-4) { x += margin; continue; } // 완전 중첩 — 결정적 +x 분리(0除算 방지)
-    const w = (reach - d) / reach / d; // 가까울수록↑, 방향 단위화(÷d)
-    x += dx * w; y += dy * w; z += dz * w;
+export interface BoidGrid {
+  cell: number;
+  map: Map<number, number[]>; // 패킹 셀키 → boid 인덱스 목록
+}
+
+// 3축 셀 인덱스를 충돌 없이 단일 number 로 패킹(float64 정수 정밀도 내 — 축당 ±65536, 셀≥1m·맵 ±수km 안전).
+const CELL_OFF = 1 << 16, CELL_M1 = 1 << 17, CELL_M2 = (1 << 17) * (1 << 17);
+function cellKey(cx: number, cy: number, cz: number): number {
+  return (cx + CELL_OFF) + (cy + CELL_OFF) * CELL_M1 + (cz + CELL_OFF) * CELL_M2;
+}
+
+/** boids 를 공간 해시 격자로 묶는다. cell 은 (2·최대반경 + SEP_MARGIN) 로 자동 산정(전수 동등 보장). 순수. */
+export function buildBoidGrid(boids: readonly Boid[]): BoidGrid {
+  let maxR = 0;
+  for (const b of boids) if (b.r > maxR) maxR = b.r;
+  const cell = Math.max(1, 2 * maxR + SEP_MARGIN);
+  const inv = 1 / cell;
+  const map = new Map<number, number[]>();
+  for (let i = 0; i < boids.length; i++) {
+    const b = boids[i];
+    const key = cellKey(Math.floor(b.x * inv), Math.floor(b.y * inv), Math.floor(b.z * inv));
+    const arr = map.get(key);
+    if (arr) arr.push(i); else map.set(key, [i]);
   }
-  return { x, y, z };
+  return { cell, map };
+}
+
+/** 동료 nb 가 reach(자기+상대 반경+margin) 안이면 분리 기여를 out 에 누적(완전 중첩은 결정적 +x). */
+function addSeparation(self: Boid, nb: Boid, margin: number, out: Vec3): void {
+  const dx = self.x - nb.x, dy = self.y - nb.y, dz = self.z - nb.z;
+  const d2 = dx * dx + dy * dy + dz * dz;
+  const reach = self.r + nb.r + margin;
+  if (d2 > reach * reach) return;
+  const d = Math.sqrt(d2);
+  if (d < 1e-4) { out.x += margin; return; } // 완전 중첩 — 결정적 +x 분리(0除算 방지)
+  const w = (reach - d) / reach / d; // 가까울수록↑, 방향 단위화(÷d)
+  out.x += dx * w; out.y += dy * w; out.z += dz * w;
+}
+
+/**
+ * 분리(separation) 조향 — boids[i] 를 reach 안의 동료들로부터 밀어내는 단위성 벡터의 합.
+ * 모두가 한 점(플레이어)으로 호밍해 쌓이는 현상을 막아 무리를 퍼뜨린다.
+ * grid 제공 시 3×3×3 이웃 셀만 순회(O(n) 총합) — 전수(O(n²))와 **결과 동일**. 없으면 전수.
+ */
+export function separationVector(boids: readonly Boid[], i: number, margin: number, grid?: BoidGrid): Vec3 {
+  const self = boids[i];
+  const out = { x: 0, y: 0, z: 0 };
+  if (grid) {
+    const inv = 1 / grid.cell;
+    const cx = Math.floor(self.x * inv), cy = Math.floor(self.y * inv), cz = Math.floor(self.z * inv);
+    for (let dx = -1; dx <= 1; dx++)
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dz = -1; dz <= 1; dz++) {
+          const arr = grid.map.get(cellKey(cx + dx, cy + dy, cz + dz));
+          if (!arr) continue;
+          for (const k of arr) if (k !== i) addSeparation(self, boids[k], margin, out);
+        }
+  } else {
+    for (let k = 0; k < boids.length; k++) if (k !== i) addSeparation(self, boids[k], margin, out);
+  }
+  return out;
 }
 
 /**
@@ -86,13 +142,13 @@ export function separationVector(boids: readonly Boid[], i: number, margin: numb
  */
 export function steerVelocity(
   pos: Vec3, aim: Vec3, speed: number, stopDist: number,
-  boids: readonly Boid[], index: number, sepMargin: number, sepGain: number
+  boids: readonly Boid[], index: number, sepMargin: number, sepGain: number, grid?: BoidGrid
 ): Vec3 {
   const dx = aim.x - pos.x, dy = aim.y - pos.y, dz = aim.z - pos.z;
   const dist = Math.hypot(dx, dy, dz);
   let vx = 0, vy = 0, vz = 0;
   if (dist > stopDist) { const k = speed / dist; vx = dx * k; vy = dy * k; vz = dz * k; }
-  const sep = separationVector(boids, index, sepMargin);
+  const sep = separationVector(boids, index, sepMargin, grid);
   vx += sep.x * speed * sepGain; vy += sep.y * speed * sepGain; vz += sep.z * speed * sepGain;
   const m = Math.hypot(vx, vy, vz);
   if (m > speed) { const s = speed / m; vx *= s; vy *= s; vz *= s; }
@@ -167,7 +223,7 @@ export function turnToward(cur: Vec3, desired: Vec3, maxRad: number): Vec3 {
  */
 export function kiterVelocity(
   pos: Vec3, target: Vec3, targetVel: Vec3, curVel: Vec3, p: KiterParams, dt: number,
-  boids: readonly Boid[], index: number, sepMargin: number, sepGain: number
+  boids: readonly Boid[], index: number, sepMargin: number, sepGain: number, grid?: BoidGrid
 ): Vec3 {
   const dx = target.x - pos.x, dy = target.y - pos.y, dz = target.z - pos.z;
   const dist = Math.hypot(dx, dy, dz) || 1e-3;
@@ -191,7 +247,7 @@ export function kiterVelocity(
     desX /= dl; desY /= dl; desZ /= dl;
   }
   let vx = desX * p.speed, vy = desY * p.speed, vz = desZ * p.speed;
-  const sep = separationVector(boids, index, sepMargin);
+  const sep = separationVector(boids, index, sepMargin, grid);
   vx += sep.x * p.speed * sepGain; vy += sep.y * p.speed * sepGain; vz += sep.z * p.speed * sepGain;
 
   // 원돌기 대응 — 플레이어의 접선(궤도) 속도가 크면 그 궤도 평면을 벗어나는 방향(수평 선회 → 주로 수직)으로 탈출.
@@ -367,25 +423,27 @@ export class SeedEnemy {
     if (this.attackCooldown > 0) this.attackCooldown -= dt;
 
     const pos = this.group.position;
-    if (this.kiter && steer) {
-      // 도주형 — keepDist 유지 + 선회 캡 + 분리. 고도 가중 미적용(kiter.speed 그대로).
-      // 플레이어 미래 위치(현위치 + 속도·리드)를 기준으로 회피 → 제자리 원돌기를 가로질러 빠져나감.
-      _pred.x = target.x + steer.vel.x * KITER_FLEE_LEAD;
-      _pred.y = target.y + steer.vel.y * KITER_FLEE_LEAD;
-      _pred.z = target.z + steer.vel.z * KITER_FLEE_LEAD;
-      const v = kiterVelocity(pos, _pred, steer.vel, this.vel, this.kiter, dt, steer.boids, steer.index, SEP_MARGIN, SEP_GAIN);
-      this.vel = v;
+    if (steer) {
+      const recompute = steer.recompute !== false; // 프레임 분산: false 면 this.vel 재사용
+      if (this.kiter) {
+        // 도주형 — keepDist 유지 + 선회 캡 + 분리. 미래 위치(속도·리드) 기준 회피로 원돌기를 가로질러 빠져나감.
+        if (recompute) {
+          _pred.x = target.x + steer.vel.x * KITER_FLEE_LEAD;
+          _pred.y = target.y + steer.vel.y * KITER_FLEE_LEAD;
+          _pred.z = target.z + steer.vel.z * KITER_FLEE_LEAD;
+          this.vel = kiterVelocity(pos, _pred, steer.vel, this.vel, this.kiter, dt, steer.boids, steer.index, SEP_MARGIN, SEP_GAIN, steer.grid);
+        }
+      } else if (recompute) {
+        // 추격형 — 예측 요격 + 분리 조향.
+        const speed = this.speed * speedScale;
+        const aim = interceptPoint(target, steer.vel, pos, speed, LEAD_MAX);
+        this.vel = steerVelocity(pos, aim, speed, STOP_DIST, steer.boids, steer.index, SEP_MARGIN, SEP_GAIN, steer.grid);
+      }
+      const v = this.vel; // 재계산했으면 새 값, 아니면 캐시
       pos.x += v.x * dt; pos.y += v.y * dt; pos.z += v.z * dt;
     } else {
-      const speed = this.speed * speedScale;
-      if (steer) {
-        const aim = interceptPoint(target, steer.vel, pos, speed, LEAD_MAX);
-        const v = steerVelocity(pos, aim, speed, STOP_DIST, steer.boids, steer.index, SEP_MARGIN, SEP_GAIN);
-        pos.x += v.x * dt; pos.y += v.y * dt; pos.z += v.z * dt;
-      } else {
-        const next = pursueStep(pos, target, speed, dt, STOP_DIST);
-        pos.set(next.x, next.y, next.z);
-      }
+      const next = pursueStep(pos, target, this.speed * speedScale, dt, STOP_DIST); // 표적 없음/디졸브 — 단순 호밍
+      pos.set(next.x, next.y, next.z);
     }
     pos.y += BOB_AMPLITUDE * BOB_RATE * Math.cos(this.bobPhase) * dt; // 누적 X 미세 흔들림
   }
