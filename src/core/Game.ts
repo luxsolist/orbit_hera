@@ -9,7 +9,7 @@ import { PlayerController } from "../player/PlayerController";
 import { fetchDrone } from "../player/drones";
 import type { DroneSpec } from "../player/DroneSpec";
 import { fetchWeapon } from "../weapons/weapons";
-import type { BeamSpec, SpecialWeapon } from "../weapons/WeaponSpec";
+import { withAutoBoost, type BeamSpec, type SpecialWeapon } from "../weapons/WeaponSpec";
 import { EnemyManager } from "../enemies/EnemyManager";
 import { fetchPlasmoid } from "../enemies/plasmoids";
 import { DEFAULT_PLASMOID } from "../enemies/PlasmoidSpec";
@@ -44,7 +44,7 @@ interface Session {
 }
 
 /**
- * Seed 코어 게임 루프 오케스트레이터.
+ * CORE 게임 루프 오케스트레이터.
  * 전장(맵) 선택 → 서버에서 데이터 다운로드 → 월드/시스템 빌드 → 전투. 맵 변경은 재접속(reload).
  */
 export class Game {
@@ -155,8 +155,8 @@ export class Game {
   private showMenu() {
     this.state = "menu";
     this.diag.snapshot(this.renderer, "menu");
-    this.overlayTitle.textContent = "SEED";
-    this.overlayTitle.setAttribute("data-text", "SEED");
+    this.overlayTitle.textContent = "CORE";
+    this.overlayTitle.setAttribute("data-text", "CORE");
     this.startBtn.hidden = true;
     this.backBtn.hidden = true;
     this.overlay.classList.remove("is-hidden");
@@ -227,16 +227,10 @@ export class Game {
       specialLabel: specialWeapon.abbr,
     });
     const enemies = new EnemyManager(this.scene, world, [player], plasmoidSpec); // MP 대응: 플레이어 배열(현재 1인)
-    // 모바일 플라이어 — 자동조준(에임어시스트 콘)·자동사격(360° 사거리/범위)을 1.5배(터치 조준 난도 보정). 스펙 캐시 보호 위해 복제.
-    let primarySpec = primaryWeapon as BeamSpec;
-    if (this.mobile.enabled && drone.move.mode === "fly") {
-      const m = 2.0;
-      primarySpec = {
-        ...primarySpec,
-        manual: { ...primarySpec.manual, assistConeDeg: primarySpec.manual.assistConeDeg * m },
-        auto: { ...primarySpec.auto, range: primarySpec.auto.range * m },
-      };
-    }
+    // 모바일 플라이어 — 자동조준(에임어시스트 콘)·자동사격(360° 사거리/범위)을 2배(터치 조준 난도 보정). 캐시 스펙 불변(복제).
+    const primarySpec = this.mobile.enabled && drone.move.mode === "fly"
+      ? withAutoBoost(primaryWeapon as BeamSpec, 2.0)
+      : (primaryWeapon as BeamSpec);
     const beam = new FrequencyBeam(this.scene, player, enemies, primarySpec, this.sfx);
     // 특수무기 타입별 구동 — barrage(콘 살포) / stream(오버드라이브 듀얼 연사). 판별 유니온 내로잉(캐스트 X).
     let special: SpecialWeapon;

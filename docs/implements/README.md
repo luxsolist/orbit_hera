@@ -1,4 +1,4 @@
-# SEED — 구현 문서 (Implementation Notes)
+# CORE — 구현 문서 (Implementation Notes)
 
 이 디렉터리는 현재 코드베이스에 **실제로 구현되어 있는** 내용을 시스템 단위로 정리한다.
 게임 디자인 비전은 [../spec/overview.md](../spec/overview.md), 현행 데이터/규칙 명세는
@@ -24,7 +24,7 @@
 | [02-input-and-player.md](02-input-and-player.md) | 입력(Pointer Lock/키보드) · 보행/비행 컨트롤러 · 충돌 서브스테핑 · 모바일 컨트롤 |
 | [03-world.md](03-world.md) | World 빌더 · TerrainField · SkyEnvironment · CollisionWorld · 특수 권역(precinct) |
 | [04-weapons.md](04-weapons.md) | 드론별 빔(중주파/경주파·듀얼 발사관) · 특수(살포/오버드라이브 스트림) · 360°오토+수동조준 · 데미지/감쇠/쿨다운 · 공유 발사·상태기계 · 절차적 사운드 |
-| [05-enemies.md](05-enemies.md) | 플라즈모이드 **온도(T) 데이터 시스템**(색·체력·크기·속도·스폰분포) · **아키타입**(러셔/카이터) · SeedEnemy(주입형 외형·3D 추적·디졸브) · 멀티타깃 어그로/웨이브 매니저 |
+| [05-enemies.md](05-enemies.md) | 플라즈모이드 **온도(T) 데이터 시스템**(색·체력·크기·속도·스폰분포) · **아키타입**(러셔/카이터) · CoreEnemy(주입형 외형·3D 추적·디졸브) · 멀티타깃 어그로/웨이브 매니저 |
 | [06-ui-menu-intro.md](06-ui-menu-intro.md) | 세계지도 메뉴 · HUD(조준선 둘레 적방향 화살표) · 미니맵/후방뷰 · 인트로 컷씬/절차적 배경음악 · 메뉴 배경 · FX |
 | [07-build-test-tooling.md](07-build-test-tooling.md) | Vite(소스맵 hidden + 난독화) · 테스트 스위트 · e2e · 월드맵 생성기 |
 
@@ -56,7 +56,7 @@ src/
     weapons.ts               무기 카탈로그/스펙 fetch
   enemies/
     PlasmoidSpec.ts          온도(T)→색/체력/크기/속도/스폰분포 + 아키타입(rusher/kiter) 시스템(순수)
-    SeedEnemy.ts             플라즈모이드(주입형 외형·아키타입 거동·3D 추적·디졸브·태깅) + chooseTarget/stickyMinIndex/kiterVelocity(순수)
+    CoreEnemy.ts             플라즈모이드(주입형 외형·아키타입 거동·3D 추적·디졸브·태깅) + chooseTarget/stickyMinIndex/kiterVelocity(순수)
     EnemyManager.ts          멀티타깃 어그로 + 아키타입별 스폰 예산(archetypeCount/pickSpawnType, 순수)/웨이브/집계
     plasmoids.ts             적 카탈로그/스펙 fetch
   world/

@@ -4,12 +4,12 @@ import type { Frag } from "./helpers";
 import {
   ease, rng, lump, track, spinAlong, makeSwarm, updateSwarm,
   starfield, sun, oumuamua, lights, underLights,
-  earth, moon, seabed, makeCore, plasmoidSwarm, beachHouse, fallFrag, makeSeed,
-  setState, getState, SEED_ORANGE, PLAS_STRONG, CORE_TEMP, SPACE_COL, DEEP_COL, SPIN_RATE, FWD1,
+  earth, moon, seabed, makeCore, plasmoidSwarm, beachHouse, fallFrag, makeDormantCore,
+  setState, getState, DORMANT_ORANGE, PLAS_STRONG, CORE_TEMP, SPACE_COL, DEEP_COL, SPIN_RATE, FWD1,
 } from "./helpers";
 
 // 인트로 군집 userData 상태(병렬 Float32Array) — setState/getState 로 타입 안전 접근.
-interface SeedSwarmState { birth: Float32Array; vel: Float32Array; off: Float32Array; }
+interface CoreSwarmState { birth: Float32Array; vel: Float32Array; off: Float32Array; }
 interface VelState { vel: Float32Array; }
 interface DebrisState { sx: Float32Array; delay: Float32Array; travel: Float32Array; }
 interface RiseSwarmState { py: Float32Array; px: Float32Array; pz: Float32Array; sp: Float32Array; sz: Float32Array; ph: Float32Array; }
@@ -42,9 +42,9 @@ export const sceneOumuamua: CutScene = {
   },
 };
 
-// ─────────────── 씬 2: 씨앗 흩어짐 ───────────────
+// ─────────────── 씬 2: 코어 흩어짐 ───────────────
 const DUR2 = 6.5;
-const SEEDS = 15; // 소수(열몇 개)만
+const CORE_COUNT = 15; // 소수(열몇 개)만
 const START2 = new THREE.Vector3(-7, 0, 1.5); // 씬2 시작 위치
 const FWD = new THREE.Vector3(1, 0.05, -0.16).normalize(); // 비행 방향(한쪽으로 쭉)
 const ASPD = 1.5; // 소행성 속도
@@ -73,18 +73,18 @@ export const sceneDispersal: CutScene = {
     rock.position.copy(START2);
     ctx.scene.add(rock);
 
-    // 소수의 씨앗 — 크기는 미세 먼지급 유지하되 밝은 오렌지로 발광(낙하/입수/침강 씨앗과 통일). 회전 결 나선 방출 → 서서히 멀어짐.
-    const orange = new THREE.Color(SEED_ORANGE);
-    const mat = new THREE.MeshStandardMaterial({ color: orange.clone().multiplyScalar(0.2), emissive: SEED_ORANGE, emissiveIntensity: 2.2, roughness: 0.5, metalness: 0 });
-    const inst = makeSwarm(new THREE.IcosahedronGeometry(0.03, 0), mat, SEEDS, "seeds"); // 씨앗 10cm급 — 크기 유지(최소 가시)
-    const birth = new Float32Array(SEEDS);
-    const vel = new Float32Array(SEEDS * 3); // 전진(같은 방향) + 반경(서서히 멀어짐) + 접선(회전 결)
-    const off = new Float32Array(SEEDS * 3); // 방출점: 긴 축 둘레 표면(각도 phi)
+    // 소수의 코어 — 크기는 미세 먼지급 유지하되 밝은 오렌지로 발광(낙하/입수/침강 코어과 통일). 회전 결 나선 방출 → 서서히 멀어짐.
+    const orange = new THREE.Color(DORMANT_ORANGE);
+    const mat = new THREE.MeshStandardMaterial({ color: orange.clone().multiplyScalar(0.2), emissive: DORMANT_ORANGE, emissiveIntensity: 2.2, roughness: 0.5, metalness: 0 });
+    const inst = makeSwarm(new THREE.IcosahedronGeometry(0.03, 0), mat, CORE_COUNT, "cores"); // 코어 10cm급 — 크기 유지(최소 가시)
+    const birth = new Float32Array(CORE_COUNT);
+    const vel = new Float32Array(CORE_COUNT * 3); // 전진(같은 방향) + 반경(서서히 멀어짐) + 접선(회전 결)
+    const off = new Float32Array(CORE_COUNT * 3); // 방출점: 긴 축 둘레 표면(각도 phi)
     const r = rng(7);
     const hidden = new THREE.Matrix4().makeScale(0, 0, 0);
-    for (let i = 0; i < SEEDS; i++) {
+    for (let i = 0; i < CORE_COUNT; i++) {
       birth[i] = 0.6 + r() * 4.2; // 비행 내내 회전 결을 따라 하나씩
-      // 방출 각도 = 그 순간의 스핀 각도(회전 결) + 약간 분산 → 씨앗들이 나선으로 배열됨
+      // 방출 각도 = 그 순간의 스핀 각도(회전 결) + 약간 분산 → 코어들이 나선으로 배열됨
       const phi = SPIN_RATE * birth[i] + (r() - 0.5) * 0.5;
       const c = Math.cos(phi), s = Math.sin(phi);
       // 긴 축(FWD) 둘레의 반경 방향 r̂ / 접선 방향 t̂(스핀 결)
@@ -101,7 +101,7 @@ export const sceneDispersal: CutScene = {
       off[i * 3 + 2] = rdz * 0.9;
       inst.setMatrixAt(i, hidden);
     }
-    setState<SeedSwarmState>(inst, { birth, vel, off });
+    setState<CoreSwarmState>(inst, { birth, vel, off });
     ctx.scene.add(inst);
   },
   update(t, _dt, ctx) {
@@ -109,8 +109,8 @@ export const sceneDispersal: CutScene = {
     rock2Pos(rock.position, t); // 아치를 그리며 비행(씬1과 유사)
     spinAlong(rock, FWD, SPIN_RATE * t); // 긴 축 = 비행 방향, 그 축 둘레로 천천히 스크류 회전
 
-    const inst = ctx.scene.getObjectByName("seeds") as THREE.InstancedMesh;
-    const { birth, vel, off } = getState<SeedSwarmState>(inst);
+    const inst = ctx.scene.getObjectByName("cores") as THREE.InstancedMesh;
+    const { birth, vel, off } = getState<CoreSwarmState>(inst);
     updateSwarm(inst, (i, m4) => {
       const age = t - birth[i];
       if (age <= 0) {
@@ -134,7 +134,7 @@ export const sceneDispersal: CutScene = {
 // ─────────────── 씬 3: 바다 낙하(3분할) ───────────────
 const FALL_DIR = new THREE.Vector3(0, -0.12, -1).normalize(); // 씬3a 비행 방향(지구 쪽)
 
-// 씬 3a — 멀리 지구 절반이 보이고, 카메라가 씨앗 바로 뒤를 추적하며 지구로 비행
+// 씬 3a — 멀리 지구 절반이 보이고, 카메라가 코어 바로 뒤를 추적하며 지구로 비행
 const DUR3A = 5;
 export const sceneFall: CutScene = {
   name: "fall",
@@ -153,22 +153,22 @@ export const sceneFall: CutScene = {
     const m = moon(6); // 매끈한 달 — 더 크게, 오른쪽·위
     m.position.set(78, 20, -150);
     ctx.scene.add(m);
-    ctx.scene.add(makeSeed(0.5, 2.0)); // 블룸 과다로 지구가 씻기지 않게 약간 낮춤
+    ctx.scene.add(makeDormantCore(0.5, 2.0)); // 블룸 과다로 지구가 씻기지 않게 약간 낮춤
   },
   update(t, dt, ctx) {
     const e = ctx.scene.getObjectByName("earth");
     if (e) e.rotation.y += dt * 0.03;
-    const seed = ctx.scene.getObjectByName("seed3")!;
+    const coreObj = ctx.scene.getObjectByName("core3")!;
     const d = 6 * t; // 지구 쪽으로 비행
-    seed.position.set(FALL_DIR.x * d, 6 + FALL_DIR.y * d, 30 + FALL_DIR.z * d);
-    seed.scale.setScalar(1 + Math.sin(t * 6) * 0.06);
-    // 카메라: 씨앗 바로 뒤(근접) — 지구가 정면 멀리
-    ctx.camera.position.set(seed.position.x - FALL_DIR.x * 7, seed.position.y - FALL_DIR.y * 7 + 2, seed.position.z - FALL_DIR.z * 7);
-    ctx.camera.lookAt(seed.position);
+    coreObj.position.set(FALL_DIR.x * d, 6 + FALL_DIR.y * d, 30 + FALL_DIR.z * d);
+    coreObj.scale.setScalar(1 + Math.sin(t * 6) * 0.06);
+    // 카메라: 코어 바로 뒤(근접) — 지구가 정면 멀리
+    ctx.camera.position.set(coreObj.position.x - FALL_DIR.x * 7, coreObj.position.y - FALL_DIR.y * 7 + 2, coreObj.position.z - FALL_DIR.z * 7);
+    ctx.camera.lookAt(coreObj.position);
   },
 };
 
-// 씬 3b — 망망대해 수평선 배경, 씨앗이 바닷물로 첨벙 입수
+// 씬 3b — 망망대해 수평선 배경, 코어이 바닷물로 첨벙 입수
 const DUR3B = 4;
 const SPL = 44;
 export const sceneSplash: CutScene = {
@@ -184,7 +184,7 @@ export const sceneSplash: CutScene = {
     const sea = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({ color: 0x2f6f97, roughness: 0.45, metalness: 0.1 }));
     sea.rotation.x = -Math.PI / 2;
     ctx.scene.add(sea);
-    ctx.scene.add(makeSeed(0.45, 2.0));
+    ctx.scene.add(makeDormantCore(0.45, 2.0));
     const sp = makeSwarm(new THREE.IcosahedronGeometry(0.13, 0), new THREE.MeshStandardMaterial({ color: 0xe3f1ff, roughness: 0.3 }), SPL, "splash");
     const vel = new Float32Array(SPL * 3), r = rng(61), hidden = new THREE.Matrix4().makeScale(0, 0, 0);
     for (let i = 0; i < SPL; i++) {
@@ -198,12 +198,12 @@ export const sceneSplash: CutScene = {
     ctx.scene.add(sp);
   },
   update(t, _dt, ctx) {
-    const seed = ctx.scene.getObjectByName("seed3") as THREE.Mesh;
+    const coreObj = ctx.scene.getObjectByName("core3") as THREE.Mesh;
     const splashT = 2.2;
     const sy = t < splashT ? 28 * (1 - t / splashT) : -3 * ((t - splashT) / (DUR3B - splashT));
-    seed.position.set(0, sy, 0);
-    seed.visible = sy > -1.6;
-    (seed.material as THREE.MeshStandardMaterial).emissiveIntensity = sy > 0 ? 2.0 : 0.6;
+    coreObj.position.set(0, sy, 0);
+    coreObj.visible = sy > -1.6;
+    (coreObj.material as THREE.MeshStandardMaterial).emissiveIntensity = sy > 0 ? 2.0 : 0.6;
     const sp = ctx.scene.getObjectByName("splash") as THREE.InstancedMesh;
     const { vel } = getState<VelState>(sp), age = t - splashT;
     updateSwarm(sp, (i, m4) => {
@@ -219,7 +219,7 @@ export const sceneSplash: CutScene = {
   },
 };
 
-// 씬 3c — 멀리 마리아나 해구가 어둡게, 클로즈업된 씨앗이 천천히 가라앉음
+// 씬 3c — 멀리 마리아나 해구가 어둡게, 클로즈업된 코어이 천천히 가라앉음
 const DUR3C = 5;
 export const sceneSink: CutScene = {
   name: "sink",
@@ -234,14 +234,14 @@ export const sceneSink: CutScene = {
     const sb = seabed(); // 마리아나 해구(멀리 보임)
     sb.position.set(0, -26, -34);
     ctx.scene.add(sb);
-    ctx.scene.add(makeSeed(0.6, 1.8)); // 수중이지만 밝은 오렌지 통일(낙하·입수와 동일 톤)
+    ctx.scene.add(makeDormantCore(0.6, 1.8)); // 수중이지만 밝은 오렌지 통일(낙하·입수와 동일 톤)
   },
   update(t, _dt, ctx) {
-    const seed = ctx.scene.getObjectByName("seed3")!;
-    seed.position.set(0, 7 - (t / DUR3C) * 15, 0); // 천천히 가라앉음
-    seed.rotation.y += 0.004;
-    ctx.camera.position.set(seed.position.x + 3, seed.position.y + 1.1, seed.position.z + 4.6); // 클로즈업
-    ctx.camera.lookAt(seed.position);
+    const coreObj = ctx.scene.getObjectByName("core3")!;
+    coreObj.position.set(0, 7 - (t / DUR3C) * 15, 0); // 천천히 가라앉음
+    coreObj.rotation.y += 0.004;
+    ctx.camera.position.set(coreObj.position.x + 3, coreObj.position.y + 1.1, coreObj.position.z + 4.6); // 클로즈업
+    ctx.camera.lookAt(coreObj.position);
   },
 };
 

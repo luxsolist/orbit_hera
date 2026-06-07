@@ -1,11 +1,11 @@
 import * as THREE from "three";
-import { SeedEnemy, chooseTarget, buildBoidGrid, recomputeSteer, CORE_GEO, SHELL_GEO, type Boid } from "./SeedEnemy";
+import { CoreEnemy, chooseTarget, buildBoidGrid, recomputeSteer, CORE_GEO, SHELL_GEO, type Boid } from "./CoreEnemy";
 import type { World } from "../world/World";
 import type { PlayerController } from "../player/PlayerController";
 import { TERRAIN_HALF } from "../world/World";
 import { DrainBeams } from "../fx/DrainBeams";
 import {
-  DEFAULT_PLASMOID, rollAppearance, contactDamage, archetypeCount, pickSpawnType, colorWeight,
+  DEFAULT_PLASMOID, rollAppearance, contactDamage, archetypeCount, pickSpawnType, colorStrength01,
   type PlasmoidSpec, type PlasmoidKiterArchetype, type PlasmoidArchetype,
 } from "./PlasmoidSpec";
 import type { Vec3 } from "../core/math";
@@ -44,7 +44,7 @@ interface Target {
  * **고유 아키타입**(rusher/kiter)으로 결정 — 어느 드론이 플레이하든 무관(자기정렬).
  */
 export class EnemyManager {
-  private enemies: SeedEnemy[] = [];
+  private enemies: CoreEnemy[] = [];
   private scene: THREE.Scene;
   private world: World;
   private players: PlayerController[];
@@ -53,7 +53,7 @@ export class EnemyManager {
   private drain: DrainBeams;
   private coreInst: THREE.InstancedMesh; // 발광 코어 일괄 렌더(드로우콜 1개)
   private shellInst: THREE.InstancedMesh; // 살아있는 셸 일괄 렌더 + 레이캐스트(드로우콜 1개)
-  private instanceEnemies: SeedEnemy[] = []; // 셸 인스턴스 슬롯 → 적(레이캐스트 instanceId 역참조)
+  private instanceEnemies: CoreEnemy[] = []; // 셸 인스턴스 슬롯 → 적(레이캐스트 instanceId 역참조)
 
   wave = 0;
   killCount = 0;
@@ -129,7 +129,6 @@ export class EnemyManager {
         this.shellInst.setMatrixAt(si, _m4);
         _col.set(e.color).multiplyScalar(SHELL_BASE * e.glow + SHELL_FLASH * e.flash); // 강체 발광 + 피격 가산
         this.shellInst.setColorAt(si, _col);
-        this.shellInst.setColorAt(si, _col);
         inst[si] = e;
         si++;
       }
@@ -144,12 +143,12 @@ export class EnemyManager {
   }
 
   /** 레이캐스트 적중 → 적(셸 InstancedMesh 의 instanceId 역참조). 없으면 undefined. */
-  enemyFromHit(hit: THREE.Intersection): SeedEnemy | undefined {
+  enemyFromHit(hit: THREE.Intersection): CoreEnemy | undefined {
     return hit.instanceId !== undefined ? this.instanceEnemies[hit.instanceId] : undefined;
   }
 
   /** 살아있는 적 목록(aliveWorldPositions 와 동일 순서) — 콘 조준 index 역참조용. */
-  get aliveEnemies(): readonly SeedEnemy[] {
+  get aliveEnemies(): readonly CoreEnemy[] {
     return this.enemies.filter((e) => e.state === "alive");
   }
 
@@ -241,15 +240,13 @@ export class EnemyManager {
     // 외형/체력/색 — 온도(웨이브별·저온편향) 시스템 유지(색·크기·흡수성장 다양성).
     const roll = rollAppearance(this.spec, this.wave, Math.random);
     const app = { maxHp: roll.maxHp, diameter: roll.diameter, color: roll.color };
-    // 색 강도 g01(0=적색/약, 1=청백/강) — 색·속도·발광을 한 노브로(온도→색가중치 정규화).
-    const stops = this.spec.color.stops;
-    const wmax = stops[stops.length - 1].weight;
-    const g01 = (colorWeight(stops, roll.temp) - 1) / Math.max(1e-6, wmax - 1);
+    // 색 강도 g01(0=적색/약, 1=청백/강) — 속도 감속·발광을 한 노브로.
+    const g01 = colorStrength01(this.spec.color.stops, roll.temp);
     const spd = arche.speed + (arche.speedMin - arche.speed) * g01; // 적색=speed(최고), 청백=speedMin(최저)
-    let enemy: SeedEnemy;
+    let enemy: CoreEnemy;
     if (type === "kiter") {
       const k = a.kiter;
-      enemy = new SeedEnemy(new THREE.Vector3(x, y, z), app);
+      enemy = new CoreEnemy(new THREE.Vector3(x, y, z), app);
       // 개체 고유 방위(구면 균등 무작위 단위벡터) — keepDist 구 위 이 방향을 향해 xy·z 고르게 분산(z 위/아래 무작위).
       const cz = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.max(0, 1 - cz * cz));
       enemy.setKiter({
@@ -264,7 +261,7 @@ export class EnemyManager {
       });
     } else {
       // 러셔 — 추격+접촉(setKiter 미호출 → isKiter false).
-      enemy = new SeedEnemy(new THREE.Vector3(x, y, z), app, spd);
+      enemy = new CoreEnemy(new THREE.Vector3(x, y, z), app, spd);
     }
     enemy.glow = 1 + GLOW_STRENGTH * g01; // 청백(강)일수록 밝게 빛남(블룸)
     enemy.killRefund = arche.killRefund;
@@ -282,7 +279,7 @@ export class EnemyManager {
   }
 
   /** 도주형 원거리 드레인 — 사거리·간격 게이트 통과 시 표적 HP 흡수 + 적 성장 + 빔 연출. */
-  private kiterAttack(enemy: SeedEnemy, p: THREE.Vector3, t: Target) {
+  private kiterAttack(enemy: CoreEnemy, p: THREE.Vector3, t: Target) {
     const k = this.kiterArche;
     if (!enemy.tryAttack(t.pos, k.attackRange, k.drainInterval)) return;
     if (t.player.takeDamage(k.drainDamage)) {
@@ -293,7 +290,7 @@ export class EnemyManager {
   }
 
   /** 추격형 접촉 흡수 — 강함 비례. 흡수량 = 표적 HP 피해 = 적 자가 회복. */
-  private contactAttack(enemy: SeedEnemy, t: Target) {
+  private contactAttack(enemy: CoreEnemy, t: Target) {
     if (!enemy.tryAttack(t.pos, ATTACK_RANGE)) return;
     const absorb = contactDamage(this.spec, enemy.maxHp);
     if (t.player.takeDamage(absorb)) {
@@ -428,7 +425,7 @@ export class EnemyManager {
     }
   }
 
-  registerKill(enemy?: SeedEnemy) {
+  registerKill(enemy?: CoreEnemy) {
     this.killCount += 1;
     // 처치 = 흡수당한 물질 회수(HP 환수). 사망 지점 최근접 플레이어에게(근사).
     if (enemy) this.nearestPlayer(enemy.group.position)?.heal(enemy.killRefund);

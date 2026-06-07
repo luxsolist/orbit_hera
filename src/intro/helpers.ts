@@ -29,12 +29,12 @@ export function lump(x: number, y: number, z: number): number {
 
 // ─────────────────────────── 공용 상수 ───────────────────────────
 
-// 플라즈모이드 색·강함 시스템(PlasmoidSpec)과 공유하는 색 stop. 인트로의 씨앗/코어/군집 색을 여기서 파생.
+// 플라즈모이드 색·강함 시스템(PlasmoidSpec)과 공유하는 색 stop. 인트로의 휴면 코어/코어/군집 색을 여기서 파생.
 const PLAS_STOPS = DEFAULT_PLASMOID.color.stops;
 const PLAS_WMAX = PLAS_STOPS[PLAS_STOPS.length - 1].weight;
-export const SEED_TEMP = 4500; // 씨앗 통일 온도(오렌지 stop)
-export const CORE_TEMP = SEED_TEMP; // 코어 시작 색 — 씨앗과 동일한 밝은 오렌지(성장 시작 전 연속성)
-export const SEED_ORANGE = colorAt(PLAS_STOPS, SEED_TEMP); // 외계 씨앗 통일 색(밝은 오렌지) — 시스템(온도→색)에서 산출. 씬2 분산~씬3 낙하/입수/침강 공통
+export const DORMANT_TEMP = 4500; // 휴면 코어 통일 온도(오렌지 stop)
+export const CORE_TEMP = DORMANT_TEMP; // 코어 시작 색 — 휴면 코어와 동일한 밝은 오렌지(성장 시작 전 연속성)
+export const DORMANT_ORANGE = colorAt(PLAS_STOPS, DORMANT_TEMP); // 외계 휴면 코어 통일 색(밝은 오렌지) — 시스템(온도→색)에서 산출. 씬2 분산~씬3 낙하/입수/침강 공통
 export const PLAS_STRONG = colorAt(PLAS_STOPS, PLAS_STOPS[PLAS_STOPS.length - 1].temp); // 가장 강한 개체 색(최고 온도=청백) — 시스템 산출. 씬6 집 붕괴 플라즈모이드
 export const SPACE_COL = new THREE.Color(0x04060c);
 export const DEEP_COL = new THREE.Color(0x0e3a4e); // 심해(현실보다 밝게 — 배경이 보이도록)
@@ -459,12 +459,12 @@ export function beachHouse(): THREE.Group {
   return house;
 }
 
-/** 오렌지 발광 씨앗(통일 색). emis: 발광 강도. */
-export function makeSeed(radius: number, emis: number): THREE.Mesh {
+/** 오렌지 발광 휴면 코어(통일 색). emis: 발광 강도. */
+export function makeDormantCore(radius: number, emis: number): THREE.Mesh {
   const m = new THREE.Mesh(
     new THREE.IcosahedronGeometry(radius, 1),
-    new THREE.MeshStandardMaterial({ color: SEED_ORANGE, emissive: SEED_ORANGE, emissiveIntensity: emis, roughness: 0.6 })
+    new THREE.MeshStandardMaterial({ color: DORMANT_ORANGE, emissive: DORMANT_ORANGE, emissiveIntensity: emis, roughness: 0.6 })
   );
-  m.name = "seed3";
+  m.name = "core3";
   return m;
 }

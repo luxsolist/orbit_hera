@@ -6,7 +6,7 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 
 /**
  * Bloom 포스트 프로세싱 컴포저.
- * 이미시브/글로우 머티리얼(에너지 빔, 디졸브 경계, 씨앗 코어)을 발광시켜
+ * 이미시브/글로우 머티리얼(에너지 빔, 디졸브 경계, 코어)을 발광시켜
  * 스펙 1장의 'SF적 분위기' 연출을 담당.
  */
 export function createComposer(

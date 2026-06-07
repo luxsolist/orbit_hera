@@ -26,6 +26,15 @@ export interface BeamSpec {
   falloff: DamageFalloff;
 }
 
+/** 자동조준/사격 강화 — 자동사격 사거리(auto.range)·에임어시스트 콘(manual.assistConeDeg)에 배수 적용한 새 스펙. 원본 불변. 순수. */
+export function withAutoBoost(spec: BeamSpec, mul: number): BeamSpec {
+  return {
+    ...spec,
+    manual: { ...spec.manual, assistConeDeg: spec.manual.assistConeDeg * mul },
+    auto: { ...spec.auto, range: spec.auto.range * mul },
+  };
+}
+
 /** 특수무기(다중 빔 살포). */
 export interface BarrageSpec {
   id: string;

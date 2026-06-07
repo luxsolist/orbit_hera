@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pursueStep, interceptPoint, separationVector, steerVelocity, buildBoidGrid, recomputeSteer, SEP_MARGIN, type Boid } from "../src/enemies/SeedEnemy";
+import { pursueStep, interceptPoint, separationVector, steerVelocity, buildBoidGrid, recomputeSteer, SEP_MARGIN, type Boid } from "../src/enemies/CoreEnemy";
 
 // 플라즈모이드 3D 추적(상하 포함, 지형/물체 무시)의 순수 스텝 가드.
 

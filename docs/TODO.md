@@ -43,31 +43,31 @@
 
 | 병목 | 위치 | 복잡도 |
 |------|------|--------|
-| 분리 연산 (separation) | `SeedEnemy.ts:65` `separationVector` | O(n²) — 조기종료 있으나 밀집 시 무력화. **두 아키타입 공통**(거머리 `steerVelocity` / 모기 `kiterVelocity`) |
-| 개별 Mesh + Material | `SeedEnemy.ts:264` | 개체당 draw call 2개(셸+코어), 고유 Material 2개 |
+| 분리 연산 (separation) | `CoreEnemy.ts:65` `separationVector` | O(n²) — 조기종료 있으나 밀집 시 무력화. **두 아키타입 공통**(거머리 `steerVelocity` / 모기 `kiterVelocity`) |
+| 개별 Mesh + Material | `CoreEnemy.ts:264` | 개체당 draw call 2개(셸+코어), 고유 Material 2개 |
 | 공간 분할 없음 | `EnemyManager.ts` (`enemies` 배열) | 이웃 탐색·표적 거리 전수 순회 |
-| 모기 조향 삼각함수 | `SeedEnemy.ts:153` `turnToward`(acos/sin), 수직회피(cross/sqrt `:206`) | 개체당 상수 비용↑ — 추격형보다 무겁고, 다수 모기 시 가중 |
+| 모기 조향 삼각함수 | `CoreEnemy.ts:153` `turnToward`(acos/sin), 수직회피(cross/sqrt `:206`) | 개체당 상수 비용↑ — 추격형보다 무겁고, 다수 모기 시 가중 |
 | 멀티타깃 선택 | `EnemyManager.pickTarget` | O(n×players) — 1인 플레이는 무시 가능, MP 다인에서 누적 |
 
 ### 개선 항목
 
-- [x] **⭐⭐⭐ round-robin 프레임 분산** (`SeedEnemy.recomputeSteer` + `EnemyManager`) ✅
+- [x] **⭐⭐⭐ round-robin 프레임 분산** (`CoreEnemy.recomputeSteer` + `EnemyManager`) ✅
   - 조향 속도(`this.vel`) 캐시 — **근접(≤130m, 교전)은 매 프레임 재계산(감각 불변)**, 원거리는 `(frame+idx)%3==0` 일 때만(직선 접근이라 무체감)
   - 원거리 군집의 모기 조향(turnToward·수직회피)·분리 비용 ~1/3. `recomputeSteer` 순수 테스트(`pursue.test.ts`)
   - 재계산=true 시 거동 비트 동일(근접 전투 무변경)
 
-- [x] **⭐⭐⭐ 공간 해시로 분리 연산 가속** (`SeedEnemy.ts` `buildBoidGrid`/`separationVector(…, grid)`) — O(n²) → O(n) ✅
+- [x] **⭐⭐⭐ 공간 해시로 분리 연산 가속** (`CoreEnemy.ts` `buildBoidGrid`/`separationVector(…, grid)`) — O(n²) → O(n) ✅
   - 매 프레임 `buildBoidGrid(boids)`(셀 = 2·최대반경 + SEP_MARGIN, 충돌 없는 패킹 키) → 각 개체는 3×3×3 이웃 셀만 순회
   - 셀 ≥ 최대 reach 라 **전수 계산과 결과가 정확히 동일**(누락·중복 0, jitter 없음). 동등성 단위 테스트로 고정(`pursue.test.ts`)
   - `EnemyManager.update`가 grid 빌드 후 `steer.grid` 로 주입(거머리/모기 공통). 분리 비용 ~187K→~선형
 
-- [x] **⭐⭐⭐ 코어 InstancedMesh** (`SeedEnemy.coreScale/coreBright` + `EnemyManager.updateCoreInstances`) ✅
+- [x] **⭐⭐⭐ 코어 InstancedMesh** (`CoreEnemy.coreScale/coreBright` + `EnemyManager.updateCoreInstances`) ✅
   - 발광 코어를 개체별 메시 → `EnemyManager` 소유 **InstancedMesh 1개**로 일괄 렌더(매 프레임 상태에서 `setMatrixAt`/`setColorAt`). 코어 드로우콜 N→1.
   - 순수 시각 요소(레이캐스트 비대상)라 **전투 코드 무변경** → 안전. e2e 4맵 PASS(렌더·비블랙·에러0). 인스턴싱 파이프라인 구축 완료.
   - 비고: 코어 발광은 `MeshBasic instanceColor = color·coreBright·0.55`(Bloom) — 글로우 톤은 육안 튜닝 필요할 수 있음(`CORE_BLOOM`).
 
-- [x] **⭐⭐⭐ 셸 InstancedMesh — GPU 게이트(전투·레이캐스트)** (`SeedEnemy`/`EnemyManager`/`weapons`) ✅
-  - 살아있는 셸 = `EnemyManager` 소유 InstancedMesh(MeshStandard, DoubleSide, castShadow) — 매 프레임 상태에서 행렬·색 기록. **개체당 2 draw call → 셸/코어 2 draw call**(드로우콜 ~2N→2).
+- [x] **⭐⭐⭐ 셸 InstancedMesh — GPU 게이트(전투·레이캐스트)** (`CoreEnemy`/`EnemyManager`/`weapons`) ✅
+  - 살아있는 셸 = `EnemyManager` 소유 InstancedMesh(MeshBasic 자체발광, DoubleSide, castShadow) — 매 프레임 상태에서 행렬·색 기록. **개체당 2 draw call → 셸/코어 2 draw call**(드로우콜 ~2N→2). `boundingSphere` 매 프레임 무효화로 이동 인스턴스 적중 보장.
   - 레이캐스트: `hitMeshes=[shellInst]` → `enemyFromHit(hit.instanceId)` 역참조(`beamFx`/`SpecialStream` 공유). `SpecialBarrage` 는 콘 표적(`aliveEnemies`)에 위치 기반 직접 적용(레이캐스트 제거).
   - 디졸브 = **하이브리드**: 살아있는 셸은 인스턴스드, 디졸브 시작 시 개별 그룹(디졸브 셰이더)을 씬에 추가 → 셰이더 인스턴싱 회피.
   - 검증: 타입체크·457 단위테스트·e2e 4맵 렌더 PASS(에러 0). **단, 전투 적중(raycast)은 헤드리스(포인터락 게이트)에서 검증 불가 → 플레이테스트 필요.**
@@ -449,7 +449,7 @@ Free Roam 샤드 (1,000명): ~$20/월
 
 **HP 재생 메커닉(신규)**: 피격 후 `3.5s` 정지 → 이후 `hpRegen/s`. 교전 중(드레인/접촉이 피격 갱신)엔 회복 안 됨(재생률 < 지속 드레인) → 빠져야 회복.
 
-**저장 포맷** — 키 `"seed.progress"`, 버전 필드, **xp만 저장·level 파생**, 손상 시 리셋:
+**저장 포맷** — 키 `"core.progress"`, 버전 필드, **xp만 저장·level 파생**, 손상 시 리셋:
 ```json
 {
   "v": 1,

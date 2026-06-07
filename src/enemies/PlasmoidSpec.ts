@@ -123,6 +123,12 @@ export function colorWeight(stops: ColorStop[], temp: number): number {
   return stops[i].weight + (stops[i + 1].weight - stops[i].weight) * t;
 }
 
+/** 색 강도 0..1 — 색가중치를 [최소,최대] 가중치로 정규화(적색 0 → 청백 1). 속도(감속)·발광 공통 지표. 순수. */
+export function colorStrength01(stops: ColorStop[], temp: number): number {
+  const wmin = stops[0].weight, wmax = stops[stops.length - 1].weight;
+  return clamp((colorWeight(stops, temp) - wmin) / Math.max(1e-6, wmax - wmin), 0, 1);
+}
+
 /** 온도 → 색(0xRRGGBB number; 채널별 구간 선형보간). 렌더/발광용. */
 export function colorAt(stops: ColorStop[], temp: number): number {
   const { i, t } = locate(stops, temp);

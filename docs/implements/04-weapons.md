@@ -19,13 +19,14 @@
    `auto.range`는 **근접 자기방어용으로 짧게** 설정(light 50 m / heavy 16 m) — 도주형 적의 적정거리(모기
    `keepDist 60`)보다 짧아, 적이 원돌기로 사거리를 유지하면 자동 처치가 불가하고 **파고들어 수동 조준**해야
    잡힌다(처치를 실력 기반으로). 값은 [spec/02](../spec/02-drones-weapons.md).
+   **모바일 플라이어 보정**: 터치 조준 난도를 감안해 `Game`이 `withAutoBoost(spec, 2)`로 light 빔의 `auto.range`·`manual.assistConeDeg`를 ×2 한 **복제 스펙**을 주입(모바일 + `move.mode==="fly"`에만; 캐시 원본 불변). ([tests/WeaponSpec.test.ts](../../tests/WeaponSpec.test.ts))
 3. `firing`이고 `cooldown ≤ 0`이면 **수동 사격**(`fireManual`) — `acquireAssistTarget`(어시스트 콘
    `manual.assistConeDeg`, `bestAlignedDir`)로 가장 정렬된 적으로 조준 보정 후 풀데미지.
 4. `fireAt(dir, cost, baseDamage, manual)` — 주파수 차감(볼리당 1회) → `sfx.beam(manual)` →
    공유 `fireEmitters`로 발사(명중은 **시점 중앙 단일 레이** 1회, 데미지는 발사관 수만큼 합산, 빔 시각만
    발사관 좌우에서 적중점으로 수렴) + `onHit`으로 임팩트/스파크 FX(기본 빔만).
 
-조준은 `enemies.aliveWorldPositions`(적 월드 좌표)를 모아 순수 targeting 함수에 위임(아래). 색은
+명중 레이캐스트는 **셸 InstancedMesh 1개**(`enemies.hitMeshes`)에 쏘고, 적중의 `instanceId`를 `enemies.enemyFromHit(hit)`로 적에 역참조한다(개체별 메시 태그 폐지). 조준은 `enemies.aliveWorldPositions`(적 월드 좌표)를 모아 순수 targeting 함수에 위임(아래). 색은
 `parseHexColor`(core/math)로 파싱. `muzzleOffsets` 없으면 단발(`[0]`), `[-x,x]`면 듀얼 발사관. 듀얼이라도 명중 판정은 **카메라 중앙
 단일 레이** 1회뿐이고 데미지만 발사관 수배(듀얼=2×) — 과거 좌우 평행 듀얼빔(`[-0.55, 0.55]`) 사이로
 작거나 쪼그라든 적이 빠져 무피해("좀비")로 남던 버그를 막는다. walker=heavy(단발), flyer=light(듀얼).
@@ -35,8 +36,8 @@
 `update(dt, triggerPressed)` — 상태는 공유 `DrainCycle`(아래)에 위임:
 - `cycle.step`이 발동/소진/사용후쿨다운을 판정하고 `{fire, drain, active}`를 반환.
 - 반환값으로 `freqRegenSuppressed` 설정·`drain`만큼 주파수 차감·`fire`면 `fireSalvo()` 실행.
-- `fireSalvo` — 전방 콘 안 가장 가까운 적 최대 `maxBeams`기에 동시 레이캐스트 + 빔 + 데미지.
-  타깃은 순수 `nearestInCone`에 위임(`index`로 메시 역참조). `sfx.barrage(빔 수)`로 묵직한 일제사격음.
+- `fireSalvo` — 전방 콘 안 가장 가까운 적 최대 `maxBeams`기에 빔 + 데미지. 셸 인스턴싱으로 개체별 메시가 없어
+  **레이캐스트 없이** `nearestInCone` 표적(`enemies.aliveEnemies[index]`)에 직접 적용(빔 끝점=표적 위치). `sfx.barrage(빔 수)`로 일제사격음.
 
 ## SpecialStream — 오버드라이브 스트림 (특수)
 

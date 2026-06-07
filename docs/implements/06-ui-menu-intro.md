@@ -58,9 +58,9 @@
 
 - **CinematicPlayer** — 전용 씬/카메라로 인트로 컷씬 재생. 각 `scene`은 `build → update(t) → dispose`.
   종료 시 `disposeComposer`(블룸 패스 RT 포함)·`disposeObject`(지오+텍스처)로 GPU 자원 해제.
-- **scenes / helpers** — 오무아무아 횡단, 씨앗 산포, 입수, 코어 성장, **해변 집 붕괴**(조각화 `shatterBox`/
+- **scenes / helpers** — 오무아무아 횡단, 휴면 코어 산포, 입수, 코어 성장, **해변 집 붕괴**(조각화 `shatterBox`/
   모임지붕 `roofFace`/낙하 `fallFrag`) 등 장면 정의 + 결정적 난수(`rng`), ease, 카메라 보간(`track`).
-  인트로의 씨앗/코어/플라즈모이드 색은 **플라즈모이드 온도 시스템**(`colorAt`)에서 파생([tests/introHelpers.test.ts](../../tests/introHelpers.test.ts)).
+  인트로의 휴면 코어·코어·플라즈모이드 색은 **플라즈모이드 온도 시스템**(`colorAt`)에서 파생([tests/introHelpers.test.ts](../../tests/introHelpers.test.ts)).
 - **MenuBackground** — 메뉴(전장 선택) 배경으로 인트로 장면 중 하나를 랜덤 재생, 끝나면 다른 장면으로
   교체하며 사이를 **검정 페이드(0.7s)** 전환. 페이드 div는 캔버스 위·메뉴 오버레이 아래. 이탈 시 컴포저 해제.
 - **CinematicAudio** ([intro/CinematicAudio.ts](../../src/intro/CinematicAudio.ts)) — 인트로 컷씬 전용
@@ -90,10 +90,11 @@
   적중부 연출을 "에너지 **중화**" 룩으로(빔이 플라즈모이드 에너지를 무력화 → 검게 탐): 일반 블렌딩의
   거의 검정(`0x05060a`) 어두운 버스트 + 가산 시안 "중화 링"(`makeRingTexture` 환형이라 어두운 배경에서도
   보임) + 어두운 잔재 스파크 파편. 확장·페이드 애니메이션은 공유.
-- **TargetBrackets** ([fx/TargetBrackets.ts](../../src/fx/TargetBrackets.ts)) — 800m 이내 플라즈모이드에
-  카메라 빌보드 **코너 브래킷**(네 모서리 ㄱ자선)을 대상 크기에 맞춰 표시. HDR 시안으로 블룸에 걸려 또렷,
-  거리 페이드(`bracketOpacity` 근접 0.95→원거리 0.35, [tests/targetBrackets.test.ts](../../tests/targetBrackets.test.ts)).
-  브래킷(3D LineSegments) 위에 적의 **현재 체력 수치**(`marker.hp`)를 DOM 라벨로 박스 상단에 표시 — 화면
-  투영, 브래킷과 동일한 거리 페이드, 카메라 뒤(`z>1`)면 숨김, 사망·일시정지엔 `hide()`로 잔상 제거.
+- **TargetBrackets** ([fx/TargetBrackets.ts](../../src/fx/TargetBrackets.ts)) — **2km(`RANGE`) 이내** 플라즈모이드에
+  카메라 빌보드 **코너 브래킷**(네 모서리 ㄱ자) 표시. **어두운 붉은색**(`0xb00000`), 투명도는 **거리 무관 일정**(페이드 제거).
+  선이 아니라 **채워진 쿼드 메시**(매 프레임 `writeBracketGeo`로 갱신) — **프레임 크기는 대상 크기**(`bracketFrameRadius`, `MARGIN 1.56`)에,
+  **선 두께는 화면상 일정**(`bracketHalfThick = THICK_SCREEN·거리`)에 따라 분리 제어. 두께는 모서리 **안쪽으로만** 들어가 ㄱ자 두 팔이
+  외곽 꼭짓점에 맞물림 → **뾰족한 점이 항상 바깥**(+ 두께 대비 최소 크기 클램프 `MAX_T_FRAC`로 원거리에서도 외향 보장). ([tests/targetBrackets.test.ts](../../tests/targetBrackets.test.ts))
+  브래킷 위에 적의 **현재 체력 수치**(`marker.hp`)를 DOM 라벨로 박스 상단에 표시 — 화면 투영, 카메라 뒤(`z>1`)면 숨김, 사망·일시정지엔 `hide()`로 잔상 제거.
 - **Diagnostics** ([core/Diagnostics.ts](../../src/core/Diagnostics.ts)) — URL `?diag` 시 화면 오버레이로
   WebGL 컨텍스트 손실/전역 에러/`renderer.info` 스냅샷/프레임 하트비트 표시(온디바이스 진단).

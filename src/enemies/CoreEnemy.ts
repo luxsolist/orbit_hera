@@ -36,7 +36,7 @@ export function recomputeSteer(distSq: number, nearDistSq: number, frame: number
 }
 
 /** 플라즈모이드 외형/체력 — PlasmoidSpec 시스템(온도·크기)에서 산출해 주입한다. */
-export interface SeedAppearance {
+export interface CoreAppearance {
   maxHp: number; // 체력(= plasmoidHp)
   diameter: number; // 렌더 지름 m(= visualDiameter) — 지오메트리 지름 2 기준 baseScale = d/2
   color: number; // 발광/표면 색(= colorAt) 0xRRGGBB
@@ -285,11 +285,11 @@ export function kiterVelocity(
 }
 
 /**
- * 외계 씨앗 적 유닛.
+ * 코어 적 유닛 — 외계 코어(가장 작은 등급 = 플라즈모이드). 물질을 흡수해 성장하며, 방치 시 상위 등급으로 진화.
  * - 박동(pulse)하며 플레이어를 추적(또는 카이터: 도주+원거리 드레인).
  * - 주파수 빔에 맞으면 쪼그라들고(shrink), 체력 소진 시 디졸브 소멸(스펙 5/6장).
  */
-export class SeedEnemy {
+export class CoreEnemy {
   readonly group = new THREE.Group();
   readonly hitMesh: THREE.Mesh; // 레이캐스트 대상(셸)
   private shellMat: DissolveMaterial;
@@ -317,7 +317,7 @@ export class SeedEnemy {
   private vel: Vec3 = { x: 0, y: 0, z: 0 }; // 카이터 속도 상태(선회 캡용)
   private kiter?: KiterParams; // 설정 시 도주형 행동
 
-  constructor(position: THREE.Vector3, appearance: SeedAppearance, speed = 4.5) {
+  constructor(position: THREE.Vector3, appearance: CoreAppearance, speed = 4.5) {
     this.baseScale = appearance.diameter / 2; // 지오메트리 지름 2(반지름 1) → 실제 지름 = scale·2
     this.maxScale = this.baseScale * 1.5;
     this.speed = speed;
@@ -481,10 +481,10 @@ export class SeedEnemy {
 
 const ENEMY_KEY = "enemy";
 /** 레이캐스트 역참조 태깅 — userData 접근을 한 곳으로(타입 안전). */
-export function tagEnemy(mesh: THREE.Object3D, enemy: SeedEnemy): void {
+export function tagEnemy(mesh: THREE.Object3D, enemy: CoreEnemy): void {
   mesh.userData[ENEMY_KEY] = enemy;
 }
 /** 레이캐스트 적중 오브젝트 → 적(없으면 undefined). */
-export function getEnemy(obj: THREE.Object3D): SeedEnemy | undefined {
-  return obj.userData[ENEMY_KEY] as SeedEnemy | undefined;
+export function getEnemy(obj: THREE.Object3D): CoreEnemy | undefined {
+  return obj.userData[ENEMY_KEY] as CoreEnemy | undefined;
 }

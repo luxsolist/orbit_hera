@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { PlayerController } from "../player/PlayerController";
 import type { EnemyManager } from "../enemies/EnemyManager";
-import type { SeedEnemy } from "../enemies/SeedEnemy";
+import type { CoreEnemy } from "../enemies/CoreEnemy";
 import type { Sfx } from "../core/Sfx";
 import { DamageNumbers } from "../fx/damageNumbers";
 import type { BarrageSpec, SpecialWeapon } from "./WeaponSpec";
@@ -107,7 +107,7 @@ export class SpecialBarrage implements SpecialWeapon {
     origin: THREE.Vector3,
     aimDir: THREE.Vector3,
     max: number
-  ): { enemy: SeedEnemy; dir: THREE.Vector3; dist: number }[] {
+  ): { enemy: CoreEnemy; dir: THREE.Vector3; dist: number }[] {
     // aliveWorldPositions 와 aliveEnemies 는 동일 순서 → nearestInCone 의 index 로 적 역참조 가능
     const list = this.enemies.aliveEnemies;
     return nearestInCone(origin, aimDir, this.enemies.aliveWorldPositions, this.spec.range, this.coneCos, max).map((t) => ({

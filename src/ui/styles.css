@@ -1,7 +1,7 @@
 :root {
-  --seed-red: #ff3b4e;
-  --seed-cyan: #34f5ff;
-  --seed-amber: #ffb648;
+  --core-red: #ff3b4e;
+  --core-cyan: #34f5ff;
+  --core-amber: #ffb648;
   --hud-dim: rgba(52, 245, 255, 0.55);
   --bg-void: #05070d;
   font-family: "Segoe UI", "Pretendard", system-ui, sans-serif;
@@ -66,7 +66,7 @@ body.is-touch {
   transition: border-color 0.1s, transform 0.06s;
 }
 .hud__crosshair.is-firing {
-  border-color: var(--seed-red);
+  border-color: var(--core-red);
   transform: translate(-50%, -50%) scale(1.25);
 }
 .crosshair__dot {
@@ -75,7 +75,7 @@ body.is-touch {
   left: 50%;
   width: 3px;
   height: 3px;
-  background: var(--seed-cyan);
+  background: var(--core-cyan);
   border-radius: 50%;
   transform: translate(-50%, -50%);
 }
@@ -119,14 +119,14 @@ body.is-touch {
   pointer-events: none;
   /* 코너 마크(L자) */
   background:
-    linear-gradient(var(--seed-cyan), var(--seed-cyan)) top left/14px 1px no-repeat,
-    linear-gradient(var(--seed-cyan), var(--seed-cyan)) top left/1px 14px no-repeat,
-    linear-gradient(var(--seed-cyan), var(--seed-cyan)) top right/14px 1px no-repeat,
-    linear-gradient(var(--seed-cyan), var(--seed-cyan)) top right/1px 14px no-repeat,
-    linear-gradient(var(--seed-cyan), var(--seed-cyan)) bottom left/14px 1px no-repeat,
-    linear-gradient(var(--seed-cyan), var(--seed-cyan)) bottom left/1px 14px no-repeat,
-    linear-gradient(var(--seed-cyan), var(--seed-cyan)) bottom right/14px 1px no-repeat,
-    linear-gradient(var(--seed-cyan), var(--seed-cyan)) bottom right/1px 14px no-repeat;
+    linear-gradient(var(--core-cyan), var(--core-cyan)) top left/14px 1px no-repeat,
+    linear-gradient(var(--core-cyan), var(--core-cyan)) top left/1px 14px no-repeat,
+    linear-gradient(var(--core-cyan), var(--core-cyan)) top right/14px 1px no-repeat,
+    linear-gradient(var(--core-cyan), var(--core-cyan)) top right/1px 14px no-repeat,
+    linear-gradient(var(--core-cyan), var(--core-cyan)) bottom left/14px 1px no-repeat,
+    linear-gradient(var(--core-cyan), var(--core-cyan)) bottom left/1px 14px no-repeat,
+    linear-gradient(var(--core-cyan), var(--core-cyan)) bottom right/14px 1px no-repeat,
+    linear-gradient(var(--core-cyan), var(--core-cyan)) bottom right/1px 14px no-repeat;
 }
 .hud__rear-label {
   position: absolute;
@@ -203,7 +203,7 @@ body.is-touch {
   border-radius: 50%;
   background: rgba(5, 12, 18, 0.55);
   border: 1px solid rgba(52, 245, 255, 0.55);
-  color: var(--seed-cyan);
+  color: var(--core-cyan);
   font-size: clamp(13px, 2vmin, 16px);
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -228,13 +228,13 @@ body.is-touch {
 .tc__btn--special {
   grid-column: 1;
   grid-row: 2;
-  border-color: var(--seed-amber);
-  color: var(--seed-amber);
+  border-color: var(--core-amber);
+  color: var(--core-amber);
   box-shadow: 0 0 14px rgba(255, 182, 72, 0.35);
 }
 .tc__btn--special.is-active {
-  border-color: var(--seed-red);
-  color: var(--seed-red);
+  border-color: var(--core-red);
+  color: var(--core-red);
   box-shadow: 0 0 18px rgba(255, 59, 78, 0.7);
 }
 .tc__btn--special.is-cooling {
@@ -258,13 +258,13 @@ body.is-touch {
 }
 .tc__btn-ring-fill {
   fill: none;
-  stroke: var(--seed-amber);
+  stroke: var(--core-amber);
   stroke-width: 3;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.1s linear;
 }
 .tc__btn--special.is-active .tc__btn-ring-fill {
-  stroke: var(--seed-red);
+  stroke: var(--core-red);
 }
 .tc__btn-label {
   position: relative;
@@ -288,7 +288,7 @@ body.is-touch .overlay__controls--touch { display: block; }
   align-items: center;
   justify-content: center;
   pointer-events: auto;
-  color: var(--seed-cyan);
+  color: var(--core-cyan);
   text-align: center;
 }
 body.is-touch.is-portrait .mc-rotate { display: flex; }
@@ -296,7 +296,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 .mc-rotate__icon {
   font-size: 96px;
   line-height: 1;
-  color: var(--seed-amber);
+  color: var(--core-amber);
   text-shadow: 0 0 24px rgba(255, 182, 72, 0.55);
   animation: mc-rotate-hint 1.8s ease-in-out infinite;
   display: inline-block;
@@ -327,7 +327,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 .hud__unit {
   font-size: 20px;
   font-weight: 700;
-  color: var(--seed-cyan);
+  color: var(--core-cyan);
   text-shadow: 0 0 8px rgba(52, 245, 255, 0.5);
 }
 .hud__stat { margin-bottom: 6px; }
@@ -354,11 +354,11 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   transform-origin: left;
 }
 .hud__bar-fill--hp {
-  background: linear-gradient(90deg, var(--seed-red), var(--seed-amber));
+  background: linear-gradient(90deg, var(--core-red), var(--core-amber));
   box-shadow: 0 0 10px rgba(255, 59, 78, 0.6);
 }
 .hud__bar-fill--freq {
-  background: linear-gradient(90deg, #1a7bff, var(--seed-cyan));
+  background: linear-gradient(90deg, #1a7bff, var(--core-cyan));
   box-shadow: 0 0 10px rgba(52, 245, 255, 0.6);
 }
 
@@ -403,7 +403,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 }
 .hud__special-fill {
   fill: transparent;
-  stroke: var(--seed-amber);
+  stroke: var(--core-amber);
   stroke-width: 2.4;
   stroke-linecap: round;
   /* 둘레 = 2πr ≈ 98.0 (r=15.6). dashoffset 으로 진행 표현. */
@@ -416,7 +416,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   stroke-dashoffset: 0;
 }
 .hud__special.is-active .hud__special-fill {
-  stroke: var(--seed-red);
+  stroke: var(--core-red);
   filter: drop-shadow(0 0 8px rgba(255, 59, 78, 0.9));
 }
 .hud__special-label {
@@ -428,7 +428,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: var(--seed-amber);
+  color: var(--core-amber);
   text-shadow: 0 0 6px rgba(255, 182, 72, 0.6);
 }
 .hud__special.is-cooling .hud__special-label {
@@ -436,7 +436,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   text-shadow: none;
 }
 .hud__special.is-active .hud__special-label {
-  color: var(--seed-red);
+  color: var(--core-red);
 }
 .hud__special-name {
   font-size: 10px;
@@ -484,7 +484,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   -webkit-backdrop-filter: blur(2px);
   padding: 18px 26px;
 }
-.overlay--scene .overlay__title { font-size: 54px; } /* 글리치 SEED 제목 유지 */
+.overlay--scene .overlay__title { font-size: 54px; } /* 글리치 CORE 제목 유지 */
 .overlay--scene .overlay__subtitle { display: none; } /* 부제만 숨김 */
 .overlay__panel {
   text-align: center;
@@ -499,7 +499,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   font-size: 88px;
   font-weight: 900;
   letter-spacing: 0.3em;
-  color: var(--seed-red);
+  color: var(--core-red);
   text-shadow: 0 0 24px rgba(255, 59, 78, 0.7);
   animation: pulse 2.2s ease-in-out infinite;
 }
@@ -508,7 +508,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   position: absolute;
   left: 2px;
   top: 0;
-  color: var(--seed-cyan);
+  color: var(--core-cyan);
   opacity: 0.5;
   mix-blend-mode: screen;
   animation: glitch 3.5s steps(2) infinite;
@@ -535,7 +535,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--bg-void);
-  background: var(--seed-cyan);
+  background: var(--core-cyan);
   border: none;
   cursor: pointer;
   border-radius: 2px;
@@ -553,7 +553,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   line-height: 2;
   color: rgba(232, 251, 255, 0.7);
 }
-.overlay__controls b { color: var(--seed-amber); }
+.overlay__controls b { color: var(--core-amber); }
 
 /* ── 전장 선택 메뉴 ── */
 .overlay__maps[hidden] {
@@ -598,11 +598,11 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   z-index: 6;
   background: rgba(8, 18, 28, 0.85);
   border: 1px solid rgba(52, 245, 255, 0.45);
-  color: var(--seed-cyan);
+  color: var(--core-cyan);
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s;
 }
-.map-btn:hover { background: rgba(52, 245, 255, 0.16); border-color: var(--seed-cyan); }
+.map-btn:hover { background: rgba(52, 245, 255, 0.16); border-color: var(--core-cyan); }
 .map-btn--story { left: 14px; padding: 8px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
 .map-btn--help { right: 14px; width: 34px; height: 34px; border-radius: 50%; font-size: 17px; font-weight: 700; }
 
@@ -638,7 +638,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, transform 0.1s;
 }
-.sidepop__item:hover { background: rgba(52, 245, 255, 0.16); border-color: var(--seed-cyan); transform: translateX(2px); }
+.sidepop__item:hover { background: rgba(52, 245, 255, 0.16); border-color: var(--core-cyan); transform: translateX(2px); }
 .sidepop .overlay__controls { margin-top: 0; font-size: 12px; line-height: 1.8; }
 .sidepop .overlay__controls li { margin-bottom: 2px; } /* 길면 깔끔히 줄바꿈(클리핑 방지) */
 .sidepop .overlay__controls + .overlay__controls { margin-top: 8px; }
@@ -669,7 +669,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 .zone-dot > i { display: block; width: 9px; height: 9px; border-radius: 50%; transition: transform 0.1s; }
 .zone-dot--reg > i { background: #eaffff; box-shadow: 0 0 6px rgba(255, 255, 255, 0.7); }
 .zone-dot--invaded > i {
-  background: var(--seed-red);
+  background: var(--core-red);
   box-shadow: 0 0 8px 2px rgba(255, 59, 78, 0.85);
   animation: zoneBlink 1s ease-in-out infinite;
 }
@@ -736,7 +736,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   color: #cdeef5;
   transition: background 0.12s, border-color 0.12s, transform 0.1s;
 }
-.zonepop__drone:hover { background: rgba(52, 245, 255, 0.18); border-color: var(--seed-cyan); transform: translateY(-1px); }
+.zonepop__drone:hover { background: rgba(52, 245, 255, 0.18); border-color: var(--core-cyan); transform: translateY(-1px); }
 .zonepop__drone-name { font-size: 12px; font-weight: 700; }
 .zonepop__drone-mode { font-size: 9.5px; opacity: 0.6; font-family: ui-monospace, monospace; }
 .overlay__map {
@@ -811,7 +811,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   border-color: rgba(52, 245, 255, 0.7);
 }
 .overlay__drone.is-selected {
-  border-color: var(--seed-cyan);
+  border-color: var(--core-cyan);
   background: rgba(52, 245, 255, 0.16);
   box-shadow: 0 0 14px rgba(52, 245, 255, 0.3);
 }
@@ -826,7 +826,7 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 }
 .overlay__btn--ghost {
   background: transparent;
-  color: var(--seed-cyan);
+  color: var(--core-cyan);
   border: 1px solid rgba(52, 245, 255, 0.5);
   box-shadow: none;
   opacity: 0.9;

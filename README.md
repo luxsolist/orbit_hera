@@ -1,4 +1,4 @@
-# SEED 🌱
+# CORE 🔴
 
 3D 무인 원격 제어 FPS / 핵앤슬래시 게임 — **순수 웹(Three.js) 기반 v3.0**.
 
@@ -68,7 +68,7 @@ src/
   core/                         Game(루프/상태) · Input · MobileControls · Sfx · loader
   player/                       DroneSpec · PlayerController(보행/비행) · drones
   weapons/                      FrequencyBeam · SpecialBarrage · targeting · WeaponSpec · beamFx
-  enemies/                      SeedEnemy(3D 추적·아키타입·디졸브) · EnemyManager(멀티타깃 어그로/스폰/웨이브)
+  enemies/                      CoreEnemy(3D 추적·아키타입·디졸브) · EnemyManager(멀티타깃 어그로/스폰/웨이브)
   world/                        World · TerrainField · SkyEnvironment · CollisionWorld · precinct
   ui/                           MenuScreen(세계지도) · HUD · Minimap · RearView
   fx/                           dissolve · postprocessing(Bloom) · damageNumbers · DrainBeams

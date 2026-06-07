@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import * as THREE from "three";
 import {
   ease, rng, lump, spinAlong, makeSwarm, updateSwarm, fallFrag, track,
-  oumuamua, moon, seabed, makeCore, makeSeed, beachHouse, plasmoidSwarm, type Frag,
-  SEED_TEMP, CORE_TEMP, SEED_ORANGE, PLAS_STRONG,
+  oumuamua, moon, seabed, makeCore, makeDormantCore, beachHouse, plasmoidSwarm, type Frag,
+  DORMANT_TEMP, CORE_TEMP, DORMANT_ORANGE, PLAS_STRONG,
 } from "../src/intro/helpers";
 import { DEFAULT_PLASMOID, colorAt, highestColor } from "../src/enemies/PlasmoidSpec";
 
@@ -116,12 +116,12 @@ describe("makeSwarm / updateSwarm", () => {
 });
 
 describe("지오메트리 팩토리 — NaN 없음(블랙스크린 회귀 가드)", () => {
-  it("oumuamua/moon/seabed/makeCore/makeSeed 정점 유한", () => {
+  it("oumuamua/moon/seabed/makeCore/makeDormantCore 정점 유한", () => {
     expect(allFinite(oumuamua().geometry)).toBe(true);
     expect(allFinite(moon(6).geometry)).toBe(true);
     expect(allFinite(seabed().geometry)).toBe(true);
     expect(allFinite(makeCore(1.2, 3200).geometry)).toBe(true);
-    expect(allFinite(makeSeed(0.5, 2).geometry)).toBe(true);
+    expect(allFinite(makeDormantCore(0.5, 2).geometry)).toBe(true);
   });
   it("beachHouse: 벽/지붕 조각 다수(각 10+) userData 구성", () => {
     const h = beachHouse();
@@ -185,12 +185,12 @@ describe("track — 카메라 이징 이동", () => {
 
 describe("인트로 색 — PlasmoidSpec 시스템 파생 불변식", () => {
   const stops = DEFAULT_PLASMOID.color.stops;
-  it("씨앗 오렌지 = 시스템 colorAt(SEED_TEMP 4500)", () => {
-    expect(SEED_TEMP).toBe(4500);
-    expect(SEED_ORANGE).toBe(colorAt(stops, SEED_TEMP));
+  it("휴면 코어 오렌지 = 시스템 colorAt(DORMANT_TEMP 4500)", () => {
+    expect(DORMANT_TEMP).toBe(4500);
+    expect(DORMANT_ORANGE).toBe(colorAt(stops, DORMANT_TEMP));
   });
-  it("코어 시작색 = 씨앗과 동일(밝은 오렌지 연속성)", () => {
-    expect(CORE_TEMP).toBe(SEED_TEMP);
+  it("코어 시작색 = 휴면 코어와 동일(밝은 오렌지 연속성)", () => {
+    expect(CORE_TEMP).toBe(DORMANT_TEMP);
   });
   it("가장 강한 개체색 = 최고 온도 stop(청백) — 집 붕괴 플라즈모이드", () => {
     expect(PLAS_STRONG).toBe(colorAt(stops, stops[stops.length - 1].temp));

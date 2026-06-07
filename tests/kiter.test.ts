@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { turnToward, kiterVelocity, stickyMinIndex, chooseTarget, type Boid, type KiterParams } from "../src/enemies/SeedEnemy";
+import { turnToward, kiterVelocity, stickyMinIndex, chooseTarget, type Boid, type KiterParams } from "../src/enemies/CoreEnemy";
 
 // 도주형(카이터) 조향 순수 함수 가드 — keepDist 유지(도주/접근/선회) + 선회속도 캡 + 동시 개체수.
 

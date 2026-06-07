@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
-  colorWeight, colorAt, plasmoidHp, visualDiameter, lowestColor, highestColor,
+  colorWeight, colorStrength01, colorAt, plasmoidHp, visualDiameter, lowestColor, highestColor,
   strength, speedForStrength, sampleTemp, rollAppearance, contactDamage,
   DEFAULT_PLASMOID, type PlasmoidSpec,
 } from "../src/enemies/PlasmoidSpec";
@@ -130,5 +130,23 @@ describe("렌더 크기(분리형: dVis = clamp(minD + k·HP^p, minD, maxD))", (
   it("단조 증가 + 소프트캡", () => {
     expect(visualDiameter(spec, 1000)).toBeGreaterThan(visualDiameter(spec, 100));
     expect(visualDiameter(spec, 1e12)).toBeLessThanOrEqual(spec.visual.maxDiameter);
+  });
+});
+
+describe("colorStrength01 — 색 강도 정규화(적색 0 → 청백 1, 속도·발광 노브)", () => {
+  const stops = spec.color.stops;
+  it("최저 색(적색) → 0, 최고 색(청백) → 1", () => {
+    expect(colorStrength01(stops, lowestColor(spec).temp)).toBeCloseTo(0, 6);
+    expect(colorStrength01(stops, highestColor(spec).temp)).toBeCloseTo(1, 6);
+  });
+  it("중간 온도는 0~1 사이 + 온도에 단조 증가", () => {
+    const mid = colorStrength01(stops, (lowestColor(spec).temp + highestColor(spec).temp) / 2);
+    expect(mid).toBeGreaterThan(0);
+    expect(mid).toBeLessThan(1);
+    expect(colorStrength01(stops, 8000)).toBeGreaterThan(colorStrength01(stops, 4000));
+  });
+  it("범위 밖 온도는 [0,1] 클램프", () => {
+    expect(colorStrength01(stops, -1000)).toBe(0);
+    expect(colorStrength01(stops, 1e9)).toBe(1);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { bracketOpacity, RANGE, projectToScreen, labelText } from "../src/fx/TargetBrackets";
+import { bracketOpacity, bracketHalfThick, bracketFrameRadius, RANGE, projectToScreen, labelText } from "../src/fx/TargetBrackets";
 
 // 코너 브래킷 투명도 — 거리 무관 일정(거리별 농도/색 변화 제거) 순수 가드.
 
@@ -13,6 +13,33 @@ describe("bracketOpacity — 거리 무관 일정(페이드 제거)", () => {
   });
   it("양수 투명도(보임)", () => {
     expect(bracketOpacity(0)).toBeGreaterThan(0);
+  });
+});
+
+describe("bracketHalfThick — 화면상 두께 일정(거리 비례, 타깃 크기 무관)", () => {
+  it("거리에 비례 + 거리0이면 0", () => {
+    expect(bracketHalfThick(0)).toBe(0);
+    expect(bracketHalfThick(200)).toBeCloseTo(bracketHalfThick(100) * 2, 6); // 선형
+    expect(bracketHalfThick(100)).toBeGreaterThan(0);
+  });
+});
+
+describe("bracketFrameRadius — 프레임 크기(타깃 맞춤 + 두께 대비 최소 보장 → 코너 외향)", () => {
+  it("타깃이 크면 타깃 크기에 비례(두께 무시)", () => {
+    const r = bracketFrameRadius(10, bracketHalfThick(50)); // 큰 타깃·근거리
+    expect(r).toBeGreaterThan(10); // radius·MARGIN(>1)
+  });
+  it("멀어 두께가 커지면 최소 크기로 클램프(타깃보다 큼)", () => {
+    const t = bracketHalfThick(2000); // 원거리 → 두꺼움
+    const r = bracketFrameRadius(0.5, t); // 아주 작은 먼 타깃
+    expect(r).toBeGreaterThan(0.5);
+  });
+  it("항상 두께 ≤ 프레임의 일정비율(코너 뾰족점 외향 보장: t/r ≤ 0.35)", () => {
+    for (const [rad, dist] of [[0.5, 2000], [1, 500], [30, 50], [3, 1500]] as const) {
+      const t = bracketHalfThick(dist);
+      const r = bracketFrameRadius(rad, t);
+      expect(t / r).toBeLessThanOrEqual(0.35 + 1e-9);
+    }
   });
 });
 

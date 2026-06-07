@@ -17,6 +17,19 @@ export function bracketOpacity(_dist: number): number {
   return BRACKET_OPACITY;
 }
 
+/** 코너 선 절반 두께(m) — 거리 비례 → 화면상 두께 일정(타깃 크기 무관). 순수. */
+export function bracketHalfThick(dist: number): number {
+  return THICK_SCREEN * dist;
+}
+
+/**
+ * 브래킷 프레임 반경(m) — 타깃 크기(radius·MARGIN)에 맞추되, 절반두께 t 대비 최소 크기 보장.
+ * t ≤ MAX_T_FRAC·반경 을 항상 만족 → 두께가 팔을 삼키지 않아 코너 뾰족점이 항상 바깥을 향한다. 순수.
+ */
+export function bracketFrameRadius(targetRadius: number, halfThick: number): number {
+  return Math.max(targetRadius * MARGIN, halfThick / MAX_T_FRAC);
+}
+
 /**
  * NDC(투영 좌표) → 화면 픽셀 + 가시성. z>1 은 카메라 뒤(절두체 밖) → visible:false. 순수.
  * (x:-1..1 → 0..w, y:1..-1 위→아래로 Y 뒤집어 0..h)
@@ -116,9 +129,8 @@ export class TargetBrackets {
       b.position.copy(m.pos);
       b.quaternion.copy(_camQuat); // 카메라 정면을 향함 → 화면상 정사각 프레임
       b.scale.setScalar(1); // 스케일 대신 지오메트리로 직접 크기 지정(두께를 크기와 분리)
-      const t = THICK_SCREEN * dist; // 절반 두께(화면상 일정)
-      const e = Math.max(m.radius * MARGIN, t / MAX_T_FRAC); // 프레임=타깃 크기, 단 두께 대비 최소 크기 보장(코너 외향)
-      writeBracketGeo(b.geometry, e, t);
+      const t = bracketHalfThick(dist); // 절반 두께(화면상 일정)
+      writeBracketGeo(b.geometry, bracketFrameRadius(m.radius, t), t); // 프레임=타깃 크기(두께 대비 최소 보장)
       this.mats[i].opacity = op;
 
       // 체력 수치 — 박스 상단을 화면에 투영해 라벨 배치(카메라 뒤면 숨김)

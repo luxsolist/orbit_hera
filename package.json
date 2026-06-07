@@ -1,7 +1,7 @@
 {
-  "name": "seed",
+  "name": "core",
   "version": "0.3.0",
-  "description": "Seed - 3D 무인 원격 제어 FPS/핵앤슬래시 게임 (Web-First)",
+  "description": "CORE - 3D 무인 원격 제어 FPS/핵앤슬래시 게임 (Web-First)",
   "type": "module",
   "scripts": {
     "dev": "vite",

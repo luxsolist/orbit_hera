@@ -1,6 +1,6 @@
 # 01 · 데이터 스키마 (JSON 데이터 계약)
 
-SEED의 전투 드론·무기·전장은 모두 **런타임에 내려받는 JSON**으로 정의된다(`src/` 수정 없이
+CORE의 전투 드론·무기·전장은 모두 **런타임에 내려받는 JSON**으로 정의된다(`src/` 수정 없이
 파일 추가만으로 콘텐츠 확장). 이 문서는 그 데이터 계약(스키마)을 정의한다.
 
 - 모든 색은 `"0xRRGGBB"` 문자열(런타임에 `Number(...)`로 파싱).
@@ -142,7 +142,7 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 | `visual.anchorHp` / `visual.anchorDiameter` | number | 앵커(이 HP일 때 이 렌더 지름)로 크기 곡선 역산 |
 | `visual.exponent` | number | 크기 곡선 가파름(0.7~1.0, 클수록 보스가 거대) |
 | `spawn.tempAlpha` | number | 온도 희귀도 지수 α (`f(T) ∝ T^-α`, 클수록 고온 희귀) |
-| `spawn.speedMax` / `spawn.speedMin` | number | 최약(적색) / 최강(청백) 개체 이동속도 |
+| `spawn.speedMax` / `spawn.speedMin` | number | (레거시) 질량 모델 속도 — 현재 개체 속도는 아키타입 `speed`/`speedMin` 사용 |
 | `spawn.hpFloor` / `spawn.hpCeil` | number | '강함' 정규화 하한/상한 HP |
 | `contact.hpDamage` | number | 약체(s=0) 접촉 시 흡수 에너지 = 플레이어 HP 피해 = 적 회복량(러셔 전용) |
 | `contact.strengthMul` | number | 강함 s=1 추가 배수 → `×(1+strengthMul·s)` |
@@ -156,15 +156,16 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 
 **공통 베이스**(rusher·kiter 모두): `name`("국문 / ENGLISH" 표시명),
 `spawnAltMin`/`spawnAltMax`(지면 대비 스폰 고도 밴드 m), `countBase`(웨이브1 동시 수, 매칭 드론 1인 기준),
-`countCap`(웨이브 증가분 상한, 1인 기준), `killRefund`(처치 시 플레이어 HP 환수). 물량은 매칭 드론 수에
-비례(러셔=워커, 카이터=플라이어).
+`countCap`(웨이브 증가분 상한, 1인 기준), `killRefund`(처치 시 플레이어 HP 환수),
+`speed`(가장 빠른=적색·약체 속도), `speedMin`(가장 느린=청백·강체 속도). 개체 속도 = `speed↔speedMin`를
+색 강도 `colorStrength01`로 보간(적색=`speed`, 청백=`speedMin`). 물량은 매칭 드론 수에 비례(러셔=워커, 카이터=플라이어).
 
-**`RusherArchetype`** (위 + ): `speedMul`(`rollAppearance` 속도에 곱 — ↑=더 빠른 돌격).
+**`RusherArchetype`** = 베이스(추가 필드 없음 — 접근+접촉 흡수).
 
-**`KiterArchetype`** (위 + ): `speed`(선형 이동속도), `turnRateDeg`(선회 상한 °/s), `keepDist`(유지 적정거리 m),
-`keepBand`(히스테리시스 반폭 m), `strafeMix`(밴드 내 거동: 1=접선 선회 / 0=도주), `orbitRef`(이 접선속도 m/s에서
-선회 회피 최대), `evadeGain`(선회 감지 시 궤도면 이탈=주로 상승 강도), `attackRange`(원거리 드레인 사거리 m),
-`drainDamage`(1틱 흡수량=플레이어 HP 피해=적 성장량), `drainInterval`(드레인 틱 간격 s).
+**`KiterArchetype`** (베이스 + ): `turnRateDeg`(선회 상한 °/s), `keepDist`(유지 적정거리 m),
+`keepBand`(히스테리시스 반폭 m), `strafeMix`(`homeDir` 없을 때 폴백 거동: 1=접선 선회 / 0=도주), `orbitRef`(이 접선속도 m/s에서
+선회 회피 최대), `evadeGain`(선회 감지 시 궤도면 이탈 강도), `attackRange`(원거리 드레인 사거리 m),
+`drainDamage`(1틱 흡수량=플레이어 HP 피해=적 성장량), `drainInterval`(드레인 틱 간격 s). 개체별 무작위 `homeDir`(keepDist 구 위 방위)는 런타임 주입(스펙 아님).
 
 순수 산출식(체력·색·렌더크기·속도·온도 샘플·아키타입 물량)은 [`PlasmoidSpec.ts`](../../src/enemies/PlasmoidSpec.ts)에
 모듈로 분리되어 있고, 내장 `DEFAULT_PLASMOID`가 JSON과 동치임을 테스트가 검증한다.

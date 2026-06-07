@@ -74,6 +74,7 @@
   사거리는 **근접 자기방어용으로 짧다**(light 50 m / heavy 16 m) — 도주형 적의 적정거리(모기 `keepDist 60`)보다
   짧아, 적이 원돌기로 사거리를 유지하면 자동 처치가 안 되고 파고들어 수동 조준해야 한다(실력 기반 처치).
 - **수동**: 좌클릭 시 어시스트 콘(`manual.assistConeDeg`) 안 가장 정렬된 적으로 조준 보정 후 풀데미지.
+- **모바일 플라이어 보정**: 모바일에서 비행 드론으로 출격하면 light 빔의 자동조준/사격 `auto.range`·`assistConeDeg`가 **×2**(50→100 m, 28°→56°) — 터치 조준 난도 완화. 데스크탑·워커는 무영향.
 
 ### `special-barrage` — 다중 빔 살포 (walker 특수)
 우클릭 1회 발동 → 전방 콘(55°)·사거리 220 m 안 적 **최대 10기**에 빔을 동시 연속 살포.
@@ -124,7 +125,7 @@ mult = clamp(refDist / dist, minMult, maxMult)
 무기들이 공유하는 순수 콘 조준은 [`src/weapons/targeting.ts`](../../src/weapons/targeting.ts):
 - `coneTargets` — 공통 코어. 콘+사거리 안 후보 수집(등 뒤 cos ≤ 0·동일점·사거리 밖·콘 밖 제외).
 - `bestAlignedDir` — 콘 안 **가장 정렬된 단일 타깃** (에임 어시스트·오버드라이브 조준).
-- `nearestInCone` — 콘 안 **거리순 N개**. 살포(최대 N), 오토파이어(콘 cos −1로 360° 최근접 1개)에 사용. `index`로 적 메시 역참조.
-- 입력은 `EnemyManager.aliveWorldPositions`(평문 좌표, `hitMeshes`와 인덱스 정합).
+- `nearestInCone` — 콘 안 **거리순 N개**. 살포(최대 N), 오토파이어(콘 cos −1로 360° 최근접 1개)에 사용. `index`로 `aliveEnemies` 역참조.
+- 입력은 `EnemyManager.aliveWorldPositions`(평문 좌표, `aliveEnemies`와 인덱스 정합). 빔 명중 레이캐스트는 **셸 InstancedMesh**(`hitMeshes`)→`instanceId`→`enemyFromHit`로 적 역참조.
 
 값 변경은 JSON만 고치면 되고, 조준 기하는 [`tests/targeting.test.ts`](../../tests/targeting.test.ts)가 가드한다.

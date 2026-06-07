@@ -32,7 +32,7 @@
 | :--- | :--- | :--- |
 | 공용 | `math` | clamp/lerp/parseHexColor |
 | 플레이어 | `PlayerController` `spawn` | 점프 적분 · **방향별 이동속도(dirSpeedMult)** · **천장/5km캡(maxRiseAltitude)** · **피해전이(applyDamage 무적·사망 게이트)** · 스폰 높이/고도 분포 |
-| 적 | `pursue` `seedEnemy` `plasmoidSpec` | 3D 추적·**예측요격(interceptPoint)·분리(separationVector)·합성조향(steerVelocity)** · **상태기계/태깅/자가회복** · **온도→색·체력·크기·속도·스폰분포·고도가중·접촉흡수피해** |
+| 적 | `pursue` `coreEnemy` `kiter` `plasmoidSpec` | 3D 추적·**예측요격(interceptPoint)·분리(separationVector)·합성조향(steerVelocity)** · **상태기계/태깅/자가회복** · **온도→색·체력·크기·속도·스폰분포·고도가중·접촉흡수피해** |
 | 무기 | `targeting` `WeaponSpec` `beamFx` `drainCycle` | 콘 조준 · 거리감쇠·쿨다운진행률 · **머즐/끝점·측면벡터(sideVector)·발사관합산(emitterDamage)** · **소진형 특수 상태기계** |
 | 모바일 | `mobileJoystick` | 데드존·8방향·속도 4단계 |
 | 월드 | `CollisionWorld` `SpatialGrid` `terrainField` `precinct` `geo` `StructureBuilder` | 충돌/격자/지형 질의(가우시안·도심마스크·오목경계)/권역 양식/지오 유틸/랜드마크 |

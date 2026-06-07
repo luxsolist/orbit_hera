@@ -111,7 +111,7 @@
   데드존 0.2 밖 축만 키로(8방향). ([tests/mobileJoystick.test.ts](../../tests/mobileJoystick.test.ts))
 - **버튼 템플릿** — 우하단 2×2: FIRE/SP(고정, 무기 `abbr` 라벨) + ACT1/ACT2(드론 `actions`).
   누르는 동안 `actions[].key`를 합성. `configure()`가 드론/무기별로 라벨·키를 주입.
-- **시야 드래그(룩)** — 우반쪽 빈 공간 스와이프 변위에 `LOOK_SCALE=3.2`를 곱해 `addLookDelta()`로
-  전달(PlayerController의 `mouseSensitivity` 0.0022와 다시 곱해져 라디안/픽셀 ≒ 0.007). 모바일 전용
+- **시야 드래그(룩)** — 우반쪽 빈 공간 스와이프 변위에 `LOOK_SCALE=9.6`을 곱해 `addLookDelta()`로
+  전달(PlayerController의 `mouseSensitivity` 0.0022와 다시 곱해져 라디안/픽셀 ≒ 0.021). 모바일 전용
   민감도 배수로, **데스크탑 포인터락은 미적용**(데스크탑은 원시 `movementX/Y`만 사용해 동일).
 - 세로 모드면 안내 + 입력 차단(`isBlocked`).
