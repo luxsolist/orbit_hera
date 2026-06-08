@@ -5,6 +5,8 @@ import { MobileControls } from "./MobileControls";
 import { Sfx } from "./Sfx";
 import { Diagnostics } from "./Diagnostics";
 import { World } from "../world/World";
+import { StreamingWorld } from "../world/StreamingWorld";
+import type { GameWorld } from "../world/GameWorld";
 import { PlayerController } from "../player/PlayerController";
 import { fetchDrone } from "../player/drones";
 import type { DroneSpec } from "../player/DroneSpec";
@@ -26,13 +28,14 @@ import { TargetBrackets } from "../fx/TargetBrackets";
 import { CinematicPlayer } from "../intro/CinematicPlayer";
 import { MenuBackground } from "../intro/MenuBackground";
 import { introScenes } from "../intro/scenes";
-import { fetchMap, loadTerrainHeights } from "../world/maps";
+import { fetchMap, fetchCatalog, loadTerrainHeights } from "../world/maps";
+import type { MapCatalogEntry, NormalizedMap } from "../world/MapData";
 
 type GameState = "intro" | "menu" | "loading" | "playing" | "paused" | "dead";
 
 /** 전장 빌드 후 함께 생성되는 플레이 세션 — 전부 존재 or 전부 없음(옵셔널 필드 + non-null 단언 제거). */
 interface Session {
-  world: World;
+  world: GameWorld;
   player: PlayerController;
   enemies: EnemyManager;
   beam: FrequencyBeam;
@@ -62,6 +65,7 @@ export class Game {
   private session?: Session;
 
   private state: GameState = "menu";
+  private peaceful = false; // 탐방 모드(적 미스폰) — selectMap 에서 설정, 재시작에도 유지
   private tornDown = false; // pagehide 정리 1회 가드
   private intro?: CinematicPlayer;
   private menuBg?: MenuBackground; // 메뉴 배경: 랜덤 인트로 장면
@@ -101,7 +105,7 @@ export class Game {
     this.startBtn.addEventListener("click", () => this.startOrResume());
     this.backBtn.addEventListener("click", () => this.changeMap());
     this.menu = new MenuScreen({
-      onDeploy: (mapId, droneId) => void this.selectMap(mapId, droneId),
+      onDeploy: (mapId, droneId, peaceful) => void this.selectMap(mapId, droneId, peaceful),
       onPlayIntro: () => this.playIntro(),
     });
 
@@ -172,18 +176,28 @@ export class Game {
   }
 
   /** 전장+기체 선택(메뉴 팝업) → 데이터 다운로드 → 월드/시스템 빌드. 이후 맵 변경은 reload. */
-  private async selectMap(id: string, droneId: string) {
+  private async selectMap(id: string, droneId: string, peaceful = false) {
     if (this.session) return;
+    this.peaceful = peaceful;
     this.sfx.resume(); // 클릭 제스처 내에서 오디오 컨텍스트 활성화(브라우저 정책)
     this.clearMenuBg(); // 메뉴 배경 종료
     this.menu.hide();
     this.state = "loading";
     this.overlaySubtitle.textContent = "전장 전송 중… / DOWNLOADING";
-    let map;
+    // 카탈로그에서 이 전장이 스트리밍(타일 월드)인지 판별 — 모놀리식 <id>.json 은 스트리밍이 아닐 때만 받는다.
+    let entry: MapCatalogEntry | undefined;
     try {
-      map = await fetchMap(id);
+      entry = (await fetchCatalog()).find((c) => c.id === id);
     } catch (e) {
-      return this.failToMenu("전송 실패 — " + (e as Error).message);
+      return this.failToMenu("전장 목록 로드 실패 — " + (e as Error).message);
+    }
+    let map: NormalizedMap | undefined;
+    if (!entry?.stream) {
+      try {
+        map = await fetchMap(id);
+      } catch (e) {
+        return this.failToMenu("전송 실패 — " + (e as Error).message);
+      }
     }
     // 고른 기체 스펙 로드
     let drone: DroneSpec;
@@ -216,8 +230,19 @@ export class Game {
     // 다음 프레임으로 넘겨 UI 가 갱신되도록
     await new Promise((r) => setTimeout(r, 16));
 
-    const terrainHeights = await loadTerrainHeights(map); // DEM 하이트맵(있으면) — 없으면 null → 절차적 폴백
-    const world = new World(this.scene, map, terrainHeights);
+    // 스트리밍 전장: 타일 월드를 플레이어 주변만 청크로 로드(StreamingWorld). 그 외: 모놀리식 World.
+    let world: GameWorld;
+    if (entry?.stream) {
+      if (entry.lat == null || entry.lon == null) return this.failToMenu("스트리밍 전장 좌표 누락 — " + id);
+      try {
+        world = await StreamingWorld.create(this.scene, entry.lat, entry.lon, entry.spawnYaw ?? 0);
+      } catch (e) {
+        return this.failToMenu("타일 월드 로드 실패 — " + (e as Error).message);
+      }
+    } else {
+      const terrainHeights = await loadTerrainHeights(map!); // DEM 하이트맵(있으면) — 없으면 null → 절차적 폴백
+      world = new World(this.scene, map!, terrainHeights);
+    }
     const aspect = window.innerWidth / window.innerHeight;
     const player = new PlayerController(this.input, world, aspect, drone);
     this.hud.setUnitName(drone.name);
@@ -253,7 +278,7 @@ export class Game {
     const s = this.session;
     if (!s) return;
     s.player.reset();
-    s.enemies.start();
+    s.enemies.start(!this.peaceful); // 탐방 모드면 적 미스폰
     s.special.reset();
     this.hud.setKills(0);
     this.state = "playing";
@@ -342,7 +367,8 @@ export class Game {
 
     if (this.state === "playing" && this.input.locked && !this.mobile.isBlocked) {
       s.player.update(dt);
-      s.world.update(s.player.worldPosition.x, s.player.worldPosition.z); // 그림자 추종
+      const pp = s.player.worldPosition;
+      s.world.update(pp.x, pp.z, pp.y); // 그림자 추종 + (스트리밍) 청크 로드/언로드
       s.beam.update(dt, this.input.fireHeld);
       s.special.update(dt, this.input.specialPressed);
       s.enemies.update(dt);

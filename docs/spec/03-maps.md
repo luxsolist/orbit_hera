@@ -29,7 +29,8 @@
 맵 1개가 빌드하는 것([`src/world/World.ts`](../../src/world/World.ts)):
 
 - **지형** — 6 km² 로우폴리 평면(360 분할). 높이는 `mountains`(가우시안 봉우리) + 완만한 기복,
-  도심 평탄 영역에서는 0으로 수렴. 잔디→숲→화강암→도심 정점색 그라데이션.
+  도심 평탄 영역에서는 0으로 수렴. 색은 **단일 옅은 초록 바닥 + 고산 눈(흰색)**([`geo.elevationColor`](../../src/world/geo.ts) `GROUND_GREEN`→`SNOW`),
+  비초록 지표(사막/해변/바위/포장 area)는 **단일 황토색 `SAND_TAN`**. (도심 정점색은 모놀리식 World 만 추가 lerp.)
 - **건물** — 실측 윤곽을 압출(높이별 색 팔레트), 단일 메시로 병합. 충돌은 OBB/오목 삼각형.
   옥상은 디딤면(올라설 수 있음).
 - **도로/차선** — 평면 리본(아스팔트) + 노란 중앙선.
@@ -61,3 +62,81 @@ SVG 경로로 변환해 임베드한다([`src/ui/worldLand.ts`](../../src/ui/wor
 [`scripts/gen-worldmap.mjs`](../../scripts/gen-worldmap.mjs)). 재생성: `node scripts/gen-worldmap.mjs`.
 
 맵 타일/건물 데이터는 OSM(ODbL)이므로 UI에 `Map data © OpenStreetMap contributors` 크레딧을 표기한다.
+
+---
+
+## 맵데이터 수집·가공 파이프라인 (단일 진입점)
+
+맵을 (재)생성할 때는 개별 스크립트를 직접 호출하지 말고 **파이프라인 프로그램**을 쓴다 —
+수집·가공·검증을 표준 순서로 실행하고, 검증 실패 시 빌드를 중단한다.
+
+```
+npm run build:map -- <id> [--no-terrain] [--zoom=13]
+# 내부: build-terrain(real DEM) → build-maps(OSM) → build-world(타일 청크) → validate-world(게이트)
+```
+
+| 단계 | 스크립트 | 출력 |
+|---|---|---|
+| 1 실측 DEM | [`build-terrain.mjs real`](../../scripts/build-terrain.mjs) (PNG 디코드 [`dem.mjs`](../../scripts/dem.mjs)) | `maps/<id>.terrain.bin` |
+| 2 OSM 수집·가공 | [`build-maps.mjs`](../../scripts/build-maps.mjs) (헬퍼 [`osm.mjs`](../../scripts/osm.mjs)) | `maps/<id>.json` (`catalogHidden`이면 카탈로그 비노출) |
+| 3 타일 청크 | [`build-world.mjs`](../../scripts/build-world.mjs) (면/수역 청크 클립) | `maps/<lat>/<lon>/*` |
+| 4 검증 게이트 | [`validate-world.mjs`](../../scripts/validate-world.mjs) (순수 [`worldValidate.mjs`](../../scripts/worldValidate.mjs)) | error 시 비0 종료 |
+
+### 대면적 OSM 수집 — **1km 타일 순차·재개**(모든 광역 맵 공통 규약)
+
+bbox 가 크면(>0.06°) [`build-maps.mjs`](../../scripts/build-maps.mjs) 가 **~1km(0.0095°≈1024m) 타일 격자**([`osm.bboxTiles`](../../scripts/osm.mjs))로 분할해 타일별로 순차 수집한다. **타일이 크면(예 3km) 도심 밀집 구역에서 Overpass 가 타임아웃**(데이터 과다)되므로 **반드시 1km 단위**로 쪼갠다. 규칙:
+
+- **중심(스폰)→외곽 순서** — 부분 수집이어도 플레이 영역(스폰 일대)이 먼저 채워진다.
+- **타일별 캐시**(`/tmp/osm-<id>-t<lat4>_<lon4>.json`, 좌표 키) — **중단 후 재실행 시 이어받음**(완료 타일 스킵). curl 타임아웃 70s + 엔드포인트 폴백 + 2회 재시도, 그래도 실패하면 **캐시 미기록 후 건너뜀**(전체 중단 없음 → 다음 실행에서 누락분 보충). 손상(비-JSON/XML 에러) 응답은 캐시하지 않는다.
+- 전 타일 성공 시에만 병합 결과(`/tmp/osm-<id>.json`)를 캐시. 부분 수집도 그때까지 모은 데이터로 `maps/<id>.json` 을 써서 빌드는 진행된다.
+- **저장 규약 유지**: 최종 산출은 항상 셀 디렉터리 `public/maps/<floorLat>/<floorLon>/<cx>_<cz>.json` + `tiles.json`(위경도 셀 + 청크 인덱스 파일명). 광역이라도 단일 셀 좌표 프레임에서 `cx/cz` 를 확장해 담는다(멀티셀 전).
+- **다른 지역 맵도 동일**하게 1km 타일·중심외곽·재개 방식으로 수집한다.
+
+배틀필드는 무제한([`StreamingWorld.bounds`](../../src/world/StreamingWorld.ts)=`1e7`) — 플레이어 주변만 스트리밍 로드, 데이터 없는 곳은 평지(y=0).
+
+### 검증 불변식(회귀 가드)
+
+지금까지 발생한 버그 클래스를 수치 불변식으로 고정한다 — `npm run validate:world -- <id>` 단독 실행 가능,
+실제 생성 타일은 `tests/worldValidate.test.ts`가 매 테스트마다 0-error를 확인한다:
+
+- 지형: NaN/Inf 없음, `heights.length == size²`, 표고 범위 정상
+- **면/수역(클립 대상)은 반드시 자기 청크 경계 내** ← 산비탈 부유 판/공중 물 재발 차단
+- 폴리곤 비퇴화(≈0 면적 경고), 좌표 유한, **셀-로컬 좌표 범위(NW 원점 음수/거대값=투영 버그)**
+- **도형 품질**: 영길이 모서리(중복 정점)·자기교차 footprint(bowtie) 경고 — 퇴화 삼각형/이상 압출 위험(과거 검은 화면 원인)
+- 생성기↔런타임 격자 일치(`tiles.mLon == cellMLon(cell)`), 청크 인덱스 셀 범위 내
+- **인접 청크 지형 연속성**(공유 모서리 표고 일치 — 크랙/이음새 검출)
+- **매니페스트 플래그 ↔ 파일 내용**(terrain/objects desync 검출)
+- **DEM 교차검증**(청크 표고가 소스 `.bin` 을 독립 재샘플한 값과 일치 — 투영/샘플 회귀 직접 검출)
+- **스폰 지표면**(스트리밍 카탈로그 스폰 청크가 존재 + 지형 보유 — 시작 추락/공중 방지)
+- **동일 footprint 건물 중복**(centroid+면적+정점수 시그니처 — OSM 중복 way/청킹 버그로 인한 z-fighting 검출)
+
+### 재현성
+
+`OSM_DATE=2024-01-01T00:00:00Z npm run build:map -- <id>` 처럼 환경변수를 주면 Overpass `[date:]`
+스냅샷으로 **그 시점 OSM 데이터를 고정 수집** → 같은 입력에 같은 결과(재빌드 재현 가능).
+
+**규칙 추가 방법(지속 개선)**: `worldValidate.mjs`의 `validateChunk`/`validateManifest`에 검사를 더하고
+`tests/worldValidate.test.ts`에 정상/이상 케이스를 추가한다(순수 함수라 네트워크 불필요).
+
+### 정확한 지형/오브젝트 원칙
+
+- 출시 맵 지형은 **항상 실측 DEM**(합성 모드는 프로토타입 전용). DEM 해상도 ≥ 청크 샘플 간격(32 m).
+- **레이어 강제 순서**(`chunkMesh.LAYER_Y`): 지형(0) < 면 < 수역 < 보도 < 차도 < 중앙선 < 건물/벽. 녹색 면이 도로를 덮지 않도록 보장.
+- **식생(초록) area 는 렌더 생략** — 지형이 이미 단일 초록이라 중복(겹침 z-fighting/자글거림 제거). 비초록(황토) area 만 지형 위에 깐다.
+- **담장/울타리는 건물처럼 처리** — 폴리라인 ≤12m 리샘플 + 정점 지형 드레이프로 **윗면을 매끄럽게**, 바닥은 구간 최저 지표 아래로 스커트(공중 부유·높이 끊김 제거). 양면 수직 리본([`chunkMesh.ts`](../../src/world/chunkMesh.ts)).
+- 1개 지형 셀보다 넓게 걸치는 오브젝트는 **단일 평면 금지** — 건물은 footprint 최저 지표까지 압출,
+  **면은 삼각분할 후 긴 모서리를 세분(maxEdge 16m)해 지형에 밀착**(경계만 드레이프하면 큰 삼각형이 떠올라 도로를 덮음 → 세분으로 방지),
+  수역은 경계 최저 지표 평탄, 도로는 **마이터 조인트 연속 리본**(겹침/조각 없음) + **차도 중앙선**(연 무광 노랑, 노면 위)([`chunkMesh.ts`](../../src/world/chunkMesh.ts)). 도로 리본·중앙선은 렌더 지오메트리라 청크 페이로드 증가 없음.
+- **폴리곤 정리(수집 시점, [`osm.mjs`](../../scripts/osm.mjs))**: 연속 중복 정점 제거, 자기교차 건물=볼록껍질 복구·면=드롭,
+  동일 footprint 건물 dedup, **도로 곡선 스무딩**(Chaikin 코너 커팅 + 직선 구간 솎음(tol 0.2) → 굴곡 완화, 데이터 폭증 방지).
+- **도로는 차도만 수집**([`osm.isVehicularHighway`](../../scripts/osm.mjs)) — 보도/오솔길/계단/자전거도로/보행자전용 제외(도로 위 보도 조각 제거).
+- **지표 노출 하천만 수집**([`osm.surfaceWaterways`](../../scripts/osm.mjs)) — `tunnel`·`layer<0`·`covered`([`isUndergroundWaterway`](../../scripts/osm.mjs))는 복개. 나아가 **하천(stream)** 은 연결 수계(끝점 공유)에 복개 구간이 하나라도 있으면 전체 제외(중학천 등 복개천의 **태그 누락 지표 구간까지** 숨김). 강/운하는 복개 구간만 제외·지표부 유지, 복개 없는 순수 지표 하천(산 계곡)은 노출.
+- **강/하천 중심선(water `w`)은 렌더 시 얇은 리본**([`chunkMesh.ts`](../../src/world/chunkMesh.ts)) — 선형 하천을 면으로 채우면 자기교차 퇴화 폴리곤이 되어 공중에 파란 판이 생김 → 폭 w 리본으로. 면(연못/호수)만 채움.
+- **도로 stroke 병합**([`osm.mergeStrokes`](../../scripts/osm.mjs)) — OSM 이 교차로마다 끊은 같은-폭 way 들을 가장 직선에 가까운 방향으로 이어 **교차로 관통 연속 폴리라인**으로 합침(병합 후 스무딩). 간선 중앙선·표면이 교차로에서 끊기지 않음(경복궁 간선 조각 87→21, 중앙값 90m→437m).
+- **도로/담장은 청크에 폴리라인으로 저장**([`build-world.mjs`](../../scripts/build-world.mjs) `clipPolylineToRect`, Liang-Barsky) — 2점 세그먼트로 쪼개지 않고
+  청크 경계로 클립한 **연속 조각**을 유지해, 렌더 시 연속 리본·중앙선이 끊김 없이 곡선을 따른다(조각남 방지).
+- **도로는 렌더 시 ≤12m 로 리샘플 + 리본의 양 가장자리 정점까지 지형 드레이프**([`chunkMesh.pushRibbon`](../../src/world/chunkMesh.ts)) — 긴 세그먼트(종방향)·넓은 폭(횡방향 교차 경사) 모두 지형에 밀착해 가장자리로 지형(초록)이 솟지 않음.
+- **도로/중앙선 폴리라인 끝점을 진행방향으로 연장**(`extendEnd`, min(반폭,10)m) — OSM way·청크 클립 경계·교차로에서 조각들이 겹쳐 사이 틈(초록)·중앙선 끊김을 메움.
+- **중앙선은 간선도로(폭≥16m: primary/secondary)에만** — 작은 도로까지 그리면 교차로에서 가는 노란선이 뒤엉킴. 굵기 0.4m.
+- **실측 DEM 은 bare-earth 스무딩**(`dem.bareEarth`, 형태학적 열림+블러) — terrarium DSM 의 건물 스파이크 제거로 도심 지면 평탄화(도로 밑 지형 솟음 방지). 검증기 `terrain-steep` 경고로 회귀 가드.
+- **드레이프 높이(`sampleChunkHeight`)는 지형 메시 삼각분할(a,c,b)+(b,c,d)과 동일 보간**(bilinear 아님) — 렌더되는 삼각형 평면값과 정확히 일치해야 도로/면이 지형 위로 떠 비평면(새들) 셀에서도 초록이 솟지 않음. 레이캐스트 테스트로 회귀 가드.

@@ -1,8 +1,7 @@
 import * as THREE from "three";
 import { CoreEnemy, chooseTarget, buildBoidGrid, recomputeSteer, CORE_GEO, SHELL_GEO, type Boid } from "./CoreEnemy";
-import type { World } from "../world/World";
+import type { GameWorld } from "../world/GameWorld";
 import type { PlayerController } from "../player/PlayerController";
-import { TERRAIN_HALF } from "../world/World";
 import { DrainBeams } from "../fx/DrainBeams";
 import {
   DEFAULT_PLASMOID, rollAppearance, contactDamage, archetypeCount, pickSpawnType, colorStrength01,
@@ -46,7 +45,7 @@ interface Target {
 export class EnemyManager {
   private enemies: CoreEnemy[] = [];
   private scene: THREE.Scene;
-  private world: World;
+  private world: GameWorld;
   private players: PlayerController[];
   private spec: PlasmoidSpec;
   private kiterArche: PlasmoidKiterArchetype; // 카이터 공격 파라미터(전 개체 공유)
@@ -59,6 +58,7 @@ export class EnemyManager {
   killCount = 0;
   private frame = 0; // 프레임 분산 라운드로빈 위상
   private spawnTimer = 0;
+  private peaceful = false; // 탐방 모드 — 웨이브 미시작 + 클리어 시 자동 재시작 억제
   private pendingRusher = 0; // 아키타입별 잔여 스폰 예산(거머리 떼 / 모기 소수정예 독립 조절)
   private pendingKiter = 0;
   // 군집 조향용 — 플레이어별 속도 추정(예측 요격) + 살아있는 적 스냅샷(분리)
@@ -76,7 +76,7 @@ export class EnemyManager {
   onWaveChange?: (wave: number) => void;
 
   constructor(
-    scene: THREE.Scene, world: World, players: PlayerController[],
+    scene: THREE.Scene, world: GameWorld, players: PlayerController[],
     spec: PlasmoidSpec = DEFAULT_PLASMOID
   ) {
     this.scene = scene;
@@ -189,11 +189,14 @@ export class EnemyManager {
     return out;
   }
 
-  start() {
+  /** 전투 시작. spawn=false 면 웨이브를 시작하지 않음(탐방 모드 — 적 미스폰, 자유 탐방). */
+  start(spawn = true) {
     this.clear();
     this.wave = 0;
     this.killCount = 0;
-    this.startNextWave();
+    this.peaceful = !spawn;
+    if (spawn) this.startNextWave();
+    else this.onWaveChange?.(0); // 탐방 모드 — HUD 웨이브 0
   }
 
   private startNextWave() {
@@ -232,8 +235,9 @@ export class EnemyManager {
     const c = this.playersCentroid(_centroid);
     const angle = Math.random() * Math.PI * 2;
     const radius = 55 + Math.random() * 150;
-    const x = THREE.MathUtils.clamp(c.x + Math.cos(angle) * radius, -TERRAIN_HALF + 6, TERRAIN_HALF - 6);
-    const z = THREE.MathUtils.clamp(c.z + Math.sin(angle) * radius, -TERRAIN_HALF + 6, TERRAIN_HALF - 6);
+    const lim = this.world.bounds - 6;
+    const x = THREE.MathUtils.clamp(c.x + Math.cos(angle) * radius, -lim, lim);
+    const z = THREE.MathUtils.clamp(c.z + Math.sin(angle) * radius, -lim, lim);
     const alt = arche.spawnAltMin + Math.random() * (arche.spawnAltMax - arche.spawnAltMin);
     const y = this.world.heightAt(x, z) + alt;
 
@@ -419,8 +423,8 @@ export class EnemyManager {
 
     this.updateInstances(); // 살아있는 셸 + 코어 일괄 렌더(InstancedMesh)
 
-    // 웨이브 종료 판정
-    if (this.pendingRusher + this.pendingKiter === 0 && this.enemies.length === 0) {
+    // 웨이브 종료 판정 — 탐방 모드면 자동 재시작 안 함
+    if (!this.peaceful && this.pendingRusher + this.pendingKiter === 0 && this.enemies.length === 0) {
       this.startNextWave();
     }
   }

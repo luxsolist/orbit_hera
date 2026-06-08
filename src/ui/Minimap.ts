@@ -1,6 +1,6 @@
 import type { PlayerController } from "../player/PlayerController";
 import type { EnemyManager } from "../enemies/EnemyManager";
-import type { World, MinimapSink } from "../world/World";
+import type { GameWorld, MinimapSink } from "../world/GameWorld";
 import { hudSizesFor } from "./hudLayout";
 
 const WORLD_RADIUS = 70; // 미니맵 가장자리가 표현하는 월드 반경(유닛)
@@ -21,7 +21,7 @@ export class Minimap implements MinimapSink {
   private ctx: CanvasRenderingContext2D;
   private player: PlayerController;
   private enemies: EnemyManager;
-  private world: World;
+  private world: GameWorld;
   private scale!: number; // 픽셀/월드유닛 (configureCanvas 에서 설정)
   private size!: number; // 캔버스 한 변(px, 화면 비례)
   private half!: number;
@@ -34,7 +34,7 @@ export class Minimap implements MinimapSink {
   private bx = 0; // project() 결과(할당 회피)
   private by = 0;
 
-  constructor(player: PlayerController, enemies: EnemyManager, world: World) {
+  constructor(player: PlayerController, enemies: EnemyManager, world: GameWorld) {
     this.canvas = document.getElementById("minimap") as HTMLCanvasElement;
     if (!this.canvas) throw new Error("#minimap canvas not found");
     const ctx = this.canvas.getContext("2d");

@@ -7,7 +7,7 @@
 //   maps/<latCell>/<lonCell>/<cx>_<cz>.json      # 1024m 청크: 지형(DEM)+오브젝트(OSM)+지하 결합
 //   (latCell/lonCell = floor(lat)/floor(lon), 1° 셀 ≈ 111km. 셀 원점 = NW 모서리 lat=cell+1, lon=cell)
 
-import type { Ring } from "./MapData";
+import type { Ring, AreaRing } from "./MapData";
 
 /** 위경도 정수도 셀 [floor(lat), floor(lon)]. */
 export type Cell = [number, number];
@@ -18,13 +18,24 @@ export function geoCell(lat: number, lon: number): Cell {
   return [Math.floor(lat), Math.floor(lon)];
 }
 
+/** 셀 격자 경도 m/도 — 셀 중앙 위도 기준(생성기·매니페스트 mLon 과 동일). 순수. */
+export function cellMLon(cellLat: number): number {
+  return M_LAT * Math.cos(((cellLat + 0.5) * Math.PI) / 180);
+}
+
+/**
+ * 위경도 → 셀-로컬 미터(원점 = 셀 NW 모서리, x=동/z=남 ≥0). 생성기(build-world.mjs)의 toCell 과 동일.
+ * mLon 미지정 시 셀 중앙 위도로 계산(매니페스트 mLon 주입 시 격자 완전 일치). 순수.
+ */
+export function cellLocalOf(lat: number, lon: number, cell: Cell, mLon = cellMLon(cell[0])): { x: number; z: number } {
+  return { x: (lon - cell[1]) * mLon, z: (cell[0] + 1 - lat) * M_LAT };
+}
+
 /** 위경도 → 타일 청크 좌표(셀 NW 원점). 생성기(build-world.mjs)와 동일 공식. 순수. */
 export function cellChunkOf(lat: number, lon: number, chunkSize = 1024): { cell: Cell; cx: number; cz: number } {
-  const cellLat = Math.floor(lat), cellLon = Math.floor(lon);
-  const mLon = M_LAT * Math.cos(((cellLat + 0.5) * Math.PI) / 180);
-  const x = (lon - cellLon) * mLon;
-  const z = (cellLat + 1 - lat) * M_LAT;
-  return { cell: [cellLat, cellLon], cx: Math.floor(x / chunkSize), cz: Math.floor(z / chunkSize) };
+  const cell: Cell = [Math.floor(lat), Math.floor(lon)];
+  const { x, z } = cellLocalOf(lat, lon, cell);
+  return { cell, cx: Math.floor(x / chunkSize), cz: Math.floor(z / chunkSize) };
 }
 
 // ── 경로 헬퍼(public/ 상대; fetch 시 BASE_URL 접두) ──
@@ -45,7 +56,7 @@ export interface WorldChunk {
   cx: number;
   cz: number;
   terrain: { size: number; seaLevel: number; heights: number[] }; // size×size row-major(평지=size 0)
-  objects: { buildings: Ring[]; roads: Ring[]; water: Ring[] };
+  objects: { buildings: Ring[]; roads: Ring[]; water: Ring[]; walls?: Ring[]; areas?: AreaRing[] };
   underground: unknown | null; // 추후 별도 생성해 병합
 }
 

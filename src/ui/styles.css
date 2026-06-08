@@ -720,6 +720,8 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 .zonepop__name { font-size: 15px; font-weight: 700; color: #dffaff; padding-right: 16px; }
 .zonepop__sub { font-size: 11.5px; opacity: 0.8; margin-top: 3px; }
 .zonepop__meta { font-size: 10.5px; opacity: 0.62; font-family: ui-monospace, monospace; margin-top: 3px; }
+.zonepop__peace { display: flex; align-items: center; gap: 6px; margin-top: 9px; cursor: pointer; font-size: 11px; color: #cfeefc; user-select: none; }
+.zonepop__peace input { accent-color: var(--core-cyan); cursor: pointer; }
 .zonepop__dlabel { font-size: 10px; letter-spacing: 0.12em; opacity: 0.6; margin: 10px 0 6px; }
 .zonepop__drones { display: flex; gap: 8px; }
 .zonepop__drone {

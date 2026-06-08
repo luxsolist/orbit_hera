@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 // @ts-expect-error — JS 빌드 헬퍼(타입 선언 없음)
-import { projFns, buildingHeight, roadWidth, ringArea } from "../scripts/osm.mjs";
+import { projFns, buildingHeight, roadWidth, ringArea, wallSpec, areaKind, relationRings, dedupeConsecutive, isSelfIntersecting, convexHull, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM } from "../scripts/osm.mjs";
 
 describe("osm.projFns", () => {
   it("maps the origin to (0,0)", () => {
@@ -44,10 +44,62 @@ describe("osm.buildingHeight", () => {
 });
 
 describe("osm.roadWidth", () => {
-  it("maps known highway classes, defaults to 6", () => {
+  it("maps known highway classes incl. 보행로, defaults to 6", () => {
     expect(roadWidth("primary")).toBe(28);
     expect(roadWidth("residential")).toBe(7);
-    expect(roadWidth("footway")).toBe(6); // 미지정
+    expect(roadWidth("footway")).toBe(2.2); // 보도(좁음)
+    expect(roadWidth("steps")).toBe(2.4); // 계단
+    expect(roadWidth("service")).toBe(4); // 이면도로
+    expect(roadWidth("unknownclass")).toBe(6); // 미지정 기본
+  });
+});
+
+describe("osm.wallSpec — barrier → 담장 사양", () => {
+  it("담장/성곽/옹벽/울타리/생울타리는 {h,w} 반환", () => {
+    expect(wallSpec({ barrier: "wall" })).toEqual({ h: 2.5, w: 0.4 });
+    expect(wallSpec({ barrier: "city_wall" }).h).toBeGreaterThan(wallSpec({ barrier: "wall" }).h);
+    expect(wallSpec({ barrier: "fence" }).w).toBeLessThan(0.2);
+  });
+  it("height 태그가 있으면 우선", () => {
+    expect(wallSpec({ barrier: "wall", height: "4.5 m" }).h).toBe(4.5);
+  });
+  it("벽이 아닌 barrier(연석·볼라드·문)는 null", () => {
+    expect(wallSpec({ barrier: "kerb" })).toBeNull();
+    expect(wallSpec({ barrier: "bollard" })).toBeNull();
+    expect(wallSpec({})).toBeNull();
+  });
+});
+
+describe("osm.areaKind — 면 태그 → 지표 면 종류", () => {
+  it("자연/녹지/공원/주차장 분류", () => {
+    expect(areaKind({ natural: "wood" })).toBe("wood");
+    expect(areaKind({ natural: "rock" })).toBe("rock");
+    expect(areaKind({ leisure: "garden" })).toBe("garden");
+    expect(areaKind({ leisure: "park" })).toBe("park");
+    expect(areaKind({ landuse: "grass" })).toBe("grass");
+    expect(areaKind({ amenity: "parking" })).toBe("pavement");
+  });
+  it("용도지역(commercial/residential 등)·미지정은 null", () => {
+    expect(areaKind({ landuse: "commercial" })).toBeNull();
+    expect(areaKind({ building: "yes" })).toBeNull();
+    expect(areaKind({})).toBeNull();
+  });
+});
+
+describe("osm.relationRings — 멀티폴리곤 outer 추출(inner 무시)", () => {
+  const proj = projFns(0, 0);
+  it("outer 멤버만 폴리곤으로, inner/노드 제외", () => {
+    const el = {
+      type: "relation",
+      members: [
+        { type: "way", role: "outer", geometry: [{ lat: 0, lon: 0 }, { lat: 0, lon: 0.001 }, { lat: 0.001, lon: 0.001 }, { lat: 0, lon: 0 }] },
+        { type: "way", role: "inner", geometry: [{ lat: 0, lon: 0 }, { lat: 0, lon: 0.0005 }, { lat: 0.0005, lon: 0 }] },
+        { type: "node", role: "admin_centre" },
+      ],
+    };
+    const rings = relationRings(el, proj);
+    expect(rings).toHaveLength(1); // outer 만
+    expect(rings[0].length).toBeGreaterThanOrEqual(6);
   });
 });
 
@@ -57,5 +109,140 @@ describe("osm.ringArea", () => {
     const ccw = [0, 0, 0, 3, 4, 3, 4, 0];
     expect(ringArea(cw)).toBeCloseTo(12);
     expect(ringArea(ccw)).toBeCloseTo(12);
+  });
+});
+
+describe("osm — 폴리곤 정리(수집 시점 dedupe/hull/selfx)", () => {
+  it("dedupeConsecutive — 연속 중복 제거(+ring 닫힘 반복)", () => {
+    expect(dedupeConsecutive([0, 0, 0, 0, 10, 0, 10, 10])).toEqual([0, 0, 10, 0, 10, 10]);
+    expect(dedupeConsecutive([0, 0, 10, 0, 10, 10, 0, 0], 0.05, true)).toEqual([0, 0, 10, 0, 10, 10]); // 닫힘 반복 제거
+  });
+  it("isSelfIntersecting — bowtie/단순", () => {
+    expect(isSelfIntersecting([0, 0, 10, 0, 0, 10, 10, 10])).toBe(true);
+    expect(isSelfIntersecting([0, 0, 10, 0, 10, 10, 0, 10])).toBe(false);
+  });
+  it("convexHull — 단순 폴리곤(자기교차 아님) 반환, 일직선은 null", () => {
+    const h = convexHull([0, 0, 10, 0, 0, 10, 10, 10]); // bowtie → 4모서리 사각형 hull
+    expect(h.length / 2).toBeGreaterThanOrEqual(3);
+    expect(isSelfIntersecting(h)).toBe(false);
+    expect(ringArea(h)).toBeCloseTo(100);
+    expect(convexHull([0, 0, 1, 0, 2, 0])).toBeNull(); // 일직선
+  });
+  it("sanitizeRing — 건물(hull 복구) vs 면(드롭)", () => {
+    const bowtie = [0, 0, 10, 0, 0, 10, 10, 10];
+    const repaired = sanitizeRing(bowtie, true);
+    expect(repaired).not.toBeNull();
+    expect(isSelfIntersecting(repaired)).toBe(false); // 복구됨
+    expect(sanitizeRing(bowtie, false)).toBeNull(); // 면은 드롭
+    expect(sanitizeRing([0, 0, 1, 0], true)).toBeNull(); // 점<3
+    const ok = sanitizeRing([0, 0, 10, 0, 10, 10, 0, 10], false); // 정상 사각형 유지
+    expect(ok.length / 2).toBe(4);
+  });
+  it("sanitizePolyline — 영길이 세그먼트 제거, 점<2 는 null", () => {
+    expect(sanitizePolyline([0, 0, 0, 0, 10, 0])).toEqual([0, 0, 10, 0]);
+    expect(sanitizePolyline([5, 5, 5, 5])).toBeNull();
+  });
+});
+
+describe("osm.overpassQuery — 수집 쿼리 계약 + 스냅샷", () => {
+  it("핵심 구성요소(건물·관계·전체 highway·barrier·수역·녹지면) 포함", () => {
+    const q = overpassQuery([37.5, 126.9, 37.6, 127.0]);
+    for (const s of ['way["building"]', 'relation["building"]', 'way["highway"]', 'way["barrier"]', 'way["natural"="water"]', 'way["leisure"', 'way["landuse"', "out geom"])
+      expect(q).toContain(s);
+  });
+  it("date 옵션 → [date:] 스냅샷(재현성), 미지정 시 없음", () => {
+    expect(overpassQuery([0, 0, 1, 1], { date: "2024-01-01T00:00:00Z" })).toContain('[date:"2024-01-01T00:00:00Z"]');
+    expect(overpassQuery([0, 0, 1, 1])).not.toContain("[date:");
+  });
+});
+
+describe("osm.smoothPolyline — 도로 곡선 스무딩(Chaikin)", () => {
+  it("끝점 고정 + 내부 모서리 커팅으로 점 증가", () => {
+    const s = smoothPolyline([0, 0, 10, 0, 10, 10], 2);
+    expect(s.length / 2).toBeGreaterThan(3); // 조밀화
+    expect(s.slice(0, 2)).toEqual([0, 0]); // 첫점 고정
+    expect(s.slice(-2)).toEqual([10, 10]); // 끝점 고정
+  });
+  it("직선(2점)은 그대로", () => {
+    expect(smoothPolyline([0, 0, 5, 5], 2)).toEqual([0, 0, 5, 5]);
+  });
+  it("코너가 둥글려져 원래 꼭짓점에서 멀어짐(부드러움)", () => {
+    const s = smoothPolyline([0, 0, 10, 0, 10, 10], 1); // 1회: 모서리 (10,0) 주변 2점으로 대체
+    // 결과에 정확한 (10,0) 꼭짓점이 남지 않음(커팅됨)
+    let hasCorner = false;
+    for (let i = 0; i < s.length; i += 2) if (s[i] === 10 && s[i + 1] === 0) hasCorner = true;
+    expect(hasCorner).toBe(false);
+  });
+});
+
+describe("osm.isVehicularHighway — 차도/보행로 구분(보도 수집 제외)", () => {
+  it("차도는 true", () => {
+    for (const hw of ["motorway", "primary", "residential", "service", "unclassified", "living_street"]) expect(isVehicularHighway(hw)).toBe(true);
+  });
+  it("보행로/오솔길/계단/자전거도로/보행자전용은 false(수집 제외)", () => {
+    for (const hw of ["footway", "path", "steps", "cycleway", "pedestrian", "bridleway", "corridor", "track"]) expect(isVehicularHighway(hw)).toBe(false);
+  });
+});
+
+describe("osm.mergeStrokes — 연결 같은-폭 도로 직선 병합(교차로 관통 연속화)", () => {
+  it("일직선 연결(같은 폭) → 하나로 병합", () => {
+    const m = mergeStrokes([{ p: [0, 0, 10, 0], w: 16 }, { p: [10, 0, 20, 0], w: 16 }]);
+    expect(m).toHaveLength(1);
+    expect(m[0].p.length / 2).toBe(3); // 0,0 / 10,0 / 20,0
+  });
+  it("급굴절(90°)은 병합 안 함", () => {
+    const m = mergeStrokes([{ p: [0, 0, 10, 0], w: 16 }, { p: [10, 0, 10, 10], w: 16 }]);
+    expect(m).toHaveLength(2);
+  });
+  it("폭이 다르면 병합 안 함", () => {
+    const m = mergeStrokes([{ p: [0, 0, 10, 0], w: 16 }, { p: [10, 0, 20, 0], w: 7 }]);
+    expect(m).toHaveLength(2);
+  });
+});
+
+describe("osm.isUndergroundWaterway — 복개/지하 하천 판별(수집 제외)", () => {
+  it("tunnel·layer<0·covered 는 지하(true)", () => {
+    expect(isUndergroundWaterway({ tunnel: "culvert" })).toBe(true);
+    expect(isUndergroundWaterway({ layer: "-1" })).toBe(true);
+    expect(isUndergroundWaterway({ covered: "yes" })).toBe(true);
+  });
+  it("지표 하천은 false", () => {
+    expect(isUndergroundWaterway({ waterway: "stream" })).toBe(false);
+    expect(isUndergroundWaterway({ layer: "0" })).toBe(false);
+  });
+});
+
+describe("osm.surfaceWaterways — 지표 노출 하천만(복개 수계 태그누락 보정)", () => {
+  it("하천계에 복개 구간이 있으면 전체 제외(태그 누락 지표 구간 포함)", () => {
+    const segs = [
+      { p: [0, 0, 10, 0], culverted: false, stream: true },  // 지표(태그 누락)
+      { p: [10, 0, 20, 0], culverted: true, stream: true },  // 복개
+      { p: [20, 0, 30, 0], culverted: false, stream: true },  // 지표(태그 누락)
+    ];
+    expect(surfaceWaterways(segs)).toHaveLength(0);
+  });
+  it("복개 없는 순수 지표 하천은 유지", () => {
+    const surf = [{ p: [0, 0, 10, 0], culverted: false, stream: true }, { p: [10, 0, 20, 0], culverted: false, stream: true }];
+    expect(surfaceWaterways(surf)).toHaveLength(2);
+  });
+  it("강(stream 아님)은 복개 구간만 제외, 지표부 유지", () => {
+    const river = [{ p: [0, 0, 10, 0], culverted: false, stream: false }, { p: [10, 0, 20, 0], culverted: true, stream: false }];
+    expect(surfaceWaterways(river)).toHaveLength(1);
+  });
+});
+
+describe("osm.bboxTiles / mergeOSM — 대면적 타일 분할 수집", () => {
+  it("bbox 를 ≤maxDeg 격자로 분할(전체 커버)", () => {
+    const t = bboxTiles([37.0, 126.0, 37.2, 126.3], 0.1);
+    expect(t.length).toBe(2 * 3); // 0.2/0.1=2행, 0.3/0.1=3열
+    expect(t[0][0]).toBeCloseTo(37.0); expect(t[0][1]).toBeCloseTo(126.0); // 남서 첫 타일
+    expect(t[t.length - 1][2]).toBeCloseTo(37.2); expect(t[t.length - 1][3]).toBeCloseTo(126.3); // 북동 끝
+  });
+  it("작은 bbox 는 1개 타일", () => {
+    expect(bboxTiles([37.0, 126.0, 37.02, 126.02], 0.03)).toHaveLength(1);
+  });
+  it("mergeOSM 는 type+id 중복 제거 병합", () => {
+    const m = mergeOSM([{ elements: [{ type: "way", id: 1 }, { type: "way", id: 2 }] }, { elements: [{ type: "way", id: 2 }, { type: "node", id: 1 }] }]);
+    expect(m.elements).toHaveLength(3); // way1, way2, node1 (way2 중복 제거)
   });
 });

@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import type { Input } from "../core/Input";
-import type { World } from "../world/World";
-import { TERRAIN_HALF } from "../world/World";
+import type { GameWorld } from "../world/GameWorld";
 import type { DroneSpec, DroneMove, JumpSpec, FlyMove } from "./DroneSpec";
 
 const PITCH_LIMIT = Math.PI / 2 - 0.05;
@@ -111,7 +110,7 @@ export class PlayerController {
 
   constructor(
     private input: Input,
-    private world: World,
+    private world: GameWorld,
     aspect: number,
     spec: DroneSpec
   ) {
@@ -259,7 +258,7 @@ export class PlayerController {
     const steps = Math.max(1, Math.ceil(Math.hypot(dxTotal, dzTotal) / MOVE_MAX_STEP));
     const stepX = dxTotal / steps;
     const stepZ = dzTotal / steps;
-    const lim = TERRAIN_HALF - 4;
+    const lim = this.world.bounds - 4;
     const feetY = this.position.y - this.eye; // 수평 이동 동안 발 높이 불변(수직은 이후)
     for (let i = 0; i < steps; i++) {
       const bx = THREE.MathUtils.clamp(this.position.x + stepX, -lim, lim);

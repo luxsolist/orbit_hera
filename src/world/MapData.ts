@@ -3,8 +3,14 @@
 
 export interface Ring {
   p: number[]; // [x0,z0,x1,z1,...]
-  h?: number; // 건물 높이(m)
-  w?: number; // 도로 폭(m)
+  h?: number; // 건물/담장 높이(m)
+  w?: number; // 도로 폭 / 담장 두께 / 하천 폭(m)
+}
+
+/** 지표 면(공원/잔디/숲/모래/바위/포장 등) — k=종류(색 구분 키). */
+export interface AreaRing {
+  p: number[]; // 닫힌 폴리곤 [x0,z0,...]
+  k: string; // "park"|"garden"|"grass"|"pitch"|"wood"|"scrub"|"sand"|"rock"|"pavement"
 }
 
 /** 데이터 구동 랜드마크(structure)용 — 재질 정의 */
@@ -92,6 +98,10 @@ export interface MapCatalogEntry {
   buildings?: number;
   lat?: number; // 침공 지점 위도(세계지도 표시용)
   lon?: number; // 침공 지점 경도
+  /** 전지구 타일 월드(청크 스트리밍) 전장 — true 면 모놀리식 <id>.json 대신 StreamingWorld 로 로드. */
+  stream?: boolean;
+  /** 스트리밍 전장 시작 방위(rad). 기본 0. */
+  spawnYaw?: number;
 }
 
 /** 전장 1개의 전체 렌더 데이터 — public/maps/<id>.json */
@@ -177,10 +187,12 @@ export interface TerrainSpec {
   water?: Ring[]; // 수역 폴리곤
 }
 
-/** 지표 위 오브젝트 섹션 — 건물·도로·랜드마크·경계. (에디터: 오브젝트 레이어) */
+/** 지표 위 오브젝트 섹션 — 건물·도로·담장·지표면·랜드마크·경계. (에디터: 오브젝트 레이어) */
 export interface ObjectsSpec {
   buildings: Ring[];
   roads: Ring[];
+  walls?: Ring[]; // 담장/울타리(폴리라인 + h 높이 + w 두께)
+  areas?: AreaRing[]; // 공원/잔디/숲/모래/바위 등 지표 면
   landmarks?: Landmark[];
   boundary?: number[];
   gates?: { x: number; z: number; r: number }[];
@@ -232,6 +244,8 @@ export function normalizeMapData(raw: any): NormalizedMap {
       objects: {
         buildings: raw.objects.buildings ?? [],
         roads: raw.objects.roads ?? [],
+        walls: raw.objects.walls,
+        areas: raw.objects.areas,
         landmarks: raw.objects.landmarks,
         boundary: raw.objects.boundary,
         gates: raw.objects.gates,
@@ -252,6 +266,8 @@ export function normalizeMapData(raw: any): NormalizedMap {
     objects: {
       buildings: raw.buildings ?? [],
       roads: raw.roads ?? [],
+      walls: raw.walls,
+      areas: raw.areas,
       landmarks: raw.landmarks,
       boundary: raw.boundary,
       gates: raw.gates,

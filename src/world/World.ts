@@ -6,17 +6,11 @@ import { StructureBuilder } from "./StructureBuilder";
 import { TerrainField } from "./TerrainField";
 import { SkyEnvironment } from "./SkyEnvironment";
 import { resolveBuildingStyle, buildingBaseColor } from "./precinct";
-import { setUniformColor } from "./geo";
+import { setUniformColor, elevationColor } from "./geo";
 import { parseHexColor } from "../core/math";
+import type { GameWorld, MinimapSink } from "./GameWorld";
 
-/** 미니맵 등 표현 레이어가 World 의 근처 지형/건물 형상을 (내부 구조 노출 없이) 받는 싱크. */
-export interface MinimapSink {
-  water(points: ReadonlyArray<number>): void;
-  road(ax: number, az: number, bx: number, bz: number, width: number): void;
-  building(corners: ReadonlyArray<number>): void;
-  triangle(ax: number, az: number, bx: number, bz: number, cx: number, cz: number): void;
-  rock(x: number, z: number, radius: number): void;
-}
+export type { MinimapSink } from "./GameWorld"; // 하위호환 재노출(기존 import 경로 유지)
 
 /**
  * 전장(맵) 렌더러 — 런타임에 서버에서 내려받은 MapData(OpenStreetMap 실측 기반)를 그린다.
@@ -33,10 +27,12 @@ const TERRAIN_SIZE = 6000;
 export const TERRAIN_HALF = TERRAIN_SIZE / 2; // 3000 (±3km)
 const SEGMENTS = 360; // 지형 격자 ~16.7m 유지(확장에도 산세 디테일 보존)
 
-export class World {
+export class World implements GameWorld {
   readonly group = new THREE.Group();
   /** 플레이어 스폰(맵 데이터 기준) */
   readonly spawn: SpawnPoint;
+  /** 플레이 반경(±m) — 모놀리식은 고정 지형 절반. */
+  readonly bounds = TERRAIN_HALF;
   private map: NormalizedMap;
   /** 지형 높이·도심/경계 마스크 등 연속 공간 질의 계층. */
   private readonly field: TerrainField;
@@ -121,9 +117,6 @@ export class World {
     const color = new THREE.Color();
     const colors: number[] = [];
 
-    const lawn = new THREE.Color(0x5ec22e); // 선명한 잔디 녹색
-    const forest = new THREE.Color(0x2f9e22); // 진한 채도 숲
-    const granite = new THREE.Color(0xa8b2be); // 밝은 한색 화강암
     const urban = new THREE.Color(0xc2bdb0); // 도심 지표(밝은 포장 콘크리트)
     // 특수 권역(경계 내부) 바닥색 — 데이터 구동. 없으면 권역 맨땅 처리 안 함.
     const bareGround = this.map.objects.precinct?.groundColor ? new THREE.Color(Number(this.map.objects.precinct.groundColor)) : null;
@@ -135,8 +128,7 @@ export class World {
       const y = this.heightAt(x, z);
       pos.setY(i, y);
 
-      m.copy(lawn).lerp(forest, THREE.MathUtils.smoothstep(y, 8, 60));
-      m.lerp(granite, THREE.MathUtils.smoothstep(y, 120, 230));
+      elevationColor(y, m); // 표고별 잔디→숲→화강암(공유 헬퍼)
       color.copy(m).lerp(urban, this.field.cityMask(x, z));
       // 특수 권역 경계 안쪽은 포장 대신 데이터 지정 바닥색(예: 경복궁 마사토)
       if (bareGround && this.field.inPalace(x, z)) color.copy(bareGround);

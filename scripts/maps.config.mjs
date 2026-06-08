@@ -10,14 +10,15 @@ export const MAPS = [
     subtitle: "Seoul, Korea — 도심 한복판의 왕궁",
     lat0: 37.578,
     lon0: 126.977,
-    bbox: [37.5695, 126.9685, 37.5862, 126.9855],
+    // 경복궁 중심 반경 20km(±0.18°lat / ±0.227°lon) — 무제한 배틀필드용 대면적 수집.
+    bbox: [37.3983, 126.7503, 37.7577, 127.2037],
     bare: true,
     spawn: { x: 0, z: 360, yaw: 0 },
-    // 이미 빌드된 맵 자신을 소스로 재사용(OSM 데이터는 그대로 통과, 랜드마크/문/스폰만 재베이킹).
-    // 최초/전체 재수집이 필요하면 from 을 지우면 bbox 로 Overpass 수집한다.
-    local: { from: "public/maps/gyeongbokgung.json" },
-    // 테스트용 10km×10km 합성 DEM(서울 산세). 생성: node scripts/build-terrain.mjs synthetic gyeongbokgung 512 10000
-    heightmap: { src: "maps/gyeongbokgung.terrain.bin", size: 512, meters: 10000 },
+    // 스트리밍 타일 월드(seoul-stream)의 소스 전용 — 메뉴 카탈로그에는 노출 안 함.
+    catalogHidden: true,
+    // 대면적 bbox 는 build-maps 가 ~3km 타일로 분할해 순차·재개 수집(단일 Overpass 타임아웃 회피). 캐시: /tmp/osm-gyeongbokgung-t*.json → 병합 /tmp/osm-gyeongbokgung.json.
+    // 실측 40km×40km DEM(AWS Terrarium → bare-earth 근사). 생성: node scripts/build-terrain.mjs real gyeongbokgung 2048 40000 13. (도심 평지 ~40m, 북악산·관악산 등 산세 보존.)
+    heightmap: { src: "maps/gyeongbokgung.terrain.bin", size: 2048, meters: 40000 },
     mountains: [
       { x: 120, z: -1250, h: 250, r: 300 }, // 북악산
       { x: -1150, z: -260, h: 220, r: 320 }, // 인왕산

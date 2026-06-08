@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "vite build && node tests/e2e/smoke.mjs"
+    "test:e2e": "vite build && node tests/e2e/smoke.mjs",
+    "build:map": "node scripts/build-pipeline.mjs",
+    "validate:world": "node scripts/validate-world.mjs"
   },
   "dependencies": {
     "three": "^0.169.0"

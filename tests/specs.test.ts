@@ -95,19 +95,22 @@ describe("무기 스펙(JSON)", () => {
 });
 
 describe("전장 카탈로그(JSON)", () => {
-  const cat = load(`${M}/index.json`) as Array<{ id: string; name: string; lat?: number; lon?: number }>;
+  const cat = load(`${M}/index.json`) as Array<{ id: string; name: string; lat?: number; lon?: number; stream?: boolean }>;
 
   const hex = (v: unknown) => expect(Number.isFinite(Number(v))).toBe(true); // "0xRRGGBB" 파싱 가능
 
   for (const e of cat) {
     it(`${e.id}: 파일 + 세계지도 좌표(lat/lon)`, () => {
-      expect(existsSync(`${M}/${e.id}.json`)).toBe(true);
+      // 스트리밍 전장은 모놀리식 <id>.json 대신 타일 디렉터리(maps/<lat>/<lon>/tiles.json)로 로드
+      if (e.stream) expect(existsSync(`${M}/${Math.floor(e.lat!)}/${Math.floor(e.lon!)}/tiles.json`)).toBe(true);
+      else expect(existsSync(`${M}/${e.id}.json`)).toBe(true);
       expect(typeof e.name).toBe("string");
       num(e.lat);
       num(e.lon);
     });
 
     it(`${e.id}: 특수 권역(precinct) 스키마 — 있으면 형태/색/경계 일관`, () => {
+      if (e.stream) return; // 스트리밍 전장은 청크 분산 — 모놀리식 권역 스키마 비대상
       const m = load(`${M}/${e.id}.json`);
       // 랜드마크는 전부 data-driven structure + excludeR(코드 하드코딩 제거 회귀 가드)
       for (const l of m.landmarks ?? []) {

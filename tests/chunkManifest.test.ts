@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import {
-  geoCell, landmarkIndexPath, worldChunkPath, tilesPath, cellChunkOf,
+  geoCell, landmarkIndexPath, worldChunkPath, tilesPath, cellChunkOf, cellMLon, cellLocalOf,
   type TilesManifest, type WorldChunk,
 } from "../src/world/chunkManifest";
 
@@ -19,12 +19,36 @@ describe("셀/타일 경로 헬퍼", () => {
   });
 });
 
+describe("cellLocalOf / cellMLon — 위경도 → 셀-로컬 m(NW 원점)", () => {
+  it("셀 NW 모서리(lat=cell+1, lon=cell) → (0,0)", () => {
+    const o = cellLocalOf(38, 126, [37, 126]);
+    expect(o.x).toBeCloseTo(0);
+    expect(o.z).toBeCloseTo(0);
+  });
+  it("동(+x)/남(+z) 증가 — 경복궁 스폰", () => {
+    const o = cellLocalOf(37.5797, 126.977, [37, 126]);
+    expect(o.x).toBeGreaterThan(0);
+    expect(o.z).toBeGreaterThan(0);
+  });
+  it("cellChunkOf 와 일관(floor(local/chunk) = cx,cz)", () => {
+    const o = cellLocalOf(37.5797, 126.977, [37, 126]);
+    const r = cellChunkOf(37.5797, 126.977, 1024);
+    expect(Math.floor(o.x / 1024)).toBe(r.cx);
+    expect(Math.floor(o.z / 1024)).toBe(r.cz);
+  });
+  it("cellMLon = 셀 중앙 위도 기준 경도 m/도", () => {
+    expect(cellMLon(37)).toBeCloseTo(111320 * Math.cos((37.5 * Math.PI) / 180), 3);
+  });
+});
+
 describe("생성된 경복궁 타일 월드(있으면)", () => {
   const tp = `public/${tilesPath([37, 126])}`;
   it.runIf(existsSync(tp))("tiles.json + 청크 파일 + 결합(지형+오브젝트) 구조", () => {
     const t = JSON.parse(readFileSync(tp, "utf8")) as TilesManifest;
     expect(t.chunkSize).toBe(1024);
     expect(t.chunks.length).toBeGreaterThan(0);
+    // 생성기 격자 == 런타임 격자(StreamingWorld origin 정합 핵심) — mLon 동일
+    expect(t.mLon).toBeCloseTo(cellMLon(t.cell[0]), 6);
     // 경복궁 위치 청크가 인덱스에 존재
     const { cx, cz } = cellChunkOf(37.5797, 126.977, t.chunkSize);
     const e = t.chunks.find((c) => c.cx === cx && c.cz === cz)!;

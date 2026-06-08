@@ -8,8 +8,8 @@ const WORLD_SVG = buildWorldSvg();
 
 /** Game 이 주입하는 콜백 — 메뉴는 UI만 담당하고 출격/인트로 재생은 Game 이 처리. */
 interface MenuCallbacks {
-  /** 점 팝업에서 기체 선택 → 해당 전장+기체로 출격 */
-  onDeploy: (mapId: string, droneId: string) => void;
+  /** 점 팝업에서 기체 선택 → 해당 전장+기체로 출격. peaceful=탐방 모드(적 미스폰). */
+  onDeploy: (mapId: string, droneId: string, peaceful: boolean) => void;
   /** 스토리 목록의 인트로 항목 → 인트로 컷씬 재생 */
   onPlayIntro: () => void;
 }
@@ -25,6 +25,7 @@ export class MenuScreen {
   private zonePopName: HTMLElement;
   private zonePopSub: HTMLElement;
   private zonePopMeta: HTMLElement;
+  private zonePopPeace: HTMLInputElement;
   private zonePopDrones: HTMLElement;
   private storyPopup: HTMLElement;
   private storyList: HTMLElement;
@@ -45,6 +46,7 @@ export class MenuScreen {
     this.zonePopName = byId("zonePopName");
     this.zonePopSub = byId("zonePopSub");
     this.zonePopMeta = byId("zonePopMeta");
+    this.zonePopPeace = byId("zonePopPeace") as HTMLInputElement;
     this.zonePopDrones = byId("zonePopDrones");
     this.storyPopup = byId("storyPopup");
     this.storyList = byId("storyList");
@@ -141,7 +143,7 @@ export class MenuScreen {
         `<span class="zonepop__drone-mode">${d.mode === "fly" ? "비행 / FLY" : "보행 / WALK"}</span>`;
       btn.addEventListener("click", () => {
         this.selectedDroneId = d.id;
-        this.cb.onDeploy(m.id, d.id); // 이 전장+기체로 즉시 출격
+        this.cb.onDeploy(m.id, d.id, this.zonePopPeace.checked); // 이 전장+기체로 즉시 출격(탐방 토글 반영)
       });
       this.zonePopDrones.appendChild(btn);
     }

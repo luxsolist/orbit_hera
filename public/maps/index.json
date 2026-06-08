@@ -1,38 +1,12 @@
 [
  {
-  "id": "gyeongbokgung",
-  "name": "경복궁 · Gyeongbokgung",
-  "subtitle": "Seoul, Korea — 도심 한복판의 왕궁",
-  "bytes": 522222,
-  "buildings": 3765,
-  "lat": 37.578,
-  "lon": 126.977
- },
- {
-  "id": "manhattan",
-  "name": "Times Square",
-  "subtitle": "Manhattan, NYC — 마천루 협곡 (확장 ±2.5km)",
-  "bytes": 1657779,
-  "buildings": 8087,
-  "lat": 40.758,
-  "lon": -73.9855
- },
- {
-  "id": "osaka",
-  "name": "Osaka Castle · 大阪城",
-  "subtitle": "Osaka, Japan — 天守閣 (일본식 양식 샘플)",
-  "bytes": 146101,
-  "buildings": 689,
-  "lat": 34.6873,
-  "lon": 135.5259
- },
- {
-  "id": "paris",
-  "name": "Eiffel Tower",
-  "subtitle": "Paris, France — 샹드마르스 광장",
-  "bytes": 262881,
-  "buildings": 734,
-  "lat": 48.8584,
-  "lon": 2.2945
+  "id": "seoul-stream",
+  "name": "서울 도심 · Seoul",
+  "subtitle": "37/126 경복궁 일대 — 청크 스트리밍 타일 월드",
+  "buildings": 3805,
+  "lat": 37.5797,
+  "lon": 126.977,
+  "stream": true,
+  "spawnYaw": 0
  }
 ]
