@@ -5,6 +5,19 @@
 // lat0/lon0: 로컬 미터 좌표 원점(보통 명소 중심)
 export const MAPS = [
   {
+    id: "busan",
+    name: "Busan · 부산",
+    subtitle: "부산 도심 반경 20km — 해운대·광안리·태종대",
+    lat0: 35.16,
+    lon0: 129.07,
+    // 부산 도심(서면/시청) 중심 반경 20km — 해운대(8.2km)·광안리(4.5km)·태종대(12.1km) 포함.
+    bbox: [34.9803, 128.8502, 35.3397, 129.2898],
+    catalogHidden: true, // 카탈로그는 busan-stream 항목으로 노출
+    // 해안 도시(바다+도심+산) — DEM raw, 건물 footprint 평탄화는 build-world(산 보존). 바다(0m)는 elevationColor 가 파랑.
+    bareEarth: false,
+    heightmap: { src: "busan.terrain.bin", size: 2048, meters: 40000 },
+  },
+  {
     id: "everest",
     name: "Everest · 에베레스트",
     subtitle: "Himalaya — 세계 최고봉 8,849m (반경 20km)",

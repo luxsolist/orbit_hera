@@ -143,7 +143,7 @@ if (H) {
       const h = Math.round(sampleMap(mxx, mzz)); heights[j * TSZ + i] = h; // 1m 정수(보간 표면은 매끄러움 유지)
       if (h < mn) mn = h; if (h > mx2) mx2 = h;
     }
-    if (mx2 - mn < 0.5 && Math.abs(mx2) < 0.5) continue; // 평지 → 지형 생략(오브젝트가 있으면 아래서 빈 지형으로 기록)
+    // 평탄 청크도 생성 — 해안 맵의 바다(평탄 0m)가 빈 공간이 아니라 파란 수면으로 렌더되도록(내륙 맵은 0m 청크 없음).
     chunk(cx, cz).terrain = { size: TSZ, seaLevel, heights };
   }
 }

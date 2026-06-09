@@ -45,20 +45,25 @@ describe("geo.makeMaterial", () => {
   });
 });
 
-describe("geo.elevationColor — 단일 초록 바닥 + 고산 눈(흰색)", () => {
+describe("geo.elevationColor — 바다(해수면↓) + 초록 바닥 + 고산 눈(흰색)", () => {
   const out = new THREE.Color();
-  it("바닥(저~중 고도) = 단일 옅은 초록 GROUND_GREEN", () => {
-    expect(elevationColor(0, out).getHex()).toBe(GROUND_GREEN);
+  it("육지(3m↑~눈선 아래) = 단일 옅은 초록 GROUND_GREEN", () => {
+    expect(elevationColor(3, out).getHex()).toBe(GROUND_GREEN);
     expect(elevationColor(300, new THREE.Color()).getHex()).toBe(GROUND_GREEN); // 눈선 아래는 모두 동일 초록
   });
-  it("고산(눈선 위)은 흰색으로 전이 — 녹색보다 밝고 채도 낮음", () => {
-    const peak = elevationColor(900, new THREE.Color()); // 충분히 높음 → 거의 흰색
+  it("해수면 이하(y≤0) = 바다(파랑 우세 b>g, b>r)", () => {
+    const sea = elevationColor(0, new THREE.Color());
+    expect(sea.b).toBeGreaterThan(sea.g);
+    expect(sea.b).toBeGreaterThan(sea.r);
+  });
+  it("고산(눈선 위)은 흰색으로 전이 — 밝고 채도 낮음", () => {
+    const peak = elevationColor(900, new THREE.Color());
     expect(peak.r).toBeGreaterThan(0.85);
     expect(peak.g).toBeGreaterThan(0.85);
     expect(peak.b).toBeGreaterThan(0.85);
   });
-  it("바닥 초록은 녹색 우세(g>r, g>b)", () => {
-    const g = elevationColor(0, new THREE.Color());
+  it("육지 초록은 녹색 우세(g>r, g>b)", () => {
+    const g = elevationColor(10, new THREE.Color());
     expect(g.g).toBeGreaterThan(g.r);
     expect(g.g).toBeGreaterThan(g.b);
   });

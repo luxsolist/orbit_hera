@@ -2,7 +2,7 @@ import { fetchDrone, fetchDroneCatalog } from "../player/drones";
 import type { DroneCatalogEntry, DroneSpec } from "../player/DroneSpec";
 import { fetchCatalog } from "../world/maps";
 import type { MapCatalogEntry } from "../world/MapData";
-import { buildWorldSvg, projectLatLon } from "./worldMapSvg";
+import { buildWorldSvg, projectLatLon, declusterDots } from "./worldMapSvg";
 
 const WORLD_SVG = buildWorldSvg();
 
@@ -111,15 +111,14 @@ export class MenuScreen {
     this.invadedIds = new Set(pool.slice(0, Math.min(N, pool.length)).map((m) => m.id));
   }
 
-  /** 세계지도에 등록 지역을 점으로(흰색=등록, 붉은 깜빡임=침공 중). 위경도 → equirectangular. */
+  /** 세계지도에 등록 지역을 점으로(흰색=등록, 붉은 깜빡임=침공 중). 위경도 → equirectangular + 겹침 분리. */
   private renderWorldMap(): void {
-    const dots = this.catalog
+    const pts = this.catalog
       .filter((r) => r.lat != null && r.lon != null)
-      .map((r) => {
-        const { x, y } = projectLatLon(r.lat!, r.lon!);
-        const cls = this.invadedIds.has(r.id) ? "zone-dot--invaded" : "zone-dot--reg";
-        return `<button type="button" class="zone-dot ${cls}" data-map="${r.id}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"><i></i></button>`;
-      })
+      .map((r) => ({ id: r.id, ...projectLatLon(r.lat!, r.lon!), cls: this.invadedIds.has(r.id) ? "zone-dot--invaded" : "zone-dot--reg" }));
+    declusterDots(pts); // 근접 도시(서울·부산 등)가 세계지도에서 겹쳐 클릭 안 되는 것 방지 — 실제 위치 근처로 분리(2:1 종횡비 반영)
+    const dots = pts
+      .map((p) => `<button type="button" class="zone-dot ${p.cls}" data-map="${p.id}" style="left:${p.x.toFixed(2)}%;top:${p.y.toFixed(2)}%"><i></i></button>`)
       .join("");
     this.worldMap.innerHTML = WORLD_SVG + dots;
   }

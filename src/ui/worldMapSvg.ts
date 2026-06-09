@@ -7,6 +7,31 @@ export function projectLatLon(lat: number, lon: number): { x: number; y: number 
   return { x: ((lon + 180) / 360) * 100, y: ((90 - lat) / 180) * 100 };
 }
 
+/**
+ * 세계지도 점 겹침 분리 — 근접 도시(서울·부산 등)가 같은 지점에 겹쳐 클릭 안 되는 것 방지.
+ * 거리는 **width-% 단위**로 계산(지도 2:1 종횡비 반영 — y%는 px가 절반이라 ×aspect): minSep(width-%) 미만 쌍을
+ * 반복적으로 밀어내 분리(실제 위치 근처 유지) [1,99]% 클램프. aspect=H/W(2:1 → 0.5). in-place. 순수.
+ */
+export function declusterDots(pts: Array<{ x: number; y: number }>, minSep = 2.6, aspect = 0.5): void {
+  for (let iter = 0; iter < 24; iter++) {
+    let moved = false;
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const dx = pts[j].x - pts[i].x, dy = (pts[j].y - pts[i].y) * aspect; // px 비례(width-%)
+        const d = Math.hypot(dx, dy);
+        if (d >= minSep) continue;
+        if (d < 1e-4) { pts[i].x -= minSep / 2; pts[j].x += minSep / 2; moved = true; continue; } // 완전 겹침 → 가로로 분리
+        const push = (minSep - d) / 2, ux = dx / d, uy = dy / d;
+        pts[i].x -= ux * push; pts[i].y -= (uy * push) / aspect; // y 밀기는 y-% 로 환산
+        pts[j].x += ux * push; pts[j].y += (uy * push) / aspect;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+  for (const p of pts) { p.x = Math.min(99, Math.max(1, p.x)); p.y = Math.min(99, Math.max(1, p.y)); }
+}
+
 /** 시안 톤 세계지도(그리드 + 실측 대륙 윤곽). 정적 1회 생성. */
 export function buildWorldSvg(): string {
   const W = 360, H = 180;

@@ -6,12 +6,17 @@ import type { MatDef } from "./MapData";
 export const GROUND_GREEN = 0x7ec84a; // 바닥 단일 초록
 export const SAND_TAN = 0xd8c89e; // 비초록 지표 단일 황토색
 const SNOW = new THREE.Color(0xeef4f7); // 고산 눈
+const SEA = new THREE.Color(0x2e6a8e); // 해수면 이하(해안 맵) — 바다
 const GROUND = new THREE.Color(GROUND_GREEN);
 const SNOW_START = 380, SNOW_FULL = 620; // 이 고도(m) 사이에서 초록→흰색
 
-/** 표고 y(m) → 지형색(out 에 기록·반환): 단일 초록 바닥, 고산(눈)은 흰색으로 전이. 순수. */
+/**
+ * 표고 y(m) → 지형색(out 에 기록·반환): 해수면 이하=바다(파랑), 바닥=초록, 고산=흰색(눈). 순수.
+ * 해안 맵(부산 등)에서 0m 바다가 초록으로 보이지 않게 — 내륙 맵은 최소 표고가 높아 영향 없음.
+ */
 export function elevationColor(y: number, out: THREE.Color): THREE.Color {
-  return out.copy(GROUND).lerp(SNOW, THREE.MathUtils.smoothstep(y, SNOW_START, SNOW_FULL));
+  out.copy(SEA).lerp(GROUND, THREE.MathUtils.smoothstep(y, 0, 3)); // ≤0 바다 → 3m↑ 육지
+  return out.lerp(SNOW, THREE.MathUtils.smoothstep(y, SNOW_START, SNOW_FULL));
 }
 
 /** 병합 일관성을 위해 비인덱스화 + uv 제거(여러 지오메트리를 mergeGeometries 로 합칠 때 필수). */

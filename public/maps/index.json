@@ -18,5 +18,15 @@
   "lon": 86.925,
   "stream": true,
   "spawnYaw": 0
+ },
+ {
+  "id": "busan-stream",
+  "name": "부산 · Busan",
+  "subtitle": "35/129 부산 도심 반경 20km — 해운대·광안리·태종대",
+  "buildings": 44544,
+  "lat": 35.16,
+  "lon": 129.07,
+  "stream": true,
+  "spawnYaw": 0
  }
 ]
