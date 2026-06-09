@@ -12,6 +12,7 @@
 | id | 이름 | 위치 | 형식 | 특징 |
 | :--- | :--- | :--- | :--- | :--- |
 | `seoul-stream` | 서울 도심 · Seoul | (37.5797, 126.977) | 스트리밍 타일 월드 | 경복궁 중심 반경 20km(58×58km, 1,600 청크, 건물 270k) — **특수 권역(precinct)** |
+| `everest-stream` | 에베레스트 · Everest | (27.9881, 86.925) | 스트리밍 타일 월드 | 정상 중심 반경 20km(1,600 청크, 표고 3~8.7km) — 자연 산악(`bareEarth:false`로 봉우리 보존, 도로 0) |
 
 현재 카탈로그(`index.json`)에는 **스트리밍 전장 seoul-stream 하나**만 노출된다. 빌드 소스 `gyeongbokgung`(maps.config)은 `catalogHidden`이라 메뉴 비노출.
 과거 monolithic 레거시(manhattan/osaka/paris)는 스트리밍 전환 후 미사용이라 제거됨 — 새 도시는 스트리밍 파이프라인으로 추가한다.
@@ -156,5 +157,6 @@ node scripts/build-maps.mjs <id> && node scripts/build-world.mjs <id> && node sc
 - **도로는 렌더 시 ≤12m 로 리샘플 + 리본의 양 가장자리 정점까지 지형 드레이프**([`chunkMesh.pushRibbon`](../../src/world/chunkMesh.ts)) — 긴 세그먼트(종방향)·넓은 폭(횡방향 교차 경사) 모두 지형에 밀착해 가장자리로 지형(초록)이 솟지 않음.
 - **도로/중앙선 폴리라인 끝점을 진행방향으로 연장**(`extendEnd`, min(반폭,10)m) — OSM way·청크 클립 경계·교차로에서 조각들이 겹쳐 사이 틈(초록)·중앙선 끊김을 메움.
 - **중앙선은 간선도로(폭≥16m: primary/secondary)에만** — 작은 도로까지 그리면 교차로에서 가는 노란선이 뒤엉킴. 굵기 0.4m.
-- **실측 DEM 은 bare-earth 스무딩**(`dem.bareEarth`, 형태학적 열림+블러) — terrarium DSM 의 건물 스파이크 제거로 도심 지면 평탄화(도로 밑 지형 솟음 방지). 검증기 `terrain-steep` 경고로 회귀 가드.
+- **실측 DEM 은 bare-earth 스무딩**(`dem.bareEarth`, 형태학적 열림+블러) — terrarium DSM 의 건물 스파이크 제거로 도심 지면 평탄화(도로 밑 지형 솟음 방지). 검증기 `terrain-steep` 경고로 회귀 가드. **단 자연 산악(`bareEarth:false`)은 생략** — 열림이 봉우리·능선을 깎으므로 실측 그대로(에베레스트 등). 검증기는 이 맵에 `terrain-steep` 미적용(실제 급경사).
+- **고지대 지형 지원**: 비행 천장([`PlayerController.HARD_CEILING`](../../src/player/PlayerController.ts))은 절대 Y(5km)가 아니라 **발밑 지면 위 5km(지면 상대)** — 에베레스트(지형 8km↑)에서도 플레이어가 지면 위로 정상 위치/상승.
 - **드레이프 높이(`sampleChunkHeight`)는 지형 메시 삼각분할(a,c,b)+(b,c,d)과 동일 보간**(bilinear 아님) — 렌더되는 삼각형 평면값과 정확히 일치해야 도로/면이 지형 위로 떠 비평면(새들) 셀에서도 초록이 솟지 않음. 레이캐스트 테스트로 회귀 가드.

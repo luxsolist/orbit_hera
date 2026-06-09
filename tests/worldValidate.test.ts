@@ -58,11 +58,13 @@ describe("validateChunk — 면/수역(클립 대상)은 청크 경계 내 강�
     const ch = goodChunk({ areas: [{ p: [1100, 2100, 1300, 2100, 1300, 2300, 1100, 2300], k: "lava" }] });
     expect(codes(validateChunk(ch, C), "warn")).toContain("area-kind");
   });
-  it("음수 좌표(NW 원점 위배) → celloob", () => {
-    const ch = goodChunk({ areas: [{ p: [-5000, 100, 300, 100, 300, 300], k: "park" }] });
-    expect(codes(validateChunk(ch, C))).toContain("area-celloob");
-    const ch2 = goodChunk({ buildings: [{ p: [-9000, 100, 300, 100, 300, 300], h: 9 }] });
-    expect(codes(validateChunk(ch2, C))).toContain("building-celloob");
+  it("좌표가 ±250km 밖(투영 버그) → celloob; 셀 경계 넘는 적당한 음수는 허용", () => {
+    // 광역 맵은 셀 원점 북/서로 음수 좌표가 정상 → -5km 는 통과
+    const ok = goodChunk({ areas: [{ p: [-5000, 100, 300, 100, 300, 300], k: "park" }] });
+    expect(codes(validateChunk(ok, C))).not.toContain("area-celloob");
+    // 투영 버그급(±250km 초과)은 celloob
+    const bug = goodChunk({ buildings: [{ p: [-300000, 100, 300, 100, 300, 300], h: 9 }] });
+    expect(codes(validateChunk(bug, C))).toContain("building-celloob");
   });
   it("청크 밖 filled water → water-bounds", () => {
     const ch = goodChunk({ water: [{ p: [50, 50, 300, 50, 300, 300, 50, 300] }] });
@@ -145,8 +147,9 @@ describe("validateManifest — 격자 일관성", () => {
   it("청크 목록 비어있음 → chunks error", () => {
     expect(codes(validateManifest({ ...good, chunks: [] }))).toContain("chunks");
   });
-  it("셀 범위 밖 청크 인덱스(음수/거대) → entry-range", () => {
-    expect(codes(validateManifest({ ...good, chunks: [{ cx: -1, cz: 5 }] }))).toContain("entry-range");
+  it("범위(±250km/chunk) 밖 청크 인덱스 → entry-range; 셀 경계 넘는 적당한 음수는 허용", () => {
+    expect(codes(validateManifest({ ...good, chunks: [{ cx: -19, cz: 5 }] }))).not.toContain("entry-range"); // 광역 셀 횡단(에베레스트 북측)
+    expect(codes(validateManifest({ ...good, chunks: [{ cx: -9999, cz: 5 }] }))).toContain("entry-range");
     expect(codes(validateManifest({ ...good, chunks: [{ cx: 5, cz: 9999 }] }))).toContain("entry-range");
   });
 });

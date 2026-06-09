@@ -5,6 +5,20 @@
 // lat0/lon0: 로컬 미터 좌표 원점(보통 명소 중심)
 export const MAPS = [
   {
+    id: "everest",
+    name: "Everest · 에베레스트",
+    subtitle: "Himalaya — 세계 최고봉 8,849m (반경 20km)",
+    lat0: 27.9881,
+    lon0: 86.9250,
+    // 에베레스트 정상 중심 반경 20km(±0.18°lat / ±0.203°lon).
+    bbox: [27.8084, 86.7215, 28.1678, 87.1285],
+    catalogHidden: true, // 스트리밍 카탈로그 항목(everest-stream)으로 노출
+    // 자연 산악 — bare-earth 형태학 열림 생략(도시 건물 제거용이라 산에 쓰면 봉우리/능선이 깎임). 실측 DEM 그대로.
+    bareEarth: false,
+    // 실측 40km×40km DEM(AWS Terrarium). 생성: node scripts/build-terrain.mjs real everest 2048 40000 13.
+    heightmap: { src: "everest.terrain.bin", size: 2048, meters: 40000 },
+  },
+  {
     id: "gyeongbokgung",
     name: "경복궁 · Gyeongbokgung",
     subtitle: "Seoul, Korea — 도심 한복판의 왕궁",

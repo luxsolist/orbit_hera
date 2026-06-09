@@ -53,6 +53,7 @@ if (srcMap) {
 }
 
 // 파일↔매니페스트 정합 + 청크별 불변식 + 플래그 일치 + DEM 정합. 청크는 이음새 검사용으로 수집.
+const naturalTerrain = srcMap?.bareEarth === false; // 자연 산악(bareEarth 끔) → terrain-steep 검사 생략(실제 급경사)
 const chunks = [];
 for (const e of manifest.chunks) {
   const blk = manifest.block || 1; // 블록 디렉터리 분산
@@ -61,7 +62,7 @@ for (const e of manifest.chunks) {
   let ch;
   try { ch = JSON.parse(readFileSync(f, "utf8")); }
   catch (err) { report(`${e.cx}_${e.cz}`, [{ level: "error", code: "parse", msg: String(err.message) }]); continue; }
-  report(`${e.cx}_${e.cz}`, validateChunk(ch, manifest.chunkSize));
+  report(`${e.cx}_${e.cz}`, validateChunk(ch, manifest.chunkSize, { naturalTerrain }));
   report(`${e.cx}_${e.cz}`, validateEntryConsistency(e, ch));
   if (demExpected) report(`${e.cx}_${e.cz}`, validateDemConsistency(ch, manifest.chunkSize, demExpected));
   chunks.push(ch);

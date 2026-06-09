@@ -70,15 +70,18 @@ describe("dirSpeedMult — 방향별 이동속도(백페달 억제)", () => {
   });
 });
 
-describe("maxRiseAltitude — 지표 상대 천장(보행 점프·비행 공통) + 절대 5km 캡", () => {
+describe("maxRiseAltitude — 지표 상대 천장(보행 점프·비행 공통) + 지면+5km 마진 캡", () => {
   const EYE = 1.7;
   it("평지: standY + rise + eye", () => {
     expect(maxRiseAltitude(0, 100, EYE)).toBeCloseTo(101.7, 6);
     expect(maxRiseAltitude(50, 300, EYE)).toBeCloseTo(351.7, 6);
   });
-  it("HARD_CEILING(5km) 절대 클램프 — 고지대에서도 못 넘음", () => {
-    expect(maxRiseAltitude(4990, 100, EYE)).toBe(HARD_CEILING);
-    expect(maxRiseAltitude(HARD_CEILING + 1000, 300, EYE)).toBe(HARD_CEILING);
+  it("상승 마진은 HARD_CEILING(지면 +5km)로 제한 — rise 가 더 커도 지면+5km+eye", () => {
+    expect(maxRiseAltitude(0, HARD_CEILING + 2000, EYE)).toBeCloseTo(HARD_CEILING + EYE, 6); // min(7000,5000)
+  });
+  it("고지대 지형(에베레스트 8km)에서도 지면 위로 상승 — 절대 5km 캡 아님(지면 상대)", () => {
+    expect(maxRiseAltitude(8000, 1300, EYE)).toBeCloseTo(8000 + 1300 + EYE, 6); // 9301.7 (≠ 5000)
+    expect(maxRiseAltitude(8000, HARD_CEILING + 2000, EYE)).toBeCloseTo(8000 + HARD_CEILING + EYE, 6);
   });
   it("캡 아래에서는 standY 에 단조 증가(지형 추종)", () => {
     expect(maxRiseAltitude(100, 200, EYE)).toBeGreaterThan(maxRiseAltitude(0, 200, EYE));

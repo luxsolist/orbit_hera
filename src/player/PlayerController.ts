@@ -7,7 +7,7 @@ const PITCH_LIMIT = Math.PI / 2 - 0.05;
 const MOVE_MAX_STEP = 0.8; // 수평 이동 1스텝 최대 거리 — 고속(대시) 터널링 방지 서브스테핑
 const ROLL_RATE = 6; // 비행 롤(뱅킹) 보간 응답속도
 const CEIL_FALL_RATE = 2.5; // 지표면 상대 천장이 낮아질 때(고지대→저지대) 부드럽게 하강하는 응답속도
-export const HARD_CEILING = 5000; // 절대 최고 고도(m) — 지표 무관, 어떤 기체/콘텐츠(항공모함 포함)도 이 위로 못 올라감
+export const HARD_CEILING = 5000; // 발밑 지면 위 최대 고도(m) — 어떤 기체도 지면 +5km 위로 못 올라감(지면 상대라 고지대 지형 8km↑ 에서도 작동, 절대 Y 아님)
 // 방향별 이동속도 배수(시선 기준) — 전진 1.0 / 옆 0.85 / 후진 0.6. 무한 백페달 카이팅 억제.
 const STRAFE_MULT = 0.85, BACK_MULT = 0.6;
 
@@ -65,7 +65,7 @@ export function applyHeal(hp: number, maxHp: number, amount: number): number {
  * 위치마다 바뀌므로(고지대/저지대) 캡도 동적으로 조정된다.
  */
 export function maxRiseAltitude(standY: number, rise: number, eye: number): number {
-  return Math.min(HARD_CEILING, standY + rise + eye);
+  return standY + Math.min(rise, HARD_CEILING) + eye; // 지면 상대(고지대 지형서도 지면 위로 상승 가능). 상승 마진은 +5km 로 제한.
 }
 
 /**
@@ -241,7 +241,8 @@ export class PlayerController {
     // --- 수직(이동 형태별) ---
     if (move.mode === "walk") this.updateWalkVertical(dt, move.jump);
     else this.updateFlyVertical(dt, move, lookClimb);
-    this.position.y = Math.min(this.position.y, HARD_CEILING); // 절대 하드리밋(5km) — 모든 기체 공통
+    // 하드리밋 — 발밑 지면 +5km(지면 상대, 고지대 지형 대응). 비행 천장(maxRiseAltitude)보다 위의 백스톱.
+    this.position.y = Math.min(this.position.y, this.world.heightAt(this.position.x, this.position.z) + HARD_CEILING + this.eye);
 
     // --- 주파수 재충전 --- (특수 무기 발동 중에는 외부에서 억제)
     if (!this.freqRegenSuppressed) {

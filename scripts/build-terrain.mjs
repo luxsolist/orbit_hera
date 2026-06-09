@@ -110,8 +110,10 @@ function buildReal(id, size, meters, zoom) {
   const lonW = lon0 + origin / M_LON, lonE = lon0 + (origin + meters) / M_LON;
   const mosaic = fetchElevationMosaic(latS, latN, lonW, lonE, zoom);
   const elevFn = (x, z) => sampleMosaic(mosaic, lat0 - z / M_LAT, lon0 + x / M_LON);
-  // terrarium 은 건물·수목 포함 표면모델(DSM) → 형태학적 열림 + 블러로 bare-earth 근사(도로 밑 스파이크 제거).
-  build(id, size, meters, elevFn, (grid) => bareEarth(grid, size, 4, 2));
+  // 도시(기본): terrarium DSM(건물·수목 포함) → 형태학적 열림+블러로 bare-earth 근사.
+  // 자연 산악(bareEarth:false): 봉우리/능선이 깎이므로 생략하고 실측 그대로 사용.
+  const post = m.bareEarth === false ? undefined : (grid) => bareEarth(grid, size, 4, 2);
+  build(id, size, meters, elevFn, post);
 }
 
 /** size×size 격자 표고를 elevFn(x,z)로 채워 (옵션 post 후처리) Float32 raw 로 기록. */

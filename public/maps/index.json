@@ -8,5 +8,15 @@
   "lon": 126.977,
   "stream": true,
   "spawnYaw": 0
+ },
+ {
+  "id": "everest-stream",
+  "name": "에베레스트 · Everest",
+  "subtitle": "27/86 히말라야 — 세계 최고봉 8,849m (반경 20km 스트리밍)",
+  "buildings": 1086,
+  "lat": 27.9881,
+  "lon": 86.925,
+  "stream": true,
+  "spawnYaw": 0
  }
 ]

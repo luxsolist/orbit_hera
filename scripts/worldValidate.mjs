@@ -73,7 +73,7 @@ export function isSelfIntersecting(p) {
  * 청크 1개 검증. chunkSize=청크변(m). 좌표는 셀-로컬 m(원점=셀 NW).
  * 면/수역(클립 대상)은 청크 경계 내 강제, 건물/도로/담장(centroid·midpoint 배치)은 유한값만.
  */
-export function validateChunk(chunk, chunkSize) {
+export function validateChunk(chunk, chunkSize, opts = {}) {
   const issues = [];
   const E = (code, msg) => issues.push({ level: "error", code, msg });
   const W = (code, msg) => issues.push({ level: "warn", code, msg });
@@ -97,7 +97,7 @@ export function validateChunk(chunk, chunkSize) {
         // 인접 격자 급경사 — DSM(건물) 잔여 스파이크 의심(bare-earth 스무딩 누락). 격자 한 칸에 30m↑ 변화.
         for (let j = 0; j < size; j++) for (let i = 0; i < size - 1; i++) { const d = Math.abs(h[j * size + i] - h[j * size + i + 1]); if (d > maxStep) maxStep = d; }
         for (let j = 0; j < size - 1; j++) for (let i = 0; i < size; i++) { const d = Math.abs(h[j * size + i] - h[(j + 1) * size + i]); if (d > maxStep) maxStep = d; }
-        if (maxStep > 30) W("terrain-steep", `인접 격자 급변 ${maxStep.toFixed(0)}m — DSM(건물) 잔여 스파이크 의심`);
+        if (!opts.naturalTerrain && maxStep > 30) W("terrain-steep", `인접 격자 급변 ${maxStep.toFixed(0)}m — DSM(건물) 잔여 스파이크 의심`); // 자연 산악(bareEarth:false)은 실제 급경사라 검사 생략
       }
     }
   } else if (Array.isArray(t.heights) && t.heights.length) {
@@ -107,8 +107,8 @@ export function validateChunk(chunk, chunkSize) {
   const o = chunk.objects || {};
   // 셀-로컬 NW 원점. 광역 맵(반경 20km↑)은 한 셀(~111km)을 넘어 인접 셀 영역까지 단일 프레임에 담으므로(멀티셀 전),
   // OOB 는 "투영 버그"(부호 반전 음수/수백만대 거대값)만 잡도록 넉넉히 ±250km. 정상 광역 좌표는 통과.
-  const CELL_MAX = 250000;
-  const cellOOB = (p) => { for (let i = 0; i < p.length; i++) if (p[i] < -2000 || p[i] > CELL_MAX) return true; return false; };
+  const CELL_MAX = 250000; // 광역 맵은 셀 경계를 넘어 음수 좌표(셀 원점 북/서)도 정상 → ±CELL_MAX 대칭(투영 버그만 검출).
+  const cellOOB = (p) => { for (let i = 0; i < p.length; i++) if (p[i] < -CELL_MAX || p[i] > CELL_MAX) return true; return false; };
   // 면(클립 대상): 유한 + 비퇴화 + 청크 경계 내 + 셀 범위 + 도형 품질(영길이 모서리/자기교차)
   const checkFill = (r, name) => {
     const pi = polyIssues(r.p, 3);
@@ -163,11 +163,11 @@ export function validateManifest(m) {
     const exp = cellMLon(m.cell[0]);
     if (Math.abs(m.mLon - exp) > 1) E("mLon", `mLon ${m.mLon} != cellMLon ${exp.toFixed(2)} (생성기↔런타임 격자 불일치)`);
   }
-  // 셀-로컬 청크 인덱스는 NW 원점 기준 ≥0, 한 셀(≈111km)에 chunkSize 분할 개수 이하.
-  const maxIdx = Math.ceil(M_LAT / (m.chunkSize || 1024)) + 1;
+  // 청크 인덱스 — 광역 맵은 셀 경계를 넘어 음수/대형 인덱스도 정상(인접 셀 영역). cellOOB(±250km)와 동일 스팬으로 검사.
+  const lim = Math.ceil(250000 / (m.chunkSize || 1024));
   for (const e of m.chunks ?? []) {
     if (!Number.isInteger(e.cx) || !Number.isInteger(e.cz)) { E("entry", "청크 엔트리 cx/cz 정수 아님"); break; }
-    if (e.cx < 0 || e.cz < 0 || e.cx > maxIdx || e.cz > maxIdx) { E("entry-range", `청크 인덱스(${e.cx},${e.cz}) 셀 범위[0,${maxIdx}] 밖`); break; }
+    if (Math.abs(e.cx) > lim || Math.abs(e.cz) > lim) { E("entry-range", `청크 인덱스(${e.cx},${e.cz}) 범위[±${lim}] 밖(투영 버그)`); break; }
   }
   return issues;
 }
