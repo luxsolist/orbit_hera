@@ -238,6 +238,42 @@ export class Minimap implements MinimapSink {
     ctx.moveTo(0, cy);
     ctx.lineTo(size, cy);
     ctx.stroke();
+
+    // ---- 방위(컴퍼스) — 헤딩업이라 북쪽이 회전. N/E/S/W 를 테두리 안쪽에 표시, N 강조 + 북쪽 작은 삼각형 ----
+    this.drawCompass(cx, cy);
+  }
+
+  /** N/E/S/W 방위 라벨(시점 회전 반영) + 북쪽 마커 삼각형. 월드 북=-Z, 동=+X. */
+  private drawCompass(cx: number, cy: number): void {
+    const ctx = this.ctx;
+    const fontPx = Math.max(8, Math.round(this.size * 0.11));
+    const rimR = this.half - fontPx * 0.72; // 라벨 중심 반경(테두리 안쪽)
+    const sin = this.sin, cos = this.cos;
+    // 월드 방향 단위벡터 → 미니맵 화면 좌표(project 와 동일 회전)
+    const dirs: Array<[string, number, number, boolean]> = [
+      ["N", 0, -1, true], ["E", 1, 0, false], ["S", 0, 1, false], ["W", -1, 0, false],
+    ];
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const [label, dx, dz, north] of dirs) {
+      const sx = cx + (dx * cos - dz * sin) * rimR;
+      const sy = cy + (dx * sin + dz * cos) * rimR;
+      if (north) {
+        // 북쪽 마커: 바깥쪽을 향하는 작은 삼각형(라벨 바로 바깥)
+        const ox = (dx * cos - dz * sin), oy = (dx * sin + dz * cos); // 단위 외향
+        const tipR = this.half - 2, baseR = this.half - fontPx * 0.4, hw = fontPx * 0.28;
+        const tx = cx + ox * tipR, ty = cy + oy * tipR;
+        const bx0 = cx + ox * baseR - oy * hw, by0 = cy + oy * baseR + ox * hw;
+        const bx1 = cx + ox * baseR + oy * hw, by1 = cy + oy * baseR - ox * hw;
+        ctx.fillStyle = "rgba(52, 245, 255, 0.95)";
+        ctx.beginPath();
+        ctx.moveTo(tx, ty); ctx.lineTo(bx0, by0); ctx.lineTo(bx1, by1); ctx.closePath();
+        ctx.fill();
+      }
+      ctx.font = `${north ? "bold " : ""}${north ? fontPx + 1 : fontPx}px ui-monospace, "SFMono-Regular", monospace`;
+      ctx.fillStyle = north ? "rgba(52, 245, 255, 0.95)" : "rgba(52, 245, 255, 0.45)";
+      ctx.fillText(label, sx, sy);
+    }
   }
 
   /** 월드 (dx,dz) 오프셋 → 미니맵 로컬 (x,y) 픽셀(적 마커용). */

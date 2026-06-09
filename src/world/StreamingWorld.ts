@@ -10,7 +10,7 @@ import type { GameWorld, MinimapSink } from "./GameWorld";
 import type { SpawnPoint } from "./MapData";
 import { CollisionWorld } from "./CollisionWorld";
 import { SkyEnvironment } from "./SkyEnvironment";
-import { cellLocalOf, type Cell, type TilesManifest, type WorldChunk } from "./chunkManifest";
+import { cellLocalOf, CHUNK_BLOCK, type Cell, type TilesManifest, type WorldChunk } from "./chunkManifest";
 import { fetchTiles, fetchWorldChunk } from "./mapLocator";
 import { ChunkStreamer, chunkIndex, type ChunkIO, type ChunkReq, type ChunkConfig } from "./chunkStream";
 import { buildChunkMesh, disposeChunkGroup, sampleChunkHeight, chunkTerrainEntry, type ChunkTerrain, type ChunkBuild } from "./chunkMesh";
@@ -46,6 +46,7 @@ export class StreamingWorld implements GameWorld {
 
   private readonly cell: Cell;
   private readonly chunkSize: number;
+  private readonly block: number; // 청크 블록 디렉터리 크기(경로 <bx>_<bz>/)
   private readonly originX: number; // 로컬 원점(셀-로컬 m)
   private readonly originZ: number;
   private readonly present: Set<string>; // 존재하는 청크(tiles.json) — fetch 404 회피
@@ -68,6 +69,7 @@ export class StreamingWorld implements GameWorld {
   private constructor(scene: THREE.Scene, manifest: TilesManifest, lat: number, lon: number, yaw: number) {
     this.cell = manifest.cell;
     this.chunkSize = manifest.chunkSize;
+    this.block = manifest.block ?? CHUNK_BLOCK;
     this.present = new Set(manifest.chunks.map((c) => chunkKey(c.cx, c.cz)));
     // 로컬 원점 = 스폰의 셀-로컬 좌표(셀 NW 기준 동/남 m). build-world 와 동일 격자(매니페스트 mLon).
     const o = cellLocalOf(lat, lon, this.cell, manifest.mLon);
@@ -99,7 +101,7 @@ export class StreamingWorld implements GameWorld {
     return {
       fetch: (req: ChunkReq) => {
         if (!this.present.has(chunkKey(req.cx, req.cz))) return Promise.resolve(null); // 미존재 → 네트워크 생략
-        return fetchWorldChunk(this.cell, req.cx, req.cz);
+        return fetchWorldChunk(this.cell, req.cx, req.cz, this.block);
       },
       build: (req: ChunkReq, raw: unknown): ChunkHandle => {
         if (!raw) return { cx: req.cx, cz: req.cz, group: null, hasObjects: false };
@@ -140,7 +142,7 @@ export class StreamingWorld implements GameWorld {
         const cx = sCx + dx, cz = sCz + dz;
         if (!this.present.has(chunkKey(cx, cz))) continue;
         jobs.push(
-          fetchWorldChunk(this.cell, cx, cz).then((chunk) => {
+          fetchWorldChunk(this.cell, cx, cz, this.block).then((chunk) => {
             const t = chunk && chunkTerrainEntry(chunk, this.chunkSize);
             if (t) this.terrainReg.set(chunkKey(cx, cz), t);
           })

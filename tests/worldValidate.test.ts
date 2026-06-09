@@ -127,8 +127,12 @@ describe("validateChunk — 도형 품질 경고", () => {
 });
 
 describe("validateManifest — 격자 일관성", () => {
-  const good = { cell: [37, 126], originLat: 38, originLon: 126, chunkSize: 1024, terrainSize: 33, mLon: cellMLon(37), chunks: [{ cx: 84, cz: 45, objects: true, terrain: true }] };
+  const good = { cell: [37, 126], originLat: 38, originLon: 126, chunkSize: 1024, terrainSize: 33, mLon: cellMLon(37), block: 16, chunks: [{ cx: 84, cz: 45, objects: true, terrain: true }] };
   it("정상 매니페스트 = error 없음", () => expect(codes(validateManifest(good))).toEqual([]));
+  it("block 누락/≤0 → block error(런타임 경로 계산 불가)", () => {
+    expect(codes(validateManifest({ ...good, block: undefined }))).toContain("block");
+    expect(codes(validateManifest({ ...good, block: 0 }))).toContain("block");
+  });
   it("mLon 불일치(생성기↔런타임 격자) → mLon error", () => {
     expect(codes(validateManifest({ ...good, mLon: 99999 }))).toContain("mLon");
   });
@@ -245,8 +249,9 @@ describe("실데이터 회귀 가드(생성된 경복궁 타일)", () => {
     const m = JSON.parse(readFileSync(tp, "utf8"));
     let errs: string[] = [...codes(validateManifest(m), "error")];
     const loaded: any[] = [];
+    const blk = m.block || 1; // 블록 디렉터리 분산
     for (const e of m.chunks) {
-      const ch = JSON.parse(readFileSync(`public/maps/37/126/${e.cx}_${e.cz}.json`, "utf8"));
+      const ch = JSON.parse(readFileSync(`public/maps/37/126/${Math.floor(e.cx / blk)}_${Math.floor(e.cz / blk)}/${e.cx}_${e.cz}.json`, "utf8"));
       loaded.push(ch);
       errs = errs.concat(codes(validateChunk(ch, m.chunkSize), "error").map((c: string) => `${e.cx}_${e.cz}:${c}`));
       errs = errs.concat(codes(validateEntryConsistency(e, ch), "error").map((c: string) => `${e.cx}_${e.cz}:${c}`));

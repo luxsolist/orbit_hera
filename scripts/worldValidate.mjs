@@ -150,6 +150,7 @@ export function validateManifest(m) {
   if (!Array.isArray(m.cell) || m.cell.length !== 2) E("cell", "cell 형식 오류");
   if (!(m.chunkSize > 0)) E("chunkSize", "chunkSize ≤ 0");
   if (!(m.terrainSize >= 2)) E("terrainSize", "terrainSize < 2");
+  if (!(m.block >= 1) || !Number.isInteger(m.block)) E("block", "block(블록 디렉터리 크기) 누락/≤0 — 런타임 청크 경로 <bx>_<bz>/ 계산 불가");
   if (!Array.isArray(m.chunks) || !m.chunks.length) E("chunks", "청크 목록 비어있음");
   if (Array.isArray(m.cell) && finite(m.mLon)) {
     const exp = cellMLon(m.cell[0]);

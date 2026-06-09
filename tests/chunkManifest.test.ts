@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import {
-  geoCell, landmarkIndexPath, worldChunkPath, tilesPath, cellChunkOf, cellMLon, cellLocalOf,
+  geoCell, landmarkIndexPath, worldChunkPath, chunkBlockDir, tilesPath, cellChunkOf, cellMLon, cellLocalOf,
   type TilesManifest, type WorldChunk,
 } from "../src/world/chunkManifest";
 
@@ -13,7 +13,11 @@ describe("셀/타일 경로 헬퍼", () => {
     expect(geoCell(40.758, -73.9855)).toEqual([40, -74]);
   });
   it("월드 청크/타일 매니페스트/랜드마크 인덱스 경로", () => {
-    expect(worldChunkPath([37, 126], 84, 45)).toBe("maps/37/126/84_45.json");
+    expect(worldChunkPath([37, 126], 84, 45)).toBe("maps/37/126/5_2/84_45.json"); // 블록 디렉터리 5_2(=floor(84/16)_floor(45/16))
+    expect(worldChunkPath([37, 126], 84, 45, 16)).toBe("maps/37/126/5_2/84_45.json");
+    expect(chunkBlockDir(84, 45, 16)).toBe("5_2");
+    expect(chunkBlockDir(0, 0, 16)).toBe("0_0");
+    expect(chunkBlockDir(-1, -1, 16)).toBe("-1_-1"); // 음수 floor 분할
     expect(tilesPath([37, 126])).toBe("maps/37/126/tiles.json");
     expect(landmarkIndexPath()).toBe("maps/landmarks.json");
   });

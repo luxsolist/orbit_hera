@@ -32,33 +32,44 @@ function bakeLandmarks(landmarks) {
 
 const ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
-  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
   "https://overpass.osm.ch/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
 ];
 
 const only = process.argv[2];
-const OUT_DIR = "public/maps";
+const OUT_DIR = "public/maps";   // 런타임 자산(카탈로그 index.json)만
+const BUILD_DIR = "build";        // 빌드 중간물(가공 OSM monolithic <id>.json) — 런타임 비사용, git 비추적
 mkdirSync(OUT_DIR, { recursive: true });
+mkdirSync(BUILD_DIR, { recursive: true });
 
-/** 단일 bbox Overpass 수집(엔드포인트 폴백). 결과는 cacheFile 에 기록. 실패 시 throw. */
+/**
+ * 단일 bbox Overpass 수집(엔드포인트 폴백). **데이터 있는 응답을 우선** — 과부하 시 빈 200 을
+ * 반환하는 엔드포인트가 있어, 빈 응답이면 다른 엔드포인트도 시도하고 모두 빈일 때만 빈으로 확정.
+ * 선택한 결과를 cacheFile 에 기록 후 반환. 모두 실패면 throw.
+ */
 function fetchOverpass(bbox, qf, cacheFile) {
   writeFileSync(qf, overpassQuery(bbox, { date: process.env.OSM_DATE }));
-  let lastErr;
+  const tmp = `${cacheFile}.tmp`;
+  let lastErr, emptyResult = null;
   for (const ep of ENDPOINTS) {
     try {
       execFileSync(
         "curl",
         ["-sS", "-m", "70", "-A", "SeedGame/0.4 (map builder; contact luxsolist@gmail.com)",
-          "-G", ep, "--data-urlencode", `data@${qf}`, "-o", cacheFile],
+          "-G", ep, "--data-urlencode", `data@${qf}`, "-o", tmp],
         { stdio: ["ignore", "ignore", "inherit"] }
       );
-      const txt = readFileSync(cacheFile, "utf8");
-      if (txt.trim().startsWith("{")) { const j = JSON.parse(txt); if (Array.isArray(j.elements)) return j; }
-      throw new Error("empty/invalid response (XML 에러/타임아웃?)");
-    } catch (e) { console.error("   failed:", e.message); lastErr = e; try { rmSync(cacheFile); } catch {} } // 잘못된 응답 캐시 제거(재개 시 재시도)
+      const txt = readFileSync(tmp, "utf8");
+      if (!txt.trim().startsWith("{")) throw new Error("non-JSON(XML 에러/타임아웃?)");
+      const j = JSON.parse(txt);
+      if (!Array.isArray(j.elements)) throw new Error("elements 누락");
+      if (j.elements.length) { writeFileSync(cacheFile, txt); try { rmSync(tmp); } catch {} return j; } // 데이터 있음 → 채택
+      emptyResult = txt; // 빈 응답 — 다른 엔드포인트도 확인(과부하 빈 200 회피)
+    } catch (e) { lastErr = e; }
   }
+  try { rmSync(tmp); } catch {}
+  if (emptyResult != null) { writeFileSync(cacheFile, emptyResult); return JSON.parse(emptyResult); } // 모든 엔드포인트가 빈 → 진짜 빈으로 확정
   throw lastErr || new Error("fetch failed");
 }
 
@@ -235,7 +246,7 @@ for (const m of MAPS) {
     ...(m.spawn ? { spawn: m.spawn } : {}),
   };
 
-  const path = `${OUT_DIR}/${m.id}.json`;
+  const path = `${BUILD_DIR}/${m.id}.json`; // 중간물 — build-world 입력. 런타임은 셀 청크만 읽음.
   writeFileSync(path, JSON.stringify(data));
   const bytes = statSync(path).size;
   console.error(`  wrote ${path}: ${core.buildings.length} buildings, ${core.roads.length} roads, ${core.water.length} water, ${core.walls?.length ?? 0} walls, ${core.areas?.length ?? 0} areas, ${(bytes / 1024).toFixed(0)}KB`);

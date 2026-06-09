@@ -77,20 +77,37 @@ npm run build:map -- <id> [--no-terrain] [--zoom=13]
 
 | 단계 | 스크립트 | 출력 |
 |---|---|---|
-| 1 실측 DEM | [`build-terrain.mjs real`](../../scripts/build-terrain.mjs) (PNG 디코드 [`dem.mjs`](../../scripts/dem.mjs)) | `maps/<id>.terrain.bin` |
-| 2 OSM 수집·가공 | [`build-maps.mjs`](../../scripts/build-maps.mjs) (헬퍼 [`osm.mjs`](../../scripts/osm.mjs)) | `maps/<id>.json` (`catalogHidden`이면 카탈로그 비노출) |
-| 3 타일 청크 | [`build-world.mjs`](../../scripts/build-world.mjs) (면/수역 청크 클립) | `maps/<lat>/<lon>/*` |
+| 1 실측 DEM | [`build-terrain.mjs real`](../../scripts/build-terrain.mjs) (PNG 디코드 [`dem.mjs`](../../scripts/dem.mjs)) | **`build/<id>.terrain.bin`**(중간물) |
+| 2 OSM 수집·가공 | [`build-maps.mjs`](../../scripts/build-maps.mjs) (헬퍼 [`osm.mjs`](../../scripts/osm.mjs)) | **`build/<id>.json`**(중간물) + `public/maps/index.json`(카탈로그) |
+| 3 타일 청크 | [`build-world.mjs`](../../scripts/build-world.mjs) (면/수역 청크 클립) | **`public/maps/<lat>/<lon>/*`**(런타임) |
 | 4 검증 게이트 | [`validate-world.mjs`](../../scripts/validate-world.mjs) (순수 [`worldValidate.mjs`](../../scripts/worldValidate.mjs)) | error 시 비0 종료 |
 
-### 대면적 OSM 수집 — **1km 타일 순차·재개**(모든 광역 맵 공통 규약)
+> **저장 분리**: 가공 OSM(`<id>.json`)·DEM(`.bin`)은 **빌드 중간물**이라 `build/`(git 비추적)에 둔다 — 런타임은 읽지 않는다. **모든 런타임 맵 데이터는 셀 구조**로만 저장(+ 카탈로그 `index.json`·`landmarks.json`). 중간물을 `public/maps` 에 두거나 커밋하지 않는다.
+>
+> **셀 내 블록 분산**: 셀 디렉터리에 청크 파일 수천 개가 평면으로 쌓이지 않도록 **블록 디렉터리** 한 단계를 더 둔다 —
+> `public/maps/<floorLat>/<floorLon>/<bx>_<bz>/<cx>_<cz>.json`, 여기서 `<bx>_<bz> = floor(cx/BLOCK)_floor(cz/BLOCK)`(BLOCK=16). 블록당 ≤ BLOCK²=**256 파일**(경복궁 20km = 1,600 청크 → 12 블록 디렉터리, 평균 ~133). 블록 크기는 `tiles.json.block` 에 기록되고 런타임 [`worldChunkPath`](../../src/world/chunkManifest.ts)/[`StreamingWorld`](../../src/world/StreamingWorld.ts) 가 동일 계산으로 경로를 만든다. 규칙: **`<cx>_<cz>` = 셀 NW 원점 기준 1024m 청크의 정수 격자 인덱스**(cx=동/1024, cz=남/1024).
 
-bbox 가 크면(>0.06°) [`build-maps.mjs`](../../scripts/build-maps.mjs) 가 **~1km(0.0095°≈1024m) 타일 격자**([`osm.bboxTiles`](../../scripts/osm.mjs))로 분할해 타일별로 순차 수집한다. **타일이 크면(예 3km) 도심 밀집 구역에서 Overpass 가 타임아웃**(데이터 과다)되므로 **반드시 1km 단위**로 쪼갠다. 규칙:
+### 대면적 OSM 수집 — **Geofabrik 추출 우선**(모든 광역 맵 공통 규약)
 
-- **중심(스폰)→외곽 순서** — 부분 수집이어도 플레이 영역(스폰 일대)이 먼저 채워진다.
-- **타일별 캐시**(`/tmp/osm-<id>-t<lat4>_<lon4>.json`, 좌표 키) — **중단 후 재실행 시 이어받음**(완료 타일 스킵). curl 타임아웃 70s + 엔드포인트 폴백 + 2회 재시도, 그래도 실패하면 **캐시 미기록 후 건너뜀**(전체 중단 없음 → 다음 실행에서 누락분 보충). 손상(비-JSON/XML 에러) 응답은 캐시하지 않는다.
-- 전 타일 성공 시에만 병합 결과(`/tmp/osm-<id>.json`)를 캐시. 부분 수집도 그때까지 모은 데이터로 `maps/<id>.json` 을 써서 빌드는 진행된다.
-- **저장 규약 유지**: 최종 산출은 항상 셀 디렉터리 `public/maps/<floorLat>/<floorLon>/<cx>_<cz>.json` + `tiles.json`(위경도 셀 + 청크 인덱스 파일명). 광역이라도 단일 셀 좌표 프레임에서 `cx/cz` 를 확장해 담는다(멀티셀 전).
-- **다른 지역 맵도 동일**하게 1km 타일·중심외곽·재개 방식으로 수집한다.
+광역(반경 수 km↑)은 **Geofabrik 지역 추출(.osm.pbf)에서 bbox 만 잘라 한 번에** 확보한다. Overpass 타일 폭격(서버 부하·과부하 시 빈 200 반환으로 누락)을 피하고 **완전·재현 가능**. 절차:
+
+```
+# 1) 지역 추출 1회 다운로드(예 남한 ~280MB)
+curl -L -o /tmp/south-korea.osm.pbf https://download.geofabrik.de/asia/south-korea-latest.osm.pbf
+# 2) osmconvert 빌드(단일 C, zlib 필요 — 의존성 설치 불가 환경 대비 소스 컴파일)
+gcc osmconvert.c -lz -O3 -o /tmp/osmconvert
+# 3) bbox 추출 + 스트리밍 파싱 → Overpass-JSON 캐시(/tmp/osm-<id>.json)
+node --max-old-space-size=8192 scripts/import-extract.mjs <id>
+# 4) 이후 동일: build-maps(캐시 가공) → build-world → validate
+node scripts/build-maps.mjs <id> && node scripts/build-world.mjs <id> && node scripts/validate-world.mjs <id>
+```
+
+- [`import-extract.mjs`](../../scripts/import-extract.mjs): `osmconvert -b=W,S,E,N --complete-ways --complete-multipolygons` 로 bbox 추출 → [`osmxml.mjs`](../../scripts/osmxml.mjs) **스트리밍 파서**(node 문자열 한계 초과 700MB+ 도 readline 라인 단위, node ref→geometry 해석)로 Overpass `out geom` 호환 `{elements}` 생성. processOSM 은 그대로 재사용.
+- **build-world 가 오브젝트를 DEM(맵) 범위 청크로 클램프** — 추출의 `--complete-*` 가 bbox 밖(긴 도로·거대 relation·위도 셀 밖)까지 끌어와도 맵 밖 지오메트리는 폐기(좌표 범위 밖 방지). 수역 선형도 도로처럼 청크 클립.
+- **저장 규약 유지**: 산출은 항상 `public/maps/<floorLat>/<floorLon>/<cx>_<cz>.json` + `tiles.json`. 광역은 단일 셀 좌표 프레임에서 `cx/cz` 확장(멀티셀 전).
+- **다른 지역 맵도 동일**하게 Geofabrik 추출 기반으로 수집한다.
+
+**폴백(소면적/추출 없음)**: bbox>0.06° 면 [`build-maps`](../../scripts/build-maps.mjs) 가 **~1km(0.0095°) Overpass 타일**([`osm.bboxTiles`](../../scripts/osm.mjs))로 중심→외곽 순차·재개 수집(좌표 키 캐시, 데이터 우선 응답, 실패 건너뜀). 단 공개 Overpass 처리량 한계로 대면적은 비권장.
 
 배틀필드는 무제한([`StreamingWorld.bounds`](../../src/world/StreamingWorld.ts)=`1e7`) — 플레이어 주변만 스트리밍 로드, 데이터 없는 곳은 평지(y=0).
 

@@ -13,6 +13,8 @@
 | `npm test` | Vitest 단위 1회 |
 | `npm run test:watch` | Vitest watch |
 | `npm run test:e2e` | `vite build` 후 Playwright 스모크 |
+| `npm run build:map -- <id>` | 맵 파이프라인(DEM→OSM→청크→검증) — [build-pipeline.mjs](../../scripts/build-pipeline.mjs) |
+| `npm run validate:world -- <id>` | 청크 검증 게이트만 |
 
 ## 빌드 하드닝 (소스 보호) — [vite.config.ts](../../vite.config.ts)
 
@@ -24,7 +26,7 @@
   controlFlowFlattening·selfDefending·debugProtection 등 위험/무거운 옵션은 **비활성**(기능/성능 보존).
 - 데이터(`public/*.json`)는 정적 자산이라 그대로 노출됨 — 민감 로직은 데이터에 두지 않음.
 
-## 테스트 스위트 (Vitest — 25파일 / 403테스트, node 환경)
+## 테스트 스위트 (Vitest — 38파일 / 634테스트, node 환경)
 
 핵심 로직을 **순수 함수로 빼서** 부수효과 없이 가드한다.
 
@@ -36,6 +38,8 @@
 | 무기 | `targeting` `WeaponSpec` `beamFx` `drainCycle` | 콘 조준 · 거리감쇠·쿨다운진행률 · **머즐/끝점·측면벡터(sideVector)·발사관합산(emitterDamage)** · **소진형 특수 상태기계** |
 | 모바일 | `mobileJoystick` | 데드존·8방향·속도 4단계 |
 | 월드 | `CollisionWorld` `SpatialGrid` `terrainField` `precinct` `geo` `StructureBuilder` | 충돌/격자/지형 질의(가우시안·도심마스크·오목경계)/권역 양식/지오 유틸/랜드마크 |
+| 타일 월드 | `chunkMesh` `chunkManifest` `chunkStream` `enemySpawnMode` | 청크→메시(드레이프·리본·중앙선·벽·삼각분할 안착) · 셀/블록 경로·격자 좌표 · 스트리밍 LOD/프리페치 · 탐방(무적) 모드 |
+| 맵 파이프라인 | `worldValidate` `clip` `dem` `osm` `osmxml` | 청크/매니페스트 16종 불변식 게이트 · 폴리곤/폴리라인 클립(S-H·L-B) · DEM 디코드·bare-earth · OSM 변환·stroke병합·복개천·타일분할 · OSM XML 스트리밍 파서 |
 | 데이터 | `specs` `loader` | 드론·무기·**적(플라즈모이드)**·맵 JSON 필수필드 + 교차참조 · 로더 fetch 성공/에러경로 |
 | UI/FX | `targetBrackets` `hudLayout` | 코너 브래킷 거리 페이드 · **화면투영(projectToScreen)·체력라벨(labelText)** · **화면비례 HUD 위젯 크기(hudSizes)** |
 | 투영/데이터 | `worldMap` `osm` `introHelpers` | equirectangular 투영 · OSM 변환 · 컷씬 헬퍼(ease/rng/fallFrag/track 등) |
@@ -45,7 +49,7 @@
 
 ## e2e 스모크 — [tests/e2e/smoke.mjs](../../tests/e2e/smoke.mjs)
 
-빌드 산출물을 Playwright로 띄워 **4개 전장 전부**를 실제 로드/플레이하며 검증:
+빌드 산출물을 Playwright로 띄워 **카탈로그 전장(현재 스트리밍 `seoul-stream`)**을 실제 로드/플레이하며 검증:
 1. 콘솔/페이지 에러 0
 2. 게임 `playing` 진입(오버레이 숨김) — 세계지도 점 클릭 → 팝업 드론 버튼 → 출격 경로
 3. 미니맵 렌더됨(프레임 루프 동작)
@@ -59,3 +63,16 @@
   도메인) GeoJSON → equirectangular SVG 경로 → `src/ui/worldLand.ts`. 재생성: `node scripts/gen-worldmap.mjs`.
 - [`scripts/osm.mjs`](../../scripts/osm.mjs) — OSM 원시 데이터 → 로컬 미터 투영 + 건물 높이/도로 폭/
   폴리곤 면적 산출(맵 JSON 빌드 유틸). 순수 함수는 `osm.test.ts`가 가드.
+
+## 맵 데이터 파이프라인 — [build-pipeline.mjs](../../scripts/build-pipeline.mjs)
+
+스트리밍 타일 월드(`public/maps/<lat>/<lon>/`) 생성. 표준 순서로 실행하고 검증 실패 시 중단. 상세 규약·불변식은 [spec/03-maps.md](../spec/03-maps.md).
+
+| 단계 | 스크립트 | 핵심 |
+| :--- | :--- | :--- |
+| DEM | [build-terrain.mjs](../../scripts/build-terrain.mjs) + [dem.mjs](../../scripts/dem.mjs) | AWS Terrarium 타일 → PNG 디코드 → **bare-earth 형태학 스무딩**(건물 DSM 제거) → `build/<id>.terrain.bin` |
+| OSM | [build-maps.mjs](../../scripts/build-maps.mjs) + [osm.mjs](../../scripts/osm.mjs) | 가공(차도만·stroke 병합·지표 하천만·정리) → `build/<id>.json` + 카탈로그 `index.json`. 대면적은 **Geofabrik 추출**([import-extract.mjs](../../scripts/import-extract.mjs) + [osmxml.mjs](../../scripts/osmxml.mjs)) 권장, 소면적은 Overpass 1km 타일 폴백 |
+| 청크 | [build-world.mjs](../../scripts/build-world.mjs) + [clip.mjs](../../scripts/clip.mjs) | DEM+OSM 결합 → 셀/블록 디렉터리 1024m 청크 클립(S-H/L-B). DEM 범위로 클램프 |
+| 검증 | [validate-world.mjs](../../scripts/validate-world.mjs) + [worldValidate.mjs](../../scripts/worldValidate.mjs) | 매니페스트/청크 16종 불변식, error 시 비0 종료 |
+
+> **중간물(`build/`)** 은 git 비추적·런타임 비사용. **런타임 자산은 셀 청크 + `index.json`·`landmarks.json`** 뿐(=[spec/03-maps.md](../spec/03-maps.md) "저장 분리").

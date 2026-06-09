@@ -40,9 +40,9 @@ export async function fetchWorldChunkAt(lat: number, lon: number, chunkSize = 10
   return fetchJson<WorldChunk>(worldChunkPath(cell, cx, cz));
 }
 
-/** 청크 좌표로 직접 로드. */
-export const fetchWorldChunk = (cell: Cell, cx: number, cz: number): Promise<WorldChunk | null> =>
-  fetchJson<WorldChunk>(worldChunkPath(cell, cx, cz));
+/** 청크 좌표로 직접 로드. block=매니페스트 블록 크기(경로 <bx>_<bz>/ 계산). */
+export const fetchWorldChunk = (cell: Cell, cx: number, cz: number, block?: number): Promise<WorldChunk | null> =>
+  fetchJson<WorldChunk>(worldChunkPath(cell, cx, cz, block));
 
 /** 랜드마크 이름 → 위치(위경도/셀/청크). */
 export async function fetchLandmarkLocation(name: string): Promise<LandmarkLoc | null> {

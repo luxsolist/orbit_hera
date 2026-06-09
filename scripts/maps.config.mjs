@@ -18,7 +18,7 @@ export const MAPS = [
     catalogHidden: true,
     // 대면적 bbox 는 build-maps 가 ~3km 타일로 분할해 순차·재개 수집(단일 Overpass 타임아웃 회피). 캐시: /tmp/osm-gyeongbokgung-t*.json → 병합 /tmp/osm-gyeongbokgung.json.
     // 실측 40km×40km DEM(AWS Terrarium → bare-earth 근사). 생성: node scripts/build-terrain.mjs real gyeongbokgung 2048 40000 13. (도심 평지 ~40m, 북악산·관악산 등 산세 보존.)
-    heightmap: { src: "maps/gyeongbokgung.terrain.bin", size: 2048, meters: 40000 },
+    heightmap: { src: "gyeongbokgung.terrain.bin", size: 2048, meters: 40000 }, // build/ 의 빌드 중간물(런타임 비사용)
     mountains: [
       { x: 120, z: -1250, h: 250, r: 300 }, // 북악산
       { x: -1150, z: -260, h: 220, r: 320 }, // 인왕산

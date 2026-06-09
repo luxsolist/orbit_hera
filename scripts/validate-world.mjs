@@ -38,7 +38,7 @@ report("tiles.json", validateManifest(manifest));
 let demExpected = null;
 const srcMap = MAPS.find((m) => m.heightmap && Math.floor(m.lat0) === cellLat && Math.floor(m.lon0) === cellLon);
 if (srcMap) {
-  const binPath = `public/${srcMap.heightmap.src}`;
+  const binPath = `build/${srcMap.heightmap.src.split("/").pop()}`; // DEM .bin = 빌드 중간물(build/)
   if (existsSync(binPath)) {
     const buf = readFileSync(binPath);
     const bin = new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4));
@@ -55,7 +55,8 @@ if (srcMap) {
 // 파일↔매니페스트 정합 + 청크별 불변식 + 플래그 일치 + DEM 정합. 청크는 이음새 검사용으로 수집.
 const chunks = [];
 for (const e of manifest.chunks) {
-  const f = `${dir}/${e.cx}_${e.cz}.json`;
+  const blk = manifest.block || 1; // 블록 디렉터리 분산
+  const f = `${dir}/${Math.floor(e.cx / blk)}_${Math.floor(e.cz / blk)}/${e.cx}_${e.cz}.json`;
   if (!existsSync(f)) { report(`${e.cx}_${e.cz}`, [{ level: "error", code: "missing-file", msg: "매니페스트에 있으나 파일 없음" }]); continue; }
   let ch;
   try { ch = JSON.parse(readFileSync(f, "utf8")); }

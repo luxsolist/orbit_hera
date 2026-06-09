@@ -39,7 +39,10 @@ export function cellChunkOf(lat: number, lon: number, chunkSize = 1024): { cell:
 }
 
 // ── 경로 헬퍼(public/ 상대; fetch 시 BASE_URL 접두) ──
-export const worldChunkPath = (cell: Cell, cx: number, cz: number): string => `maps/${cell[0]}/${cell[1]}/${cx}_${cz}.json`;
+// 청크는 셀 디렉터리 안에서 다시 **블록 디렉터리 `<bx>_<bz>/`(블록=BLOCK×BLOCK 청크)** 로 분산 — 한 디렉터리에 파일이 수천 개 쌓이는 것 방지(블록당 ≤ BLOCK² 파일).
+export const CHUNK_BLOCK = 16;
+export const chunkBlockDir = (cx: number, cz: number, block = CHUNK_BLOCK): string => `${Math.floor(cx / block)}_${Math.floor(cz / block)}`;
+export const worldChunkPath = (cell: Cell, cx: number, cz: number, block = CHUNK_BLOCK): string => `maps/${cell[0]}/${cell[1]}/${chunkBlockDir(cx, cz, block)}/${cx}_${cz}.json`;
 export const tilesPath = (cell: Cell): string => `maps/${cell[0]}/${cell[1]}/tiles.json`;
 export const landmarkIndexPath = (): string => `maps/landmarks.json`;
 
@@ -68,6 +71,7 @@ export interface TilesManifest {
   chunkSize: number; // m
   terrainSize: number; // 청크당 지형 샘플 한 변
   mLon: number; // 셀 격자 경도 m/도(= 111320·cos(cell+0.5))
+  block: number; // 블록 디렉터리 한 변(청크 수) — worldChunkPath 의 <bx>_<bz>/ 계산
   chunks: ChunkEntry[];
 }
 

@@ -24,7 +24,7 @@ import { execFileSync } from "node:child_process";
 import { MAPS } from "./maps.config.mjs";
 import { decodePNG, lonToPx, latToPx, terrariumElev, bareEarth } from "./dem.mjs";
 
-const OUT_DIR = "public/maps";
+const OUT_DIR = "build"; // DEM .bin = 빌드 중간물(build-world 입력). 런타임은 청크에 구운 표고만 사용 — git 비추적.
 
 // 합성 표고 프리셋(테스트용 가우시안 봉우리, 로컬 m: +X=동, -Z=북, 원점=맵 lat0/lon0). 실 DEM 으로 교체 대상.
 const PEAK_PRESETS = {
@@ -131,7 +131,7 @@ function build(id, size, meters, elevFn, post) {
   const path = `${OUT_DIR}/${id}.terrain.bin`;
   writeFileSync(path, Buffer.from(out.buffer));
   console.error(`wrote ${path}: ${size}×${size} Float32 (${(out.byteLength / 1024).toFixed(0)}KB), meters=${meters}`);
-  console.error(`add to maps.config.mjs → heightmap: { src: "maps/${id}.terrain.bin", size: ${size}, meters: ${meters} }`);
+  console.error(`add to maps.config.mjs → heightmap: { src: "${id}.terrain.bin", size: ${size}, meters: ${meters} }`);
 }
 
 const [mode, id, sizeArg, metersArg, zoomArg] = process.argv.slice(2);

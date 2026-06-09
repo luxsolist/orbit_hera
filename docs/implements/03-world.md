@@ -24,6 +24,18 @@
 외부 API: `heightAt(x,z)`(→ field 위임), `resolveCollision`/`topAt`(→ collision 위임),
 `queryMinimap(cx,cz,r,sink)`(미니맵용 근처 형상 방문), `update(px,pz)`(→ sky 태양 추종).
 
+## StreamingWorld — 전지구 타일 월드(청크 스트리밍)
+
+`World`(모놀리식 1장)의 대체 — 플레이어 주변만 1024m 청크로 로드/언로드. 둘 다 공통 표면 [`GameWorld`](../../src/world/GameWorld.ts)
+(`group/spawn/bounds/heightAt/topAt/resolveCollision/queryMinimap/update`)를 구현해 `Game`이 동일하게 다룬다.
+카탈로그 `stream:true` 항목이면 `StreamingWorld.create(lat,lon)`로 진입.
+
+- **데이터 소스**: `public/maps/<floorLat>/<floorLon>/<bx>_<bz>/<cx>_<cz>.json`(1024m 청크) + `tiles.json`(존재 청크·격자·`block`). 빌드는 [맵 파이프라인](07-build-test-tooling.md#맵-데이터-파이프라인-build-pipelinemjs), 규약은 [spec/03-maps.md](../spec/03-maps.md).
+- **스트리밍**([chunkStream.ts](../../src/world/chunkStream.ts)): 속도방향 프리페치·히스테리시스·시간예산 빌드 큐·LRU. 주입형 `ChunkIO`(fetch=`tiles.json` 게이트+블록 경로, build=[chunkMesh](../../src/world/chunkMesh.ts), dispose).
+- **부동 원점(단순화)**: 스폰을 로컬 원점(0,0)으로 잡아 Float32 정밀도 확보(셀-로컬 = 로컬 + origin). `bounds=1e7`(사실상 무제한 — 데이터 없는 곳은 평지 y=0). 셀 경계 횡단 재원점화/멀티셀은 추후.
+- **질의 계층**: 로드된 청크 레지스트리에서 `heightAt`(삼각분할 일치 보간 `sampleChunkHeight`) · 오브젝트 청크 집합 변경 시 `CollisionWorld` 재구축 · `queryMinimap`.
+- **청크 메시**([chunkMesh.ts](../../src/world/chunkMesh.ts)): 단일 초록/황토/눈 지형 + 건물 압출(표고 안착) + 마이터 도로 리본(가장자리 드레이프·끝점 연장)·간선 중앙선 + 담장/강 리본 + 면 세분 드레이프. 모두 렌더 지오메트리(청크 페이로드 불변).
+
 ## TerrainField — 공간 질의 계층 (순수)
 
 맵 데이터로부터 연속 공간 함수를 해석적으로 계산. 같은 (x,z)엔 항상 같은 값(부수효과 없음 →
