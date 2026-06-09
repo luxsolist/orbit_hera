@@ -6,6 +6,10 @@ export default defineConfig({
   server: {
     host: true,
     open: true,
+    // 맵 청크 수천 개(public/maps)는 정적이라 HMR 불필요 — watch 제외로 dev 서버 안정화
+    // (대량 파일 watch 시 일부 셀이 정적 서빙 안 되던 문제 회피).
+    watch: { ignored: ["**/public/maps/**"] },
+    fs: { strict: false },
   },
   build: {
     target: "es2020",
