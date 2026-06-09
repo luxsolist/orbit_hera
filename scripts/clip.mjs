@@ -1,6 +1,17 @@
 // 청크 분배용 순수 기하 클립 — build-world.mjs 와 테스트가 공유(부수효과 없음).
 // 폴리곤=Sutherland-Hodgman, 폴리라인=Liang-Barsky. 좌표는 평면 m([x,z,...]). 결과는 cm 반올림.
 
+/** 연속 중복 정점 제거([x,z,...], 정수 반올림 후 생기는 영길이 모서리 제거). 폴리곤 닫힘(마지막==처음)은 보존. */
+export function dedupeFlat(p) {
+  const o = [];
+  for (let i = 0; i < p.length; i += 2) {
+    const n = o.length;
+    if (n >= 2 && o[n - 2] === p[i] && o[n - 1] === p[i + 1]) continue;
+    o.push(p[i], p[i + 1]);
+  }
+  return o;
+}
+
 /** 폴리라인/폴리곤 평면 bbox [x0,z0,x1,z1]. */
 export function bbox(p) {
   let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
@@ -27,8 +38,8 @@ export function clipRect(p, minX, minZ, maxX, maxZ) {
   poly = edge(poly, (P) => P[0] <= maxX, (A, B) => { const t = (maxX - A[0]) / (B[0] - A[0]); return [maxX, A[1] + (B[1] - A[1]) * t]; });
   poly = edge(poly, (P) => P[1] >= minZ, (A, B) => { const t = (minZ - A[1]) / (B[1] - A[1]); return [A[0] + (B[0] - A[0]) * t, minZ]; });
   poly = edge(poly, (P) => P[1] <= maxZ, (A, B) => { const t = (maxZ - A[1]) / (B[1] - A[1]); return [A[0] + (B[0] - A[0]) * t, maxZ]; });
-  const out = []; for (const pt of poly) out.push(Math.round(pt[0] * 100) / 100, Math.round(pt[1] * 100) / 100);
-  return out;
+  const out = []; for (const pt of poly) out.push(Math.round(pt[0]), Math.round(pt[1])); // 1m 정수(용량↓, 게임 규모엔 충분)
+  return dedupeFlat(out);
 }
 
 /** Liang-Barsky — 선분(a→b)의 사각형 내부 구간 산출. 밖이면 null. {C,D,cFromStart,dToEnd}. */
@@ -58,5 +69,5 @@ export function clipPolylineToRect(p, xmin, zmin, xmax, zmax) {
     cur.push(r.D[0], r.D[1]);
     if (!r.dToEnd) cur = null; // 사각형을 벗어남 → 조각 종료
   }
-  return pieces.filter((pc) => pc.length >= 4).map((pc) => pc.map((v) => Math.round(v * 100) / 100));
+  return pieces.map((pc) => dedupeFlat(pc.map((v) => Math.round(v)))).filter((pc) => pc.length >= 4); // 1m 정수 + 연속중복 제거
 }

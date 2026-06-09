@@ -45,42 +45,6 @@ export const MAPS = [
       { type: "jogyesa", x: 443, z: 430 }, // 조계사
     ],
   },
-  {
-    id: "manhattan",
-    name: "Times Square",
-    subtitle: "Manhattan, NYC — 마천루 협곡 (확장 ±2.5km)",
-    lat0: 40.758,
-    lon0: -73.9855,
-    // A안 확장: 미드타운 대부분을 덮는 ~4.5km × ~3.5km 영역
-    bbox: [40.7375, -74.0, 40.7785, -73.9705],
-    spawn: { x: 45, z: 0, yaw: 3.14159 },
-  },
-  {
-    id: "osaka",
-    name: "Osaka Castle · 大阪城",
-    subtitle: "Osaka, Japan — 天守閣 (일본식 양식 샘플)",
-    lat0: 34.6873,
-    lon0: 135.5259,
-    bbox: [34.6808, 135.518, 34.6938, 135.5338],
-    spawn: { x: 0, z: 170, yaw: 0 },
-    // 천수각(데이터 구동 일본식 지붕) — 실측 위치(맵 원점 = 천수각).
-    landmarks: [{ type: "tenshukaku", x: 0, z: 0 }],
-  },
-  {
-    id: "paris",
-    name: "Eiffel Tower",
-    subtitle: "Paris, France — 샹드마르스 광장",
-    lat0: 48.8584,
-    lon0: 2.2945,
-    bbox: [48.8524, 2.2865, 48.8644, 2.3025],
-    spawn: { x: 0, z: 200, yaw: 0 },
-    // 실측 위치의 양식화 랜드마크(세느강 방향 기반 회전)
-    landmarks: [
-      { type: "eiffel-tower", x: 0, z: 16 },
-      { type: "pont-iena", x: -178, z: -157, rot: -0.577 },
-      { type: "pont-bir-hakeim", x: -507, z: 304, rot: -0.715 },
-      { type: "quai-branly", x: 241, z: -287, rot: -1.466 },
-      { type: "palais-tokyo", x: 190, z: -646, rot: 0.349 },
-    ],
-  },
+  // 레거시 manhattan/osaka/paris(스트리밍 이전 monolithic)는 카탈로그 비노출·미사용이라 제거됨.
+  // 새 도시는 gyeongbokgung 처럼 스트리밍 파이프라인(build-pipeline)으로 생성한다.
 ];

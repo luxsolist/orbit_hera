@@ -87,6 +87,12 @@ describe("validateChunk — 건물(배치형) / 도로·담장(청크 클립 →
     const ch = goodChunk({ roads: [{ p: [1100, 2100, 1300, 2300], w: 0 }] });
     expect(codes(validateChunk(ch, C), "warn")).toContain("road-w");
   });
+  it("좌표 비정수(cm) → coord-precision(warn, 용량 최적화 회귀); 정수면 경고 없음", () => {
+    const cm = goodChunk({ buildings: [{ p: [1100.15, 2100.07, 1120.5, 2100, 1110, 2120], h: 9 }] });
+    expect(codes(validateChunk(cm, C), "warn")).toContain("coord-precision");
+    const int = goodChunk({ buildings: [{ p: [1100, 2100, 1120, 2100, 1110, 2120], h: 9 }] });
+    expect(codes(validateChunk(int, C), "warn")).not.toContain("coord-precision");
+  });
   it("도로가 청크 경계 밖 → road-bounds(클립 누락 검출)", () => {
     const ch = goodChunk({ roads: [{ p: [50, 50, 9000, 9000], w: 8 }] });
     expect(codes(validateChunk(ch, C))).toContain("road-bounds");

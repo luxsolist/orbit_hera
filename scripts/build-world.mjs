@@ -12,7 +12,7 @@
 // 실행: node scripts/build-world.mjs <id> [chunkSize=1024] [terrainSize=33]
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { MAPS as MAP_DEFS } from "./maps.config.mjs";
-import { bbox, polyArea, clipRect, clipPolylineToRect } from "./clip.mjs";
+import { bbox, polyArea, clipRect, clipPolylineToRect, dedupeFlat } from "./clip.mjs";
 
 const BLOCK = 16; // 블록 디렉터리 한 변(청크) — 셀 내 <bx>_<bz>/<cx>_<cz>.json. 디렉터리당 ≤ BLOCK²(256) 파일.
 const id = process.argv[2];
@@ -40,7 +40,7 @@ mkdirSync(cellDir, { recursive: true });
 const toLL = (x, z) => [lat0 - z / M_LAT, lon0 + x / M_LON0];
 const toCell = (la, lo) => [(lo - cellLon) * M_LONc, (cellLat + 1 - la) * M_LAT];
 const mapToCell = (x, z) => { const [la, lo] = toLL(x, z); return toCell(la, lo); };
-const reproj = (p) => { const o = []; for (let i = 0; i < p.length; i += 2) { const [cx, cz] = mapToCell(p[i], p[i + 1]); o.push(Math.round(cx * 100) / 100, Math.round(cz * 100) / 100); } return o; };
+const reproj = (p) => { const o = []; for (let i = 0; i < p.length; i += 2) { const [cx, cz] = mapToCell(p[i], p[i + 1]); o.push(Math.round(cx), Math.round(cz)); } return dedupeFlat(o); }; // 1m 정수 + 연속중복 제거(용량↓·퇴화 방지)
 const centroid = (p) => { let x = 0, z = 0, n = p.length / 2; for (let i = 0; i < p.length; i += 2) { x += p[i]; z += p[i + 1]; } return [x / n, z / n]; };
 const ci = (v) => Math.floor(v / C);
 
@@ -99,7 +99,17 @@ const inExt = (cx, cz) => cx >= cxMin && cx <= cxMax && cz >= czMin && cz <= czM
 const chunks = new Map();
 const chunk = (cx, cz) => { const k = `${cx}_${cz}`; let c = chunks.get(k); if (!c) { c = { cx, cz, buildings: [], roads: [], water: [], walls: [], areas: [] }; chunks.set(k, c); } return c; };
 
-for (const b of objects.buildings ?? []) { const [mx, mz] = centroid(b.p); const [x, z] = mapToCell(mx, mz); const cx = ci(x), cz = ci(z); if (inExt(cx, cz)) chunk(cx, cz).buildings.push({ p: reproj(b.p), ...(b.h != null ? { h: b.h } : {}) }); }
+const seenBld = new Set(); // 정수 반올림 후 동일 footprint 가 된 건물 중복 제거(z-fighting·용량↓). 검증기 findDuplicateBuildings 키와 동치.
+for (const b of objects.buildings ?? []) {
+  const [mx, mz] = centroid(b.p); const [x, z] = mapToCell(mx, mz); const cx = ci(x), cz = ci(z);
+  if (!inExt(cx, cz)) continue;
+  const rp = reproj(b.p); if (rp.length < 6) continue; // <3 정점 = 퇴화
+  const [bcx, bcz] = centroid(rp);
+  const sig = `${Math.round(bcx * 10)}_${Math.round(bcz * 10)}_${Math.round(polyArea(rp))}_${rp.length / 2}`;
+  if (seenBld.has(sig)) continue;
+  seenBld.add(sig);
+  chunk(cx, cz).buildings.push({ p: rp, ...(b.h != null ? { h: b.h } : {}) });
+}
 // 도로: 폴리라인을 청크 경계로 클립해 **연속 조각**으로 저장(2점 분할 폐기) → 연속 리본·중앙선, 끊김 방지.
 for (const r of objects.roads ?? []) binPolyline(reproj(r.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).roads.push({ p: piece, ...(r.w != null ? { w: r.w } : {}) }); });
 // 담장/울타리: 동일하게 폴리라인 클립으로 연속 조각 저장.
@@ -120,7 +130,7 @@ if (H) {
     let mn = Infinity, mx2 = -Infinity;
     for (let j = 0; j < TSZ; j++) for (let i = 0; i < TSZ; i++) {
       const [mxx, mzz] = cellToMap(cx * C + i * step, cz * C + j * step);
-      const h = Math.round(sampleMap(mxx, mzz) * 10) / 10; heights[j * TSZ + i] = h;
+      const h = Math.round(sampleMap(mxx, mzz)); heights[j * TSZ + i] = h; // 1m 정수(보간 표면은 매끄러움 유지)
       if (h < mn) mn = h; if (h > mx2) mx2 = h;
     }
     if (mx2 - mn < 0.5 && Math.abs(mx2) < 0.5) continue; // 평지 → 지형 생략(오브젝트가 있으면 아래서 빈 지형으로 기록)

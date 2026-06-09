@@ -9,18 +9,17 @@
 
 ## 현행 로스터 (`public/maps/index.json`)
 
-| id | 이름 | 위치 | 건물 수 | 크기 | 특징 |
-| :--- | :--- | :--- | ---: | ---: | :--- |
-| `gyeongbokgung` | 경복궁 · Gyeongbokgung | 서울 (37.578, 126.977) | 3,765 | ~510 KB | 도심 한복판 왕궁 — **특수 권역(precinct)** |
-| `manhattan` | Times Square | 뉴욕 (40.758, −73.986) | 8,087 | ~1.6 MB | 마천루 협곡(확장 ±2.5 km) |
-| `osaka` | Osaka Castle · 大阪城 | 오사카 (34.687, 135.526) | 689 | ~146 KB | 일본식 양식(천수각) 샘플 |
-| `paris` | Eiffel Tower | 파리 (48.858, 2.295) | 734 | ~263 KB | 샹드마르스 광장 |
+| id | 이름 | 위치 | 형식 | 특징 |
+| :--- | :--- | :--- | :--- | :--- |
+| `seoul-stream` | 서울 도심 · Seoul | (37.5797, 126.977) | 스트리밍 타일 월드 | 경복궁 중심 반경 20km(58×58km, 1,600 청크, 건물 270k) — **특수 권역(precinct)** |
+
+현재 카탈로그(`index.json`)에는 **스트리밍 전장 seoul-stream 하나**만 노출된다. 빌드 소스 `gyeongbokgung`(maps.config)은 `catalogHidden`이라 메뉴 비노출.
+과거 monolithic 레거시(manhattan/osaka/paris)는 스트리밍 전환 후 미사용이라 제거됨 — 새 도시는 스트리밍 파이프라인으로 추가한다.
 
 `lat/lon`은 메인 화면 세계지도(equirectangular) 점 위치에 사용된다. 진입마다 랜덤 2개가
 "침공 중"(붉은 깜빡임), 나머지는 등록 지역(흰 점)으로 표시.
 
-각 맵은 자체 `spawn{ x, z, yaw }`을 갖는다(예: 경복궁 `{0, 360, 0}`, 맨해튼 `{45, 0, π}`).
-스폰 높이는 드론별 — 보행은 지면, 비행은 지면 + `spawnHeight`(예: 100 m).
+각 맵은 자체 `spawn{ x, z, yaw }`을 갖는다(스트리밍은 스폰을 로컬 원점으로). 스폰 높이는 드론별 — 보행은 지면, 비행은 지면 + `spawnHeight`.
 
 ---
 
@@ -83,6 +82,8 @@ npm run build:map -- <id> [--no-terrain] [--zoom=13]
 | 4 검증 게이트 | [`validate-world.mjs`](../../scripts/validate-world.mjs) (순수 [`worldValidate.mjs`](../../scripts/worldValidate.mjs)) | error 시 비0 종료 |
 
 > **저장 분리**: 가공 OSM(`<id>.json`)·DEM(`.bin`)은 **빌드 중간물**이라 `build/`(git 비추적)에 둔다 — 런타임은 읽지 않는다. **모든 런타임 맵 데이터는 셀 구조**로만 저장(+ 카탈로그 `index.json`·`landmarks.json`). 중간물을 `public/maps` 에 두거나 커밋하지 않는다.
+>
+> **좌표 정밀도(용량)**: 청크 좌표·표고는 **1m 정수로 반올림**([build-world.mjs](../../scripts/build-world.mjs)·[clip.mjs](../../scripts/clip.mjs))한다 — 미터 규모 객체엔 시각 차이 없고(표고는 보간 표면이라 매끄러움 유지), cm 부동소수 대비 **정수가 훨씬 잘 압축**돼 raw 65→50MB, **gzip 22→13MB(−41%)**. 반올림 후 **연속 중복 정점 제거**(`dedupeFlat`)로 영길이 모서리·퇴화 삼각형 방지, **동일 footprint 건물 중복 제거**(z-fighting·용량↓).
 >
 > **셀 내 블록 분산**: 셀 디렉터리에 청크 파일 수천 개가 평면으로 쌓이지 않도록 **블록 디렉터리** 한 단계를 더 둔다 —
 > `public/maps/<floorLat>/<floorLon>/<bx>_<bz>/<cx>_<cz>.json`, 여기서 `<bx>_<bz> = floor(cx/BLOCK)_floor(cz/BLOCK)`(BLOCK=16). 블록당 ≤ BLOCK²=**256 파일**(경복궁 20km = 1,600 청크 → 12 블록 디렉터리, 평균 ~133). 블록 크기는 `tiles.json.block` 에 기록되고 런타임 [`worldChunkPath`](../../src/world/chunkManifest.ts)/[`StreamingWorld`](../../src/world/StreamingWorld.ts) 가 동일 계산으로 경로를 만든다. 규칙: **`<cx>_<cz>` = 셀 NW 원점 기준 1024m 청크의 정수 격자 인덱스**(cx=동/1024, cz=남/1024).
