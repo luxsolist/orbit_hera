@@ -30,8 +30,9 @@ export const MAPS = [
     spawn: { x: 0, z: 360, yaw: 0 },
     // 스트리밍 타일 월드(seoul-stream)의 소스 전용 — 메뉴 카탈로그에는 노출 안 함.
     catalogHidden: true,
-    // 대면적 bbox 는 build-maps 가 ~3km 타일로 분할해 순차·재개 수집(단일 Overpass 타임아웃 회피). 캐시: /tmp/osm-gyeongbokgung-t*.json → 병합 /tmp/osm-gyeongbokgung.json.
-    // 실측 40km×40km DEM(AWS Terrarium → bare-earth 근사). 생성: node scripts/build-terrain.mjs real gyeongbokgung 2048 40000 13. (도심 평지 ~40m, 북악산·관악산 등 산세 보존.)
+    // 실측 40km×40km DEM(AWS Terrarium). DEM 은 raw — 평탄화는 build-world 가 **건물 풋프린트 아래만**(산·공원 보존).
+    // 생성: node scripts/build-terrain.mjs real gyeongbokgung 2048 40000 13.
+    bareEarth: false, // 전역 형태학 열림(봉우리 깎임) 끔 → 산 보존. 건물 스파이크는 build-world footprint 평탄화로 제거.
     heightmap: { src: "gyeongbokgung.terrain.bin", size: 2048, meters: 40000 }, // build/ 의 빌드 중간물(런타임 비사용)
     mountains: [
       { x: 120, z: -1250, h: 250, r: 300 }, // 북악산

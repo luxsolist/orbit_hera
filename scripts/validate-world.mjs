@@ -38,7 +38,10 @@ report("tiles.json", validateManifest(manifest));
 let demExpected = null;
 const srcMap = MAPS.find((m) => m.heightmap && Math.floor(m.lat0) === cellLat && Math.floor(m.lon0) === cellLon);
 if (srcMap) {
-  const binPath = `build/${srcMap.heightmap.src.split("/").pop()}`; // DEM .bin = 빌드 중간물(build/)
+  // DEM .bin = 빌드 중간물(build/). 건물 footprint 평탄화 결과(.flat.bin)가 있으면 그것을 기준으로(청크가 평탄 격자에서 샘플됨).
+  const base = `build/${srcMap.heightmap.src.split("/").pop()}`;
+  const flat = base.replace(/\.bin$/, ".flat.bin");
+  const binPath = existsSync(flat) ? flat : base;
   if (existsSync(binPath)) {
     const buf = readFileSync(binPath);
     const bin = new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4));

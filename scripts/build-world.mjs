@@ -13,6 +13,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
 import { MAPS as MAP_DEFS } from "./maps.config.mjs";
 import { bbox, polyArea, clipRect, clipPolylineToRect, dedupeFlat } from "./clip.mjs";
+import { flattenUnderBuildings } from "./dem.mjs";
 
 const BLOCK = 16; // 블록 디렉터리 한 변(청크) — 셀 내 <bx>_<bz>/<cx>_<cz>.json. 디렉터리당 ≤ BLOCK²(256) 파일.
 const id = process.argv[2];
@@ -121,6 +122,15 @@ for (const w of terrain.water ?? []) {
 }
 // 지표 면(공원/잔디/숲 등): 청크별로 클립해 분배 — 각 조각이 자기 청크 격자 안에서 지형에 드레이프.
 for (const a of objects.areas ?? []) binClipped(reproj(a.p), (cx, cz, c) => { if (inExt(cx, cz)) chunk(cx, cz).areas.push({ p: c, k: a.k }); });
+
+// ── 건물 풋프린트 아래 지형 평탄화(도시 DSM 스파이크 제거, 산·공원 등은 원본 보존) ──
+// raw DEM → 평탄 격자(전역, 이음매 일관) → .flat.bin 기록(검증·샘플 동일). build-terrain bareEarth 와 독립.
+if (H && objects.buildings?.length) {
+  H = flattenUnderBuildings(H, hm.size, objects.buildings, gOrig, gStep, 4);
+  const flatPath = `${BUILD_DIR}/${hm.src.split("/").pop().replace(/\.bin$/, ".flat.bin")}`;
+  writeFileSync(flatPath, Buffer.from(H.buffer));
+  console.error(`  건물 footprint 평탄화 → ${flatPath}`);
+}
 
 // ── 지형: 하이트맵 커버(맵 ±meters/2) 범위의 청크에 표고 채움 ──
 if (H) {

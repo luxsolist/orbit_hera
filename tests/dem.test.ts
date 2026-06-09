@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import zlib from "node:zlib";
 // @ts-expect-error — JS 빌드 헬퍼(타입 선언 없음)
-import { decodePNG, lonToPx, latToPx, terrariumElev, bareEarth, morphPass } from "../scripts/dem.mjs";
+import { decodePNG, lonToPx, latToPx, terrariumElev, bareEarth, morphPass, flattenUnderBuildings, pointInPoly } from "../scripts/dem.mjs";
 
 // 실측 DEM(terrarium) 처리 순수 헬퍼 — 투영/디코드 버그는 지형 전체를 어긋나게 하므로 고정.
 
@@ -80,5 +80,22 @@ describe("dem.bareEarth / morphPass — DSM(건물) 스파이크 제거(형태�
     const s = 7; const g = mkGrid(s, 10); g[3 * s + 3] = 99;
     const er = morphPass(g, s, 1, Math.min);
     expect(er[3 * s + 3]).toBe(10);
+  });
+});
+
+describe("dem.flattenUnderBuildings — 건물 아래만 평탄화(산 보존)", () => {
+  it("건물 풋프린트 셀은 침식(주변 지면), 건물 없는 산은 원본 유지", () => {
+    const s = 11; const H = new Float32Array(s * s); H.fill(40);
+    H[5 * s + 5] = 100; // 도시 건물 스파이크
+    H[2 * s + 2] = 300; // 산 봉우리(건물 없음)
+    const buildings = [{ p: [4.5, 4.5, 5.5, 4.5, 5.5, 5.5, 4.5, 5.5] }]; // 셀(5,5) 덮음(origin=0,step=1)
+    const out = flattenUnderBuildings(H, s, buildings, 0, 1, 3);
+    expect(out[5 * s + 5]).toBeLessThan(50); // 스파이크 제거 → 주변 40
+    expect(out[2 * s + 2]).toBe(300); // 산 보존
+  });
+  it("pointInPoly — 사각형 내부/외부", () => {
+    const sq = [0, 0, 10, 0, 10, 10, 0, 10];
+    expect(pointInPoly(5, 5, sq)).toBe(true);
+    expect(pointInPoly(15, 5, sq)).toBe(false);
   });
 });

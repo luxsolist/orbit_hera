@@ -50,6 +50,41 @@ export function bareEarth(grid, size, openR = 4, blurR = 2) {
   return boxBlur(g, size, blurR);
 }
 
+/** 점(x,z)이 폴리곤 p([x,z,...]) 내부인지 — ray casting. 순수. */
+export function pointInPoly(x, z, p) {
+  let inside = false; const n = p.length / 2;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = p[i * 2], zi = p[i * 2 + 1], xj = p[j * 2], zj = p[j * 2 + 1];
+    if (((zi > z) !== (zj > z)) && (x < ((xj - xi) * (z - zi)) / (zj - zi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * 건물 풋프린트 아래 지형만 평탄화 — 도시(건물 DSM 스파이크)는 제거하되 **산·공원 등은 원본 보존**.
+ * 마스크된 셀(건물 내부)은 형태학적 침식값(주변 지면 최저)으로 치환, 그 외는 raw. 전역 격자라 청크 이음매 일관. 순수.
+ * buildings: [{p:[mapX,mapZ,...]}] (맵-로컬). gOrigin/gStep: DEM 격자 원점·간격(맵-로컬). 반환: 새 Float32Array.
+ */
+export function flattenUnderBuildings(H, size, buildings, gOrigin, gStep, openR = 4) {
+  if (!buildings || !buildings.length) return H;
+  const E = morphPass(H, size, openR, Math.min); // 침식 = 주변 지면 최저
+  const mask = new Uint8Array(size * size);
+  const g = (v) => (v - gOrigin) / gStep;
+  for (const b of buildings) {
+    const p = b.p; if (!p || p.length < 6) continue;
+    let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
+    for (let i = 0; i < p.length; i += 2) { if (p[i] < x0) x0 = p[i]; if (p[i] > x1) x1 = p[i]; if (p[i + 1] < z0) z0 = p[i + 1]; if (p[i + 1] > z1) z1 = p[i + 1]; }
+    const gx0 = Math.max(0, Math.floor(g(x0))), gx1 = Math.min(size - 1, Math.ceil(g(x1)));
+    const gz0 = Math.max(0, Math.floor(g(z0))), gz1 = Math.min(size - 1, Math.ceil(g(z1)));
+    for (let gz = gz0; gz <= gz1; gz++) for (let gx = gx0; gx <= gx1; gx++) {
+      if (pointInPoly(gOrigin + gx * gStep, gOrigin + gz * gStep, p)) mask[gz * size + gx] = 1;
+    }
+  }
+  const out = new Float32Array(H.length);
+  for (let i = 0; i < H.length; i++) out[i] = mask[i] ? E[i] : H[i];
+  return out;
+}
+
 /** 위경도 → 웹 메르카토르 전역 픽셀(줌 z, 타일 256px). 순수. */
 export const lonToPx = (lon, z) => ((lon + 180) / 360) * Math.pow(2, z) * 256;
 export const latToPx = (lat, z) => {
