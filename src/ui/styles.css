@@ -679,11 +679,39 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   50% { opacity: 0.2; transform: scale(0.5); }
 }
 
+/* 클러스터(대표 점) — 링 + 멤버 수 배지 */
+.zone-dot--cluster > i { width: 12px; height: 12px; box-shadow: 0 0 0 2px rgba(52, 245, 255, 0.6), 0 0 8px rgba(52, 245, 255, 0.6); }
+.zone-dot--cluster.zone-dot--invaded > i { box-shadow: 0 0 0 2px rgba(255, 59, 78, 0.7), 0 0 9px 2px rgba(255, 59, 78, 0.85); }
+.zone-dot__n {
+  position: absolute; top: -7px; right: -7px; min-width: 13px; height: 13px; padding: 0 2px;
+  font: 700 9px/13px ui-monospace, monospace; color: #041018; text-align: center;
+  background: var(--core-cyan); border-radius: 7px; box-shadow: 0 0 5px rgba(52, 245, 255, 0.6);
+}
+.zone-dot--invaded .zone-dot__n { background: var(--core-red); color: #fff; }
+
+/* 클러스터 확대창 — 지역 확대 후 세부 점 펼침 */
+.clusterpop {
+  position: absolute; transform: translate(-50%, 0); z-index: 6;
+  width: 330px; padding: 12px 12px 14px; /* 기존 220px 의 1.5배 */
+  background: rgba(8, 18, 28, 0.97); border: 1px solid rgba(52, 245, 255, 0.5);
+  border-radius: 10px; box-shadow: 0 8px 26px rgba(0, 0, 0, 0.6), 0 0 16px rgba(52, 245, 255, 0.18);
+}
+.clusterpop[hidden] { display: none; }
+.clusterpop__close { position: absolute; top: 5px; right: 8px; z-index: 2; background: none; border: none; color: var(--core-cyan); font-size: 18px; line-height: 1; cursor: pointer; }
+.clusterpop__map { position: relative; width: 100%; height: 225px; background: rgba(4, 14, 22, 0.6); border: 1px solid rgba(52, 245, 255, 0.25); border-radius: 6px; overflow: hidden; } /* 150px → 225px(1.5배) */
+.clusterpop__map > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; } /* 확대된 세계지도(크롭) 배경 */
+.clusterpop__map .zone-dot { position: absolute; z-index: 1; } /* 점은 지도 위 */
+.clusterpop__map .zone-dot__lbl {
+  position: absolute; left: 10px; top: -4px; white-space: nowrap;
+  font: 600 10px/1 ui-monospace, monospace; color: #cfeef5; text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+}
+.clusterpop__map .zone-dot__lbl--l { left: auto; right: 10px; } /* 오른쪽 점 — 라벨 왼쪽 정렬 */
+
 /* 점 클릭 팝업(그 위치 위) — 지역 정보 + 기체 선택(출격) */
 .zonepop {
   position: absolute;
   transform: translate(-50%, calc(-100% - 14px));
-  z-index: 5;
+  z-index: 8; /* 확대창(6) 위 — 확대창 유지 중에도 출격창이 가려지지 않게 */
   width: 232px;
   padding: 12px 14px 14px;
   text-align: left;

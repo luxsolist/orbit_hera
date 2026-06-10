@@ -2,7 +2,7 @@ import { fetchDrone, fetchDroneCatalog } from "../player/drones";
 import type { DroneCatalogEntry, DroneSpec } from "../player/DroneSpec";
 import { fetchCatalog } from "../world/maps";
 import type { MapCatalogEntry } from "../world/MapData";
-import { buildWorldSvg, projectLatLon, declusterDots } from "./worldMapSvg";
+import { buildWorldSvg, projectLatLon, clusterDots, zoomMapBox, projectInBox } from "./worldMapSvg";
 
 const WORLD_SVG = buildWorldSvg();
 
@@ -30,6 +30,8 @@ export class MenuScreen {
   private storyPopup: HTMLElement;
   private storyList: HTMLElement;
   private helpPopup: HTMLElement;
+  private clusterPopup: HTMLElement;
+  private clusterMap: HTMLElement;
   private hintMoveMouse: HTMLElement;
   private hintMoveTouch: HTMLElement;
 
@@ -51,19 +53,30 @@ export class MenuScreen {
     this.storyPopup = byId("storyPopup");
     this.storyList = byId("storyList");
     this.helpPopup = byId("helpPopup");
+    this.clusterPopup = byId("clusterPopup");
+    this.clusterMap = byId("clusterMap");
     this.hintMoveMouse = byId("hintMoveMouse");
     this.hintMoveTouch = byId("hintMoveTouch");
     this.selectedDroneId = new URLSearchParams(window.location.search).get("drone") || "walker";
 
-    // 지도 점 클릭 → 지역 팝업, 배경 클릭 → 모든 팝업 닫기
+    // 지도 점 클릭 → 단일 점=지역 팝업 / 클러스터=확대창. 배경 클릭 → 모든 팝업 닫기.
     this.worldMap.addEventListener("click", (e) => {
-      const dot = (e.target as HTMLElement).closest("[data-map]") as HTMLElement | null;
-      if (dot?.dataset.map) {
-        this.storyPopup.hidden = true;
-        this.helpPopup.hidden = true;
-        this.openPopup(dot.dataset.map);
+      const el = (e.target as HTMLElement).closest("[data-map],[data-cluster]") as HTMLElement | null;
+      if (el?.dataset.cluster) {
+        this.storyPopup.hidden = true; this.helpPopup.hidden = true;
+        this.openClusterZoom(el.dataset.cluster.split(","), parseFloat(el.style.left), parseFloat(el.style.top));
+      } else if (el?.dataset.map) {
+        this.storyPopup.hidden = true; this.helpPopup.hidden = true;
+        this.clusterPopup.hidden = true;
+        this.openPopup(el.dataset.map);
       } else this.closeAllPopups();
     });
+    // 확대창 안의 세부 점 클릭 → 기존 출격 팝업(확대창은 닫지 않고 유지).
+    this.clusterMap.addEventListener("click", (e) => {
+      const dot = (e.target as HTMLElement).closest("[data-map]") as HTMLElement | null;
+      if (dot?.dataset.map) this.openPopup(dot.dataset.map);
+    });
+    byId("clusterPopClose").addEventListener("click", () => (this.clusterPopup.hidden = true));
     byId("zonePopClose").addEventListener("click", () => (this.zonePopup.hidden = true));
     byId("storyBtn").addEventListener("click", () => this.toggleSidePop(this.storyPopup));
     byId("helpBtn").addEventListener("click", () => this.toggleSidePop(this.helpPopup));
@@ -98,6 +111,7 @@ export class MenuScreen {
     this.zonePopup.hidden = true;
     this.storyPopup.hidden = true;
     this.helpPopup.hidden = true;
+    this.clusterPopup.hidden = true;
   }
 
   /** 침공 중(붉은 깜빡임) 지역을 랜덤 2개 선택. 나머지 등록 지역은 흰색 점. */
@@ -111,16 +125,52 @@ export class MenuScreen {
     this.invadedIds = new Set(pool.slice(0, Math.min(N, pool.length)).map((m) => m.id));
   }
 
-  /** 세계지도에 등록 지역을 점으로(흰색=등록, 붉은 깜빡임=침공 중). 위경도 → equirectangular + 겹침 분리. */
+  /** 세계지도에 등록 지역을 점으로. 가까운 점은 **대표 점(클러스터)** 으로 묶고(하나라도 침공이면 붉음), 단일은 그대로. */
   private renderWorldMap(): void {
     const pts = this.catalog
       .filter((r) => r.lat != null && r.lon != null)
-      .map((r) => ({ id: r.id, ...projectLatLon(r.lat!, r.lon!), cls: this.invadedIds.has(r.id) ? "zone-dot--invaded" : "zone-dot--reg" }));
-    declusterDots(pts); // 근접 도시(서울·부산 등)가 세계지도에서 겹쳐 클릭 안 되는 것 방지 — 실제 위치 근처로 분리(2:1 종횡비 반영)
-    const dots = pts
-      .map((p) => `<button type="button" class="zone-dot ${p.cls}" data-map="${p.id}" style="left:${p.x.toFixed(2)}%;top:${p.y.toFixed(2)}%"><i></i></button>`)
+      .map((r) => ({ id: r.id, ...projectLatLon(r.lat!, r.lon!), invaded: this.invadedIds.has(r.id) }));
+    const dots = clusterDots(pts, 2.6)
+      .map((c) => {
+        const invaded = c.members.some((m) => m.invaded);
+        const cls = invaded ? "zone-dot--invaded" : "zone-dot--reg";
+        const pos = `left:${c.x.toFixed(2)}%;top:${c.y.toFixed(2)}%`;
+        if (c.members.length === 1) {
+          return `<button type="button" class="zone-dot ${cls}" data-map="${c.members[0].id}" style="${pos}"><i></i></button>`;
+        }
+        // 대표 점(클러스터) — 클릭 시 확대창. 멤버 수 배지.
+        const ids = c.members.map((m) => m.id).join(",");
+        return `<button type="button" class="zone-dot zone-dot--cluster ${cls}" data-cluster="${ids}" style="${pos}"><i></i><b class="zone-dot__n">${c.members.length}</b></button>`;
+      })
       .join("");
     this.worldMap.innerHTML = WORLD_SVG + dots;
+  }
+
+  /**
+   * 클러스터(대표 점) 클릭 → 그 지역을 **확대한 지도 위에** 세부 점들을 **정확한 위치**로 표시. 세부 점 클릭은 출격 팝업.
+   * 확대 지도(viewBox 크롭)·점 배치는 worldMapSvg 공통 로직(zoomMapBox/projectInBox/buildWorldSvg) — 모든 확대창이 공유.
+   */
+  private openClusterZoom(ids: string[], anchorX: number, anchorY: number): void {
+    const members = ids.map((id) => this.catalog.find((c) => c.id === id)).filter((m): m is MapCatalogEntry => !!m && m.lat != null && m.lon != null);
+    if (members.length < 2) { if (members[0]) this.openPopup(members[0].id); return; }
+    // 확대창을 대표 점 근처에 띄우고(좌우 보정), 레이아웃된 박스 종횡비로 확대 지도 생성.
+    this.clusterPopup.style.left = `${Math.min(72, Math.max(2, anchorX)).toFixed(1)}%`;
+    this.clusterPopup.style.top = `${Math.min(60, Math.max(4, anchorY + 4)).toFixed(1)}%`;
+    this.clusterPopup.hidden = false;
+    const zw = this.clusterMap.clientWidth || 300, zh = this.clusterMap.clientHeight || 220;
+    const box = zoomMapBox(members.map((m) => ({ lat: m.lat!, lon: m.lon! })), zw / zh);
+    // 해안선 두께 = 기본 세계지도 해안선 픽셀의 2배(렌더 크기·확대율 보정). 그리드는 생략(step 0).
+    const baseStrokePx = 0.3 * ((this.worldMap.clientWidth || 860) / 360);
+    const svg = buildWorldSvg(box, 0, (2 * baseStrokePx * box.w) / zw);
+    const dots = members
+      .map((m) => {
+        const { x, y } = projectInBox(m.lat!, m.lon!, box); // 지도상 정확한 위치
+        const cls = this.invadedIds.has(m.id) ? "zone-dot--invaded" : "zone-dot--reg";
+        const lblCls = x > 55 ? "zone-dot__lbl zone-dot__lbl--l" : "zone-dot__lbl"; // 오른쪽 점은 라벨 왼쪽(창 밖 넘침 방지)
+        return `<button type="button" class="zone-dot ${cls}" data-map="${m.id}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"><i></i><span class="${lblCls}">${m.name}</span></button>`;
+      })
+      .join("");
+    this.clusterMap.innerHTML = svg + dots;
   }
 
   /** 점 클릭 → 그 위치 위에 지역 정보 + 기체 선택(출격) 팝업. 기체 선택 시 즉시 출격. */

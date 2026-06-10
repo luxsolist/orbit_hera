@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { projectLatLon, declusterDots } from "../src/ui/worldMapSvg";
+import { projectLatLon, clusterDots, zoomMapBox, projectInBox, niceGridStep, buildWorldSvg } from "../src/ui/worldMapSvg";
 
 describe("projectLatLon — equirectangular 백분율 투영", () => {
   it("원점(0,0) → 중앙(50,50)", () => {
@@ -22,22 +22,105 @@ describe("projectLatLon — equirectangular 백분율 투영", () => {
   });
 });
 
-describe("declusterDots — 근접 점 겹침 분리(클릭 가능, 2:1 종횡비)", () => {
-  const sep = (a: any, bp: any, aspect = 0.5) => Math.hypot(a.x - bp.x, (a.y - bp.y) * aspect); // width-% 메트릭
-  it("최소 간격 미만 쌍을 minSep(width-%) 이상으로 분리(서울·부산 시뮬)", () => {
-    const seoul = projectLatLon(37.58, 126.98), busan = projectLatLon(35.16, 129.07);
-    const pts = [{ ...seoul }, { ...busan }];
-    declusterDots(pts, 2.6);
-    expect(sep(pts[0], pts[1])).toBeGreaterThanOrEqual(2.55);
+describe("clusterDots — 근접 점 클러스터링(2:1 종횡비)", () => {
+  it("가까운 점(서울·부산)은 한 그룹, 먼 점(에베레스트)은 별도", () => {
+    const seoul = { id: "seoul", ...projectLatLon(37.58, 126.98) };
+    const busan = { id: "busan", ...projectLatLon(35.16, 129.07) };
+    const everest = { id: "everest", ...projectLatLon(27.99, 86.92) };
+    const groups = clusterDots([seoul, busan, everest], 2.6);
+    expect(groups).toHaveLength(2); // {서울,부산} + {에베레스트}
+    const cluster = groups.find((g) => g.members.length === 2)!;
+    expect(cluster.members.map((m) => m.id).sort()).toEqual(["busan", "seoul"]);
+    // 대표 위치 = 멤버 평균
+    expect(cluster.x).toBeCloseTo((seoul.x + busan.x) / 2, 6);
   });
-  it("완전 동일 좌표도 분리(겹침 0)", () => {
-    const pts = [{ x: 50, y: 50 }, { x: 50, y: 50 }];
-    declusterDots(pts, 2.6);
-    expect(sep(pts[0], pts[1])).toBeGreaterThan(2.55);
+  it("연결성(transitive) — A~B, B~C 면 한 그룹", () => {
+    const a = { id: "a", x: 50, y: 50 }, b = { id: "b", x: 51, y: 50 }, c = { id: "c", x: 52, y: 50 };
+    expect(clusterDots([a, b, c], 1.5)).toHaveLength(1);
   });
-  it("멀리 떨어진 점은 거의 안 움직임", () => {
-    const pts = [{ x: 10, y: 10 }, { x: 80, y: 80 }];
-    declusterDots(pts, 2.6);
-    expect(pts[0].x).toBeCloseTo(10, 6); expect(pts[1].x).toBeCloseTo(80, 6);
+  it("모두 멀면 각각 단일 그룹", () => {
+    expect(clusterDots([{ id: "a", x: 10, y: 10 }, { id: "b", x: 80, y: 80 }], 2.6)).toHaveLength(2);
+  });
+});
+
+describe("zoomMapBox / projectInBox — 확대창 공통 로직(확대 지도 + 정확 점 배치)", () => {
+  it("박스 종횡비에 맞춰 확장(왜곡 방지) + 점들 포함", () => {
+    const items = [{ lat: 37.58, lon: 126.98 }, { lat: 35.16, lon: 129.07 }];
+    const box = zoomMapBox(items, 2); // 너비/높이 = 2
+    expect(box.w / box.h).toBeCloseTo(2, 5);
+    // 두 점 모두 박스 내부
+    for (const it of items) {
+      const p = projectInBox(it.lat, it.lon, box);
+      expect(p.x).toBeGreaterThan(0); expect(p.x).toBeLessThan(100);
+      expect(p.y).toBeGreaterThan(0); expect(p.y).toBeLessThan(100);
+    }
+  });
+  it("projectInBox 는 buildWorldSvg 와 동일 좌표(경도→x, 위도→y 반전)", () => {
+    const box = { x: 300, y: 50, w: 20, h: 20 }; // lon 120~140, lat 20~40
+    expect(projectInBox(40, 120, box)).toEqual({ x: 0, y: 0 }); // 좌상(서·북)
+    expect(projectInBox(20, 140, box)).toEqual({ x: 100, y: 100 }); // 우하(동·남)
+  });
+  it("niceGridStep — 폭에 어울리는 1·2·5·10 계열 간격", () => {
+    expect(niceGridStep(4)).toBe(1); // 4/4=1
+    expect(niceGridStep(40)).toBe(10);
+    expect(niceGridStep(12)).toBe(5); // 12/4=3 → 5
+  });
+});
+
+describe("buildWorldSvg — 전체/확대(viewBox 크롭) 공통 렌더", () => {
+  it("기본값 = 전체 지도 viewBox(0 0 360 180) + 대륙 path", () => {
+    const svg = buildWorldSvg();
+    expect(svg).toContain('viewBox="0 0 360 180"');
+    expect(svg).toContain("<path d="); // 실측 대륙 윤곽
+    expect(svg).toContain("<line"); // 기본 그리드 존재
+  });
+  it("box 주면 그 영역으로 크롭(viewBox·배경 rect 일치)", () => {
+    const svg = buildWorldSvg({ x: 300, y: 50, w: 20, h: 20 });
+    expect(svg).toContain('viewBox="300 50 20 20"');
+    expect(svg).toContain('<rect x="300" y="50" width="20" height="20"');
+  });
+  it("step≤0 → 그리드 생략(확대창)", () => {
+    expect(buildWorldSvg({ x: 300, y: 50, w: 20, h: 20 }, 0)).not.toContain("<line");
+    expect(buildWorldSvg({ x: 300, y: 50, w: 20, h: 20 }, 5)).toContain("<line"); // step>0 면 존재
+  });
+  it("landStroke 인자 → 대륙 윤곽 stroke-width 반영", () => {
+    expect(buildWorldSvg({ x: 300, y: 50, w: 20, h: 20 }, 0, 0.05)).toContain('stroke-width="0.05"');
+  });
+  it("크롭 viewBox 안의 그리드선만 생성(범위 밖 미포함)", () => {
+    // box lon 120~140(x 300~320), lat 20~40(y 50~70), step 10 → 세로선 x=300,310,320 / 가로선 y=50,60,70
+    const svg = buildWorldSvg({ x: 300, y: 50, w: 20, h: 20 }, 10);
+    expect(svg).toContain('x1="310"'); // 범위 내
+    expect(svg).not.toContain('x1="330"'); // 범위 밖
+  });
+});
+
+describe("clusterDots / zoomMapBox — 엣지 케이스", () => {
+  it("빈 배열 → 빈 결과", () => {
+    expect(clusterDots([], 2.6)).toEqual([]);
+  });
+  it("단일 점 → 멤버 1개 그룹, 대표=그 점", () => {
+    const g = clusterDots([{ id: "a", x: 30, y: 40 }], 2.6);
+    expect(g).toHaveLength(1);
+    expect(g[0].members).toHaveLength(1);
+    expect(g[0]).toMatchObject({ x: 30, y: 40 });
+  });
+  it("대표 위치 = 멤버 x·y 평균(양 축)", () => {
+    const g = clusterDots([{ id: "a", x: 10, y: 20 }, { id: "b", x: 12, y: 26 }], 5);
+    expect(g[0].x).toBeCloseTo(11, 6);
+    expect(g[0].y).toBeCloseTo(23, 6);
+  });
+  it("zoomMapBox 단일 점 → minSpan 으로 적당히 확대(폭/높이>0, 종횡비 일치)", () => {
+    const box = zoomMapBox([{ lat: 35, lon: 129 }], 1.5, 0.5, 1.2);
+    expect(box.w).toBeGreaterThan(0);
+    expect(box.w / box.h).toBeCloseTo(1.5, 5);
+    // 점이 박스 중앙 부근
+    const p = projectInBox(35, 129, box);
+    expect(p.x).toBeCloseTo(50, 1); expect(p.y).toBeCloseTo(50, 1);
+  });
+  it("세로로 긴 군집도 박스 종횡비에 맞춰 가로 확장(점은 내부)", () => {
+    const items = [{ lat: 30, lon: 100 }, { lat: 40, lon: 100.5 }]; // 위도 폭≫경도 폭
+    const box = zoomMapBox(items, 2);
+    expect(box.w / box.h).toBeCloseTo(2, 5);
+    for (const it of items) { const p = projectInBox(it.lat, it.lon, box); expect(p.x).toBeGreaterThan(2); expect(p.x).toBeLessThan(98); }
   });
 });

@@ -81,9 +81,17 @@ try {
 
     await page.goto(BASE, { waitUntil: "load" });
     await page.waitForTimeout(800);
-    const dot = `.zone-dot[data-map="${m.id}"]`;
-    await page.locator(dot).waitFor({ state: "visible", timeout: 15000 });
-    await page.locator(dot).click(); // 세계지도 점 클릭 → 팝업
+    await page.locator(".zone-dot").first().waitFor({ state: "visible", timeout: 15000 });
+    const dot = page.locator(`.zone-dot[data-map="${m.id}"]`);
+    if (await dot.count()) {
+      await dot.click(); // 단일 점 → 바로 팝업
+    } else {
+      // 클러스터(대표 점)에 묶임 → 대표 점 클릭 → 확대창의 세부 점 클릭
+      const cluster = page.locator(`.zone-dot[data-cluster*="${m.id}"]`);
+      await cluster.first().click();
+      await page.locator(`#clusterMap .zone-dot[data-map="${m.id}"]`).waitFor({ state: "visible", timeout: 5000 });
+      await page.locator(`#clusterMap .zone-dot[data-map="${m.id}"]`).click();
+    }
     await page.locator(".zonepop__drone").first().waitFor({ state: "visible", timeout: 8000 });
     await page.locator(".zonepop__drone").first().click(); // 기체 선택 → 즉시 출격
     await page.waitForTimeout(5000); // 다운로드 + 월드 빌드 + 첫 프레임들
