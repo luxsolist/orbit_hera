@@ -16,6 +16,9 @@ export const cellLocalOf = (lat, lon, cell, mLon = cellMLon(cell[0])) => ({ x: (
 /** chunkMesh AREA_COLOR 와 짝 — 알려진 지표 면 종류. */
 export const KNOWN_AREA = new Set(["park", "garden", "grass", "pitch", "wood", "scrub", "sand", "rock", "pavement"]);
 
+/** 건물 높이 상한(m) — 실존 최고 건물(부르즈 할리파 828m). 초과 = OSM 가비지 태그(예: levels="123456…")로 인한 바늘 건물. osm.buildingHeight 와 동일 기준. */
+export const BUILDING_H_MAX = 830;
+
 const finite = (v) => typeof v === "number" && Number.isFinite(v);
 
 /** 폴리라인/폴리곤 좌표 배열 기본 검사. minPts=최소 점 수(면 3, 선 2). */
@@ -118,6 +121,16 @@ export function validateChunk(chunk, chunkSize, opts = {}) {
     if (hasZeroLengthEdge(r.p)) W(`${name}-dupvert`, `${name} 영길이 모서리(중복 정점)`);
     if (isSelfIntersecting(r.p)) W(`${name}-selfx`, `${name} 자기교차 폴리곤(압출 퇴화 위험)`);
     if (!inBounds(r.p, x0, z0, x1, z1, 1.0)) E(`${name}-bounds`, `${name} 폴리곤이 청크(${cx},${cz}) 경계 밖 — 클립 누락`);
+    // 멀티폴리곤 구멍(수역 섬·제방=육지) — outer 와 동일 불변식(even-odd 도려내기 입력이라 깨지면 렌더 퇴화).
+    if (Array.isArray(r.holes)) {
+      for (const h of r.holes) {
+        const hi = polyIssues(h, 3);
+        if (hi.length) { E(`${name}-hole-poly`, `${name} 구멍: ${hi.join(", ")}`); continue; }
+        if (cellOOB(h)) { E(`${name}-hole-celloob`, `${name} 구멍 좌표가 셀 범위 밖`); continue; }
+        if (!inBounds(h, x0, z0, x1, z1, 1.0)) E(`${name}-hole-bounds`, `${name} 구멍이 청크(${cx},${cz}) 경계 밖 — 클립 누락`);
+        if (hasZeroLengthEdge(h)) W(`${name}-hole-dupvert`, `${name} 구멍 영길이 모서리`);
+      }
+    }
   };
   // 선/세그먼트: 유한값 + 셀 범위 + 영길이. bounded=true(도로·담장: 파이프라인이 청크로 클립 → 경계 내 강제).
   const checkSeg = (r, name, bounded) => {
@@ -133,6 +146,7 @@ export function validateChunk(chunk, chunkSize, opts = {}) {
     if (pi.length) { E("building-poly", pi.join(", ")); continue; }
     if (cellOOB(b.p)) { E("building-celloob", "건물 좌표가 셀 범위 밖(투영 버그)"); continue; }
     if (!finite(b.h) || b.h <= 0) W("building-h", `건물 높이 ${b.h}`);
+    else if (b.h > BUILDING_H_MAX) E("building-h-extreme", `건물 높이 ${b.h}m > ${BUILDING_H_MAX}m — 비현실적(OSM 태그 오류·가비지 의심)`); // 바늘 건물 게이트
     if (hasZeroLengthEdge(b.p)) W("building-dupvert", "건물 영길이 모서리(중복 정점)");
     if (isSelfIntersecting(b.p)) W("building-selfx", "건물 자기교차 footprint(압출 퇴화 위험)");
   }

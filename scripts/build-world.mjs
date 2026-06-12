@@ -115,10 +115,21 @@ for (const b of objects.buildings ?? []) {
 for (const r of objects.roads ?? []) binPolyline(reproj(r.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).roads.push({ p: piece, ...(r.w != null ? { w: r.w } : {}) }); });
 // 담장/울타리: 동일하게 폴리라인 클립으로 연속 조각 저장.
 for (const wl of objects.walls ?? []) binPolyline(reproj(wl.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).walls.push({ p: piece, ...(wl.h != null ? { h: wl.h } : {}), ...(wl.w != null ? { w: wl.w } : {}) }); });
-// 수역: 면(polygon)은 청크별 클립(드레이프 정확), 선형 하천(w 보유)은 도로처럼 폴리라인 클립(맵 밖·거대 relation 좌표 방지).
+// 수역: 면(polygon)은 청크별 클립(드레이프 정확) + 멀티폴리곤 구멍(holes)도 같은 청크 rect 로 클립해 보존(섬·제방 도려냄),
+// 선형 하천(w 보유)은 도로처럼 폴리라인 클립(맵 밖·거대 relation 좌표 방지).
 for (const w of terrain.water ?? []) {
-  if (w.w != null) binPolyline(reproj(w.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).water.push({ p: piece, w: w.w }); });
-  else binClipped(reproj(w.p), (cx, cz, c) => { if (inExt(cx, cz)) chunk(cx, cz).water.push({ p: c }); });
+  if (w.w != null) { binPolyline(reproj(w.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).water.push({ p: piece, w: w.w }); }); continue; }
+  const outer = reproj(w.p);
+  const holes = (w.holes ?? []).map(reproj).filter((h) => h.length >= 6);
+  const [x0, z0, x1, z1] = bbox(outer);
+  for (let cz = ci(z0); cz <= ci(z1); cz++) for (let cx = ci(x0); cx <= ci(x1); cx++) {
+    if (!inExt(cx, cz)) continue;
+    const oc = clipRect(outer, cx * C, cz * C, (cx + 1) * C, (cz + 1) * C);
+    if (oc.length < 6 || polyArea(oc) < 1) continue;
+    const hc = [];
+    for (const h of holes) { const c = clipRect(h, cx * C, cz * C, (cx + 1) * C, (cz + 1) * C); if (c.length >= 6 && polyArea(c) >= 1) hc.push(c); }
+    chunk(cx, cz).water.push(hc.length ? { p: oc, holes: hc } : { p: oc });
+  }
 }
 // 지표 면(공원/잔디/숲 등): 청크별로 클립해 분배 — 각 조각이 자기 청크 격자 안에서 지형에 드레이프.
 for (const a of objects.areas ?? []) binClipped(reproj(a.p), (cx, cz, c) => { if (inExt(cx, cz)) chunk(cx, cz).areas.push({ p: c, k: a.k }); });

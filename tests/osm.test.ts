@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 // @ts-expect-error — JS 빌드 헬퍼(타입 선언 없음)
-import { projFns, buildingHeight, roadWidth, ringArea, wallSpec, areaKind, relationRings, dedupeConsecutive, isSelfIntersecting, convexHull, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM } from "../scripts/osm.mjs";
+import { projFns, buildingHeight, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationRings, relationPolys, dedupeConsecutive, isSelfIntersecting, convexHull, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM } from "../scripts/osm.mjs";
 
 describe("osm.projFns", () => {
   it("maps the origin to (0,0)", () => {
@@ -40,6 +40,52 @@ describe("osm.buildingHeight", () => {
     expect(buildingHeight({ building: "house" })).toBe(6);
     expect(buildingHeight({ building: "yes" })).toBe(9);
     expect(buildingHeight({})).toBe(9);
+  });
+  it("비현실/가비지 높이 태그는 무시하고 폴백(바늘 건물 방지)", () => {
+    // OSM 가비지 levels="12345678910111212" → 4e16m 바늘 건물이었던 케이스
+    expect(buildingHeight({ building: "yes", "building:levels": "12345678910111212" })).toBe(9);
+    expect(buildingHeight({ building: "yes", height: "7599" })).toBe(9); // 7599m > 830 → 폴백
+    expect(buildingHeight({ building: "yes", "building:levels": "300" })).toBe(9); // 300층(가비지) → 폴백
+    // 실존 초고층은 보존
+    expect(buildingHeight({ height: "555" })).toBe(555); // 롯데월드타워
+    expect(buildingHeight({ height: "828" })).toBe(828); // 부르즈 할리파(상한)
+    expect(buildingHeight({ "building:levels": "100" })).toBe(330); // 100층 보존
+  });
+  it("첫 수치 토큰만(구분기호/범위/세미콜론 안전 — 자리 이어붙임 방지)", () => {
+    expect(buildingHeight({ height: "12;15" })).toBe(12); // 이전엔 "1215" 로 이어붙던 버그
+    expect(buildingHeight({ height: "30-40" })).toBe(30);
+  });
+});
+
+describe("osm.buildingHeightInfo — 추정(estimated) 구분", () => {
+  it("실측(height/levels)·명시 타입은 estimated=false, 일반 폴백(9m)만 true", () => {
+    expect(buildingHeightInfo({ height: "30" })).toEqual({ h: 30, estimated: false });
+    expect(buildingHeightInfo({ "building:levels": "10" })).toEqual({ h: 33, estimated: false });
+    expect(buildingHeightInfo({ building: "house" })).toEqual({ h: 6, estimated: false });
+    expect(buildingHeightInfo({ building: "palace" })).toEqual({ h: 7, estimated: false });
+    expect(buildingHeightInfo({ building: "yes" })).toEqual({ h: 9, estimated: true }); // 미상 → 보간 대상
+    expect(buildingHeightInfo({ building: "yes", "building:levels": "12345678910111212" })).toEqual({ h: 9, estimated: true }); // 가비지 → 미상
+  });
+});
+
+describe("osm.interpolateBuildingHeights — 미상 건물을 주변 실측 중앙값으로", () => {
+  const sq = (x: number, z: number) => [x, z, x + 8, z, x + 8, z + 8, x, z + 8];
+  it("반경 내 seed 중앙값으로 대체(이상치 강인), 외딴 미상은 기본값 유지", () => {
+    const B = [
+      { p: sq(0, 0), h: 30 }, { p: sq(60, 0), h: 40 }, { p: sq(0, 60), h: 50 }, // seed(실측)
+      { p: sq(30, 30), h: 9 },      // 미상, 중앙 — seed 3개 반경내 → 중앙값 40
+      { p: sq(9000, 9000), h: 9 },  // 미상, 외딴 — seed 없음 → 9 유지
+    ];
+    const est = [false, false, false, true, true];
+    interpolateBuildingHeights(B, est, { radius: 220, minNeighbors: 3 });
+    expect(B[3].h).toBe(40); // median(30,40,50)
+    expect(B[4].h).toBe(9);
+    expect(B[0].h).toBe(30); // seed 불변
+  });
+  it("미상끼리는 서로 seed 가 되지 않음(전파 드리프트 방지)", () => {
+    const B = [{ p: sq(0, 0), h: 9 }, { p: sq(30, 0), h: 9 }, { p: sq(60, 0), h: 9 }];
+    interpolateBuildingHeights(B, [true, true, true], { radius: 220, minNeighbors: 1 });
+    expect(B.map((b) => b.h)).toEqual([9, 9, 9]); // seed 없음 → 전부 유지
   });
 });
 
@@ -100,6 +146,41 @@ describe("osm.relationRings — 멀티폴리곤 outer 추출(inner 무시)", () 
     const rings = relationRings(el, proj);
     expect(rings).toHaveLength(1); // outer 만
     expect(rings[0].length).toBeGreaterThanOrEqual(6);
+  });
+});
+
+describe("osm.relationPolys — 멀티폴리곤 outer+구멍(inner) 보존", () => {
+  const proj = projFns(0, 0);
+  it("outer 1개 + 그 안의 inner = 구멍으로 귀속(섬·제방=육지 도려냄)", () => {
+    const el = {
+      type: "relation",
+      members: [
+        // 큰 사각 outer(약 1.1km²)
+        { type: "way", role: "outer", geometry: [{ lat: 0, lon: 0 }, { lat: 0, lon: 0.01 }, { lat: 0.01, lon: 0.01 }, { lat: 0.01, lon: 0 }, { lat: 0, lon: 0 }] },
+        // 내부 작은 사각 inner(구멍)
+        { type: "way", role: "inner", geometry: [{ lat: 0.003, lon: 0.003 }, { lat: 0.003, lon: 0.006 }, { lat: 0.006, lon: 0.006 }, { lat: 0.006, lon: 0.003 }, { lat: 0.003, lon: 0.003 }] },
+        { type: "node", role: "label" },
+      ],
+    };
+    const polys = relationPolys(el, proj);
+    expect(polys).toHaveLength(1);
+    expect(polys[0].outer.length).toBeGreaterThanOrEqual(8);
+    expect(polys[0].holes).toHaveLength(1); // inner = 구멍
+    expect(ringArea(polys[0].holes[0])).toBeGreaterThan(0);
+    expect(ringArea(polys[0].outer)).toBeGreaterThan(ringArea(polys[0].holes[0])); // 구멍 < outer
+  });
+  it("쪼개진 outer way 들을 끝점으로 봉합해 닫힌 링 1개로", () => {
+    const el = {
+      type: "relation",
+      members: [
+        { type: "way", role: "outer", geometry: [{ lat: 0, lon: 0 }, { lat: 0, lon: 0.01 }] },
+        { type: "way", role: "outer", geometry: [{ lat: 0, lon: 0.01 }, { lat: 0.01, lon: 0.01 }, { lat: 0.01, lon: 0 }] },
+        { type: "way", role: "outer", geometry: [{ lat: 0.01, lon: 0 }, { lat: 0, lon: 0 }] },
+      ],
+    };
+    const polys = relationPolys(el, proj);
+    expect(polys).toHaveLength(1); // 3 조각 → 닫힌 링 1개(거대 가짜 사각형 아님)
+    expect(ringArea(polys[0].outer)).toBeGreaterThan(0);
   });
 });
 

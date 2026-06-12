@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import * as THREE from "three";
-import { sampleChunkHeight, chunkTerrainEntry, buildChunkMesh, disposeChunkGroup, LAYER_Y } from "../src/world/chunkMesh";
+import { sampleChunkHeight, chunkTerrainEntry, buildChunkMesh, disposeChunkGroup } from "../src/world/chunkMesh";
 import type { WorldChunk } from "../src/world/chunkManifest";
 
 // 청크 → 메시/등록 데이터 변환 — heightAt 샘플러, 지형 엔트리, 로컬 좌표 변환·콜리전 top 의 정확성.
+// 도로/물(면)/지표면/차선은 **지형 표면 텍스처에 베이크**되어 별도 메시를 만들지 않는다(아래 "텍스처 베이크" describe).
+// 테스트 환경(node, document 없음)에선 캔버스 베이크가 null → 지형은 폴백 vertexColors 머티리얼, 도로/물/면 메시 0.
 
 const CHUNK = 1024;
 
@@ -60,7 +62,7 @@ describe("sampleChunkHeight — 바이리니어 + 클램프", () => {
   });
 });
 
-describe("buildChunkMesh — 로컬 좌표 변환 + 콜리전 top", () => {
+describe("buildChunkMesh — 로컬 좌표 변환 + 콜리전/미니맵 데이터", () => {
   const originX = CHUNK, originZ = 2 * CHUNK; // 로컬 원점 = 청크 NW 모서리
 
   it("건물 폴리 = 셀-로컬 − origin, top = 지표면 + 높이", () => {
@@ -76,7 +78,7 @@ describe("buildChunkMesh — 로컬 좌표 변환 + 콜리전 top", () => {
     expect(cb.buildings[0].top).toBeCloseTo(groundY + 12);
   });
 
-  it("도로 세그먼트·수역 = 로컬 좌표 보존", () => {
+  it("도로 세그먼트·수역(면) = 로컬 좌표로 미니맵 데이터에 보존", () => {
     const chunk = makeChunk({
       objects: {
         buildings: [],
@@ -92,25 +94,10 @@ describe("buildChunkMesh — 로컬 좌표 변환 + 콜리전 top", () => {
     expect(cb.water[0].slice(0, 2)).toEqual([1300 - originX, 2300 - originZ]);
   });
 
-  it("지형+건물+간선도로(w≥16)+수역 → 그룹 메시 5개(지형·건물·도로·중앙선·수역)", () => {
-    const chunk = makeChunk({
-      objects: {
-        buildings: [{ p: [1500, 2500, 1520, 2500, 1510, 2520], h: 9 }],
-        roads: [{ p: [1100, 2100, 1200, 2200], w: 28 }], // 간선(≥16) → 도로 + 중앙선 2메시
-        water: [{ p: [1300, 2300, 1400, 2300, 1350, 2400] }],
-      },
-    });
-    const cb = buildChunkMesh(chunk, CHUNK, originX, originZ);
-    expect(cb.group).toBeInstanceOf(THREE.Group);
-    expect(cb.group.children.length).toBe(5);
-    expect(cb.terrain).not.toBeNull();
-  });
-
-  it("중앙선은 간선(w≥16)에만 — 작은 도로(w<16)는 중앙선 없음", () => {
-    const minor = makeChunk({ objects: { buildings: [], roads: [{ p: [1100, 2100, 1200, 2200], w: 8 }], water: [] } });
-    expect(buildChunkMesh(minor, CHUNK, originX, originZ).group.children.length).toBe(2); // 지형 + 도로(중앙선 X)
-    const arterial = makeChunk({ objects: { buildings: [], roads: [{ p: [1100, 2100, 1200, 2200], w: 28 }], water: [] } });
-    expect(buildChunkMesh(arterial, CHUNK, originX, originZ).group.children.length).toBe(3); // 지형 + 도로 + 중앙선
+  it("강/하천 라인(water w)은 미니맵 면 목록(cb.water)에서 제외 — 면 폴리곤만 수집", () => {
+    const chunk = makeChunk({ objects: { buildings: [], roads: [], areas: [], water: [{ p: [1100, 2100, 1200, 2200, 1300, 2200], w: 6 }] } });
+    const cb = buildChunkMesh(chunk, CHUNK, CHUNK, 2 * CHUNK);
+    expect(cb.water).toHaveLength(0); // 라인(w 보유)은 면 목록에 안 들어감
   });
 
   it("경사면 건물: base 를 footprint 최저 지표 아래까지 압출(틈 제거), 옥상=중심지표+높이", () => {
@@ -122,8 +109,7 @@ describe("buildChunkMesh — 로컬 좌표 변환 + 콜리전 top", () => {
     const t = cb.terrain;
     const minGround = Math.min(sampleChunkHeight(t, 1100, 2510), sampleChunkHeight(t, 1590, 2510));
     const centroidGround = sampleChunkHeight(t, 1345, 2510);
-    // group.children = [terrain, building]
-    const bmesh = cb.group.children[1] as THREE.Mesh;
+    const bmesh = cb.group.children[1] as THREE.Mesh; // [terrain, building]
     bmesh.geometry.computeBoundingBox();
     const bb = bmesh.geometry.boundingBox!;
     expect(bb.min.y).toBeLessThanOrEqual(minGround); // 최저 지표 아래까지 채움(틈 없음)
@@ -144,29 +130,7 @@ describe("buildChunkMesh — 로컬 좌표 변환 + 콜리전 top", () => {
     expect(w.z1).toBeGreaterThan(w.z0);
     const topGround = Math.max(sampleChunkHeight(cb.terrain, 1200, 2200), sampleChunkHeight(cb.terrain, 1300, 2200));
     expect(w.top).toBeCloseTo(topGround + 3); // 양 끝 지표 최대 + 높이
-    // group: [terrain, wall-mesh]
-    expect(cb.group.children.length).toBe(2);
-  });
-
-  it("강/하천 라인(water w)은 리본으로 — 면 채움(cb.water) 아님", () => {
-    const chunk = makeChunk({ objects: { buildings: [], roads: [], areas: [], water: [{ p: [1100, 2100, 1200, 2200, 1300, 2200], w: 6 }] } });
-    const cb = buildChunkMesh(chunk, CHUNK, CHUNK, 2 * CHUNK);
-    expect(cb.water).toHaveLength(0); // 라인은 fill 목록에 안 들어감
-    expect(cb.group.children.length).toBe(2); // 지형 + 물 리본
-  });
-
-  it("지표 면(area): 메시 생성(충돌/미니맵 비대상)", () => {
-    const chunk = makeChunk({
-      objects: {
-        buildings: [], roads: [], water: [],
-        areas: [{ p: [1100, 2100, 1300, 2100, 1300, 2300, 1100, 2300], k: "sand" }],
-      },
-    });
-    const cb = buildChunkMesh(chunk, CHUNK, originX, originZ);
-    // group: [terrain, area-mesh]
-    expect(cb.group.children.length).toBe(2);
-    expect(cb.buildings).toHaveLength(0);
-    expect(cb.walls).toHaveLength(0);
+    expect(cb.group.children.length).toBe(2); // [terrain, wall]
   });
 
   it("지형 없는 청크(size 0) — 건물 top 은 지표면 0 기준", () => {
@@ -180,149 +144,60 @@ describe("buildChunkMesh — 로컬 좌표 변환 + 콜리전 top", () => {
   });
 });
 
-describe("buildChunkMesh — 시각 가공(드레이프·수면·도로 조인트)", () => {
+describe("buildChunkMesh — 도로/물/면/차선은 지형 표면 텍스처에 베이크(별도 메시 없음)", () => {
   const originX = CHUNK, originZ = 2 * CHUNK;
-  const meshY = (m: THREE.Mesh) => {
-    const pos = m.geometry.attributes.position;
-    let mn = Infinity, mx = -Infinity;
-    for (let i = 0; i < pos.count; i++) { const y = pos.getY(i); if (y < mn) mn = y; if (y > mx) mx = y; }
-    return { mn, mx };
-  };
 
-  it("지표 면은 경사 지형에 드레이프(Y 변동 — 평면 부유 아님)", () => {
-    const chunk = makeChunk({ objects: { buildings: [], roads: [], water: [], areas: [{ p: [1100, 2100, 1300, 2100, 1300, 2300, 1100, 2300], k: "sand" }] } });
+  it("지형+도로+수역면+지표면+간선차선 → 그룹 메시는 지형 1개만(나머지 전부 텍스처 베이크)", () => {
+    const chunk = makeChunk({
+      objects: {
+        buildings: [],
+        roads: [{ p: [1100, 2100, 1200, 2200], w: 28 }], // 간선(차선) — 텍스처 베이크
+        water: [{ p: [1300, 2300, 1400, 2300, 1350, 2400] }],
+        areas: [{ p: [1100, 2600, 1300, 2600, 1300, 2800, 1100, 2800], k: "sand" }],
+      },
+    });
     const cb = buildChunkMesh(chunk, CHUNK, originX, originZ);
-    const { mn, mx } = meshY(cb.group.children[1] as THREE.Mesh); // [terrain, area]
-    expect(mx - mn).toBeGreaterThan(1); // 경사 따라 높이 변동
+    expect(cb.group).toBeInstanceOf(THREE.Group);
+    expect(cb.group.children.length).toBe(1); // 지형 메시뿐 — 도로/물/면/차선 메시 없음
+    expect(cb.group.children[0]).toBeInstanceOf(THREE.Mesh);
+    // 데이터는 미니맵/충돌용으로 보존
+    expect(cb.roads).toHaveLength(1);
+    expect(cb.water).toHaveLength(1);
   });
 
-  it("수면은 경계 최저 지표 위 평탄(부유 아님, 도로 아래)", () => {
-    const chunk = makeChunk({ objects: { buildings: [], roads: [], water: [{ p: [1100, 2100, 1300, 2100, 1300, 2300, 1100, 2300] }], areas: [] } });
+  it("건물만 추가 메시 — [지형, 건물]", () => {
+    const chunk = makeChunk({
+      objects: {
+        buildings: [{ p: [1500, 2500, 1520, 2500, 1510, 2520], h: 9 }],
+        roads: [{ p: [1100, 2100, 1200, 2200], w: 28 }],
+        water: [{ p: [1300, 2300, 1400, 2300, 1350, 2400] }],
+      },
+    });
     const cb = buildChunkMesh(chunk, CHUNK, originX, originZ);
-    const { mn, mx } = meshY(cb.group.children[1] as THREE.Mesh); // [terrain, water]
-    expect(mx - mn).toBeLessThan(0.01); // 평탄
-    const minG = Math.min(
-      sampleChunkHeight(cb.terrain, 1100, 2100), sampleChunkHeight(cb.terrain, 1300, 2100),
-      sampleChunkHeight(cb.terrain, 1300, 2300), sampleChunkHeight(cb.terrain, 1100, 2300));
-    expect(mn).toBeCloseTo(minG + LAYER_Y.water, 2);
-    expect(LAYER_Y.water).toBeLessThan(LAYER_Y.road); // 수면은 도로 아래
+    expect(cb.group.children.length).toBe(2); // [terrain, building]
   });
 
-  it("도로 마이터 리본 — 짧은 세그먼트(≤12m)는 quad 하나, 연속 폴리라인은 이어진 quad", () => {
-    // 짧은 2점(≤12m): 리샘플 없이 quad 1개 = 6정점(원반/연장 없음 — 조각·z-fighting 제거)
-    const seg2 = makeChunk({ objects: { buildings: [], roads: [{ p: [1100, 2100, 1108, 2105], w: 8 }], water: [], areas: [] } });
-    const r2 = (buildChunkMesh(seg2, CHUNK, originX, originZ).group.children[1] as THREE.Mesh).geometry.attributes.position.count;
-    expect(r2).toBe(6);
-    // 짧은 3점: 연속 2 quad = 12정점(마이터로 이어짐)
-    const poly3 = makeChunk({ objects: { buildings: [], roads: [{ p: [1100, 2100, 1108, 2105, 1116, 2100], w: 8 }], water: [], areas: [] } });
-    const r3 = (buildChunkMesh(poly3, CHUNK, originX, originZ).group.children[1] as THREE.Mesh).geometry.attributes.position.count;
-    expect(r3).toBe(12);
+  it("node 환경(캔버스 없음): 지형은 폴백 vertexColors 머티리얼(map 없음)", () => {
+    const cb = buildChunkMesh(makeChunk(), CHUNK, originX, originZ);
+    const mat = (cb.group.children[0] as THREE.Mesh).material as THREE.MeshStandardMaterial;
+    expect(mat.map).toBeFalsy(); // 텍스처 베이크 실패 → 폴백
+    expect(mat.vertexColors).toBe(true);
+    // 폴백 경로에서도 UV 는 항상 부여(텍스처 성공 시 사용)
+    expect((cb.group.children[0] as THREE.Mesh).geometry.getAttribute("uv")).toBeTruthy();
   });
 
-  it("도로 끝점이 진행방향으로 연장됨 — 조각/교차로 사이 틈 메움", () => {
-    const chunk = makeChunk({ objects: { buildings: [], roads: [{ p: [1100, 2100, 1200, 2100], w: 8 }], water: [], areas: [] } }); // 수평, 반폭4, ext=4
-    const road = buildChunkMesh(chunk, CHUNK, originX, originZ).group.children[1] as THREE.Mesh;
-    road.geometry.computeBoundingBox();
-    const bb = road.geometry.boundingBox!;
-    expect(bb.max.x).toBeGreaterThan(1200 - originX + 2); // 끝점(176) 너머로 연장(≈+4)
-    expect(bb.min.x).toBeLessThan(1100 - originX - 2); // 시작점(76) 이전으로 연장
-  });
-
-  it("긴 도로 세그먼트는 ≤12m 로 리샘플돼 지형에 밀착(정점 다수)", () => {
-    const longRoad = makeChunk({ objects: { buildings: [], roads: [{ p: [1100, 2100, 1300, 2100], w: 8 }], water: [], areas: [] } }); // 200m
-    const cnt = (buildChunkMesh(longRoad, CHUNK, originX, originZ).group.children[1] as THREE.Mesh).geometry.attributes.position.count;
-    expect(cnt).toBeGreaterThan(6 * 10); // 200/12≈17 세그먼트 → 다수 quad(지형 삐져나옴 방지)
+  it("지표 면만 있는 청크 — 메시는 지형 1개(면은 텍스처), 충돌/미니맵 비대상", () => {
+    const chunk = makeChunk({
+      objects: { buildings: [], roads: [], water: [], areas: [{ p: [1100, 2100, 1300, 2100, 1300, 2300, 1100, 2300], k: "sand" }] },
+    });
+    const cb = buildChunkMesh(chunk, CHUNK, originX, originZ);
+    expect(cb.group.children.length).toBe(1); // 지형만
+    expect(cb.buildings).toHaveLength(0);
+    expect(cb.walls).toHaveLength(0);
   });
 
   it("disposeChunkGroup — 지오메트리 해제(예외 없음)", () => {
     const cb = buildChunkMesh(makeChunk(), CHUNK, originX, originZ);
     expect(() => disposeChunkGroup(cb.group)).not.toThrow();
-  });
-});
-
-describe("레이어 강제 — 지형 < 면 < 수역 < 보도 < 차도 (녹색이 도로 덮는 문제 방지)", () => {
-  const originX = CHUNK, originZ = 2 * CHUNK;
-  it("LAYER_Y 오프셋이 엄격히 증가(면<수역<보도<차도<중앙선)", () => {
-    expect(LAYER_Y.area).toBeLessThan(LAYER_Y.water);
-    expect(LAYER_Y.water).toBeLessThan(LAYER_Y.path);
-    expect(LAYER_Y.path).toBeLessThan(LAYER_Y.road);
-    expect(LAYER_Y.centerAdd).toBeGreaterThan(0);
-  });
-
-  it("큰 면이 지형에 밀착(세분-드레이프) — 모든 정점이 지표면+면오프셋, 떠오르지 않음", () => {
-    // 900m 대형 면 — 경계만 드레이프하면 내부가 떠오르던 케이스. 세분으로 지형 밀착해야 함.
-    const chunk = makeChunk({ objects: { buildings: [], roads: [], water: [], areas: [{ p: [1050, 2050, 1950, 2050, 1950, 2950, 1050, 2950], k: "sand" }] } });
-    const cb = buildChunkMesh(chunk, CHUNK, originX, originZ);
-    const area = cb.group.children[1] as THREE.Mesh; // [terrain, area]
-    const pos = area.geometry.attributes.position;
-    expect(pos.count).toBeGreaterThan(4); // 세분됨(경계 4점 초과)
-    let maxDev = 0;
-    for (let i = 0; i < pos.count; i++) {
-      const expectY = sampleChunkHeight(cb.terrain, pos.getX(i) + originX, pos.getZ(i) + originZ) + LAYER_Y.area;
-      maxDev = Math.max(maxDev, Math.abs(pos.getY(i) - expectY));
-    }
-    expect(maxDev).toBeLessThan(0.01); // 모든 정점이 지형 밀착 → 도로(LAYER_Y.road) 아래 보장
-  });
-
-  it("레이캐스트: 비평면(새들) 지형에서도 도로가 지형 위 — 초록 솟음(poke-through) 방지", () => {
-    // 새들 셀(중앙이 대각으로 솟음) — bilinear 드레이프면 도로가 메시 아래로 가라앉아 지형이 솟던 케이스.
-    const chunk: any = {
-      cx: 1, cz: 2,
-      terrain: { size: 2, seaLevel: 0, heights: [0, 10, 10, 0] }, // 새들
-      objects: { buildings: [], water: [], areas: [], roads: [{ p: [1536, 2400, 1536, 2700], w: 8 }] },
-      underground: null,
-    };
-    const cb = buildChunkMesh(chunk, CHUNK, originX, originZ);
-    const terrainMesh = cb.group.children[0] as THREE.Mesh; // 지형
-    const road = cb.group.children[1] as THREE.Mesh; // 도로
-    const px = 1536 - originX, pz = 2560 - originZ; // 도로가 지나는 중앙
-    const ray = new THREE.Raycaster(new THREE.Vector3(px, 1000, pz), new THREE.Vector3(0, -1, 0));
-    const hT = ray.intersectObject(terrainMesh)[0], hR = ray.intersectObject(road)[0];
-    expect(hT && hR).toBeTruthy();
-    expect(hR.point.y).toBeGreaterThan(hT.point.y); // 도로가 지형 위(초록 안 솟음)
-  });
-
-  it("레이캐스트: 급한 교차 경사(cross-slope)에서 넓은 도로 **가장자리**도 지형 위 — 가장자리 초록 솟음 방지", () => {
-    // X 방향 급경사(0→100/512m). 도로는 Z 방향 종주(폭이 경사를 가로지름). 가장자리(중심선+10m)에서 검사.
-    const chunk: any = {
-      cx: 1, cz: 2,
-      terrain: { size: 3, seaLevel: 0, heights: [0, 50, 100, 0, 50, 100, 0, 50, 100] },
-      objects: { buildings: [], water: [], areas: [], roads: [{ p: [1536, 2200, 1536, 2900], w: 28 }] }, // 반폭 14m
-      underground: null,
-    };
-    const cb = buildChunkMesh(chunk, CHUNK, originX, originZ);
-    const terrainMesh = cb.group.children[0] as THREE.Mesh, road = cb.group.children[1] as THREE.Mesh;
-    const px = 1548 - originX, pz = 2550 - originZ; // 중심선(1536)에서 오르막 가장자리 쪽 12m
-    const ray = new THREE.Raycaster(new THREE.Vector3(px, 1000, pz), new THREE.Vector3(0, -1, 0));
-    const hT = ray.intersectObject(terrainMesh)[0], hR = ray.intersectObject(road)[0];
-    expect(hT && hR).toBeTruthy();
-    expect(hR.point.y).toBeGreaterThan(hT.point.y); // 가장자리에서도 도로가 지형 위(중심선 드레이프였다면 솟았을 지점)
-  });
-
-  it("레이캐스트: 도로가 면 위를 덮음 — 같은 지점에서 도로면이 면보다 위", () => {
-    // 경사 지형 + 청크 전체를 덮는 면 + 그 위를 가로지르는 차도. 도로 위에서 수직 레이캐스트.
-    const chunk = makeChunk({
-      objects: {
-        buildings: [], water: [],
-        areas: [{ p: [1050, 2050, 1950, 2050, 1950, 2950, 1050, 2950], k: "sand" }],
-        roads: [{ p: [1100, 2100, 1300, 2300], w: 8 }],
-      },
-    });
-    const cb = buildChunkMesh(chunk, CHUNK, originX, originZ);
-    const area = cb.group.children[1] as THREE.Mesh; // [terrain, area, road, center]
-    const road = cb.group.children[2] as THREE.Mesh;
-    const px = (1100 + 1300) / 2 - originX, pz = (2100 + 2300) / 2 - originZ; // 도로 중점(로컬)
-    const ray = new THREE.Raycaster(new THREE.Vector3(px, 1000, pz), new THREE.Vector3(0, -1, 0));
-    const hitArea = ray.intersectObject(area)[0];
-    const hitRoad = ray.intersectObject(road)[0];
-    expect(hitArea && hitRoad).toBeTruthy();
-    expect(hitRoad.point.y).toBeGreaterThan(hitArea.point.y); // 도로가 면 위(덮음)
-  });
-});
-
-describe("buildChunkMesh — 면 세분 경계 케이스", () => {
-  it("퇴화 면(점<3 또는 일직선)은 메시 없음", () => {
-    const degen = makeChunk({ objects: { buildings: [], roads: [], water: [], areas: [{ p: [1100, 2100, 1200, 2100], k: "sand" }] } }); // 2점
-    expect(buildChunkMesh(degen, CHUNK, CHUNK, 2 * CHUNK).group.children.length).toBe(1); // 지형만
   });
 });

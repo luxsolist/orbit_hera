@@ -41,12 +41,12 @@ export function resolveBuildingStyle(
 
 /**
  * 건물 기본색(HSL 동별 변주 전) — 순수 hex.
- * precinctColor 가 있으면 권역 양식색, 없으면 높이별 도심 팔레트(저층→마천루).
+ * precinctColor 가 있으면 권역 양식색, 없으면 **높이별 회색 그라데이션**(저층=짙은 회색 → 마천루=밝은 회색, 연속).
+ * 채도 0 이라 호출측 명도 jitter(offsetHSL) 후에도 회색 유지.
  */
 export function buildingBaseColor(h: number, precinctColor: number | null): number {
   if (precinctColor != null) return precinctColor; // 권역 양식색(예: 경복궁 단청)
-  if (h < 9) return 0xe6c23a; // 저층 — 황금/베이지
-  if (h < 22) return 0x3fb56a; // 중층 — 녹색
-  if (h < 45) return 0x3a82e0; // 고층 — 파랑
-  return 0x2fcadf; // 마천루(유리) — 시안
+  const t = Math.max(0, Math.min(1, (h - 6) / (100 - 6))); // 6m → 100m 구간 정규화
+  const v = Math.round(0xa6 + (0xf8 - 0xa6) * t); // 166(밝은 회색) → 248(거의 흰 회색)
+  return (v << 16) | (v << 8) | v;
 }

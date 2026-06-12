@@ -69,21 +69,69 @@ export function projFns(lat0, lon0) {
   ];
 }
 
-/** OSM building 태그 → 높이(m). height > building:levels > 종류별 기본. */
-export function buildingHeight(t = {}) {
-  if (t.height) {
-    const v = parseFloat(String(t.height).replace(/[^\d.]/g, ""));
-    if (v > 0) return Math.round(v * 10) / 10;
-  }
-  if (t["building:levels"]) {
-    const v = parseFloat(t["building:levels"]);
-    if (v > 0) return Math.round(Math.max(3, v * 3.3) * 10) / 10;
-  }
+/** OSM building 태그의 첫 수치 토큰(구분기호/단위/범위/가비지 안전). 없으면 NaN. */
+const firstNum = (s) => { const m = String(s).match(/\d+(?:\.\d+)?/); return m ? parseFloat(m[0]) : NaN; };
+export const BUILDING_H_MAX = 830; // 실존 최고 건물(부르즈 할리파 828m) — 초과 height/levels 태그는 오류로 간주(폴백). 검증기와 공유.
+const BUILDING_LVL_MAX = 200;      // 층수 상한(가비지 levels 예: "12345678910111212" 차단)
+
+/**
+ * OSM building 태그 → { h, estimated }.
+ * h: height > building:levels > 종류별 기본. **현실적 상한 가드**: 첫 수치 토큰만 취하고
+ * height>BUILDING_H_MAX·levels>200 인 오류/가비지 태그는 무시하고 폴백(예: levels="12345678910111212" → 4e16m 바늘 방지).
+ * estimated: 실측 신호(height/levels)·명시 타입(hut/house/palace…)이 전혀 없어 일반 기본 9m 로 떨어진 경우 true
+ * → 빌드 단계에서 주변 건물 높이로 보간(interpolateBuildingHeights) 대상.
+ */
+export function buildingHeightInfo(t = {}) {
+  const hv = firstNum(t.height);
+  if (hv > 0 && hv <= BUILDING_H_MAX) return { h: Math.round(hv * 10) / 10, estimated: false };
+  const lv = firstNum(t["building:levels"]);
+  if (lv > 0 && lv <= BUILDING_LVL_MAX) return { h: Math.round(Math.max(3, lv * 3.3) * 10) / 10, estimated: false };
   const b = t.building;
-  if (b === "hut" || b === "shed" || b === "roof") return 3;
-  if (b === "temple" || b === "shrine" || b === "palace" || b === "pavilion") return 7;
-  if (b === "house" || b === "detached" || b === "hanok") return 6;
-  return 9;
+  if (b === "hut" || b === "shed" || b === "roof") return { h: 3, estimated: false };
+  if (b === "temple" || b === "shrine" || b === "palace" || b === "pavilion") return { h: 7, estimated: false };
+  if (b === "house" || b === "detached" || b === "hanok") return { h: 6, estimated: false };
+  return { h: 9, estimated: true }; // 일반/미지정 → 주변 보간 대상
+}
+
+/** OSM building 태그 → 높이(m)만. (buildingHeightInfo 의 h) */
+export function buildingHeight(t = {}) { return buildingHeightInfo(t).h; }
+
+/**
+ * 높이 미상(estimated) 건물의 h 를 **주변 실측(seed) 건물 높이의 반경 내 중앙값**으로 추정 — in-place.
+ * buildings: [{p:[x,z,...], h}], estimated: boolean[](buildings 와 동일 정렬). 좌표는 평면 m.
+ * 공간 그리드(셀=radius)로 근사 O(n). 반경 radius(m) 내 seed 가 minNeighbors↑ 면 중앙값(이상치 강인)으로 대체, 아니면 기본값 유지.
+ * estimated 끼리는 서로 seed 가 되지 않아(전파 드리프트 방지) 결과가 입력 순서에 무관.
+ */
+export function interpolateBuildingHeights(buildings, estimated, { radius = 220, minNeighbors = 3 } = {}) {
+  const n = buildings.length;
+  if (!n) return buildings;
+  const cx = new Float64Array(n), cz = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const p = buildings[i].p, m = p.length / 2; let sx = 0, sz = 0;
+    for (let k = 0; k < m; k++) { sx += p[k * 2]; sz += p[k * 2 + 1]; }
+    cx[i] = sx / m; cz[i] = sz / m;
+  }
+  const cell = radius, grid = new Map(), key = (gx, gz) => `${gx}_${gz}`;
+  for (let i = 0; i < n; i++) { // seed(실측)만 색인
+    if (estimated[i]) continue;
+    const k = key(Math.floor(cx[i] / cell), Math.floor(cz[i] / cell));
+    let arr = grid.get(k); if (!arr) grid.set(k, arr = []); arr.push(i);
+  }
+  const r2 = radius * radius, out = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    if (!estimated[i]) continue;
+    const gx = Math.floor(cx[i] / cell), gz = Math.floor(cz[i] / cell), hs = [];
+    for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
+      const arr = grid.get(key(gx + dx, gz + dz)); if (!arr) continue;
+      for (const j of arr) { const ax = cx[j] - cx[i], az = cz[j] - cz[i]; if (ax * ax + az * az <= r2) hs.push(buildings[j].h); }
+    }
+    if (hs.length >= minNeighbors) {
+      hs.sort((a, b) => a - b); const mid = hs.length >> 1;
+      out[i] = hs.length % 2 ? hs[mid] : (hs[mid - 1] + hs[mid]) / 2;
+    } else out[i] = NaN; // 주변 seed 부족 → 기본값 유지
+  }
+  for (let i = 0; i < n; i++) if (estimated[i] && Number.isFinite(out[i])) buildings[i].h = Math.round(out[i] * 10) / 10;
+  return buildings;
 }
 
 /** 차도(차량 통행) highway 인지 — 보도/오솔길/계단/자전거도로/보행자 전용은 제외(수집 안 함). */
@@ -194,6 +242,80 @@ export function relationRings(el, proj) {
     if (flat.length >= 6) out.push(flat);
   }
   return out;
+}
+
+// ── 멀티폴리곤 조립(구멍 보존) ── outer/inner 멤버 way 를 끝점으로 봉합해 닫힌 링으로, 각 outer 에 그 안의 inner(구멍)를 귀속.
+function ptClose(ax, az, bx, bz, eps) { return Math.abs(ax - bx) <= eps && Math.abs(az - bz) <= eps; }
+
+/** 멤버 way 들(flat [x,z,...] 배열)을 공유 끝점으로 봉합 → 닫힌 링 목록(닫힘 중복점 제거). */
+function assembleRings(ways, eps = 0.5) {
+  const rings = [], segs = [];
+  for (const w of ways) {
+    const n = w.length;
+    if (n < 4) continue;
+    if (n >= 6 && ptClose(w[0], w[1], w[n - 2], w[n - 1], eps)) rings.push(w.slice(0, n - 2));
+    else segs.push(w.slice());
+  }
+  const used = new Array(segs.length).fill(false);
+  for (let i = 0; i < segs.length; i++) {
+    if (used[i]) continue;
+    used[i] = true;
+    let chain = segs[i].slice();
+    for (let grew = true; grew;) {
+      grew = false;
+      const m = chain.length, hx = chain[0], hz = chain[1], tx = chain[m - 2], tz = chain[m - 1];
+      if (m >= 6 && ptClose(hx, hz, tx, tz, eps)) break;
+      for (let j = 0; j < segs.length; j++) {
+        if (used[j]) continue;
+        const s = segs[j], sn = s.length, sx = s[0], sz = s[1], ex = s[sn - 2], ez = s[sn - 1];
+        if (ptClose(tx, tz, sx, sz, eps)) { for (let k = 2; k < sn; k += 2) chain.push(s[k], s[k + 1]); }
+        else if (ptClose(tx, tz, ex, ez, eps)) { for (let k = sn - 4; k >= 0; k -= 2) chain.push(s[k], s[k + 1]); }
+        else if (ptClose(hx, hz, ex, ez, eps)) { const pre = []; for (let k = 0; k < sn - 2; k += 2) pre.push(s[k], s[k + 1]); chain = pre.concat(chain); }
+        else if (ptClose(hx, hz, sx, sz, eps)) { const pre = []; for (let k = sn - 2; k >= 2; k -= 2) pre.push(s[k], s[k + 1]); chain = pre.concat(chain); }
+        else continue;
+        used[j] = true; grew = true; break;
+      }
+    }
+    const m = chain.length;
+    if (m >= 8 && ptClose(chain[0], chain[1], chain[m - 2], chain[m - 1], eps)) chain = chain.slice(0, m - 2);
+    if (chain.length >= 6) rings.push(chain);
+  }
+  return rings;
+}
+
+/** 점 (x,z) 가 링 r([x,z,...]) 내부인지(ray-casting). */
+function pointInRing(x, z, r) {
+  let inside = false; const n = r.length / 2;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = r[i * 2], zi = r[i * 2 + 1], xj = r[j * 2], zj = r[j * 2 + 1];
+    if (((zi > z) !== (zj > z)) && (x < (xj - xi) * (z - zi) / (zj - zi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+
+/**
+ * Overpass relation(out geom) → 멀티폴리곤 목록 [{ outer:flat, holes:flat[] }].
+ * outer/inner 멤버 way 를 끝점 봉합해 닫힌 링으로 만들고, 각 inner(구멍=섬/제방/육지)를 자신을 포함하는
+ * 가장 작은 outer 에 귀속(중첩 다중폴리곤 대응). proj=투영. relationRings 와 달리 구멍을 보존한다.
+ */
+export function relationPolys(el, proj) {
+  const outerWays = [], innerWays = [];
+  for (const m of el.members ?? []) {
+    if (m.type !== "way" || !m.geometry) continue;
+    const flat = [];
+    for (const g of m.geometry) { const [x, z] = proj(g.lat, g.lon); flat.push(x, z); }
+    if (flat.length >= 4) (m.role === "inner" ? innerWays : outerWays).push(flat);
+  }
+  const polys = assembleRings(outerWays).map((o) => ({ outer: o, holes: [] }));
+  if (!polys.length) return [];
+  for (const h of assembleRings(innerWays)) {
+    let best = -1, bestA = Infinity;
+    for (let i = 0; i < polys.length; i++) {
+      if (pointInRing(h[0], h[1], polys[i].outer)) { const a = ringArea(polys[i].outer); if (a < bestA) { bestA = a; best = i; } }
+    }
+    if (best >= 0) polys[best].holes.push(h); // 어느 outer 에도 안 들면 버림(잘못 도려내기 방지)
+  }
+  return polys;
 }
 
 /** 평면 폴리곤 [x0,z0,x1,z1,...] 의 넓이(shoelace, 절댓값). */

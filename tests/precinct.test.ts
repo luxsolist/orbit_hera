@@ -55,17 +55,25 @@ describe("resolveBuildingStyle", () => {
   });
 });
 
-describe("buildingBaseColor — 높이별 도심 팔레트 / 권역 양식색", () => {
+describe("buildingBaseColor — 높이별 회색 그라데이션 / 권역 양식색", () => {
   it("권역색 지정 시 높이 무관 그 색", () => {
     expect(buildingBaseColor(5, 0x123456)).toBe(0x123456);
     expect(buildingBaseColor(99, 0x123456)).toBe(0x123456);
   });
-  it("높이 밴드 경계(<9/<22/<45/그외)", () => {
-    expect(buildingBaseColor(8, null)).toBe(0xe6c23a);
-    expect(buildingBaseColor(9, null)).toBe(0x3fb56a); // 경계 포함 윗밴드
-    expect(buildingBaseColor(21, null)).toBe(0x3fb56a);
-    expect(buildingBaseColor(22, null)).toBe(0x3a82e0);
-    expect(buildingBaseColor(44, null)).toBe(0x3a82e0);
-    expect(buildingBaseColor(45, null)).toBe(0x2fcadf);
+  it("권역색 없으면 회색(채도0, R=G=B)", () => {
+    for (const h of [3, 9, 30, 80, 150]) {
+      const c = buildingBaseColor(h, null);
+      const r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
+      expect(r).toBe(g); expect(g).toBe(b);
+    }
+  });
+  it("저층=짙은 회색(0xa6) → 고층=밝은 회색(0xf8), 단조 증가 + 구간 클램프", () => {
+    expect(buildingBaseColor(6, null)).toBe(0xa6a6a6); // 하한
+    expect(buildingBaseColor(100, null)).toBe(0xf8f8f8); // 상한
+    expect(buildingBaseColor(3, null)).toBe(0xa6a6a6); // <6 클램프
+    expect(buildingBaseColor(200, null)).toBe(0xf8f8f8); // >100 클램프
+    const mid = buildingBaseColor(50, null) & 255;
+    expect(mid).toBeGreaterThan(0xa6); // 중층은 저층보다 밝음
+    expect(mid).toBeLessThan(0xf8);
   });
 });

@@ -74,6 +74,18 @@ describe("validateChunk — 면/수역(클립 대상)은 청크 경계 내 강�
     const ch = goodChunk({ water: [{ p: [50, 50, 9000, 9000], w: 12 }] });
     expect(codes(validateChunk(ch, C), "error")).toEqual([]);
   });
+  it("수역 구멍(holes)이 청크 안 = error 없음", () => {
+    const ch = goodChunk({ water: [{ p: [1100, 2100, 1900, 2100, 1900, 2900, 1100, 2900], holes: [[1300, 2300, 1500, 2300, 1500, 2500, 1300, 2500]] }] });
+    expect(codes(validateChunk(ch, C), "error")).toEqual([]);
+  });
+  it("청크 밖 구멍 → water-hole-bounds (구멍 클립 누락 검출)", () => {
+    const ch = goodChunk({ water: [{ p: [1100, 2100, 1900, 2100, 1900, 2900, 1100, 2900], holes: [[50, 50, 300, 50, 300, 300, 50, 300]] }] });
+    expect(codes(validateChunk(ch, C))).toContain("water-hole-bounds");
+  });
+  it("퇴화 구멍(점<3) → water-hole-poly", () => {
+    const ch = goodChunk({ water: [{ p: [1100, 2100, 1900, 2100, 1900, 2900, 1100, 2900], holes: [[1300, 2300, 1500, 2300]] }] });
+    expect(codes(validateChunk(ch, C))).toContain("water-hole-poly");
+  });
 });
 
 describe("validateChunk — 건물(배치형) / 도로·담장(청크 클립 → 경계 강제)", () => {
@@ -84,6 +96,13 @@ describe("validateChunk — 건물(배치형) / 도로·담장(청크 클립 →
   it("건물은 footprint overhang 허용 — 청크 밖 좌표여도 bounds error 없음(셀 범위 내)", () => {
     const ch = goodChunk({ buildings: [{ p: [900, 2000, 2200, 2000, 2200, 3200], h: 9 }] }); // 청크(1,2) 밖이나 셀 내
     expect(codes(validateChunk(ch, C))).not.toContain("building-bounds");
+  });
+  it("비현실 높이(>830m) → building-h-extreme(error, 바늘 건물 게이트)", () => {
+    const ch = goodChunk({ buildings: [{ p: [1100, 2100, 1200, 2100, 1150, 2200], h: 4.07e16 }] });
+    expect(codes(validateChunk(ch, C), "error")).toContain("building-h-extreme");
+    // 실존 초고층(롯데 555m)은 통과
+    const ok = goodChunk({ buildings: [{ p: [1100, 2100, 1200, 2100, 1150, 2200], h: 555 }] });
+    expect(codes(validateChunk(ok, C), "error")).not.toContain("building-h-extreme");
   });
   it("도로 폭 ≤0 → road-w(warn)", () => {
     const ch = goodChunk({ roads: [{ p: [1100, 2100, 1300, 2300], w: 0 }] });
