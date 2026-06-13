@@ -10,8 +10,8 @@ import { normalizeGeo, makeMaterial } from "./geo";
  * (예: 지붕 양식 = hiproof 의 ridge/cap/fin/up)
  */
 export class StructureBuilder {
-  /** lm(랜드마크)을 group 에 그리고, 콜라이더를 collision 에 등록. */
-  build(lm: Landmark, group: THREE.Group, collision: CollisionWorld): void {
+  /** lm(랜드마크)을 group 에 그리고, 콜라이더를 collision 에 등록. 생성한 Group(파괴 연출 대상)을 반환. */
+  build(lm: Landmark, group: THREE.Group, collision: CollisionWorld): THREE.Group {
     const mats = (lm.mats ?? []).map(makeMaterial);
 
     // 재질별로 지오메트리 모아 병합(드로콜 최소화)
@@ -44,6 +44,7 @@ export class StructureBuilder {
     // 축정렬 통과 불가 박스(rot=0 가정 — 광화문 피어 등)
     for (const b of lm.boxColliders ?? [])
       collision.addAabbBox(lm.x + b.x0, lm.x + b.x1, lm.z + b.z0, lm.z + b.z1);
+    return grp;
   }
 
   /** 부품(Part) → 비인덱스 BufferGeometry(로컬 변환 반영, 병합 일관성 위해 uv 제거). */

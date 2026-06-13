@@ -14,6 +14,9 @@ const SPAWN_INTERVAL = 0.35; // 개체 점진 스폰 간격(s)
 const KITER_GROUND_CLEARANCE = 1.5; // 도주형이 가라앉지 않는 지면 위 최소 높이(m)
 const KITER_CEILING = 1020; // 도주형 상승 상한(지면 대비, m) — 비행 천장(1000) 근처까지 추격 가능(고고도 이탈 방지)
 const TARGET_HYSTERESIS = 1.2; // 표적 교체 문턱 — 현재 표적이 최근접의 1.2배 이내면 유지(깜빡임 방지)
+const AGGRO_RADIUS = 150; // 이 거리(m) 안 살아있는 플레이어가 있으면 1순위(드론). 밖이면 2순위(건물) 자동 공격
+const AGGRO_RADIUS_SQ = AGGRO_RADIUS * AGGRO_RADIUS;
+const BUILDING_SEEK_R = 700; // 플레이어가 멀 때 공격할 주변 건물 탐색 반경(m)
 const STEER_STRIDE = 3; // 원거리 적 조향 재계산 주기(프레임) — 라운드로빈 분산
 const NEAR_DIST = 250; // 이 거리(m) 이내는 매 프레임 재계산(교전 감각 — 스폰 반경 전체 커버, 끊김 방지)
 const NEAR_DIST_SQ = NEAR_DIST * NEAR_DIST;
@@ -28,6 +31,8 @@ const _col = new THREE.Color(); // 인스턴스 색 임시
 const AGGRO_PENALTY = 0.4; // 어그로 분산 — 이미 표적이 된 플레이어당 거리 점수 가산(한 명에게 몰빵 방지)
 
 const _centroid = new THREE.Vector3(); // 스폰 무게중심 임시(프레임당 동기 사용)
+const _btarget = new THREE.Vector3(); // 건물 표적 좌표 임시(프레임당 동기 사용)
+const ZERO_VEL: Vec3 = { x: 0, y: 0, z: 0 }; // 정적 건물 표적 — 예측 리드 없음
 
 /** 멀티타깃 — 한 프레임의 플레이어 스냅샷(위치·추정속도·생존). 인덱스는 players 와 정합. */
 interface Target {
@@ -282,25 +287,55 @@ export class EnemyManager {
     else if (p.y > hi) p.y = hi;
   }
 
-  /** 도주형 원거리 드레인 — 사거리·간격 게이트 통과 시 표적 HP 흡수 + 적 성장 + 빔 연출. */
-  private kiterAttack(enemy: CoreEnemy, p: THREE.Vector3, t: Target) {
+  /**
+   * 공격 1회(아키타입·표적 공통) — 사거리/쿨다운 통과 시 표적(플레이어 1개 or 건물 buildingId 1개)에 피해.
+   * 적중 시 **흡수=성장**(`grow`) — 카이터(드레인)·러셔(접촉) 동일. 카이터는 `from→to` 드레인 빔, 플레이어 피해 시 onPlayerHit.
+   * 카이터는 고정 `drainDamage`, 러셔는 강함 비례 `contactDamage`를 흡수량 = 가하는 피해 = 성장량으로 삼는다.
+   * 반환: 이 타격으로 **건물이 파괴**됐으면 true(호출부가 건물 표적 해제).
+   */
+  private attack(enemy: CoreEnemy, targetPos: THREE.Vector3, from: THREE.Vector3, player: PlayerController | null, buildingId: string | null): boolean {
+    const drain = enemy.isKiter;
     const k = this.kiterArche;
-    if (!enemy.tryAttack(t.pos, k.attackRange, k.drainInterval)) return;
-    if (t.player.takeDamage(k.drainDamage)) {
-      enemy.grow(k.drainDamage); // 흡수=성장(더 크고 탱키)
-      this.drain.spawn(p, t.pos, enemy.color);
-      this.onPlayerHit?.(k.drainDamage);
+    const range = drain ? k.attackRange : ATTACK_RANGE;
+    const cooldown = drain ? k.drainInterval : 1.0;
+    const amount = drain ? k.drainDamage : contactDamage(this.spec, enemy.maxHp);
+    if (!enemy.tryAttack(targetPos, range, cooldown)) return false;
+
+    let landed = false, destroyed = false;
+    if (player) {
+      landed = player.takeDamage(amount);
+    } else if (buildingId && this.world.buildings) {
+      const res = this.world.buildings.damage(buildingId, amount);
+      landed = res !== "none";
+      destroyed = res === "destroyed";
     }
+    if (landed) {
+      enemy.grow(amount); // 흡수=성장(러셔·카이터 공통)
+      if (drain) this.drain.spawn(from, targetPos, enemy.color);
+      if (player) this.onPlayerHit?.(amount);
+    }
+    return destroyed;
   }
 
-  /** 추격형 접촉 흡수 — 강함 비례. 흡수량 = 표적 HP 피해 = 적 자가 회복. */
-  private contactAttack(enemy: CoreEnemy, t: Target) {
-    if (!enemy.tryAttack(t.pos, ATTACK_RANGE)) return;
-    const absorb = contactDamage(this.spec, enemy.maxHp);
-    if (t.player.takeDamage(absorb)) {
-      enemy.absorbEnergy(absorb);
-      this.onPlayerHit?.(absorb);
+  /**
+   * 2순위 표적 — 플레이어가 사거리 밖일 때 주변 건물을 자동 공격(흡수=성장).
+   * 건물 표적을 확보/유지하고 접근·접촉(러셔)/원거리 드레인(카이터)으로 피해를 준다.
+   */
+  private buildingStep(enemy: CoreEnemy, p: THREE.Vector3, dt: number, boids: Boid[], grid: ReturnType<typeof buildBoidGrid> | undefined, myIdx: number) {
+    const bc = this.world.buildings;
+    if (!bc) { enemy.update(dt, p, 1); return; } // 건물 없는 전장 → 정지(부유)
+    // 현 표적이 없거나(또는 파괴/언로드됨) → 최근접 건물 재탐색
+    if (enemy.buildingId == null || !bc.targetPos(enemy.buildingId, _btarget)) {
+      const found = bc.nearestTarget(p.x, p.z, BUILDING_SEEK_R);
+      enemy.buildingId = found ? found.id : null;
+      if (!found) { enemy.update(dt, p, 1); return; } // 주변 건물 없음 → 정지
+      _btarget.set(found.x, found.y, found.z);
     }
+    const recompute = recomputeSteer(p.distanceToSquared(_btarget), NEAR_DIST_SQ, this.frame, myIdx, STEER_STRIDE);
+    const steer = { vel: ZERO_VEL, boids, index: myIdx, grid, recompute };
+    enemy.update(dt, _btarget, 1, steer);
+    if (enemy.isKiter) this.clampKiterAltitude(p); // 도주형은 지면 아래로 가라앉지 않게
+    if (this.attack(enemy, _btarget, p, null, enemy.buildingId)) enemy.buildingId = null; // 파괴 시 표적 해제
   }
 
   /** 사망 지점 최근접 플레이어(처치 환수 대상 근사 — MP 무기 소유자 미배선 단계). */
@@ -361,6 +396,7 @@ export class EnemyManager {
 
   update(dt: number) {
     this.frame++;
+    this.world.buildings?.update(dt); // 건물 피격 틴트/붕괴 연출 진행
     this.tickSpawns(dt);
     this.buildTargets(dt);
     const targets = this.targets;
@@ -392,22 +428,22 @@ export class EnemyManager {
       }
       const myIdx = bi++;
       const idx = this.pickTarget(p, enemy.targetIndex);
-      if (idx < 0) { enemy.targetIndex = -1; enemy.update(dt, p, 1); continue; } // 표적 없음 → 정지
-      load[idx]++;
+      // 1순위 = 사거리(AGGRO_RADIUS) 안 드론. 그 밖이면 2순위 = 주변 건물 자동 공격.
+      if (idx < 0 || targets[idx].pos.distanceToSquared(p) > AGGRO_RADIUS_SQ) {
+        enemy.targetIndex = -1;
+        this.buildingStep(enemy, p, dt, boids, grid, myIdx);
+        continue;
+      }
       enemy.targetIndex = idx;
+      enemy.buildingId = null;
+      load[idx]++;
       const t = targets[idx];
       const recompute = recomputeSteer(p.distanceToSquared(t.pos), NEAR_DIST_SQ, this.frame, myIdx, STEER_STRIDE);
       const steer = { vel: t.vel, boids, index: myIdx, grid, recompute };
-      if (enemy.isKiter) {
-        // 도주형 — 지면 아래로 가라앉지 않게 고정 후 원거리 드레인.
-        enemy.update(dt, t.pos, 1, steer);
-        this.clampKiterAltitude(p);
-        this.kiterAttack(enemy, p, t);
-      } else {
-        // 추격형 — 예측 요격 + 분리 조향(원돌기·뭉침 방지) + 접촉 흡수.
-        enemy.update(dt, t.pos, 1, steer);
-        this.contactAttack(enemy, t);
-      }
+      // 도주형 = 예측 회피·원거리 드레인 / 추격형 = 예측 요격·접촉. 공격은 공통 attack()(흡수=성장).
+      enemy.update(dt, t.pos, 1, steer);
+      if (enemy.isKiter) this.clampKiterAltitude(p); // 지면 아래로 가라앉지 않게
+      this.attack(enemy, t.pos, p, t.player, null);
     }
 
     this.drain.update(dt);

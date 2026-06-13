@@ -281,6 +281,7 @@ export class Game {
     s.enemies.start(!this.peaceful); // 탐방 모드면 적 미스폰
     s.special.reset();
     this.hud.setKills(0);
+    this.hud.setDestroyed(s.world.buildings?.destroyedBuildings ?? 0, s.world.buildings?.destroyedLandmarks ?? 0);
     this.state = "playing";
     this.hideOverlay();
     this.setPlayActive(true);
@@ -301,6 +302,9 @@ export class Game {
       this.hud.flashDamage();
       this.sfx.sizzle(); // 접촉 피해 — 달군 철판에 물 닿는 "치익" 기화음
     };
+    // 건물/랜드마크 파괴 → HUD 카운터 갱신(번쩍 + 슬로우 붕괴 연출은 BuildingCombat 가 진행)
+    const bc = s.world.buildings;
+    if (bc) bc.onDestroyed = () => this.hud.setDestroyed(bc.destroyedBuildings, bc.destroyedLandmarks);
   }
 
   /** 일시정지/사망 후 버튼: 재접속(같은 전장 재개/재시작) */

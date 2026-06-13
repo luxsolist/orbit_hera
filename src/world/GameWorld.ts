@@ -3,6 +3,7 @@
 // 두 월드 구현을 코드 분기 없이 교체한다.
 import type * as THREE from "three";
 import type { SpawnPoint } from "./MapData";
+import type { BuildingCombat } from "./BuildingCombat";
 
 /** 미니맵 등 표현 레이어가 World 의 근처 지형/건물 형상을 (내부 구조 노출 없이) 받는 싱크. */
 export interface MinimapSink {
@@ -21,6 +22,8 @@ export interface GameWorld {
   readonly spawn: SpawnPoint;
   /** 플레이 가능한 수평 반경(±m) — 플레이어/적 이동 클램프. 모놀리식=TERRAIN_HALF, 스트리밍=셀 범위. */
   readonly bounds: number;
+  /** 건물 전투(체력/피격/파괴) — 건물 없는 전장이면 null. 플라즈모이드의 2순위 표적. */
+  readonly buildings: BuildingCombat | null;
 
   /** 지형 높이(m). */
   heightAt(x: number, z: number): number;

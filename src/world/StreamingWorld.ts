@@ -9,6 +9,7 @@ import * as THREE from "three";
 import type { GameWorld, MinimapSink } from "./GameWorld";
 import type { SpawnPoint } from "./MapData";
 import { CollisionWorld } from "./CollisionWorld";
+import { BuildingCombat } from "./BuildingCombat";
 import { SkyEnvironment } from "./SkyEnvironment";
 import { cellLocalOf, CHUNK_BLOCK, type Cell, type TilesManifest, type WorldChunk } from "./chunkManifest";
 import { fetchTiles, fetchWorldChunk } from "./mapLocator";
@@ -37,6 +38,7 @@ interface ChunkHandle {
   cz: number;
   group: THREE.Group | null;
   hasObjects: boolean;
+  buildingMesh: THREE.Mesh | null; // 건물 전투 등록 해제용(언로드 시)
 }
 
 export class StreamingWorld implements GameWorld {
@@ -58,6 +60,7 @@ export class StreamingWorld implements GameWorld {
   private readonly objReg = new Map<string, { buildings: ChunkBuild["buildings"]; walls: ChunkBuild["walls"]; roads: ChunkBuild["roads"]; water: number[][] }>();
   private collision = new CollisionWorld();
   private collisionDirty = false;
+  readonly buildings = new BuildingCombat(this.group); // 건물 체력/피격/파괴(잔해 더미 인스턴싱)
 
   // 속도 추정(프리페치) — update 간 위치 델타
   private lastX = 0;
@@ -77,6 +80,7 @@ export class StreamingWorld implements GameWorld {
     this.originZ = o.z;
     this.spawn = { x: 0, z: 0, yaw };
     this.collision.finalize(); // 빈 충돌 세계(초기)
+    this.buildings.attachCollision(this.collision);
 
     this.streamer = new ChunkStreamer(this.makeIO(), STREAM_CFG(this.chunkSize));
     this.sky = new SkyEnvironment(scene, this.spawn);
@@ -104,7 +108,7 @@ export class StreamingWorld implements GameWorld {
         return fetchWorldChunk(this.cell, req.cx, req.cz, this.block);
       },
       build: (req: ChunkReq, raw: unknown): ChunkHandle => {
-        if (!raw) return { cx: req.cx, cz: req.cz, group: null, hasObjects: false };
+        if (!raw) return { cx: req.cx, cz: req.cz, group: null, hasObjects: false, buildingMesh: null };
         const cb = buildChunkMesh(raw as WorldChunk, this.chunkSize, this.originX, this.originZ);
         const key = chunkKey(cb.cx, cb.cz);
         this.group.add(cb.group);
@@ -114,11 +118,16 @@ export class StreamingWorld implements GameWorld {
           this.objReg.set(key, { buildings: cb.buildings, walls: cb.walls, roads: cb.roads, water: cb.water });
           if (cb.buildings.length > 0 || cb.walls.length > 0) this.collisionDirty = true; // 충돌체 변화 시만 재구축
         }
-        return { cx: cb.cx, cz: cb.cz, group: cb.group, hasObjects };
+        // 건물 전투 등록(병합 메시 정점 범위로 개별 갱신 바인딩)
+        if (cb.buildingMesh) {
+          for (const b of cb.buildings) this.buildings.registerBuilding(cb.buildingMesh, b.vStart, b.vCount, b.poly, b.baseY, b.top);
+        }
+        return { cx: cb.cx, cz: cb.cz, group: cb.group, hasObjects, buildingMesh: cb.buildingMesh };
       },
       dispose: (h: unknown) => {
         const handle = h as ChunkHandle;
         const key = chunkKey(handle.cx, handle.cz);
+        if (handle.buildingMesh) this.buildings.unregisterMesh(handle.buildingMesh);
         if (handle.group) {
           this.group.remove(handle.group);
           disposeChunkGroup(handle.group);
@@ -222,6 +231,8 @@ export class StreamingWorld implements GameWorld {
     }
     c.finalize();
     this.collision = c;
+    this.buildings.attachCollision(c);
+    this.buildings.reopenDestroyed(); // 재구축으로 되살아난 콜라이더 중 파괴분은 다시 개방
   }
 
   /** 디버그/HUD용 — 로드 완료 청크 수. */

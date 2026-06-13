@@ -25,8 +25,13 @@ export interface ChunkBuild {
   group: THREE.Group;
   /** 지형 격자. 없으면(평지/미존재) null. */
   terrain: ChunkTerrain | null;
-  /** 건물 footprint(로컬 폴리 [x0,z0,...]) + 옥상 높이(top) — CollisionWorld 재구축용. */
-  buildings: { poly: number[]; top: number }[];
+  /**
+   * 건물 footprint(로컬 폴리 [x0,z0,...]) + 옥상 높이(top) — CollisionWorld 재구축용.
+   * + 병합 메시 내 정점 범위(vStart/vCount) + base(바닥 y) — BuildingCombat 개별 갱신 바인딩.
+   */
+  buildings: { poly: number[]; top: number; vStart: number; vCount: number; baseY: number }[];
+  /** 건물 병합 메시(정점 색·위치 부분 갱신 대상) — 건물 없으면 null. */
+  buildingMesh: THREE.Mesh | null;
   /** 담장/울타리 충돌 박스(로컬 AABB + 윗면 top) — CollisionWorld.addWallBox 용. */
   walls: { x0: number; x1: number; z0: number; z1: number; top: number }[];
   /** 도로 세그먼트(로컬) — 미니맵용. */
@@ -190,15 +195,16 @@ function localize(p: number[], originX: number, originZ: number): number[] {
   return out;
 }
 
-/** 지오메트리 배열을 병합(입력 해제)해 그룹에 메시로 추가. 비었으면 무시. cast=그림자 투사. */
-function addMerged(group: THREE.Group, geos: THREE.BufferGeometry[], mat: THREE.Material, cast: boolean): void {
-  if (!geos.length) return;
+/** 지오메트리 배열을 병합(입력 해제)해 그룹에 메시로 추가 후 메시 반환. 비었으면 null. cast=그림자 투사. */
+function addMerged(group: THREE.Group, geos: THREE.BufferGeometry[], mat: THREE.Material, cast: boolean): THREE.Mesh | null {
+  if (!geos.length) return null;
   const merged = mergeGeometries(geos, false);
   geos.forEach((g) => g.dispose());
   const mesh = new THREE.Mesh(merged, mat);
   if (cast) mesh.castShadow = true;
   mesh.receiveShadow = true;
   group.add(mesh);
+  return mesh;
 }
 
 /**
@@ -251,6 +257,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
   const buildings: ChunkBuild["buildings"] = [];
   const bGeos: THREE.BufferGeometry[] = [];
   const bcol = new THREE.Color();
+  let bVtx = 0; // 병합 누적 정점 수 — 건물별 정점 범위(병합은 입력 순서 보존) 추적
   for (const b of chunk.objects?.buildings ?? []) {
     const p = b.p;
     const n = p.length / 2;
@@ -287,10 +294,12 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     bcol.setHex(buildingBaseColor(h, null)).offsetHSL(0, 0, (jitter - 0.5) * 0.12);
     setUniformColor(geo, bcol);
     geo.deleteAttribute("uv");
+    const vCount = geo.getAttribute("position").count;
     bGeos.push(geo);
-    buildings.push({ poly: local, top });
+    buildings.push({ poly: local, top, vStart: bVtx, vCount, baseY });
+    bVtx += vCount;
   }
-  addMerged(group, bGeos, cityMat, true);
+  const buildingMesh = addMerged(group, bGeos, cityMat, true);
 
   // ── 도로 — 지형 표면 텍스처에 베이크됨(bakeSurfaceTexture). 여기선 미니맵용 폴리라인만 수집. ──
   const roads: ChunkBuild["roads"] = [];
@@ -353,7 +362,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     water.push(localize(wpoly.p, originX, originZ));
   }
 
-  return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, walls, roads, water };
+  return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, walls, roads, water };
 }
 
 /**

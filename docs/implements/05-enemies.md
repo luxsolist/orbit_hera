@@ -36,7 +36,7 @@
 > **폐기된 고도 가중 시스템.** 과거의 `altitudeSpeedMult`/`contactAltWeaken` 함수, `altitude` 스펙 블록, `contact.altWeakRef/altWeakMin`는 모두 제거됐다. 또한 전역 스폰 고도(`spawnAltitude`/`SPAWN_BIAS`/`SPAWN_CEILING`)도 아키타입별 고도 밴드(`spawnAltMin/spawnAltMax`)로 대체됐다. 온도(T)는 색·HP·시각크기·기본속도·희귀도를 계속 구동하지만, 이동 난이도가 고도에 따라 변하지는 않는다.
 
 ### 접촉(에너지 흡수) 피해 (`contactDamage(spec, hp)`)
-플라즈모이드가 물체에서 **에너지를 빨아들여** 약화시키고(인트로의 집 붕괴 원인) 그만큼 **자기 체력을 회복**한다는 설정. `contactDamage`가 반환하는 단일 수치 = 플레이어 HP 피해 = 적 자가 회복량. (러셔 전용 — 카이터는 `drainDamage`를 쓴다.)
+플라즈모이드가 물체에서 **에너지를 빨아들여** 약화시키고(인트로의 집 붕괴 원인) 그만큼 **자신이 성장**한다는 설정. `contactDamage`가 반환하는 단일 수치 = 표적(플레이어/건물) 피해 = 적 성장량(`grow`). (러셔 전용 흡수량 — 카이터는 `drainDamage`를 쓴다.) 카이터·러셔 **둘 다** 흡수 시 `grow`로 성장한다(아래 `EnemyManager.attack`).
 - 식: `hpDamage × (1 + strengthMul×strength(hp))` — 강함(s)에만 비례. 강체(`strength` 1)일수록 묵직(×(1+strengthMul)). 고도 의존 없음.
 - 현 스펙(`contact`): `hpDamage 10`, `strengthMul 2.0`.
 
@@ -76,7 +76,7 @@
 
 ### 흡수 = 성장 (`grow`)
 - `grow(amount)` — 드레인/흡수한 만큼 `maxHp`·`hp`를 올리고 **시각 크기도 `maxScale`(초기 `baseScale`의 ~1.5배)까지 점증**. 방치한 모기가 더 크고 탱키해져 쫓아갈 동기를 만든다(살아있을 때만).
-- `absorbEnergy(amount)` — 러셔 접촉용. `hp`만 `maxHp` 한도 내 회복(크기/최대치 증가 없음).
+- `absorbEnergy(amount)` — `hp`만 `maxHp` 한도 내 회복(크기/최대치 증가 없음). 현 `EnemyManager`는 러셔·카이터 모두 `grow`를 쓰므로 미사용(회복 전용 프리미티브로 보존).
 - `setKiter(params)` / `get isKiter` — 카이터 행동 활성화/판별(매니저가 드레인↔접촉 경로 분기).
 
 ### 이동 — 자유 부유 + 3D (추격형 / 카이터)
@@ -115,8 +115,9 @@
 
 ### 매 프레임 군집 조향 + 공격 (`update`)
 - 프레임 시작 시 표적 스냅샷·살아있는 적 스냅샷(`boids`)·어그로 부하(`load`)를 갱신하고, alive 적에 `{vel, boids, index}`를 `steer`로 넘긴다. 디졸브 중인 적은 비주얼만 진행.
-- **카이터:** 이동 후 `clampKiterAltitude`(지면 위 `KITER_GROUND_CLEARANCE=1.5m` ~ `KITER_CEILING=1020m`로 클램프 — 가라앉음·천장 돌파 방지) → `kiterAttack`: `tryAttack(t.pos, attackRange, drainInterval)` 통과 시 `takeDamage(drainDamage)` → **`enemy.grow(drainDamage)`(흡수=성장)** + `DrainBeams.spawn(적→표적, 개체색)` + `onPlayerHit`.
-- **러셔:** 예측 요격+분리 조향 후 `contactAttack`: `tryAttack(t.pos, ATTACK_RANGE=3.2)` 통과 시 `contactDamage(spec, enemy.maxHp)`로 흡수량 산출 → `takeDamage(absorb)`가 적용되면 `enemy.absorbEnergy(absorb)`로 **적이 같은 양만큼 회복** + `onPlayerHit`. 닿게 두면 적이 회복한다.
+- **표적 우선순위:** 사거리(`AGGRO_RADIUS=150m`) 안 드론이 **1순위**, 밖이면 주변 건물(`BUILDING_SEEK_R=700m`)을 **2순위**로 자동 공격(`buildingStep` → [BuildingCombat](../../src/world/BuildingCombat.ts)). 둘 다 아래 공통 `attack()`을 쓴다.
+- **공통 공격 `attack(enemy, targetPos, from, player, buildingId)`:** 아키타입·표적(플레이어/건물) 공통 단일 경로. `tryAttack(targetPos, range, cooldown)` 통과 시 표적에 피해 → 적중하면 **`enemy.grow(amount)`(흡수=성장 — 러셔·카이터 동일)**. 카이터=고정 `drainDamage`·`DrainBeams.spawn(from→targetPos)`, 러셔=`contactDamage(spec, enemy.maxHp)`·빔 없음. 플레이어 피해 시 `onPlayerHit`, 건물이 이 타격으로 파괴되면 true 반환(호출부가 표적 해제).
+- **카이터:** 이동 후 `clampKiterAltitude`(지면 위 `KITER_GROUND_CLEARANCE=1.5m` ~ `KITER_CEILING=1020m`로 클램프 — 가라앉음·천장 돌파 방지) 후 `attack`.
 - 드레인 빔은 [DrainBeams](../../src/fx/DrainBeams.ts)(가산발광 풀, 적→표적)로 분리. `update`에서 페이드/정리.
 
 ### 웨이브 (`startNextWave`)
@@ -133,4 +134,4 @@
 - `aliveMarkers` — 월드 위치 + 시각 반경(`group.scale.x`; 코너 브래킷 등 화면 표식용).
 - `aliveSnapshot` — `{x,z}` 위치 스냅샷(미니맵용).
 
-`update(dt)` — 점진 스폰(`tickSpawns`) → 표적/`boids`/`load` 갱신 → 각 적 `update`(표적 좌표 + 조향 전달) + 아키타입별 공격(드레인/접촉) → 드레인 빔 갱신 → 사망 적 정리 → 웨이브 종료 판정.
+`update(dt)` — 건물 연출(`world.buildings.update`) → 점진 스폰(`tickSpawns`) → 표적/`boids`/`load` 갱신 → 각 적 `update`(표적 좌표 + 조향 전달) + 공통 `attack`(드론 1순위/건물 2순위, 흡수=성장) → 드레인 빔 갱신 → 사망 적 정리 → 웨이브 종료 판정.

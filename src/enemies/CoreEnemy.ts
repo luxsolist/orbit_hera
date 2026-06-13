@@ -305,6 +305,7 @@ export class CoreEnemy {
   killRefund = 0; // 처치 시 플레이어 HP 환수(아키타입에서 주입)
   archetypeName = ""; // 아키타입 표시명(모기/거머리 …) — HUD/로그용
   targetIndex = -1; // 현재 추적 대상 플레이어 인덱스(MP 멀티타깃 — 매니저가 관리, 히스테리시스)
+  buildingId: string | null = null; // 플레이어가 사거리 밖일 때 공격 중인 건물(2순위 표적)
 
   private dissolveProgress = 0;
   private hitFlash = 0; // 피격 순간 1 → 빠르게 감쇠하며 흰색 번쩍임

@@ -323,4 +323,25 @@ export class CollisionWorld {
       cb(c.x, c.z, c.radius);
     }
   }
+
+  /**
+   * (cx,cz) 의 건물 콜라이더를 통과 가능하게 개방 — 파괴된 건물 잔해 위를 지나갈 수 있도록.
+   * 중심을 품는 박스/삼각형/원기둥의 top 을 -Infinity 로(발이 항상 윗면 이상 = 통과). 디딤면(topAt)에서도 제외됨.
+   */
+  openBuildingAt(cx: number, cz: number): void {
+    this.boxGrid.query(cx, cz, cx, cz, (b) => {
+      const dx = cx - b.cx, dz = cz - b.cz;
+      const lu = dx * b.ux + dz * b.uz, lv = -dx * b.uz + dz * b.ux;
+      if (Math.abs(lu) <= b.hu && Math.abs(lv) <= b.hv) b.top = -Infinity;
+    });
+    this.triGrid.query(cx, cz, cx, cz, (t) => {
+      const s1 = (cx - t.bx) * (t.az - t.bz) - (t.ax - t.bx) * (cz - t.bz);
+      const s2 = (cx - t.cx) * (t.bz - t.cz) - (t.bx - t.cx) * (cz - t.cz);
+      const s3 = (cx - t.ax) * (t.cz - t.az) - (t.cx - t.ax) * (cz - t.az);
+      if (!((s1 < 0 || s2 < 0 || s3 < 0) && (s1 > 0 || s2 > 0 || s3 > 0))) t.top = -Infinity;
+    });
+    for (const c of this.circles) {
+      if ((c.x - cx) ** 2 + (c.z - cz) ** 2 <= c.radius * c.radius) c.top = -Infinity;
+    }
+  }
 }

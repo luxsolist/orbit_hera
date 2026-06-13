@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { NormalizedMap, SpawnPoint } from "./MapData";
 import { CollisionWorld } from "./CollisionWorld";
+import { BuildingCombat } from "./BuildingCombat";
 import { StructureBuilder } from "./StructureBuilder";
 import { TerrainField } from "./TerrainField";
 import { SkyEnvironment } from "./SkyEnvironment";
@@ -38,6 +39,8 @@ export class World implements GameWorld {
   private readonly field: TerrainField;
   /** 충돌 세계 — 원기둥/건물 OBB/오목 삼각형/궁장 박스 + 격자 브로드페이즈. */
   private readonly collision = new CollisionWorld();
+  /** 건물 체력/피격/파괴 — 플라즈모이드의 2순위 표적(잔해 더미는 group 에 인스턴싱). */
+  readonly buildings = new BuildingCombat(this.group);
   /** 데이터 구동 랜드마크(parts/mats) 공통 인터프리터. */
   private readonly structures = new StructureBuilder();
   /** 대기/조명(태양 그림자 추종 포함). */
@@ -55,6 +58,7 @@ export class World implements GameWorld {
     this.buildLandmarks();
     this.buildPrecinctWalls();
     this.collision.finalize(); // 모든 콜라이더 등록 후 격자 공간 인덱스 구축
+    this.buildings.attachCollision(this.collision); // 파괴 시 콜라이더 개방
     this.sky = new SkyEnvironment(scene, this.spawn);
     scene.add(this.group);
   }
@@ -221,6 +225,9 @@ export class World implements GameWorld {
     const buildings = this.map.objects.buildings;
     const geos: THREE.BufferGeometry[] = [];
     const roofGeos: THREE.BufferGeometry[] = []; // 특수 권역 지붕 슬래브(예: 경복궁 기와)
+    // 건물 전투 바인딩 — 병합(geos 가 먼저) 내 정점 범위. 압출 base=0, top=style.height.
+    const buildMeta: { poly: number[]; topY: number; vStart: number; vCount: number }[] = [];
+    let bVtx = 0;
     const col = new THREE.Color();
     // 특수 권역 건물 양식(데이터 구동). boundary 내부 건물에만 적용.
     const pb = this.map.objects.precinct?.building;
@@ -284,6 +291,9 @@ export class World implements GameWorld {
       this.buildingColor(h, style.usePrecinctColor ? precinctColor : null, jitter, col);
       setUniformColor(geo, col);
       geo.deleteAttribute("uv"); // 병합 일관성(uv 불필요)
+      const vCount = geo.getAttribute("position").count;
+      buildMeta.push({ poly: p, topY: h, vStart: bVtx, vCount });
+      bVtx += vCount;
       geos.push(geo);
 
       // 권역 건물엔 지정 색 지붕 슬래브를 살짝 얹어 전통 지붕 느낌(예: 경복궁 기와)
@@ -312,6 +322,8 @@ export class World implements GameWorld {
       mesh.receiveShadow = true;
       mesh.name = "city";
       this.group.add(mesh);
+      // 건물 전투 등록 — 병합 메시 정점 범위로 개별 갱신(체력/틴트/붕괴). base=0.
+      for (const m of buildMeta) this.buildings.registerBuilding(mesh, m.vStart, m.vCount, m.poly, 0, m.topY);
     }
   }
 
@@ -495,8 +507,16 @@ export class World implements GameWorld {
 
   /** 맵 데이터의 landmarks 를 배치 — 전부 데이터 구동(structure) 공통 렌더. */
   private buildLandmarks() {
-    for (const lm of this.map.objects.landmarks ?? [])
-      if (lm.type === "structure") this.structures.build(lm, this.group, this.collision);
+    const box = new THREE.Box3();
+    for (const lm of this.map.objects.landmarks ?? []) {
+      if (lm.type !== "structure") continue;
+      const grp = this.structures.build(lm, this.group, this.collision);
+      box.setFromObject(grp); // 대략 높이/바닥 반폭(조준·잔해 더미 크기)
+      const topY = isFinite(box.max.y) ? box.max.y : 30;
+      const halfX = isFinite(box.max.x) ? (box.max.x - box.min.x) / 2 : 8;
+      const halfZ = isFinite(box.max.z) ? (box.max.z - box.min.z) / 2 : 8;
+      this.buildings.registerLandmark(grp, lm.x, lm.z, topY, halfX, halfZ, lm.hp);
+    }
   }
 
   // ─────────────────────────── 특수 권역 둘레 담장(경계 폴리라인) ───────────────────────────

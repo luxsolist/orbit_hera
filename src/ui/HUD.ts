@@ -16,6 +16,8 @@ export class HUD {
   private freqFill: HTMLElement;
   private killCount: HTMLElement;
   private waveCount: HTMLElement;
+  private destroyedCount: HTMLElement;
+  private landmarkLostCount: HTMLElement;
   private unitName: HTMLElement;
   private crosshair: HTMLElement;
   private damage: HTMLElement;
@@ -39,6 +41,8 @@ export class HUD {
     this.freqFill = byId("freqFill");
     this.killCount = byId("killCount");
     this.waveCount = byId("waveCount");
+    this.destroyedCount = byId("destroyedCount");
+    this.landmarkLostCount = byId("landmarkLostCount");
     this.unitName = byId("unitName");
     this.crosshair = byId("crosshair");
     this.specialEl = byId("specialIndicator");
@@ -75,6 +79,12 @@ export class HUD {
 
   setWave(n: number) {
     this.waveCount.textContent = String(n);
+  }
+
+  /** 파괴된 건물 수 / 랜드마크 수 갱신. */
+  setDestroyed(buildings: number, landmarks: number) {
+    this.destroyedCount.textContent = String(buildings);
+    this.landmarkLostCount.textContent = String(landmarks);
   }
 
   setUnitName(name: string) {

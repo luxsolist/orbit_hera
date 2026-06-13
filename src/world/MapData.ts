@@ -75,6 +75,8 @@ export interface Landmark {
   boxColliders?: { x0: number; x1: number; z0: number; z1: number }[];
   /** 이 반경 안 OSM 건물을 제거(양식화 메시로 대체할 자리 비우기). */
   excludeR?: number;
+  /** 랜드마크 고유 체력(일반 건물과 별개) — 미지정 시 BuildingCombat 기본값. */
+  hp?: number;
 }
 
 export interface Mountain {
