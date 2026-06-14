@@ -6,7 +6,7 @@
   "range": 400,
   "color": "0x60ffff",
   "beamLifetime": 0.1,
-  "manual": { "damage": 50, "freqCost": 14, "fireInterval": 0.15, "assistConeDeg": 13 },
-  "auto": { "damage": 20, "freqCost": 4, "fireInterval": 0.2, "range": 16 },
+  "manual": { "damage": 150, "freqCost": 14, "fireInterval": 0.15, "assistConeDeg": 13 },
+  "auto": { "damage": 60, "freqCost": 4, "fireInterval": 0.2, "range": 32 },
   "falloff": { "refDist": 30, "maxMult": 3.2, "minMult": 0.5 }
 }

@@ -54,6 +54,33 @@ export interface ChunkEntry {
   terrain: boolean;
 }
 
+/**
+ * 무작위 스폰 청크 선택 — **건물 밀집 도심 위주**. 작전구역 중심이 될 청크를 고른다.
+ *
+ * 밀집도 = 반경 `R` 청크 이웃 중 건물(objects) 청크 수. 건물+지형(terrain) 후보를 밀집도순 정렬해
+ * **상위 `topFrac`(기본 25%)** 안에서 무작위 선택 → 도심 코어에 집중하되 매판 다른 위치(변주). 건물 청크가
+ * 없으면(예: 에베레스트) 지형 청크, 그것도 없으면 아무 청크. 빈 목록은 null. rand: ()=>[0,1). 순수(테스트 가능).
+ */
+export function pickSpawnChunk(chunks: ChunkEntry[], rand: () => number, R = 2, topFrac = 0.25): ChunkEntry | null {
+  if (chunks.length === 0) return null;
+  const candidates = chunks.filter((c) => c.objects && c.terrain); // 스폰 = 건물 + 디딜 지형
+  if (candidates.length === 0) {
+    const land = chunks.filter((c) => c.terrain);
+    const pool = land.length > 0 ? land : chunks;
+    return pool[Math.min(pool.length - 1, Math.floor(rand() * pool.length))];
+  }
+  // 건물(objects) 청크 집합 — 이웃에 건물 청크가 많을수록 도심 밀집
+  const objKeys = new Set(chunks.filter((c) => c.objects).map((c) => `${c.cx}_${c.cz}`));
+  const scored = candidates.map((c) => {
+    let d = 0;
+    for (let dz = -R; dz <= R; dz++) for (let dx = -R; dx <= R; dx++) if (objKeys.has(`${c.cx + dx}_${c.cz + dz}`)) d++;
+    return { c, d };
+  });
+  scored.sort((a, b) => b.d - a.d); // 밀집도 내림차순
+  const topN = Math.max(1, Math.ceil(scored.length * Math.min(1, Math.max(0, topFrac)))); // 상위 비율(최소 1)
+  return scored[Math.min(topN - 1, Math.floor(rand() * topN))].c;
+}
+
 /** 1024m 월드 청크 — 지형(DEM)+오브젝트(OSM)+지하. 좌표는 셀-로컬 m(원점=셀 NW). */
 export interface WorldChunk {
   cx: number;

@@ -7,7 +7,7 @@
   "cooldown": 30,
   "drainRate": 50,
   "fireInterval": 0.09,
-  "damage": 50,
+  "damage": 150,
   "assistConeDeg": 18,
   "muzzleOffsets": [-0.55, 0.55],
   "beamLifetime": 0.08,

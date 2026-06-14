@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   colorWeight, colorStrength01, colorAt, plasmoidHp, visualDiameter, lowestColor, highestColor,
-  strength, speedForStrength, sampleTemp, rollAppearance, contactDamage,
+  strength, speedForStrength, sampleTemp, rollAppearance, contactDamage, pickBurstType,
+  distributeHp, appearanceForHp,
   DEFAULT_PLASMOID, type PlasmoidSpec,
 } from "../src/enemies/PlasmoidSpec";
 
@@ -148,5 +149,55 @@ describe("colorStrength01 — 색 강도 정규화(적색 0 → 청백 1, 속도
   it("범위 밖 온도는 [0,1] 클램프", () => {
     expect(colorStrength01(stops, -1000)).toBe(0);
     expect(colorStrength01(stops, 1e9)).toBe(1);
+  });
+});
+
+describe("pickBurstType — 일괄 스폰 아키타입(자기정렬)", () => {
+  const r = (v: number) => () => v;
+  it("워커만 → 항상 러셔, 플라이어만 → 항상 카이터", () => {
+    expect(pickBurstType(1, 0, r(0.0))).toBe("rusher");
+    expect(pickBurstType(1, 0, r(0.99))).toBe("rusher");
+    expect(pickBurstType(0, 1, r(0.0))).toBe("kiter");
+    expect(pickBurstType(0, 1, r(0.99))).toBe("kiter");
+  });
+  it("혼합 구성 → 인원 비율로 가중", () => {
+    // walkers=3, flyers=1, total=4 → rand*4 < 3 이면 러셔
+    expect(pickBurstType(3, 1, r(0.7))).toBe("rusher"); // 2.8 < 3
+    expect(pickBurstType(3, 1, r(0.8))).toBe("kiter"); // 3.2 ≥ 3
+  });
+  it("플레이어 없음 → 50:50", () => {
+    expect(pickBurstType(0, 0, r(0.4))).toBe("rusher");
+    expect(pickBurstType(0, 0, r(0.6))).toBe("kiter");
+  });
+});
+
+describe("distributeHp — 체력 총합 예산 배분(보스 1 + 나머지)", () => {
+  let seed = 1;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  it("합계 = total, [0] = 보스, 나머지 = total−boss 를 나눠 가짐", () => {
+    const hps = distributeHp(70000, 10000, 100, rnd);
+    expect(hps).toHaveLength(100);
+    expect(hps[0]).toBe(10000); // 중간보스
+    expect(hps.reduce((a, b) => a + b, 0)).toBe(70000); // 총합 정확
+    expect(hps.slice(1).reduce((a, b) => a + b, 0)).toBe(60000); // 나머지 99기 합
+    for (const h of hps) expect(h).toBeGreaterThanOrEqual(1); // 0 HP 없음
+  });
+  it("count==1 → [total], count≤0 → 빈 배열", () => {
+    expect(distributeHp(5000, 1000, 1, rnd)).toEqual([5000]);
+    expect(distributeHp(5000, 1000, 0, rnd)).toEqual([]);
+  });
+  it("bossHp=0 → 보스 없이 total 을 전부 나눔(보스 슬롯 최소 1)", () => {
+    const hps = distributeHp(30000, 0, 50, rnd);
+    expect(hps.reduce((a, b) => a + b, 0)).toBe(30000);
+  });
+});
+
+describe("appearanceForHp — 예산 HP → 외형(HP↑=청백·대형)", () => {
+  it("HP 클수록 고온(청백)·큰 지름", () => {
+    const lo = appearanceForHp(spec, 600);
+    const hi = appearanceForHp(spec, 10000);
+    expect(hi.temp).toBeGreaterThan(lo.temp); // 고HP=고온
+    expect(hi.diameter).toBeGreaterThan(lo.diameter); // 고HP=대형(보스)
+    expect(hi.diameter).toBeLessThanOrEqual(spec.visual.maxDiameter); // 소프트캡
   });
 });

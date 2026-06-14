@@ -108,6 +108,11 @@ export class PlayerController {
 
   private invuln = 0;
 
+  // 교전 구역 — 미션 인스턴스가 설정. 이 원(중심 zoneCx/zoneCz, 반경 zoneRadius) 밖으로 못 나간다.
+  private zoneCx = 0;
+  private zoneCz = 0;
+  private zoneRadius = 0; // 0 = 구역 제한 없음
+
   constructor(
     private input: Input,
     private world: GameWorld,
@@ -286,6 +291,7 @@ export class PlayerController {
         this.position.z = resolved.z;
       }
     }
+    this.clampToZone(); // 미션 교전 구역 경계(원) 안으로 제한
   }
 
   /** 보행: 점프(상한 게이트) + 중력(상승 감속/하강 종단) + 착지. */
@@ -392,5 +398,44 @@ export class PlayerController {
     this.placeAtSpawn();
     this.pitch = 0;
     this.syncCamera();
+  }
+
+  /** 인스턴스 리스폰 — 스폰 지점으로 복귀 + 짧은 무적(접촉 즉사 방지). 적/미션은 그대로 진행. */
+  respawn(protectSec = 1.5) {
+    this.reset();
+    this.invuln = protectSec;
+  }
+
+  /** 교전 구역 설정(미션 인스턴스). radius≤0 이면 제한 해제. 중심 미지정 시 현재 위치(=스폰) 기준. */
+  setZone(radius: number, cx = this.position.x, cz = this.position.z) {
+    this.zoneRadius = radius > 0 ? radius : 0;
+    this.zoneCx = cx;
+    this.zoneCz = cz;
+  }
+
+  clearZone() {
+    this.zoneRadius = 0;
+  }
+
+  /** 작전구역(월드 중심·반경) — 미니맵 경계 표시용. 구역 없으면 null. */
+  get zone(): { cx: number; cz: number; radius: number } | null {
+    return this.zoneRadius > 0 ? { cx: this.zoneCx, cz: this.zoneCz, radius: this.zoneRadius } : null;
+  }
+
+  /** 구역 밖이면 경계 안으로 되돌리고, 밖으로 파고드는 수평 속도를 제거(경계를 벽처럼). */
+  private clampToZone() {
+    if (this.zoneRadius <= 0) return;
+    const dx = this.position.x - this.zoneCx;
+    const dz = this.position.z - this.zoneCz;
+    const d = Math.hypot(dx, dz);
+    if (d <= this.zoneRadius || d < 1e-6) return;
+    const ux = dx / d, uz = dz / d; // 중심→밖 단위벡터
+    this.position.x = this.zoneCx + ux * this.zoneRadius;
+    this.position.z = this.zoneCz + uz * this.zoneRadius;
+    const into = this.hVel.x * ux + this.hVel.z * uz; // 밖으로 향하는 성분만 제거(경계 슬라이드 유지)
+    if (into > 0) {
+      this.hVel.x -= into * ux;
+      this.hVel.z -= into * uz;
+    }
   }
 }

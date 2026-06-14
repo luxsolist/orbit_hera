@@ -8,21 +8,38 @@
 ## MenuScreen — 세계지도 전장 선택
 
 `Game`에서 분리된 메뉴 UI 클래스(Game은 루프/상태에 집중). 콜백 주입:
-`{ onDeploy(mapId, droneId), onPlayIntro() }`.
+`{ onDeploy(mapId, droneId, peaceful), onPlayIntro() }`.
 
 - **세계지도** — Natural Earth 대륙 윤곽 SVG([worldMapSvg](../../src/ui/worldMapSvg.ts) +
   생성 데이터 worldLand) 위에, 맵 카탈로그의 `lat/lon`을 equirectangular로 투영한 점 배치.
   진입마다 랜덤 2개 "침공 중"(붉은 깜빡임), 나머지 등록(흰 점).
-- **지역 팝업** — 점 클릭 → 그 위에 지역 정보 + **드론 선택 버튼**. 선택 즉시 `onDeploy` → 출격.
+- **근접 점 클러스터링** — 세계지도(2:1 종횡비)상 너무 가까운 점들을 `clusterDots(pts, threshold=2.6%, aspect=0.5)`
+  (Union-Find)로 한 **대표 점**으로 묶고 멤버 수 배지를 단다. 클러스터 안에 "침공 중" 멤버가 하나라도 있으면
+  대표 점이 붉게 표시. 단일 점은 `data-map`, 묶인 점은 `data-cluster`로 마크.
+- **확대 지도 드릴다운** — 대표 점 클릭 → `openClusterZoom`이 `.clusterPopup`에 **확대 지도**를 띄운다.
+  `zoomMapBox(members, …)`가 멤버들을 감싸는 viewBox 크롭 영역을 산출하고, `buildWorldSvg(box)`가 그 영역만
+  (그리드 생략) 다시 그린 뒤 `projectInBox`로 멤버 점을 정확히 배치(이름 라벨 포함). 확대창의 세부 점 클릭 →
+  일반 지역 팝업으로 진입. 크롭/투영 로직은 worldMapSvg 공통 함수라 모든 확대창이 공유.
+- **지역 팝업** — 점 클릭 → 그 위에 지역 정보 + **드론 선택 버튼** + **탐방 모드 토글**. 선택 즉시
+  `onDeploy(mapId, droneId, peaceful)` → 출격. **탐방(peaceful) 모드**면 적이 미스폰(`enemies.start(false)`)되어
+  전장을 자유 답사(가드: [tests/enemySpawnMode.test.ts](../../tests/enemySpawnMode.test.ts)).
 - **스토리/도움말 사이드 팝업** — "스토리"(첫 항목 INTRO → `onPlayIntro`), "?"(조작 안내).
   조작 안내는 드론 스펙 `actions[].desc`/`label`에서 동적 생성.
-- `projectLatLon(lat, lon)` 투영은 순수([tests/worldMap.test.ts](../../tests/worldMap.test.ts)).
+- `projectLatLon`/`clusterDots`/`zoomMapBox`/`projectInBox` 투영·클러스터 로직은 순수
+  ([tests/worldMap.test.ts](../../tests/worldMap.test.ts)).
 
 ## HUD
 
 체력/주파수 게이지(**화면 상단 가운데** `.hud__gauges`, 좌우 나란히), 크로스헤어(발사 점멸 `flashFire`),
 처치 수/웨이브, 특수무기 쿨다운 링(진행률·잔여초·발동중), 피격 비네팅(`flashDamage`), 유닛명. DOM은
 [index.html](../../index.html)에 정적 배치, 런타임에 갱신.
+
+### 미션 배너 (`#missionBar`)
+
+게이지 바로 아래 **상단 중앙**에 게임 인스턴스의 미션 상태를 표시한다([08](08-game-instance-mission.md)):
+정적 **목표 문구**(`setMission`) + **잔여 시간**(`m:ss`, 30초 이하 경고색) · **진행 상세**(`32 / 60`,
+`손실 3 / 10` 등) · **잔여 리스폰**(`⟳ 3`/`⟳ ∞`)을 `updateMission`으로 매 프레임 갱신. **탐방 모드**는
+목표가 없어 배너를 숨긴다(`setMission(_, false)`).
 
 ### 적 방향 화살표 ([aimArrows.ts](../../src/ui/aimArrows.ts))
 
@@ -50,7 +67,8 @@
 
 - **Minimap** — 플레이어 주변을 `world.queryMinimap(cx,cz,r,sink)`로 받아 캔버스에 지형/도로/수역/
   건물/적/콜라이더를 위에서 내려다본 뷰로 그림. 플레이어 yaw로 회전. 캔버스 크기/DPR은 `configureCanvas(size)`
-  로 화면 비례 설정, `resize(size)`로 리사이즈 대응.
+  로 화면 비례 설정, `resize(size)`로 리사이즈 대응. **작전구역 경계**(`player.zone`)는 그 호가 미니맵 반경
+  안에 들어올 때(=경계 근처) **호박색 점선 호**로 표시해 이탈 한계를 알린다.
 - **RearView** — 후방 카메라를 메인 캔버스 좌상단에 viewport/scissor로 덧그림. 박스 크기/여백/종횡비는
   매 프레임 `hudSizesFor`로 산출(CSS 테두리 박스와 동일 공식 → 정렬).
 
@@ -96,5 +114,10 @@
   **선 두께는 화면상 일정**(`bracketHalfThick = THICK_SCREEN·거리`)에 따라 분리 제어. 두께는 모서리 **안쪽으로만** 들어가 ㄱ자 두 팔이
   외곽 꼭짓점에 맞물림 → **뾰족한 점이 항상 바깥**(+ 두께 대비 최소 크기 클램프 `MAX_T_FRAC`로 원거리에서도 외향 보장). ([tests/targetBrackets.test.ts](../../tests/targetBrackets.test.ts))
   브래킷 위에 적의 **현재 체력 수치**(`marker.hp`)를 DOM 라벨로 박스 상단에 표시 — 화면 투영, 카메라 뒤(`z>1`)면 숨김, 사망·일시정지엔 `hide()`로 잔상 제거.
+- **EnergyWall** ([fx/EnergyWall.ts](../../src/fx/EnergyWall.ts)) — 작전구역 경계의 **반투명 에너지 벽**(반경
+  `zoneRadius` 원통, `ShaderMaterial`). DoubleSide·depthWrite 끔(투과), **거리 페이드**(uNear 800/uFar 2600 —
+  멀면 사라지고 경계 근처에서 진해짐, 원경 호리병 방지), 위로 흐르는 에너지 밴드 + 세로 격자선 + 프레넬,
+  HDR 호박색이라 블룸에 걸려 발광. 지면(`heightAt(spawn)`) 기준 수직 범위(−200~+1600m)로 세워 고지대 맵 대응.
+  `Game`이 존 있을 때 생성하고 프레임마다 `update(dt)`로 애니메이션, 종료 시 `dispose()`.
 - **Diagnostics** ([core/Diagnostics.ts](../../src/core/Diagnostics.ts)) — URL `?diag` 시 화면 오버레이로
   WebGL 컨텍스트 손실/전역 에러/`renderer.info` 스냅샷/프레임 하트비트 표시(온디바이스 진단).

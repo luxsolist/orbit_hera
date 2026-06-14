@@ -6,7 +6,7 @@ import * as THREE from "three";
 export const RANGE = 2000; // 이 거리(m) 이내의 적 모두 표시(2km)
 const CORNER_LEN = 0.45; // 변 절반(=1) 대비 코너 선 길이
 const MARGIN = 1.56; // 대상 반경 대비 프레임 반경(대상을 둘러쌈) — 기존 1.3 +20%
-const MAX = 64; // 동시 표시 상한(풀)
+const MAX = 128; // 동시 표시 상한(풀) — 일괄 스폰(현 100) 전부 표식되도록 상향
 const BRACKET_OPACITY = 0.9; // 투명도(거리 무관 일정 — 거리별 색/농도 변화 없음)
 const THICK_SCREEN = 0.006; // 코너 선 절반 두께 = THICK_SCREEN·거리(m) → 화면상 두께 일정(타깃 크기·거리 무관). 클수록 두껍게
 const MAX_T_FRAC = 0.35; // 두께/프레임반경 상한 — 멀어 두께가 커지면 프레임에 최소 크기 부여(코너 뾰족점이 항상 바깥 향하도록)

@@ -16,10 +16,10 @@
     ]
   },
   "visual": {
-    "minDiameter": 1.0,
-    "maxDiameter": 300,
+    "minDiameter": 2.0,
+    "maxDiameter": 600,
     "anchorHp": 200000,
-    "anchorDiameter": 250,
+    "anchorDiameter": 500,
     "exponent": 0.82
   },
   "spawn": {

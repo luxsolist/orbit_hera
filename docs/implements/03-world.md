@@ -33,8 +33,12 @@
 - **데이터 소스**: `public/maps/<floorLat>/<floorLon>/<bx>_<bz>/<cx>_<cz>.json`(1024m 청크) + `tiles.json`(존재 청크·격자·`block`). 빌드는 [맵 파이프라인](07-build-test-tooling.md#맵-데이터-파이프라인-build-pipelinemjs), 규약은 [spec/03-maps.md](../spec/03-maps.md).
 - **스트리밍**([chunkStream.ts](../../src/world/chunkStream.ts)): 속도방향 프리페치·히스테리시스·시간예산 빌드 큐·LRU. 주입형 `ChunkIO`(fetch=`tiles.json` 게이트+블록 경로, build=[chunkMesh](../../src/world/chunkMesh.ts), dispose).
 - **부동 원점(단순화)**: 스폰을 로컬 원점(0,0)으로 잡아 Float32 정밀도 확보(셀-로컬 = 로컬 + origin). `bounds=1e7`(사실상 무제한 — 데이터 없는 곳은 평지 y=0). 셀 경계 횡단 재원점화/멀티셀은 추후.
+- **무작위 시작 위치(건물 밀집 도심 위주)**: 매 게임 `pickSpawnChunk`([chunkManifest](../../src/world/chunkManifest.ts))로 **건물 밀집 도심 청크**를 골라 그 중심을 로컬 원점으로 삼는다 → 맵마다 다른 곳에서 시작(플레이어는 여전히 로컬 (0,0) = 정밀도 유지). **밀집도 = 반경 R(=2) 청크 이웃 중 건물(objects) 청크 수**, 밀집도 상위 `topFrac`(=25%) 안에서 무작위 선택(도심 코어 집중 + 변주). 시작 방위(yaw)도 무작위. 건물 청크 없으면(에베레스트 등) 지형 청크 폴백. **작전구역(미션 `zoneRadius`)·적 일괄 스폰이 이 도심 중심을 기준**으로 잡히고, 플레이어는 이 구역(반경 5km) 밖으로 못 나간다(`PlayerController.setZone`/`clampToZone`, 미니맵에 호박색 경계 표시).
 - **질의 계층**: 로드된 청크 레지스트리에서 `heightAt`(삼각분할 일치 보간 `sampleChunkHeight`) · 오브젝트 청크 집합 변경 시 `CollisionWorld` 재구축 · `queryMinimap`.
-- **청크 메시**([chunkMesh.ts](../../src/world/chunkMesh.ts)): 단일 초록/황토/눈 지형 + 건물 압출(표고 안착) + 마이터 도로 리본(가장자리 드레이프·끝점 연장)·간선 중앙선 + 담장/강 리본 + 면 세분 드레이프. 모두 렌더 지오메트리(청크 페이로드 불변).
+- **청크 메시**([chunkMesh.ts](../../src/world/chunkMesh.ts)): 단일 초록/황토/눈 지형(면 세분 드레이프) + **지형 표면 베이크 텍스처** + 건물 압출 + 담장/강 리본. 모두 렌더 지오메트리(청크 페이로드 불변).
+  - **표면 베이크 텍스처**(`bakeSurfaceTexture`): 도로/수역/면(area)·간선 중앙선을 **캔버스에 그려 지형 표면 텍스처로 굽는다**(별도 3D 리본 메시 아님 — 드로우콜·정점 절감). 도로는 minimap 질의용으로만 별도 수집.
+  - **수역 구멍 보존**: 수역 폴리곤의 내부 구멍(섬·제방, `holes` 배열)을 SVG even-odd 채우기로 물에서 제외해 텍스처에 반영.
+  - **건물 높이 보간**: 경사 지형에 건물을 안착시키기 위해 footprint **각 모서리 표고를 샘플**해 최저점(`minGround`) 기준으로 baseY(−0.6m 스커트)를 내리고, 지붕은 **중심 고도 + 높이**로 잡아 처마선을 일관되게 유지. 표고 샘플은 지형 메시 삼각분할과 동일하게 보간(`sampleChunkHeight`).
 
 ## TerrainField — 공간 질의 계층 (순수)
 
@@ -81,3 +85,27 @@
 `Landmark.parts`(box/cyl/cone/plane/hiproof/strut) + `mats`(색/재질) 명세를 해석해 양식화 메시 +
 콜라이더를 생성. 전각/동상/탑/다리 등이 전부 동일 인터프리터로 빌드된다(한국 기와·일본 천수각 처마
 들림 등은 part 파라미터로 표현). 가드: [tests/StructureBuilder.test.ts](../../tests/StructureBuilder.test.ts).
+
+## 건물 전투 (BuildingCombat)
+
+소스: [BuildingCombat.ts](../../src/world/BuildingCombat.ts) · 가드: [tests/buildingCombat.test.ts](../../tests/buildingCombat.test.ts)
+
+도시 건물·랜드마크에 **체력**을 부여해 플라즈모이드의 공격 대상으로 만든다(적의 공격 경로는
+[05-enemies](05-enemies.md#매-프레임-군집-조향--공격-update) 참고). `World`/`StreamingWorld`가 빌드 시
+건물을 등록(`registerBuilding`/`registerLandmark`)하고, `EnemyManager`가 표적 질의(`nearestTarget`)·피해
+적용(`damage`)을 호출하며, 매 프레임 `update(dt)`로 연출을 진행한다.
+
+- **체력 = 부피 기반** — 일반 건물 `maxHp = max(HP_MIN=40, 바닥면적 × 높이 × HP_PER_M3=0.04)`,
+  랜드마크는 고유 hp 또는 기본값 `LANDMARK_HP_DEFAULT=6000`.
+- **부분 갱신(드로우콜 보존)** — 건물은 성능상 청크 단위 **단일 병합 메시**로 렌더된다. 등록 시 건물별
+  **정점 범위(`vStart`/`vCount`)**만 기록해 두면, 병합을 유지한 채 개별 건물의 정점 색(점진 적색 틴트)·
+  위치(붕괴)만 부분 갱신할 수 있다. 랜드마크는 개별 `Group`이라 group 변환(scale/sink)으로 처리.
+- **파괴 시퀀스** — 체력 0 → `beginDestroy`: 번쩍(`FLASH_DUR=0.16s`, 블룸 유발) → 슬로우 붕괴
+  (`COLLAPSE_DUR=1.5s`, 윗부분이 더 크게 흩어지며 가라앉음) → 셸을 지하로 묻고(`buryShell`) **검정 잔해
+  더미**만 남김.
+- **검정 잔해(rubble)** — 파괴물은 인트로 해변 집 붕괴처럼 낮게 쌓인 각진 조각 더미로 남기되, **조명 무관
+  순수 검정 단색**(`RUBBLE_BLACK`, `MeshBasic`)으로 통일해 지상/공중 어디서든 즉시 눈에 띄게 한다. 모든
+  잔해는 **단일 InstancedMesh**(드로우콜 1개, 상한 `MAX_RUBBLE=2048`)에 footprint 크기로 인스턴싱.
+- **충돌 개방** — 파괴 시 `collision.openBuildingAt`으로 해당 콜라이더를 열어 잔해 위를 통과할 수 있게 한다.
+- **스트리밍 영속** — 파괴 이력을 안정 ID(중심 좌표 해시)로 `destroyed`에 보관 → 청크가 언로드/재로드돼도
+  파괴 상태가 복원된다(`restoreRubble*`). 스트리밍 충돌 재구축 후엔 `reopenDestroyed`로 콜라이더를 다시 개방.

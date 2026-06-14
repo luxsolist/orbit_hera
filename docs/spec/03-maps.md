@@ -11,10 +11,11 @@
 
 | id | 이름 | 위치 | 형식 | 특징 |
 | :--- | :--- | :--- | :--- | :--- |
-| `seoul-stream` | 서울 도심 · Seoul | (37.5797, 126.977) | 스트리밍 타일 월드 | 경복궁 중심 반경 20km(58×58km, 1,600 청크, 건물 270k) — **특수 권역(precinct)** |
+| `seoul-stream` | 서울 도심 · Seoul | (37.5797, 126.977) | 스트리밍 타일 월드 | 경복궁 중심 반경 20km(58×58km, 1,600 청크) — **특수 권역(precinct)** |
 | `everest-stream` | 에베레스트 · Everest | (27.9881, 86.925) | 스트리밍 타일 월드 | 정상 중심 반경 20km(1,600 청크, 표고 3~8.7km) — 자연 산악(`bareEarth:false`로 봉우리 보존, 도로 0) |
+| `busan-stream` | 부산 · Busan | (35.16, 129.07) | 스트리밍 타일 월드 | 부산 도심 반경 20km — 해운대·광안리·태종대(해안 도시, 바다 렌더) |
 
-현재 카탈로그(`index.json`)에는 **스트리밍 전장 seoul-stream 하나**만 노출된다. 빌드 소스 `gyeongbokgung`(maps.config)은 `catalogHidden`이라 메뉴 비노출.
+현재 카탈로그(`index.json`)에는 **스트리밍 전장 3개**(seoul-stream·everest-stream·busan-stream)가 노출된다. 빌드 소스 `gyeongbokgung`(maps.config)은 `catalogHidden`이라 메뉴 비노출.
 과거 monolithic 레거시(manhattan/osaka/paris)는 스트리밍 전환 후 미사용이라 제거됨 — 새 도시는 스트리밍 파이프라인으로 추가한다.
 
 `lat/lon`은 메인 화면 세계지도(equirectangular) 점 위치에 사용된다. 진입마다 랜덤 2개가

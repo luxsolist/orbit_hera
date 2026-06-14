@@ -168,6 +168,19 @@ export class Minimap implements MinimapSink {
       ctx.stroke();
     }
 
+    // ---- 작전구역 경계 — 경계 근처(미니맵 반경 내)일 때 호박색 점선 호로 표시(이탈 불가 안내) ----
+    const zone = this.player.zone;
+    if (zone && Math.abs(Math.hypot(this.px - zone.cx, this.pz - zone.cz) - zone.radius) < WORLD_RADIUS) {
+      this.project(zone.cx, zone.cz);
+      ctx.strokeStyle = "rgba(255, 170, 40, 0.75)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.arc(this.bx, this.by, zone.radius * this.scale, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     // ---- 시야 콘(위쪽 부채꼴) ----
     const fovHalf = (72 * Math.PI) / 180 / 2; // 메인 카메라 FOV 의 절반
     const coneR = half - 4;

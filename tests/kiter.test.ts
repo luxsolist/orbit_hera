@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { turnToward, kiterVelocity, stickyMinIndex, chooseTarget, type Boid, type KiterParams } from "../src/enemies/CoreEnemy";
+import { turnToward, kiterVelocity, stickyMinIndex, chooseTarget, matchupMul, engageKeepDist, type Boid, type KiterParams } from "../src/enemies/CoreEnemy";
 
 // 도주형(카이터) 조향 순수 함수 가드 — keepDist 유지(도주/접근/선회) + 선회속도 캡 + 동시 개체수.
 
@@ -138,5 +138,31 @@ describe("chooseTarget — 거리 + 어그로 분산 표적 선택", () => {
   it("Infinity(사망/부재) 표적 제외, 전부 무효면 -1", () => {
     expect(chooseTarget([Infinity, 10], [0, 0], -1, 0.4, 1.2, scratch())).toBe(1);
     expect(chooseTarget([Infinity, Infinity], [0, 0], -1, 0.4, 1.2, scratch())).toBe(-1);
+  });
+  it("상성 가중 — 더 가까운 비상성보다 약간 먼 상성 표적을 우선(MP)", () => {
+    // idx0=상성(거리 12, mul 1 → 12), idx1=비상성(거리 10, mul 3 → 30) → 상성 idx0
+    expect(chooseTarget([12, 10], [0, 0], -1, 0.4, 1.2, scratch(), [1, 3])).toBe(0);
+    // 비상성이 충분히 가까우면(거리 3 → 9 < 12) 그래도 비상성 선택(절대 배제 아님)
+    expect(chooseTarget([12, 3], [0, 0], -1, 0.4, 1.2, scratch(), [1, 3])).toBe(1);
+  });
+});
+
+describe("matchupMul — 상성 가중(카이터↔플라이어 / 러셔↔워커)", () => {
+  it("카이터→플라이어, 러셔→워커 = 상성(1)", () => {
+    expect(matchupMul(true, true, 3)).toBe(1); // kiter vs flyer
+    expect(matchupMul(false, false, 3)).toBe(1); // rusher vs walker
+  });
+  it("카이터→워커, 러셔→플라이어 = 비상성(penalty)", () => {
+    expect(matchupMul(true, false, 3)).toBe(3); // kiter vs walker
+    expect(matchupMul(false, true, 3)).toBe(3); // rusher vs flyer
+  });
+});
+
+describe("engageKeepDist — 상성 폴백(비상성 워커 표적이면 근접)", () => {
+  it("상성(플라이어) 표적 → 기본 keepDist 유지", () => {
+    expect(engageKeepDist(60, true, 0.45)).toBe(60);
+  });
+  it("비상성(워커) 표적 → keepDist 축소(사거리 안으로)", () => {
+    expect(engageKeepDist(60, false, 0.45)).toBe(27);
   });
 });

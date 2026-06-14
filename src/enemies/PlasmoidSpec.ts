@@ -239,10 +239,56 @@ export function pickSpawnType(pendingRusher: number, pendingKiter: number, rand:
   return "kiter";
 }
 
+/**
+ * 일괄 스폰 1마리의 아키타입 — 전장 드론 구성에 비례(워커↔러셔/지표, 플라이어↔카이터/상공).
+ * 단일 구성은 자기 매칭 타입만(자기정렬 — 이길 수 없는 미스매치 차단). 둘 다 없으면 50:50. rand: ()=>[0,1). 순수.
+ */
+export function pickBurstType(walkers: number, flyers: number, rand: () => number): PlasmoidArchetype {
+  const total = walkers + flyers;
+  if (total <= 0) return rand() < 0.5 ? "rusher" : "kiter";
+  return rand() * total < walkers ? "rusher" : "kiter";
+}
+
 /** 가장 낮은(가장 차가운·최약) 색 stop. */
 export const lowestColor = (spec: PlasmoidSpec): ColorStop => spec.color.stops[0];
 /** 가장 높은(가장 뜨거운·최강) 색 stop. */
 export const highestColor = (spec: PlasmoidSpec): ColorStop => spec.color.stops[spec.color.stops.length - 1];
+
+/**
+ * 일괄 스폰의 **HP 예산 배분**(순수) — 합계 = total. index 0 = 중간보스(bossHp), 나머지 count-1 마리는
+ * total−bossHp 를 무작위 가중(0.5~1.5)으로 나눠 갖되 합이 정확히 맞도록 마지막이 잔여를 흡수.
+ * rand: ()=>[0,1). count≤0 → 빈 배열, count==1 → [total].
+ */
+export function distributeHp(total: number, bossHp: number, count: number, rand: () => number): number[] {
+  if (count <= 0) return [];
+  if (count === 1) return [Math.max(1, Math.round(total))];
+  const boss = Math.max(1, Math.min(Math.round(bossHp), Math.round(total)));
+  const rest = Math.max(0, Math.round(total) - boss);
+  const n = count - 1;
+  const w: number[] = [];
+  let sum = 0;
+  for (let i = 0; i < n; i++) { const v = 0.5 + rand(); w.push(v); sum += v; }
+  const out = new Array<number>(count);
+  out[0] = boss; // 중간보스
+  let acc = 0;
+  for (let i = 0; i < n; i++) {
+    const h = i < n - 1 ? Math.max(1, Math.round((rest * w[i]) / sum)) : Math.max(1, rest - acc); // 마지막이 잔여 흡수(합 정확)
+    out[i + 1] = h;
+    acc += h;
+  }
+  return out;
+}
+
+/**
+ * 예산 지정 HP → 외형(온도·색·렌더 지름). HP가 클수록 고온(청백)·대형 — 색=강함 메타포 유지.
+ * `temp = lowT + strength(hp)·(highT−lowT)`, color/지름은 기존 시스템 재사용. 순수.
+ */
+export function appearanceForHp(spec: PlasmoidSpec, hp: number): { temp: number; color: number; diameter: number } {
+  const lowT = spec.color.stops[0].temp;
+  const highT = spec.color.stops[spec.color.stops.length - 1].temp;
+  const temp = lowT + strength(spec, hp) * (highT - lowT);
+  return { temp, color: colorAt(spec.color.stops, temp), diameter: visualDiameter(spec, hp) };
+}
 
 /**
  * 내장 기본 스펙 — public/enemies/plasmoid.json 과 동일(테스트가 동치 검증).
@@ -261,7 +307,7 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
       { temp: 12000, color: "0x4aa6ff", weight: 5.0 },
     ],
   },
-  visual: { minDiameter: 1.0, maxDiameter: 300, anchorHp: 200000, anchorDiameter: 250, exponent: 0.82 },
+  visual: { minDiameter: 2.0, maxDiameter: 600, anchorHp: 200000, anchorDiameter: 500, exponent: 0.82 },
   spawn: { tempAlpha: 2, speedMax: 13.5, speedMin: 3.75, hpFloor: 100, hpCeil: 200000 },
   contact: { hpDamage: 10, strengthMul: 2.0 },
   archetypes: {

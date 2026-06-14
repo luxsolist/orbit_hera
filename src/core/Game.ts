@@ -25,13 +25,27 @@ import { hudSizesFor, hudComponentsFor } from "../ui/hudLayout";
 import { MenuScreen } from "../ui/MenuScreen";
 import { createComposer, disposeComposer } from "../fx/postprocessing";
 import { TargetBrackets } from "../fx/TargetBrackets";
+import { EnergyWall } from "../fx/EnergyWall";
 import { CinematicPlayer } from "../intro/CinematicPlayer";
 import { MenuBackground } from "../intro/MenuBackground";
 import { introScenes } from "../intro/scenes";
 import { fetchMap, fetchCatalog, loadTerrainHeights } from "../world/maps";
 import type { MapCatalogEntry, NormalizedMap } from "../world/MapData";
+import { GameInstance } from "../game/GameInstance";
+import { fetchMissions } from "../game/missions";
+import { pickMission, FREE_ROAM, DEFAULT_MISSIONS, type MissionOutcome } from "../game/mission";
 
 type GameState = "intro" | "menu" | "loading" | "playing" | "paused" | "dead";
+
+// 재시작(reload)으로 같은 전장/기체에 재출격하기 위한 sessionStorage 키.
+const DEPLOY_KEY = "core.deploy";
+const RETRY_KEY = "core.retry";
+
+interface DeployInfo {
+  id: string;
+  droneId: string;
+  peaceful: boolean;
+}
 
 /** 전장 빌드 후 함께 생성되는 플레이 세션 — 전부 존재 or 전부 없음(옵셔널 필드 + non-null 단언 제거). */
 interface Session {
@@ -44,6 +58,8 @@ interface Session {
   rearView: RearView;
   minimap: Minimap;
   brackets: TargetBrackets;
+  instance: GameInstance; // 이 플레이타임의 미션/상태/종료 조건 관리
+  wall?: EnergyWall; // 작전구역 경계 에너지 벽(존 있을 때만)
 }
 
 /**
@@ -136,6 +152,7 @@ export class Game {
   start() {
     this.clock.start();
     this.renderer.setAnimationLoop(() => this.diag.guard(() => { this.diag.tick(); this.frame(); }));
+    this.maybeAutoRedeploy(); // 미션 재시작(reload) → 저장된 전장으로 바로 재출격
   }
 
   /** 메뉴 배경(랜덤 인트로 장면) 정리 — 메뉴 이탈(전장 선택/인트로 재생) 시 호출. */
@@ -179,6 +196,7 @@ export class Game {
   private async selectMap(id: string, droneId: string, peaceful = false) {
     if (this.session) return;
     this.peaceful = peaceful;
+    this.rememberDeploy({ id, droneId, peaceful }); // 재시작(reload) 재출격용
     this.sfx.resume(); // 클릭 제스처 내에서 오디오 컨텍스트 활성화(브라우저 정책)
     this.clearMenuBg(); // 메뉴 배경 종료
     this.menu.hide();
@@ -253,8 +271,9 @@ export class Game {
       specialLabel: specialWeapon.abbr,
     });
     const enemies = new EnemyManager(this.scene, world, [player], plasmoidSpec); // MP 대응: 플레이어 배열(현재 1인)
-    // 모바일 플라이어 — 자동조준(에임어시스트 콘)·자동사격(360° 사거리/범위)을 2배(터치 조준 난도 보정). 캐시 스펙 불변(복제).
-    const primarySpec = this.mobile.enabled && drone.move.mode === "fly"
+    // 모바일 — 자동조준(에임어시스트 콘)·자동사격(360° 소프트락 사거리)을 2배(터치 조준 난도 보정).
+    // 워커 32→64, 플라이어 100→200. 데스크탑은 무영향. 캐시 스펙 불변(복제).
+    const primarySpec = this.mobile.enabled
       ? withAutoBoost(primaryWeapon as BeamSpec, 2.0)
       : (primaryWeapon as BeamSpec);
     const beam = new FrequencyBeam(this.scene, player, enemies, primarySpec, this.sfx);
@@ -267,7 +286,18 @@ export class Game {
     const rearView = new RearView(this.renderer, this.scene, player);
     const minimap = new Minimap(player, enemies, world);
     const brackets = new TargetBrackets(this.scene);
-    this.session = { world, player, enemies, beam, special, composer, rearView, minimap, brackets };
+    // 이 플레이타임의 미션을 정하고 인스턴스 생성 — 평화(탐방)는 목표 없는 FREE_ROAM, 전투는 풀에서 랜덤.
+    const pool = peaceful ? [] : await fetchMissions().catch(() => DEFAULT_MISSIONS);
+    const mission = peaceful ? FREE_ROAM : pickMission(pool, Math.random());
+    const instance = new GameInstance({ mission, players: [player], enemies, buildings: world.buildings ?? undefined });
+    // 작전구역 에너지 벽 — 스폰(=존 중심) 주위 반경 zoneRadius. 지면 기준 수직 범위로 세움(고지대 맵 대응).
+    let wall: EnergyWall | undefined;
+    if (!peaceful && mission.zoneRadius > 0) {
+      const sx = world.spawn.x, sz = world.spawn.z;
+      const gy = world.heightAt(sx, sz);
+      wall = new EnergyWall(this.scene, sx, sz, mission.zoneRadius, gy - 200, gy + 1600);
+    }
+    this.session = { world, player, enemies, beam, special, composer, rearView, minimap, brackets, instance, wall };
     this.applyHudLayout(); // 새 미니맵을 현재 화면 비례로 동기화
     this.diag.snapshot(this.renderer, "battle-built"); // 세션(컴포저 등) 생성 직후 — 누수 추적 핵심 지점
     this.wireEvents(this.session);
@@ -278,10 +308,27 @@ export class Game {
     const s = this.session;
     if (!s) return;
     s.player.reset();
-    s.enemies.start(!this.peaceful); // 탐방 모드면 적 미스폰
+    // 작전구역(미션 zoneRadius, 중심 = 스폰) — 플레이어·플라즈모이드 모두 이 원 밖으로 못 나간다. 탐방은 무제한.
+    const m = s.instance.mission;
+    if (!this.peaceful && m.zoneRadius > 0) {
+      s.player.setZone(m.zoneRadius);
+      const z = s.player.zone;
+      if (z) s.enemies.setZone(z.cx, z.cz, z.radius);
+    } else {
+      s.player.clearZone();
+      s.enemies.setZone(0, 0, 0);
+    }
+    // 적 스폰 — 미션 spawnCount>0 이면 시작 위치 반경 spawnRadius 안에 체력 총합 totalHp 예산으로 일괄 스폰
+    // (중간보스 bossHp 1기 + 나머지), 아니면 웨이브(탐방은 미스폰)
+    if (!this.peaceful && m.spawnCount > 0) s.enemies.startBurst(m.spawnCount, m.spawnRadius, m.totalHp, m.bossHp);
+    else s.enemies.start(!this.peaceful);
     s.special.reset();
+    s.instance.start(); // 미션 타이머/리스폰 예산 초기화
     this.hud.setKills(0);
     this.hud.setDestroyed(s.world.buildings?.destroyedBuildings ?? 0, s.world.buildings?.destroyedLandmarks ?? 0);
+    const snap = s.instance.snapshot();
+    this.hud.setMission(snap.objective, s.instance.mission.kind !== "free-roam");
+    this.hud.updateMission(snap.timeLeft, snap.detail, snap.respawnsLeft);
     this.state = "playing";
     this.hideOverlay();
     this.setPlayActive(true);
@@ -305,13 +352,15 @@ export class Game {
     // 건물/랜드마크 파괴 → HUD 카운터 갱신(번쩍 + 슬로우 붕괴 연출은 BuildingCombat 가 진행)
     const bc = s.world.buildings;
     if (bc) bc.onDestroyed = () => this.hud.setDestroyed(bc.destroyedBuildings, bc.destroyedLandmarks);
+    // 미션 종료(성공/실패) → 결과 패널(재시작은 reload)
+    s.instance.onEnd = (outcome) => this.endMission(outcome);
   }
 
-  /** 일시정지/사망 후 버튼: 재접속(같은 전장 재개/재시작) */
+  /** 일시정지 후 재접속(제자리 재개) · 미션 종료 후 재시작(reload 재출격) 버튼. */
   private startOrResume() {
     this.sfx.resume(); // 사용자 클릭 제스처 → 오디오 활성화/재개
     if (this.state === "dead") {
-      this.beginPlay();
+      this.retryDeploy(); // 미션 종료 → 같은 전장으로 reload 재출격(새 인스턴스/미션)
     } else if (this.state === "paused") {
       this.state = "playing";
       this.hideOverlay();
@@ -329,13 +378,40 @@ export class Game {
     this.renderer.setAnimationLoop(null);
     this.intro?.dispose();
     this.menuBg?.dispose();
-    if (this.session) disposeComposer(this.session.composer);
+    if (this.session) { disposeComposer(this.session.composer); this.session.wall?.dispose(); }
     this.renderer.forceContextLoss(); // GPU 컨텍스트 즉시 반납(iOS 회수 촉진)
     this.renderer.dispose();
   }
 
   private changeMap() {
+    try { sessionStorage.removeItem(DEPLOY_KEY); sessionStorage.removeItem(RETRY_KEY); } catch { /* 무시 */ }
     window.location.reload();
+  }
+
+  // ─────────────────────────── 재출격(reload) ───────────────────────────
+
+  /** 출격 정보를 저장(재시작 reload 시 같은 전장/기체로 재출격). */
+  private rememberDeploy(d: DeployInfo) {
+    try { sessionStorage.setItem(DEPLOY_KEY, JSON.stringify(d)); } catch { /* 비공개 모드 등 — 무시 */ }
+  }
+
+  /** 미션 재시작 — 재출격 플래그를 세우고 reload(클린 인스턴스/새 랜덤 미션). */
+  private retryDeploy() {
+    try { sessionStorage.setItem(RETRY_KEY, "1"); } catch { /* 무시 */ }
+    window.location.reload();
+  }
+
+  /** 부팅 시 재출격 플래그가 있으면 메뉴를 건너뛰고 저장된 전장으로 바로 출격. */
+  private maybeAutoRedeploy() {
+    let retry: string | null = null;
+    let raw: string | null = null;
+    try { retry = sessionStorage.getItem(RETRY_KEY); raw = sessionStorage.getItem(DEPLOY_KEY); } catch { return; }
+    if (!retry || !raw) return;
+    try { sessionStorage.removeItem(RETRY_KEY); } catch { /* 무시 */ }
+    try {
+      const d = JSON.parse(raw) as DeployInfo;
+      if (d && d.id && d.droneId) void this.selectMap(d.id, d.droneId, !!d.peaceful);
+    } catch { /* 손상된 값 — 메뉴 유지 */ }
   }
 
   private onPointerLockChange() {
@@ -373,6 +449,7 @@ export class Game {
       s.player.update(dt);
       const pp = s.player.worldPosition;
       s.world.update(pp.x, pp.z, pp.y); // 그림자 추종 + (스트리밍) 청크 로드/언로드
+      s.wall?.update(dt); // 작전구역 에너지 벽 애니메이션
       s.beam.update(dt, this.input.fireHeld);
       s.special.update(dt, this.input.specialPressed);
       s.enemies.update(dt);
@@ -387,7 +464,14 @@ export class Game {
       this.hud.setSpecial(cdReady, s.special.isActive, cdRemaining);
       this.mobile.setSpecialState(cdReady, s.special.isActive, cdRemaining);
 
-      if (s.player.isDead) this.onDeath();
+      // 인스턴스: 미션 평가(타이머/목표/종료). 종료 전이 시 onEnd→endMission 으로 state 가 바뀐다.
+      s.instance.update(dt);
+      if (s.instance.mission.kind !== "free-roam") {
+        const snap = s.instance.snapshot();
+        this.hud.updateMission(snap.timeLeft, snap.detail, snap.respawnsLeft);
+      }
+      // 사망 처리는 미션 종료(성공 등) 전이 후엔 생략 — 여전히 playing 일 때만.
+      if (s.player.isDead && this.state === "playing") this.handlePlayerDeath();
     }
 
     this.input.endFrame();
@@ -398,20 +482,36 @@ export class Game {
     }
   }
 
-  private onDeath() {
+  /**
+   * 플레이어(기체) 파괴 — 인스턴스 리스폰 예산을 조회한다. 남으면 **제자리 부활**(적/미션/처치 유지)로
+   * 전투를 잇고, 소진이면 인스턴스를 종료 평가(→ onEnd→endMission 으로 미션 실패 패널).
+   */
+  private handlePlayerDeath() {
+    const s = this.session;
+    if (!s) return;
+    if (s.instance.registerDeath()) {
+      s.player.respawn(); // 스폰 복귀 + 짧은 무적. 적/미션은 그대로 진행
+      this.hud.flashDamage();
+      return;
+    }
+    s.instance.finalize(); // 리스폰 소진 → 미션 실패 전이(onEnd→endMission)
+  }
+
+  /** 미션 종료(성공/실패) → 포인터락 해제 + 결과 패널. 재시작은 reload(같은 전장 재출격). */
+  private endMission(outcome: MissionOutcome) {
+    if (this.state !== "playing") return;
     const s = this.session;
     this.state = "dead";
     this.setPlayActive(false);
-    s?.brackets.hide(); // 사망 화면에 브래킷·체력수치 잔상 방지
+    s?.brackets.hide(); // 결과 화면에 브래킷·체력수치 잔상 방지
     this.hud.clearEnemyDirections(); // 적 방향 화살표 잔상 방지
-    // 실제 포인터락은 데스크탑만 사용(모바일은 합성 락). iPad WebKit 은 exitPointerLock 미지원/실패 가능 →
+    // 실제 포인터락은 데스크탑만(모바일은 합성 락). iPad WebKit 은 exitPointerLock 미지원/실패 가능 →
     // 가드 없이 호출하면 예외로 showPanel 이 건너뛰어져 버튼이 안 뜸. 모바일은 호출 생략 + 옵셔널 체이닝.
     if (!this.mobile.enabled) document.exitPointerLock?.();
-    this.showPanel(
-      "LINK LOST",
-      s ? `정화 ${s.enemies.killCount}체 · WAVE ${s.enemies.wave}` : "",
-      "재접속 / RECONNECT"
-    );
+    const success = outcome.status === "success";
+    const kills = s ? s.enemies.killCount : 0;
+    const title = success ? "작전 완수 / MISSION COMPLETE" : "작전 실패 / MISSION FAILED";
+    this.showPanel(title, `${outcome.reason} · 정화 ${kills}체`, "다시 / RETRY");
   }
 
   /** 일시정지/사망 패널(맵 목록 숨김, 재접속 + 전장 선택 버튼) */

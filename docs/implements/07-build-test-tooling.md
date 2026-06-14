@@ -26,32 +26,34 @@
   controlFlowFlattening·selfDefending·debugProtection 등 위험/무거운 옵션은 **비활성**(기능/성능 보존).
 - 데이터(`public/*.json`)는 정적 자산이라 그대로 노출됨 — 민감 로직은 데이터에 두지 않음.
 
-## 테스트 스위트 (Vitest — 38파일 / 634테스트, node 환경)
+## 테스트 스위트 (Vitest — 40파일 / 703테스트, node 환경)
 
 핵심 로직을 **순수 함수로 빼서** 부수효과 없이 가드한다.
 
 | 영역 | 파일 | 가드 |
 | :--- | :--- | :--- |
-| 공용 | `math` | clamp/lerp/parseHexColor |
+| 공용 | `math` | clamp/lerp/parseHexColor·**디스크 클램프(clampToDisk 존 경계)** |
 | 플레이어 | `PlayerController` `spawn` | 점프 적분 · **방향별 이동속도(dirSpeedMult)** · **천장/5km캡(maxRiseAltitude)** · **피해전이(applyDamage 무적·사망 게이트)** · 스폰 높이/고도 분포 |
-| 적 | `pursue` `coreEnemy` `kiter` `plasmoidSpec` | 3D 추적·**예측요격(interceptPoint)·분리(separationVector)·합성조향(steerVelocity)** · **상태기계/태깅/자가회복** · **온도→색·체력·크기·속도·스폰분포·고도가중·접촉흡수피해** |
+| 적 | `pursue` `coreEnemy` `kiter` `plasmoidSpec` | 3D 추적·**예측요격(interceptPoint)·분리(separationVector)·합성조향(steerVelocity)** · **상태기계/태깅/자가회복·흡수=성장(grow)** · **온도→색·체력·크기·속도·스폰분포·아키타입별 물량·접촉흡수피해** |
 | 무기 | `targeting` `WeaponSpec` `beamFx` `drainCycle` | 콘 조준 · 거리감쇠·쿨다운진행률 · **머즐/끝점·측면벡터(sideVector)·발사관합산(emitterDamage)** · **소진형 특수 상태기계** |
 | 모바일 | `mobileJoystick` | 데드존·8방향·속도 4단계 |
-| 월드 | `CollisionWorld` `SpatialGrid` `terrainField` `precinct` `geo` `StructureBuilder` | 충돌/격자/지형 질의(가우시안·도심마스크·오목경계)/권역 양식/지오 유틸/랜드마크 |
-| 타일 월드 | `chunkMesh` `chunkManifest` `chunkStream` `enemySpawnMode` | 청크→메시(드레이프·리본·중앙선·벽·삼각분할 안착) · 셀/블록 경로·격자 좌표 · 스트리밍 LOD/프리페치 · 탐방(무적) 모드 |
+| 인스턴스/미션 | `mission` | **미션 평가(격멸/방어/사수/탐방)·종료 우선순위·리스폰 예산(deathFail)·풀 선택(pickMission)·목표/진행 문구** |
+| 월드 | `CollisionWorld` `SpatialGrid` `terrainField` `precinct` `geo` `StructureBuilder` `buildingCombat` | 충돌/격자/지형 질의(가우시안·도심마스크·오목경계)/권역 양식/지오 유틸/랜드마크 · **건물 체력·피격 틴트·파괴·잔해 슬롯** |
+| 타일 월드 | `chunkMesh` `chunkManifest` `chunkStream` `mapLocator` `enemySpawnMode` | 청크→메시(드레이프·리본·중앙선·벽·삼각분할 안착) · 셀/블록 경로·격자 좌표 · 스트리밍 LOD/프리페치 · **위경도→청크/랜드마크 로케이터** · 탐방(무적) 모드 |
 | 맵 파이프라인 | `worldValidate` `clip` `dem` `osm` `osmxml` | 청크/매니페스트 16종 불변식 게이트 · 폴리곤/폴리라인 클립(S-H·L-B) · DEM 디코드·bare-earth · OSM 변환·stroke병합·복개천·타일분할 · OSM XML 스트리밍 파서 |
 | 데이터 | `specs` `loader` | 드론·무기·**적(플라즈모이드)**·맵 JSON 필수필드 + 교차참조 · 로더 fetch 성공/에러경로 |
-| UI/FX | `targetBrackets` `hudLayout` | 코너 브래킷 거리 페이드 · **화면투영(projectToScreen)·체력라벨(labelText)** · **화면비례 HUD 위젯 크기(hudSizes)** |
-| 투영/데이터 | `worldMap` `osm` `introHelpers` | equirectangular 투영 · OSM 변환 · 컷씬 헬퍼(ease/rng/fallFrag/track 등) |
+| UI/FX | `targetBrackets` `hudLayout` `hudLayoutRects` `aimArrows` | 코너 브래킷 거리 페이드 · **화면투영(projectToScreen)·체력라벨(labelText)** · **화면비례 HUD 위젯 크기(hudSizes)·박스 배치(rects)** · **조준선 둘레 적방향 화살표(aimArrow/arrowOffset)** |
+| 투영/데이터 | `worldMap` `osm` `introHelpers` `cinematicFade` | equirectangular 투영·**클러스터/확대 박스(clusterDots/zoomMapBox/projectInBox)** · OSM 변환 · 컷씬 헬퍼(ease/rng/fallFrag/track 등)·**컷씬 페이드** |
 
 > 데이터 검증(`specs.test.ts`)은 tsc가 못 보는 `public/*.json`의 누락/오타/dangling 참조(무기·맵·적 id)와
 > 권역 스키마를 빌드 타임에 차단한다. `DEFAULT_PLASMOID ≡ plasmoid.json` 동치도 테스트로 고정(드리프트 방지).
 
 ## e2e 스모크 — [tests/e2e/smoke.mjs](../../tests/e2e/smoke.mjs)
 
-빌드 산출물을 Playwright로 띄워 **카탈로그 전장(현재 스트리밍 `seoul-stream`)**을 실제 로드/플레이하며 검증:
+빌드 산출물을 Playwright로 띄워 먼저 **인트로 시네마틱**(재생 중 비-블랙·Esc 메뉴 복귀·에러 0)을 검증한 뒤,
+`public/maps/index.json` **카탈로그 전 전장**(현재 스트리밍 3맵 `seoul-stream`·`everest-stream`·`busan-stream`)을 차례로 실제 로드/플레이하며 검증:
 1. 콘솔/페이지 에러 0
-2. 게임 `playing` 진입(오버레이 숨김) — 세계지도 점 클릭 → 팝업 드론 버튼 → 출격 경로
+2. 게임 `playing` 진입(오버레이 숨김) — 세계지도 점 클릭(클러스터면 대표 점 → 확대창 세부 점) → 팝업 드론 버튼 → 출격 경로
 3. 미니맵 렌더됨(프레임 루프 동작)
 4. 메인 WebGL 화면이 블랙이 아님(스크린샷 PNG 크기 휴리스틱)
 

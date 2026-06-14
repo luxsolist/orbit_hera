@@ -1,0 +1,62 @@
+[
+ {
+  "id": "purge",
+  "name": "정화 작전 / PURGE",
+  "kind": "eradicate",
+  "duration": 300,
+  "killTarget": 100,
+  "maxBuildingLoss": 0,
+  "maxLandmarkLoss": 0,
+  "respawns": 3,
+  "zoneRadius": 5000,
+  "spawnCount": 100,
+  "spawnRadius": 1500,
+  "totalHp": 70000,
+  "bossHp": 10000
+ },
+ {
+  "id": "hold-city",
+  "name": "도시 방어 / HOLD THE CITY",
+  "kind": "defend-buildings",
+  "duration": 300,
+  "killTarget": 0,
+  "maxBuildingLoss": 10,
+  "maxLandmarkLoss": 0,
+  "respawns": 3,
+  "zoneRadius": 5000,
+  "spawnCount": 100,
+  "spawnRadius": 1500,
+  "totalHp": 70000,
+  "bossHp": 10000
+ },
+ {
+  "id": "guard-landmark",
+  "name": "랜드마크 사수 / GUARD",
+  "kind": "defend-landmark",
+  "duration": 300,
+  "killTarget": 0,
+  "maxBuildingLoss": 0,
+  "maxLandmarkLoss": 1,
+  "respawns": 3,
+  "zoneRadius": 5000,
+  "spawnCount": 100,
+  "spawnRadius": 1500,
+  "totalHp": 70000,
+  "bossHp": 10000
+ },
+ {
+  "id": "survive",
+  "name": "지역 사수 / SURVIVE",
+  "kind": "survival",
+  "duration": 300,
+  "killTarget": 0,
+  "maxBuildingLoss": 0,
+  "maxLandmarkLoss": 0,
+  "respawns": 2,
+  "zoneRadius": 5000,
+  "spawnCount": 100,
+  "spawnRadius": 1500,
+  "totalHp": 70000,
+  "bossHp": 10000
+ }
+]

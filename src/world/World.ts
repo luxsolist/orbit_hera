@@ -467,7 +467,7 @@ export class World implements GameWorld {
   private buildWater() {
     const water = this.map.terrain.water ?? [];
     const mat = new THREE.MeshStandardMaterial({
-      color: 0x1f8cf0,
+      color: 0x84c0f7, // 연한 파랑(배경 대비 — 플라즈모이드 가독성)
       transparent: true,
       opacity: 0.85,
       roughness: 0.2,

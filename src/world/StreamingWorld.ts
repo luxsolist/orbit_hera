@@ -11,7 +11,7 @@ import type { SpawnPoint } from "./MapData";
 import { CollisionWorld } from "./CollisionWorld";
 import { BuildingCombat } from "./BuildingCombat";
 import { SkyEnvironment } from "./SkyEnvironment";
-import { cellLocalOf, CHUNK_BLOCK, type Cell, type TilesManifest, type WorldChunk } from "./chunkManifest";
+import { cellLocalOf, pickSpawnChunk, CHUNK_BLOCK, type Cell, type TilesManifest, type WorldChunk } from "./chunkManifest";
 import { fetchTiles, fetchWorldChunk } from "./mapLocator";
 import { ChunkStreamer, chunkIndex, type ChunkIO, type ChunkReq, type ChunkConfig } from "./chunkStream";
 import { buildChunkMesh, disposeChunkGroup, sampleChunkHeight, chunkTerrainEntry, type ChunkTerrain, type ChunkBuild } from "./chunkMesh";
@@ -69,16 +69,24 @@ export class StreamingWorld implements GameWorld {
   private vx = 0;
   private vz = 0;
 
-  private constructor(scene: THREE.Scene, manifest: TilesManifest, lat: number, lon: number, yaw: number) {
+  private constructor(scene: THREE.Scene, manifest: TilesManifest, lat: number, lon: number, _yaw: number) {
     this.cell = manifest.cell;
     this.chunkSize = manifest.chunkSize;
     this.block = manifest.block ?? CHUNK_BLOCK;
     this.present = new Set(manifest.chunks.map((c) => chunkKey(c.cx, c.cz)));
-    // 로컬 원점 = 스폰의 셀-로컬 좌표(셀 NW 기준 동/남 m). build-world 와 동일 격자(매니페스트 mLon).
-    const o = cellLocalOf(lat, lon, this.cell, manifest.mLon);
-    this.originX = o.x;
-    this.originZ = o.z;
-    this.spawn = { x: 0, z: 0, yaw };
+    // 로컬 원점 = 시작 위치의 셀-로컬 좌표(셀 NW 기준 동/남 m). 플레이어는 항상 로컬 (0,0)에 두어
+    // Float32 정밀도를 확보(부동 원점). **시작 위치는 매 게임 무작위** — 건물 있는 청크 중 하나를 골라
+    // 그 중심을 원점으로 삼는다(맵마다 다른 곳에서 시작). 후보 없으면 카탈로그 좌표(lat/lon)로 폴백.
+    const sc = pickSpawnChunk(manifest.chunks, Math.random);
+    if (sc) {
+      this.originX = (sc.cx + 0.5) * this.chunkSize;
+      this.originZ = (sc.cz + 0.5) * this.chunkSize;
+    } else {
+      const o = cellLocalOf(lat, lon, this.cell, manifest.mLon);
+      this.originX = o.x;
+      this.originZ = o.z;
+    }
+    this.spawn = { x: 0, z: 0, yaw: Math.random() * Math.PI * 2 }; // 시작 방위도 무작위(카탈로그 spawnYaw 대체)
     this.collision.finalize(); // 빈 충돌 세계(초기)
     this.buildings.attachCollision(this.collision);
 

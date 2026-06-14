@@ -58,8 +58,8 @@ const AREA_COLOR: Record<string, number> = {
 // 굴곡과 무관하게 완벽 밀착(z-fighting·뚫림·부유 제거). 페인트 순서 = 기존 레이어 순서(면<물<도로<중앙선).
 const ROAD_CSS = "#44484f";   // 아스팔트
 const CENTER_CSS = "#cdb24a"; // 중앙선(연 노랑)
-const WATER_CSS = "#1f8cf0";  // 수역(평면 색)
-const SAND_CSS = "#d8c89e";   // 비초록 지표(SAND_TAN)
+const WATER_CSS = "#84c0f7";  // 수역(평면 색) — 연한 파랑(플라즈모이드 대비)
+const SAND_CSS = "#e4d8ba";   // 비초록 지표(SAND_TAN, 연하게)
 const TEX_PER_M = 1;          // 텍스처 해상도(px/m)
 const MAX_TEX = 1024;         // 청크 텍스처 한 변 최대 px(메모리 상한)
 // 차선은 **간선도로만**(폭≥LANE_MIN_W m). OSM 은 한 도로를 방향·램프별 여러 평행 way 로 쪼개므로,

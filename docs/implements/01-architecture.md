@@ -59,26 +59,29 @@ type GameState = "intro" | "menu" | "loading" | "playing" | "paused" | "dead";
 
 ```
 intro ─(컷씬 끝)─▶ menu ─(점 클릭→드론 선택)─▶ loading ─(빌드)─▶ playing
-                   ▲                                                 │ ⇅ ESC(포인터락)
-                   └────────────── dead ◀─(HP 0)─────────── paused ◀─┘
+                   ▲                                              │ ⇅ ESC(포인터락)
+                   └──────────── dead ◀─(미션 종료 / 리스폰 소진)── paused ◀─┘
 ```
 
 - **intro** — `CinematicPlayer`가 인트로 장면 재생, 끝나면 `showMenu()`.
 - **menu** — `MenuScreen`(세계지도)이 활성. 배경엔 `MenuBackground`가 랜덤 인트로 장면을 페이드
-  전환하며 렌더. 점 클릭 → 팝업에서 드론 선택 → `onDeploy(mapId, droneId)` → `selectMap()`.
-- **loading → playing** — 데이터 fetch + 전장 빌드(아래).
+  전환하며 렌더. 점 클릭(근접 점은 클러스터→확대창 드릴다운) → 팝업에서 드론 선택 + 탐방 토글 →
+  `onDeploy(mapId, droneId, peaceful)` → `selectMap()`. 자세한 메뉴 동작은 [06](06-ui-menu-intro.md#menuscreen--세계지도-전장-선택).
+- **loading → playing** — 데이터 fetch + 전장 빌드 + **게임 인스턴스 생성**(미션 배정, 아래/[08](08-game-instance-mission.md)).
 - **paused** — `playing` 중 포인터 락이 풀리면(ESC 등) 자동 전이.
-- **dead** — `player.isDead` → 포인터 락 해제 + "LINK LOST" 패널(정화 수/웨이브) + **재접속/RECONNECT**
-  버튼(같은 전장 재시작 `beginPlay`) + **전장 선택**(reload) 버튼.
+- **dead** — **미션 종료**(성공/실패) 또는 **플레이어 사망 + 리스폰 소진** → 포인터 락 해제 + 결과 패널
+  ("작전 완수/실패" + 사유·정화 수) + **다시/RETRY**(reload 재출격) · **전장 선택**(reload) 버튼.
+  **사망 + 리스폰 잔여**면 `dead`로 가지 않고 `player.respawn()`으로 **제자리 부활**(전투 지속).
 
 > **세션은 페이지 로드당 1회.** `selectMap`은 `if (this.session) return`으로 가드되어 한 번 전장을 빌드하면
-> 다른 맵으로 가려면 **`location.reload()`**(전장 선택 버튼)로 메뉴부터 다시 시작한다. 이 단일 세션 +
-> reload 모델이 위 GPU 수명 주기 완화와 짝을 이룬다.
+> 다른 맵으로 가려면 **`location.reload()`**로 메뉴부터 다시 시작한다(미션 재시작도 reload 재출격 —
+> 출격 정보는 `sessionStorage`에 저장, [08](08-game-instance-mission.md#재시작--reload-재출격-단일-세션-모델-유지)).
+> 이 단일 세션 + reload 모델이 위 GPU 수명 주기 완화와 짝을 이룬다.
 
 ## 데이터 구동 로딩 흐름 (`selectMap`)
 
 ```
-selectMap(mapId, droneId)
+selectMap(mapId, droneId, peaceful)       // peaceful=탐방 모드(적 미스폰, 재시작에도 유지)
   fetchMap(mapId)                         // public/maps/<id>.json
   fetchDrone(droneId)                     // public/drones/<id>.json
   Promise.all[ fetchWeapon(primary),      // 드론의 weapons.{primary,special}
@@ -87,7 +90,9 @@ selectMap(mapId, droneId)
   new PlayerController(input, world, aspect, drone)
   mobile.configure({ actions, fireLabel, specialLabel })   // 라벨은 무기 abbr
   new EnemyManager / FrequencyBeam / SpecialBarrage / composer / RearView / Minimap
-  session = { ... }; wireEvents(session); beginPlay()
+  mission = peaceful ? FREE_ROAM : pickMission(fetchMissions(), random)  // 인스턴스마다 랜덤
+  new GameInstance({ mission, players:[player], enemies, buildings })
+  session = { …, instance }; wireEvents(session); beginPlay()
 ```
 
 각 fetch 실패는 `failToMenu(msg)`로 콘솔 기록 후 메뉴 복귀. 전장 1회 빌드 후 맵 변경은 reload.
@@ -102,6 +107,8 @@ selectMap(mapId, droneId)
 | Enemies | `onKill` | HUD 처치 수 |
 | Enemies | `onWaveChange(w)` | HUD 웨이브 |
 | Enemies | `onPlayerHit` | HUD 피격 비네팅 |
+| BuildingCombat | `onDestroyed` | HUD 도시/랜드마크 손실 수 |
+| GameInstance | `onEnd(outcome)` | Game `endMission` — 결과 패널 |
 | MenuScreen | `onDeploy` / `onPlayIntro` | Game `selectMap` / `playIntro` |
 
 ## 프레임 루프 (`frame`)
@@ -118,7 +125,9 @@ playing && locked && !mobile.isBlocked:
     special.update(dt, input.specialPressed)
     enemies.update(dt)
     hud.update + setHp/setFrequency/setSpecial
-    if player.isDead → onDeath()
+    instance.update(dt)                         // 미션 타이머/평가 → 종료 시 onEnd→endMission
+    hud.updateMission(timeLeft, detail, respawns)
+    if player.isDead && state=="playing" → handlePlayerDeath()  // 리스폰 or 미션 실패
 input.endFrame()                                // 엣지 플래그 리셋
 composer.render()                               // Bloom 포함
 playing: rearView.render(); minimap.render()

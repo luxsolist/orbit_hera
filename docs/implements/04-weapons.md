@@ -16,10 +16,8 @@
 1. 두 쿨다운(`cooldown`=수동, `autoCooldown`=오토) 감쇠.
 2. **오토파이어** — `autoCooldown ≤ 0`이면 `acquireAutoFireTarget`로 `auto.range` 안 **360° 최근접 적**
    (`nearestInCone`에 콘 cos −1, max 1) 방향을 잡아 저비용 연사. 정면을 안 봐도 추격자를 소프트락.
-   `auto.range`는 **근접 자기방어용으로 짧게** 설정(light 50 m / heavy 16 m) — 도주형 적의 적정거리(모기
-   `keepDist 60`)보다 짧아, 적이 원돌기로 사거리를 유지하면 자동 처치가 불가하고 **파고들어 수동 조준**해야
-   잡힌다(처치를 실력 기반으로). 값은 [spec/02](../spec/02-drones-weapons.md).
-   **모바일 플라이어 보정**: 터치 조준 난도를 감안해 `Game`이 `withAutoBoost(spec, 2)`로 light 빔의 `auto.range`·`manual.assistConeDeg`를 ×2 한 **복제 스펙**을 주입(모바일 + `move.mode==="fly"`에만; 캐시 원본 불변). ([tests/WeaponSpec.test.ts](../../tests/WeaponSpec.test.ts))
+   `auto.range`(light 100 m / heavy 32 m) 안의 적을 자동 처치. 값은 [spec/02](../spec/02-drones-weapons.md).
+   **모바일 보정**: 터치 조준 난도를 감안해 `Game`이 `withAutoBoost(spec, 2)`로 기본 빔의 `auto.range`·`manual.assistConeDeg`를 추가 ×2 한 **복제 스펙**을 주입(`mobile.enabled`이면 워커 32→64 m·플라이어 100→200 m; 캐시 원본 불변). ([tests/WeaponSpec.test.ts](../../tests/WeaponSpec.test.ts))
 3. `firing`이고 `cooldown ≤ 0`이면 **수동 사격**(`fireManual`) — `acquireAssistTarget`(어시스트 콘
    `manual.assistConeDeg`, `bestAlignedDir`)로 가장 정렬된 적으로 조준 보정 후 풀데미지.
 4. `fireAt(dir, cost, baseDamage, manual)` — 주파수 차감(볼리당 1회) → `sfx.beam(manual)` →

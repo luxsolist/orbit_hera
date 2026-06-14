@@ -35,6 +35,13 @@ export class HUD {
   // SVG 원둘레(반경 15.6) — CSS dasharray 와 동일하게 유지
   private readonly specialCirc = 2 * Math.PI * 15.6;
 
+  // 미션 배너(상단 중앙) — 인스턴스 미션 목표/타이머/리스폰
+  private missionBar: HTMLElement;
+  private missionObjective: HTMLElement;
+  private missionTime: HTMLElement;
+  private missionDetail: HTMLElement;
+  private missionResp: HTMLElement;
+
   constructor() {
     this.root = byId("hud");
     this.hpFill = byId("hpFill");
@@ -48,6 +55,11 @@ export class HUD {
     this.specialEl = byId("specialIndicator");
     this.specialFill = byId("specialFill") as unknown as SVGCircleElement;
     this.specialLabel = byId("specialLabel");
+    this.missionBar = byId("missionBar");
+    this.missionObjective = byId("missionObjective");
+    this.missionTime = byId("missionTime");
+    this.missionDetail = byId("missionDetail");
+    this.missionResp = byId("missionResp");
 
     // 데미지 비네팅은 동적 생성
     this.damage = document.createElement("div");
@@ -89,6 +101,20 @@ export class HUD {
 
   setUnitName(name: string) {
     this.unitName.textContent = name;
+  }
+
+  /** 미션 목표 배너 설정. visible=false(탐방)면 배너 숨김. */
+  setMission(objective: string, visible: boolean) {
+    this.missionObjective.textContent = objective;
+    this.missionBar.style.display = visible ? "" : "none";
+  }
+
+  /** 미션 실시간 상태 갱신 — 잔여 시간(m:ss)·진행 상세·잔여 리스폰. 30초 이하 시간은 경고색. */
+  updateMission(timeLeftSec: number, detail: string, respawnsLeft: number) {
+    this.missionTime.textContent = timeLeftSec === Infinity ? "∞" : fmtTime(timeLeftSec);
+    this.missionTime.classList.toggle("is-urgent", timeLeftSec !== Infinity && timeLeftSec <= 30);
+    this.missionDetail.textContent = detail;
+    this.missionResp.textContent = respawnsLeft === Infinity ? "⟳ ∞" : `⟳ ${respawnsLeft}`;
   }
 
   /**
@@ -176,4 +202,12 @@ function byId(id: string): HTMLElement {
   const el = document.getElementById(id);
   if (!el) throw new Error(`HUD element #${id} not found`);
   return el;
+}
+
+/** 초 → m:ss(올림). */
+function fmtTime(sec: number): string {
+  const t = Math.max(0, Math.ceil(sec));
+  const m = Math.floor(t / 60);
+  const s = t % 60;
+  return `${m}:${s < 10 ? "0" : ""}${s}`;
 }

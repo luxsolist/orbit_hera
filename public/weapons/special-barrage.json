@@ -9,7 +9,7 @@
   "cooldown": 60,
   "drainRate": 60,
   "salvoInterval": 0.12,
-  "salvoDamage": 16,
+  "salvoDamage": 48,
   "beamLifetime": 0.13,
   "colorBeam": "0xffb648",
   "colorGlow": "0xffd58a",

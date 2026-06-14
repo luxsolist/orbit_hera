@@ -47,6 +47,6 @@ export function resolveBuildingStyle(
 export function buildingBaseColor(h: number, precinctColor: number | null): number {
   if (precinctColor != null) return precinctColor; // 권역 양식색(예: 경복궁 단청)
   const t = Math.max(0, Math.min(1, (h - 6) / (100 - 6))); // 6m → 100m 구간 정규화
-  const v = Math.round(0xa6 + (0xf8 - 0xa6) * t); // 166(밝은 회색) → 248(거의 흰 회색)
+  const v = Math.round(0xc8 + (0xfa - 0xc8) * t); // 200(옅은 회색) → 250(거의 흰색) — 전반적으로 더 옅게
   return (v << 16) | (v << 8) | v;
 }

@@ -16,6 +16,16 @@
           <span class="crosshair__dot"></span>
         </div>
 
+        <!-- 상단 중앙: 인스턴스 미션 배너(목표 · 잔여시간 · 진행 · 리스폰) -->
+        <div class="hud__mission" id="missionBar">
+          <div class="hud__mission-obj" id="missionObjective">—</div>
+          <div class="hud__mission-meta">
+            <span class="hud__mission-time" id="missionTime">--:--</span>
+            <span class="hud__mission-detail" id="missionDetail"></span>
+            <span class="hud__mission-resp" id="missionResp">⟳ —</span>
+          </div>
+        </div>
+
         <!-- 좌상단: 후방 카메라 보조 화면(메인 캔버스에 viewport 로 덧그림) + 텍스트 -->
         <div class="hud__rear" aria-label="rear camera">
           <div class="hud__rear-label">REAR-CAM · 180°</div>

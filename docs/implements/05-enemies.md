@@ -54,7 +54,7 @@
 
 ### 기본 스펙 / 로더
 - `DEFAULT_PLASMOID` — `public/enemies/plasmoid.json`과 동일(테스트 동치 검증). 비동기 로드가 어려운 곳(인트로 연출, `EnemyManager` 기본값)이 동기적으로 사용.
-- 현 데이터(`plasmoid.json`): `hp{ basePerArea 100, minDiameter 0.5, maxDiameter 60 }`; `color.stops` 5단계(3000K `0xff3b30` w1.0 → 12000K `0x4aa6ff` w5.0); `visual{ minDiameter 1, maxDiameter 300, anchorHp 200000, anchorDiameter 250, exponent 0.82 }`; `spawn{ tempAlpha 2, speedMax 13.5, speedMin 3.75, hpFloor 100, hpCeil 200000 }`; `contact{ hpDamage 10, strengthMul 2.0 }`; `archetypes.rusher{ name "거머리 플라즈모이드 / LEECH", spawnAltMin 0, spawnAltMax 60, countBase 6, countCap 12, killRefund 5, speed 17, speedMin 12 }`; `archetypes.kiter{ name "모기 플라즈모이드 / SKEETER", spawnAltMin 80, spawnAltMax 300, countBase 3, countCap 5, killRefund 8, speed 89, speedMin 67, turnRateDeg 100, keepDist 60, keepBand 12, strafeMix 0, orbitRef 35, evadeGain 0.85, attackRange 95, drainDamage 1.4, drainInterval 1.5 }`. (`speed`/`speedMin`은 아키타입 공통 base 필드.)
+- 현 데이터(`plasmoid.json`): `hp{ basePerArea 100, minDiameter 0.5, maxDiameter 60 }`; `color.stops` 5단계(3000K `0xff3b30` w1.0 → 12000K `0x4aa6ff` w5.0); `visual{ minDiameter 2, maxDiameter 600, anchorHp 200000, anchorDiameter 500, exponent 0.82 }`(렌더 크기 ×2); `spawn{ tempAlpha 2, speedMax 13.5, speedMin 3.75, hpFloor 100, hpCeil 200000 }`; `contact{ hpDamage 10, strengthMul 2.0 }`; `archetypes.rusher{ name "거머리 플라즈모이드 / LEECH", spawnAltMin 0, spawnAltMax 60, countBase 6, countCap 12, killRefund 5, speed 17, speedMin 12 }`; `archetypes.kiter{ name "모기 플라즈모이드 / SKEETER", spawnAltMin 80, spawnAltMax 300, countBase 3, countCap 5, killRefund 8, speed 89, speedMin 67, turnRateDeg 100, keepDist 60, keepBand 12, strafeMix 0, orbitRef 35, evadeGain 0.85, attackRange 95, drainDamage 1.4, drainInterval 1.5 }`. (`speed`/`speedMin`은 아키타입 공통 base 필드.)
 - [plasmoids.ts](../../src/enemies/plasmoids.ts) — `makeLoader("enemies","적")` 기반. `fetchPlasmoidCatalog()`(`public/enemies/index.json`) + `fetchPlasmoid(id)`(`<id>.json`).
 - 테스트: [tests/plasmoidSpec.test.ts](../../tests/plasmoidSpec.test.ts).
 
@@ -82,7 +82,7 @@
 ### 이동 — 자유 부유 + 3D (추격형 / 카이터)
 - **지형/물체와 충돌하지 않고** 자유롭게 떠다닌다(지표면 지향성·강하 없음).
 - **추격형(러셔):** 플레이어를 향해 **상하 포함 3D**로 다가온다. `steer` 없으면 단순 호밍 `pursueStep`, 있으면 아래 군집 조향을 합성. `STOP_DIST=2.2m` 이내면 추격 정지(접촉 교전 거리). ([tests/pursue.test.ts](../../tests/pursue.test.ts))
-- **카이터(모기):** `kiterVelocity(...)`로 `keepDist` 유지 — 너무 가까우면 직접 도주, 그 외엔 **keepDist 구 위 개체 고유 방위(`homeDir`)** 지점으로 향한다 → 무리가 한쪽/한 높이에 뭉치지 않고 **xy·z 모두 고르게 분산**. `homeDir`은 `EnemyManager.updateMotion`에서 매 프레임 **구면 랜덤워크**(`HOME_WANDER`)로 표류 → 한 마리도 죽기 전까지 xyz 전 방향 자유 유영(z 위/아래도 수시 전환). `turnToward(cur, desired, turnRate·dt)`로 선회 캡 + 분리 합성. 플레이어 미래 위치(`KITER_FLEE_LEAD=0.35s`) 예측 도주 + 원돌기 시 궤도면 이탈 **수직 회피**(개체별 위/아래 = `homeDir.y` 부호; `orbitRef`/`evadeGain`). `homeDir` 없으면(테스트 폴백) 기존 반경 도주/선회. ([tests/kiter.test.ts](../../tests/kiter.test.ts))
+- **카이터(모기):** `kiterVelocity(...)`로 `keepDist` 유지 — 너무 가까우면 직접 도주, 그 외엔 **keepDist 구 위 개체 고유 방위(`homeDir`)** 지점으로 향한다 → 무리가 한쪽/한 높이에 뭉치지 않고 **xy·z 모두 고르게 분산**. `homeDir`은 `CoreEnemy.updateMotion`에서 매 프레임 **구면 랜덤워크**(`HOME_WANDER=2.0`)로 표류 → 한 마리도 죽기 전까지 xyz 전 방향 자유 유영(z 위/아래도 수시 전환). `turnToward(cur, desired, turnRate·dt)`로 선회 캡 + 분리 합성. 플레이어 미래 위치(`KITER_FLEE_LEAD=0.35s`) 예측 도주 + 원돌기 시 궤도면 이탈 **수직 회피**(개체별 위/아래 = `homeDir.y` 부호; `orbitRef`/`evadeGain`). `homeDir` 없으면(테스트 폴백) 기존 반경 도주/선회. ([tests/kiter.test.ts](../../tests/kiter.test.ts))
 - **예측 요격(`interceptPoint`)** — 현재 위치가 아니라 플레이어의 **예상 미래 위치**(현위치 + 속도×리드, `LEAD_MAX=1s`)로 향함. 플레이어가 원을 그려도 안쪽을 가로질러 끊고 들어와, 뒤로 모아 한 덩어리로 만드는 카이팅을 차단.
 - **분리(`separationVector`)** — 반경(자기+상대 반경+`SEP_MARGIN=2`) 안의 동료를 거리 반비례로 밀어냄(`SEP_GAIN=0.7`). 한 점에 겹쳐 쌓이지 않고 플레이어 주위로 퍼진 무리(링)가 됨. `STOP_DIST` 이내에서도 적용.
 - 추격+분리는 `steerVelocity`로 합성 후 **최고속도(speed)로 클램프**. 플레이어 속도는 `EnemyManager`가 프레임 변위 EMA(`dt·8`)로 추정하며, 동료 스냅샷(`boids`)은 프레임 시작 시점으로 고정(순서 무관).
@@ -102,20 +102,25 @@
 
 생성자 `(scene, world, players[], spec=DEFAULT_PLASMOID)` — **플레이어 배열**을 받는다(MP 대응; Game은 현재 `[player]`). `DrainBeams` 풀과 카이터 공격 파라미터(`spec.archetypes.kiter`)를 보유.
 
-### 멀티타깃 표적 선택 (어그로 분산)
-- `buildTargets(dt)` — 매 프레임 플레이어별 스냅샷(위치·생존·**속도 EMA** `dt·8`) 갱신.
-- 각 적은 `pickTarget`(→ `chooseTarget`)으로 **최근접 플레이어**를 고르되 **히스테리시스(`TARGET_HYSTERESIS=1.2`)**로 표적 깜빡임을 막고, **어그로 부하 가산(`AGGRO_PENALTY=0.4`)**으로 한 명에게 몰빵(도그파일)을 회피한다. 표적은 `enemy.targetIndex`에 유지. 표적이 공격받는다.
+### 멀티타깃 표적 선택 (어그로 분산 + 상성 가중 — MP)
+- `buildTargets(dt)` — 매 프레임 플레이어별 스냅샷(위치·생존·**속도 EMA** `dt·8`·**비행 여부** `playerIsFlyer`) 갱신.
+- 각 적은 `pickTarget`(→ `chooseTarget`)으로 표적 점수 = **거리 × (1+`AGGRO_PENALTY=0.4`·부하) × 상성가중**의 최소를 고른다. **히스테리시스(`TARGET_HYSTERESIS=1.2`)**로 깜빡임 방지, **어그로 부하**로 도그파일 회피.
+- **상성 가중(`matchupMul`, MP 혼합팀)** — 카이터↔플라이어 / 러셔↔워커가 상성. 상성이면 ×1, 비상성이면 ×`MISMATCH_PENALTY=3.0`로 점수를 불리하게 줘 **적이 자기 상성 드론을 우선 표적**으로 삼는다(절대 배제 아닌 가중 — 비상성이 충분히 가까우면 노린다). 혼합팀에서 각 플레이어가 자기 레인을 맡고, 솔로의 자기정렬이 인원수만큼 확장된다.
+- **미스매치 폴백(`engageKeepDist`)** — 카이터가 어쩔 수 없이 **비상성(워커=지상)**을 노릴 때 `keepDist`를 `KITER_CLOSE_MUL=0.45`로 좁혀(60→27 m) 워커 자동조준 안으로 진입 → "못 잡는 적" 제거(여전히 드레인하되 처치 가능). 상성(플라이어) 표적이면 기본 keepDist 복원. (러셔가 플라이어를 노리면 속도 17≪111로 못 잡아 자연히 2순위 건물로.)
 - 재입장(`clear`) 시 속도 추정 리셋(순간이동 스파이크 방지).
 
-### 스폰 (`spawnOne` / `tickSpawns`)
-- 살아있는 플레이어들의 **무게중심**(`playersCentroid`) 주변 근거리 밴드(반경 55~205 m, `TERRAIN_HALF` 클램프)에 배치.
+### 스폰 (`spawnOne` / `tickSpawns` / `startBurst`)
+- **일괄 스폰(`startBurst`, 현행 미션):** 시작 위치(플레이어 무게중심) 중심 **반경 `spawnRadius`(미션값, 기본 1.5km) 원판에 면적 균등 분포**(`rr = √rand·radius`)로 `spawnCount`(기본 100)마리를 **한 번에** 투입. 아키타입은 `pickBurstType`(워커↔러셔/플라이어↔카이터 비례, 자기정렬). 클리어해도 웨이브 자동 재시작 없음(종료는 미션 인스턴스, [08](08-game-instance-mission.md)).
+  - **MP 1인당 스케일**: `count`·`totalHp`를 **살아있는 플레이어 수 N배**(보스는 팀당 1기 유지)로 키워 1인당 체감 난이도를 일정하게. 아키타입 비율은 `pickBurstType`이 팀 구성대로 → 워커 a명·플라이어 b명이면 러셔:카이터 ≈ a:b(고아 적 없음).
+  - **체력 총합 예산(`totalHp`)**: HP를 온도 롤이 아니라 **예산으로 배분**한다 — `distributeHp(totalHp, bossHp, count, rand)`가 합계 = `totalHp`(기본 7만)로, **index 0 = 중간보스(`bossHp` 기본 1만)** + 나머지 `count−1`기가 `totalHp−bossHp`(6만)를 무작위(0.5~1.5 가중)로 나눠 갖는다. 개체 외형은 **HP에서 산출**(`appearanceForHp`): HP↑ → 고온(청백)·대형(`visualDiameter`)·발광↑·속도↓ → 보스가 가장 크고 푸르게. (`hpFloor`~`hpCeil` 로그 정규화 `strength`로 온도 매핑.)
+- 레거시 점진 스폰(`spawnOne`/`tickSpawns`)은 플레이어 무게중심 주변 근거리 밴드(반경 55~205 m, `TERRAIN_HALF` 클램프)에 배치.
 - 고도는 **아키타입 고도 밴드**: `alt = spawnAltMin + rand×(spawnAltMax−spawnAltMin)`(러셔 0–60m 지표 / 카이터 80–300m 상공). 최종 y = `world.heightAt(x,z) + alt`. ([tests/spawn.test.ts](../../tests/spawn.test.ts))
 - 외형/색은 `rollAppearance(spec, wave, Math.random)`(온도 시스템 유지). **개체 속도**는 색 강도 `g01 = colorStrength01(stops, temp)`로 `arche.speed↔speedMin`를 보간(러셔·카이터 공통), **발광** `glow = 1 + GLOW_STRENGTH·g01`. 카이터는 `setKiter(...)`(구면 균등 무작위 `homeDir` 주입, `turnRateDeg→rad`), 러셔는 `CoreEnemy(pos, app, spd)`. 각 개체에 `killRefund`·`archetypeName` 주입.
 - `tickSpawns`는 `pickSpawnType`으로 두 잔여 예산(`pendingRusher`/`pendingKiter`)을 잔여 비율로 섞어 `SPAWN_INTERVAL=0.35s`마다 1마리씩 투입.
 
 ### 매 프레임 군집 조향 + 공격 (`update`)
 - 프레임 시작 시 표적 스냅샷·살아있는 적 스냅샷(`boids`)·어그로 부하(`load`)를 갱신하고, alive 적에 `{vel, boids, index}`를 `steer`로 넘긴다. 디졸브 중인 적은 비주얼만 진행.
-- **표적 우선순위:** 사거리(`AGGRO_RADIUS=150m`) 안 드론이 **1순위**, 밖이면 주변 건물(`BUILDING_SEEK_R=700m`)을 **2순위**로 자동 공격(`buildingStep` → [BuildingCombat](../../src/world/BuildingCombat.ts)). 둘 다 아래 공통 `attack()`을 쓴다.
+- **표적 우선순위 — 인식 범위(awareness) 히스테리시스:** **기본은 건물 공격**. 플레이어가 **인식 반경(`AWARENESS_RADIUS=200m`)** 안에 들면 그 적은 **플레이어 공격으로 전환**하고, **한번 인식하면 `AWARENESS_LOSE_RADIUS=360m`까지 계속 추격**(히스테리시스: "들어오면 계속, 벗어나면 건물 복귀"). 전환 판정은 `enemy.targetIndex>=0 ? LOSE : AWARENESS` 제곱거리 비교. 건물 공격은 주변(`BUILDING_SEEK_R=700m`) 최근접 건물(`nearestTarget`/`damage` → [BuildingCombat](../../src/world/BuildingCombat.ts), 체력·붕괴·**검정 잔해**는 [03-world](03-world.md#건물-전투-buildingcombat)). 둘 다 공통 `attack()`. 건물이 파괴되면 점진 적색 → 번쩍 → 슬로우 붕괴 → 검정 잔해로 전이.
 - **공통 공격 `attack(enemy, targetPos, from, player, buildingId)`:** 아키타입·표적(플레이어/건물) 공통 단일 경로. `tryAttack(targetPos, range, cooldown)` 통과 시 표적에 피해 → 적중하면 **`enemy.grow(amount)`(흡수=성장 — 러셔·카이터 동일)**. 카이터=고정 `drainDamage`·`DrainBeams.spawn(from→targetPos)`, 러셔=`contactDamage(spec, enemy.maxHp)`·빔 없음. 플레이어 피해 시 `onPlayerHit`, 건물이 이 타격으로 파괴되면 true 반환(호출부가 표적 해제).
 - **카이터:** 이동 후 `clampKiterAltitude`(지면 위 `KITER_GROUND_CLEARANCE=1.5m` ~ `KITER_CEILING=1020m`로 클램프 — 가라앉음·천장 돌파 방지) 후 `attack`.
 - 드레인 빔은 [DrainBeams](../../src/fx/DrainBeams.ts)(가산발광 풀, 적→표적)로 분리. `update`에서 페이드/정리.
@@ -134,4 +139,4 @@
 - `aliveMarkers` — 월드 위치 + 시각 반경(`group.scale.x`; 코너 브래킷 등 화면 표식용).
 - `aliveSnapshot` — `{x,z}` 위치 스냅샷(미니맵용).
 
-`update(dt)` — 건물 연출(`world.buildings.update`) → 점진 스폰(`tickSpawns`) → 표적/`boids`/`load` 갱신 → 각 적 `update`(표적 좌표 + 조향 전달) + 공통 `attack`(드론 1순위/건물 2순위, 흡수=성장) → 드레인 빔 갱신 → 사망 적 정리 → 웨이브 종료 판정.
+`update(dt)` — 건물 연출(`world.buildings.update`) → 점진 스폰(`tickSpawns`, 일괄 모드면 무동작) → 표적/`boids`/`load` 갱신 → 각 적 `update`(표적 좌표 + 조향 전달) + 공통 `attack`(건물 기본/인식 범위 안이면 플레이어, 흡수=성장) → 드레인 빔 갱신 → 사망 적 정리 → 웨이브 종료 판정(일괄 모드는 자동 재시작 없음).

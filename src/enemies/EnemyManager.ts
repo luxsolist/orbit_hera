@@ -1,21 +1,27 @@
 import * as THREE from "three";
-import { CoreEnemy, chooseTarget, buildBoidGrid, recomputeSteer, CORE_GEO, SHELL_GEO, type Boid } from "./CoreEnemy";
+import { CoreEnemy, chooseTarget, matchupMul, engageKeepDist, buildBoidGrid, recomputeSteer, CORE_GEO, SHELL_GEO, type Boid } from "./CoreEnemy";
 import type { GameWorld } from "../world/GameWorld";
 import type { PlayerController } from "../player/PlayerController";
 import { DrainBeams } from "../fx/DrainBeams";
 import {
-  DEFAULT_PLASMOID, rollAppearance, contactDamage, archetypeCount, pickSpawnType, colorStrength01,
+  DEFAULT_PLASMOID, rollAppearance, contactDamage, archetypeCount, pickSpawnType, pickBurstType, colorStrength01,
+  distributeHp, appearanceForHp,
   type PlasmoidSpec, type PlasmoidKiterArchetype, type PlasmoidArchetype,
 } from "./PlasmoidSpec";
-import type { Vec3 } from "../core/math";
+import { clampToDisk, type Vec3 } from "../core/math";
 
 const ATTACK_RANGE = 3.2; // 접촉 교전 거리(피해는 PlasmoidSpec.contact 로 산출)
 const SPAWN_INTERVAL = 0.35; // 개체 점진 스폰 간격(s)
+const BURST_ROLL_WAVE = 12; // 일괄 스폰 외형 롤의 가상 웨이브 — 전 온도(색) 스펙트럼 해금(크기 다양성은 개체 rand 유지)
 const KITER_GROUND_CLEARANCE = 1.5; // 도주형이 가라앉지 않는 지면 위 최소 높이(m)
 const KITER_CEILING = 1020; // 도주형 상승 상한(지면 대비, m) — 비행 천장(1000) 근처까지 추격 가능(고고도 이탈 방지)
 const TARGET_HYSTERESIS = 1.2; // 표적 교체 문턱 — 현재 표적이 최근접의 1.2배 이내면 유지(깜빡임 방지)
-const AGGRO_RADIUS = 150; // 이 거리(m) 안 살아있는 플레이어가 있으면 1순위(드론). 밖이면 2순위(건물) 자동 공격
-const AGGRO_RADIUS_SQ = AGGRO_RADIUS * AGGRO_RADIUS;
+// 플레이어 인식 범위(awareness) — 기본은 건물 공격, 플레이어가 이 안에 들면 플레이어 공격으로 전환.
+// 한번 인식하면 LOSE 거리까지 계속 추격(히스테리시스: 들어오면 계속, 벗어나면 다시 건물). 플레이테스트로 조정.
+const AWARENESS_RADIUS = 200; // 인식(전환) 반경(m)
+const AWARENESS_RADIUS_SQ = AWARENESS_RADIUS * AWARENESS_RADIUS;
+const AWARENESS_LOSE_RADIUS = 360; // 인식 해제 반경(m) — 이보다 멀어지면 건물 공격 복귀
+const AWARENESS_LOSE_SQ = AWARENESS_LOSE_RADIUS * AWARENESS_LOSE_RADIUS;
 const BUILDING_SEEK_R = 700; // 플레이어가 멀 때 공격할 주변 건물 탐색 반경(m)
 const STEER_STRIDE = 3; // 원거리 적 조향 재계산 주기(프레임) — 라운드로빈 분산
 const NEAR_DIST = 250; // 이 거리(m) 이내는 매 프레임 재계산(교전 감각 — 스폰 반경 전체 커버, 끊김 방지)
@@ -29,6 +35,8 @@ const GLOW_STRENGTH = 2.0; // 색 강도 비례 발광 가산 — glow = 1 + 2·
 const _m4 = new THREE.Matrix4(); // 인스턴스 행렬 임시
 const _col = new THREE.Color(); // 인스턴스 색 임시
 const AGGRO_PENALTY = 0.4; // 어그로 분산 — 이미 표적이 된 플레이어당 거리 점수 가산(한 명에게 몰빵 방지)
+const MISMATCH_PENALTY = 3.0; // 상성 불일치 표적 점수 배수(>1) — 적이 자기 상성 드론을 우선(MP 혼합팀). 절대 배제 아닌 가중
+const KITER_CLOSE_MUL = 0.45; // 카이터가 비상성(워커) 표적을 노릴 때 keepDist 축소 배수(60→27 ≈ 워커 자동조준 내)
 
 const _centroid = new THREE.Vector3(); // 스폰 무게중심 임시(프레임당 동기 사용)
 const _btarget = new THREE.Vector3(); // 건물 표적 좌표 임시(프레임당 동기 사용)
@@ -64,6 +72,12 @@ export class EnemyManager {
   private frame = 0; // 프레임 분산 라운드로빈 위상
   private spawnTimer = 0;
   private peaceful = false; // 탐방 모드 — 웨이브 미시작 + 클리어 시 자동 재시작 억제
+  private burstMode = false; // 일괄 스폰 모드 — 웨이브 미사용(미션: 구역 내 N마리 한번에) + 클리어 시 자동 재시작 억제
+  // 작전구역(존) — 플라즈모이드도 이 원(중심·반경) 밖으로 못 나간다. radius 0 = 무제한.
+  private zoneCx = 0;
+  private zoneCz = 0;
+  private zoneR = 0;
+  private _clampOut = { x: 0, z: 0 }; // clampToDisk 결과 재사용
   private pendingRusher = 0; // 아키타입별 잔여 스폰 예산(거머리 떼 / 모기 소수정예 독립 조절)
   private pendingKiter = 0;
   // 군집 조향용 — 플레이어별 속도 추정(예측 요격) + 살아있는 적 스냅샷(분리)
@@ -75,6 +89,8 @@ export class EnemyManager {
   private dists: number[] = []; // pickTarget 스크래치(할당 회피)
   private scores: number[] = []; // chooseTarget 스크래치
   private load: number[] = [];
+  private playerIsFlyer: boolean[] = []; // 플레이어별 비행 여부(상성 타깃팅) — buildTargets 에서 갱신
+  private matchMul: number[] = []; // pickTarget 상성 가중 스크래치
 
   onKill?: () => void;
   onPlayerHit?: (damage: number) => void;
@@ -194,14 +210,58 @@ export class EnemyManager {
     return out;
   }
 
+  /** 작전구역(존) 설정 — 플라즈모이드를 이 원 안으로 제한. radius≤0 이면 해제. */
+  setZone(cx: number, cz: number, radius: number): void {
+    this.zoneCx = cx;
+    this.zoneCz = cz;
+    this.zoneR = radius > 0 ? radius : 0;
+  }
+
   /** 전투 시작. spawn=false 면 웨이브를 시작하지 않음(탐방 모드 — 적 미스폰, 자유 탐방). */
   start(spawn = true) {
     this.clear();
     this.wave = 0;
     this.killCount = 0;
     this.peaceful = !spawn;
+    this.burstMode = false;
     if (spawn) this.startNextWave();
     else this.onWaveChange?.(0); // 탐방 모드 — HUD 웨이브 0
+  }
+
+  /**
+   * 일괄 스폰 — 웨이브 대신 구역(반경 radius) 안에 `count` 마리를 **한 번에** 투입.
+   * **체력 총합 = totalHp**(예산 배분): index 0 = 중간보스(bossHp), 나머지는 총합을 무작위로 나눠 가진다.
+   * HP가 클수록 색은 고온(청백)·크기 대형(`appearanceForHp`). 아키타입은 전장 구성 비례(자기정렬).
+   * **MP 1인당 스케일**: count·totalHp 를 살아있는 플레이어 수 N 배(보스는 팀당 1기 유지) → 1인당 체감 일정.
+   * 클리어 후 자동 재시작하지 않는다(미션 종료는 인스턴스가 판정).
+   */
+  startBurst(count: number, radius: number, totalHp: number, bossHp: number) {
+    this.clear();
+    this.wave = 1;
+    this.killCount = 0;
+    this.peaceful = false;
+    this.burstMode = true;
+
+    let walkers = 0, flyers = 0;
+    for (const pl of this.players) {
+      if (pl.spec.move.mode === "fly") flyers++;
+      else walkers++;
+    }
+    // MP 1인당 스케일 — 인원 N 만큼 물량·체력 총합을 키운다(보스 1기는 팀 공유). 아키타입 비율은 pickBurstType 이 구성대로.
+    const n = Math.max(1, walkers + flyers);
+    count = Math.round(count * n);
+    totalHp = totalHp * n;
+    const hps = distributeHp(totalHp, bossHp, count, Math.random); // 체력 예산 배분(합=totalHp, [0]=보스)
+    const c = this.playersCentroid(_centroid);
+    const cx = c.x, cz = c.z; // 구역 중심 = 스폰 무게중심(스냅샷 — 루프 중 갱신되는 임시 벡터 회피)
+    const lim = Math.min(radius > 0 ? radius : 1500, this.world.bounds - 6);
+    for (let i = 0; i < count; i++) {
+      const type = pickBurstType(walkers, flyers, Math.random);
+      const ang = Math.random() * Math.PI * 2;
+      const rr = Math.sqrt(Math.random()) * lim; // 원판 균등 분포(√ 보정)
+      this.spawnOne(type, cx + Math.cos(ang) * rr, cz + Math.sin(ang) * rr, BURST_ROLL_WAVE, hps[i]);
+    }
+    this.onWaveChange?.(1);
   }
 
   private startNextWave() {
@@ -232,25 +292,43 @@ export class EnemyManager {
     return out;
   }
 
-  private spawnOne(type: PlasmoidArchetype) {
+  /** 개체 1마리 스폰. px/pz 를 주면 그 (x,z)에(일괄 스폰), 없으면 무게중심 주변 근거리 밴드에 배치.
+   *  hpOverride 를 주면 그 HP로 외형 산출(예산 배분 일괄 스폰), 없으면 온도 롤(rollAppearance). */
+  private spawnOne(type: PlasmoidArchetype, px?: number, pz?: number, rollWave = this.wave, hpOverride?: number) {
     const a = this.spec.archetypes;
     const arche = type === "kiter" ? a.kiter : a.rusher;
 
-    // 플레이어 무게중심 주변 근거리 밴드 + 아키타입 고도 밴드(카이터=상공, 러셔=지표)
-    const c = this.playersCentroid(_centroid);
-    const angle = Math.random() * Math.PI * 2;
-    const radius = 55 + Math.random() * 150;
+    // 위치: 명시(일괄 스폰) 또는 플레이어 무게중심 주변 근거리 밴드. 고도는 아키타입 밴드(카이터=상공, 러셔=지표).
     const lim = this.world.bounds - 6;
-    const x = THREE.MathUtils.clamp(c.x + Math.cos(angle) * radius, -lim, lim);
-    const z = THREE.MathUtils.clamp(c.z + Math.sin(angle) * radius, -lim, lim);
+    let x: number, z: number;
+    if (px !== undefined && pz !== undefined) {
+      x = THREE.MathUtils.clamp(px, -lim, lim);
+      z = THREE.MathUtils.clamp(pz, -lim, lim);
+    } else {
+      const c = this.playersCentroid(_centroid);
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 55 + Math.random() * 150;
+      x = THREE.MathUtils.clamp(c.x + Math.cos(angle) * radius, -lim, lim);
+      z = THREE.MathUtils.clamp(c.z + Math.sin(angle) * radius, -lim, lim);
+    }
     const alt = arche.spawnAltMin + Math.random() * (arche.spawnAltMax - arche.spawnAltMin);
     const y = this.world.heightAt(x, z) + alt;
 
-    // 외형/체력/색 — 온도(웨이브별·저온편향) 시스템 유지(색·크기·흡수성장 다양성).
-    const roll = rollAppearance(this.spec, this.wave, Math.random);
-    const app = { maxHp: roll.maxHp, diameter: roll.diameter, color: roll.color };
+    // 외형/체력/색. hpOverride(예산 배분 일괄 스폰)면 그 HP로 색·크기 산출(HP↑=청백·대형);
+    // 아니면 온도 롤(rollAppearance, 저온편향). 일괄 스폰은 전 색 스펙트럼 해금(rollWave).
+    let app: { maxHp: number; diameter: number; color: number };
+    let temp: number;
+    if (hpOverride != null) {
+      const ap = appearanceForHp(this.spec, hpOverride);
+      app = { maxHp: hpOverride, diameter: ap.diameter, color: ap.color };
+      temp = ap.temp;
+    } else {
+      const roll = rollAppearance(this.spec, rollWave, Math.random);
+      app = { maxHp: roll.maxHp, diameter: roll.diameter, color: roll.color };
+      temp = roll.temp;
+    }
     // 색 강도 g01(0=적색/약, 1=청백/강) — 속도 감속·발광을 한 노브로.
-    const g01 = colorStrength01(this.spec.color.stops, roll.temp);
+    const g01 = colorStrength01(this.spec.color.stops, temp);
     const spd = arche.speed + (arche.speedMin - arche.speed) * g01; // 적색=speed(최고), 청백=speedMin(최저)
     let enemy: CoreEnemy;
     if (type === "kiter") {
@@ -366,19 +444,26 @@ export class EnemyManager {
         v.z += ((cur.z - this.prevPos[i].z) / dt - v.z) * a;
       }
       this.prevPos[i].copy(cur);
+      this.playerIsFlyer[i] = pl.spec.move.mode === "fly"; // 상성 타깃팅용
       this.targets[i] = { pos: cur, vel: v, player: pl, alive: !pl.isDead };
     }
+    this.playerIsFlyer.length = n;
     this.hasPrev = true;
   }
 
-  /** 개체의 표적 선택 — 거리 + 어그로 부하 점수의 최소(현 표적은 히스테리시스로 유지). 없으면 -1. */
-  private pickTarget(pos: THREE.Vector3, currentIdx: number): number {
-    const { targets, dists } = this;
+  /**
+   * 개체의 표적 선택 — 거리 + 어그로 부하 + **상성 가중** 점수의 최소(현 표적은 히스테리시스로 유지). 없으면 -1.
+   * 적은 자기 상성 드론(카이터→플라이어 / 러셔→워커)을 우선 — MP 혼합팀에서 각자 자기 레인을 맡게 한다.
+   */
+  private pickTarget(pos: THREE.Vector3, currentIdx: number, isKiter: boolean): number {
+    const { targets, dists, matchMul } = this;
     dists.length = targets.length;
+    matchMul.length = targets.length;
     for (let i = 0; i < targets.length; i++) {
+      matchMul[i] = matchupMul(isKiter, this.playerIsFlyer[i], MISMATCH_PENALTY);
       dists[i] = targets[i].alive ? Math.sqrt(targets[i].pos.distanceToSquared(pos)) : Infinity;
     }
-    return chooseTarget(dists, this.load, currentIdx, AGGRO_PENALTY, TARGET_HYSTERESIS, this.scores);
+    return chooseTarget(dists, this.load, currentIdx, AGGRO_PENALTY, TARGET_HYSTERESIS, this.scores, matchMul);
   }
 
   /** 점진적 스폰 — 두 아키타입 예산을 잔여 비율로 섞어 SPAWN_INTERVAL 마다 1마리씩 투입. */
@@ -427,9 +512,11 @@ export class EnemyManager {
         continue;
       }
       const myIdx = bi++;
-      const idx = this.pickTarget(p, enemy.targetIndex);
-      // 1순위 = 사거리(AGGRO_RADIUS) 안 드론. 그 밖이면 2순위 = 주변 건물 자동 공격.
-      if (idx < 0 || targets[idx].pos.distanceToSquared(p) > AGGRO_RADIUS_SQ) {
+      const idx = this.pickTarget(p, enemy.targetIndex, enemy.isKiter); // 상성 가중 포함
+      // 기본 = 건물 공격. 플레이어가 인식 범위(AWARENESS_RADIUS) 안에 들면 플레이어로 전환하고,
+      // 한번 인식하면 AWARENESS_LOSE_RADIUS 까지 계속 추격(히스테리시스). 벗어나면 다시 건물.
+      const detectSq = enemy.targetIndex >= 0 ? AWARENESS_LOSE_SQ : AWARENESS_RADIUS_SQ;
+      if (idx < 0 || targets[idx].pos.distanceToSquared(p) > detectSq) {
         enemy.targetIndex = -1;
         this.buildingStep(enemy, p, dt, boids, grid, myIdx);
         continue;
@@ -438,12 +525,25 @@ export class EnemyManager {
       enemy.buildingId = null;
       load[idx]++;
       const t = targets[idx];
+      // 상성 폴백 — 카이터가 비상성(워커=지상) 표적을 노릴 땐 keepDist 를 좁혀 사거리 안으로(처치 가능하게)
+      if (enemy.isKiter) enemy.setEngageKeepDist(engageKeepDist(enemy.kiterBaseKeepDist, this.playerIsFlyer[idx], KITER_CLOSE_MUL));
       const recompute = recomputeSteer(p.distanceToSquared(t.pos), NEAR_DIST_SQ, this.frame, myIdx, STEER_STRIDE);
       const steer = { vel: t.vel, boids, index: myIdx, grid, recompute };
       // 도주형 = 예측 회피·원거리 드레인 / 추격형 = 예측 요격·접촉. 공격은 공통 attack()(흡수=성장).
       enemy.update(dt, t.pos, 1, steer);
       if (enemy.isKiter) this.clampKiterAltitude(p); // 지면 아래로 가라앉지 않게
       this.attack(enemy, t.pos, p, t.player, null);
+    }
+
+    // 작전구역 경계 — 살아있는 플라즈모이드를 원 안으로 클램프(밖으로 못 나감). 수직(고도)은 별도 처리.
+    if (this.zoneR > 0) {
+      for (const e of this.enemies) {
+        if (e.state !== "alive") continue;
+        const gp = e.group.position;
+        clampToDisk(gp.x, gp.z, this.zoneCx, this.zoneCz, this.zoneR, this._clampOut);
+        gp.x = this._clampOut.x;
+        gp.z = this._clampOut.z;
+      }
     }
 
     this.drain.update(dt);
@@ -459,8 +559,8 @@ export class EnemyManager {
 
     this.updateInstances(); // 살아있는 셸 + 코어 일괄 렌더(InstancedMesh)
 
-    // 웨이브 종료 판정 — 탐방 모드면 자동 재시작 안 함
-    if (!this.peaceful && this.pendingRusher + this.pendingKiter === 0 && this.enemies.length === 0) {
+    // 웨이브 종료 판정 — 탐방/일괄 스폰 모드면 자동 재시작 안 함(일괄은 미션 인스턴스가 종료 판정)
+    if (!this.peaceful && !this.burstMode && this.pendingRusher + this.pendingKiter === 0 && this.enemies.length === 0) {
       this.startNextWave();
     }
   }
@@ -486,6 +586,7 @@ export class EnemyManager {
     this.shellInst.instanceMatrix.needsUpdate = true;
     this.pendingRusher = 0;
     this.pendingKiter = 0;
+    this.burstMode = false;
     this.hasPrev = false; // 재입장 시 순간이동 변위로 인한 가짜 속도 스파이크 방지
     for (const v of this.vels) { v.x = v.y = v.z = 0; }
   }

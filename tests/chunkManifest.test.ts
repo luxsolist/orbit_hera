@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import {
   geoCell, landmarkIndexPath, worldChunkPath, chunkBlockDir, tilesPath, cellChunkOf, cellMLon, cellLocalOf,
-  type TilesManifest, type WorldChunk,
+  pickSpawnChunk,
+  type TilesManifest, type WorldChunk, type ChunkEntry,
 } from "../src/world/chunkManifest";
 
 // 위경도 셀 + 전지구 타일 경로 계약(순수) + 생성 산출물(있으면) 구조 가드.
@@ -65,5 +66,36 @@ describe("생성된 경복궁 타일 월드(있으면)", () => {
     expect(ch.terrain.heights.length).toBe(ch.terrain.size * ch.terrain.size);
     expect("buildings" in ch.objects).toBe(true);
     expect(ch.underground).toBeNull();
+  });
+});
+
+describe("pickSpawnChunk — 무작위 시작 청크 선택", () => {
+  const E = (cx: number, cz: number, objects: boolean, terrain: boolean): ChunkEntry => ({ cx, cz, objects, terrain });
+  it("건물(objects)+지형 청크를 우선", () => {
+    const chunks = [E(0, 0, false, true), E(1, 0, true, true), E(2, 0, false, false)];
+    for (const u of [0, 0.3, 0.6, 0.99]) {
+      const c = pickSpawnChunk(chunks, () => u)!;
+      expect(c.objects && c.terrain).toBe(true); // 항상 건물+지형 청크
+    }
+  });
+  it("건물 청크 없으면 지형 청크로 폴백", () => {
+    const chunks = [E(0, 0, false, true), E(1, 0, false, true), E(2, 0, false, false)];
+    const c = pickSpawnChunk(chunks, () => 0.99)!;
+    expect(c.terrain).toBe(true);
+    expect(c.cx).toBe(1); // 지형 청크 중 마지막
+  });
+  it("빈 목록은 null", () => {
+    expect(pickSpawnChunk([], () => 0.5)).toBeNull();
+  });
+  it("건물 밀집 도심(이웃 objects 多) 위주 — 고립 건물 청크는 제외", () => {
+    const dense: ChunkEntry[] = [];
+    for (let z = 0; z < 3; z++) for (let x = 0; x < 3; x++) dense.push(E(x, z, true, true)); // 3×3 밀집 블록
+    const isolated = E(50, 50, true, true); // 외딴 건물 청크(밀집도 1)
+    const chunks = [...dense, isolated];
+    for (const u of [0, 0.3, 0.6, 0.99]) {
+      const c = pickSpawnChunk(chunks, () => u, 2, 0.25)!;
+      expect(c.cx).toBeLessThan(3); // 항상 밀집 블록에서(외딴 50,50 아님)
+      expect(c.cz).toBeLessThan(3);
+    }
   });
 });

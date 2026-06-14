@@ -174,14 +174,32 @@ export function stickyMinIndex(scores: readonly number[], currentIdx: number, hy
  */
 export function chooseTarget(
   dists: readonly number[], load: readonly number[], currentIdx: number,
-  aggroPenalty: number, hysteresis: number, scores: number[]
+  aggroPenalty: number, hysteresis: number, scores: number[],
+  matchMul?: readonly number[] // 상성 가중(없으면 1) — MP: 적이 자기 상성 드론을 우선 표적
 ): number {
   scores.length = dists.length;
   for (let i = 0; i < dists.length; i++) {
-    scores[i] = dists[i] === Infinity ? Infinity : dists[i] * (1 + aggroPenalty * load[i]);
+    if (dists[i] === Infinity) { scores[i] = Infinity; continue; }
+    scores[i] = dists[i] * (1 + aggroPenalty * load[i]) * (matchMul ? matchMul[i] : 1);
   }
   const idx = stickyMinIndex(scores, currentIdx, hysteresis);
   return idx >= 0 && scores[idx] !== Infinity ? idx : -1;
+}
+
+/**
+ * 상성 가중(순수) — 카이터↔플라이어 / 러셔↔워커가 상성. 상성이면 1, 비상성이면 penalty(>1)배로
+ * 점수를 불리하게 줘 적이 **자기 상성 드론을 우선 표적**으로 삼게 한다(거리/부하와 곱해짐). MP 혼합팀 대응.
+ */
+export function matchupMul(isKiter: boolean, targetIsFlyer: boolean, penalty: number): number {
+  return isKiter === targetIsFlyer ? 1 : penalty; // kiter+flyer 또는 rusher+walker = 상성(1)
+}
+
+/**
+ * 카이터 교전 거리(순수) — 비상성(워커=지상) 표적을 노릴 땐 keepDist 를 좁혀 그 무기 사거리 안으로
+ * 들어가게(처치 가능). 상성(플라이어) 표적이면 기본 keepDist 유지(원거리 카이팅). MP 미스매치 폴백.
+ */
+export function engageKeepDist(baseKeepDist: number, targetIsFlyer: boolean, closeMul: number): number {
+  return targetIsFlyer ? baseKeepDist : baseKeepDist * closeMul;
 }
 
 /** 도주형(카이터) 조향 파라미터 — turnRate 는 rad/s. */
@@ -317,6 +335,7 @@ export class CoreEnemy {
   private maxScale: number; // 흡수 성장 시각 상한(초기 baseScale 의 1.5배)
   private vel: Vec3 = { x: 0, y: 0, z: 0 }; // 카이터 속도 상태(선회 캡용)
   private kiter?: KiterParams; // 설정 시 도주형 행동
+  private kiterKeepBase = 0; // 기본 keepDist(상성 폴백에서 좁혔다 복원할 기준)
 
   constructor(position: THREE.Vector3, appearance: CoreAppearance, speed = 4.5) {
     this.baseScale = appearance.diameter / 2; // 지오메트리 지름 2(반지름 1) → 실제 지름 = scale·2
@@ -366,6 +385,17 @@ export class CoreEnemy {
   /** 도주형(카이터) 행동 활성화 — 도주+선회+원거리 드레인. */
   setKiter(params: KiterParams): void {
     this.kiter = params;
+    this.kiterKeepBase = params.keepDist;
+  }
+
+  /** 상성 폴백 — 비상성(워커) 표적이면 keepDist 를 좁혀 그 사거리 안으로 진입(처치 가능). 상성이면 복원. */
+  setEngageKeepDist(dist: number): void {
+    if (this.kiter) this.kiter.keepDist = dist;
+  }
+
+  /** 기본 keepDist(매니저가 engageKeepDist 산출 기준으로 사용). */
+  get kiterBaseKeepDist(): number {
+    return this.kiterKeepBase;
   }
 
   /** 카이터 여부(매니저가 드레인/접촉 경로를 분기). */

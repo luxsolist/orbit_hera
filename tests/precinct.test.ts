@@ -67,13 +67,13 @@ describe("buildingBaseColor — 높이별 회색 그라데이션 / 권역 양식
       expect(r).toBe(g); expect(g).toBe(b);
     }
   });
-  it("저층=짙은 회색(0xa6) → 고층=밝은 회색(0xf8), 단조 증가 + 구간 클램프", () => {
-    expect(buildingBaseColor(6, null)).toBe(0xa6a6a6); // 하한
-    expect(buildingBaseColor(100, null)).toBe(0xf8f8f8); // 상한
-    expect(buildingBaseColor(3, null)).toBe(0xa6a6a6); // <6 클램프
-    expect(buildingBaseColor(200, null)).toBe(0xf8f8f8); // >100 클램프
+  it("저층=옅은 회색(0xc8) → 고층=거의 흰색(0xfa), 단조 증가 + 구간 클램프", () => {
+    expect(buildingBaseColor(6, null)).toBe(0xc8c8c8); // 하한
+    expect(buildingBaseColor(100, null)).toBe(0xfafafa); // 상한
+    expect(buildingBaseColor(3, null)).toBe(0xc8c8c8); // <6 클램프
+    expect(buildingBaseColor(200, null)).toBe(0xfafafa); // >100 클램프
     const mid = buildingBaseColor(50, null) & 255;
-    expect(mid).toBeGreaterThan(0xa6); // 중층은 저층보다 밝음
-    expect(mid).toBeLessThan(0xf8);
+    expect(mid).toBeGreaterThan(0xc8); // 중층은 저층보다 밝음
+    expect(mid).toBeLessThan(0xfa);
   });
 });
