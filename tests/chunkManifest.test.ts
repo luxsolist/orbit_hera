@@ -70,7 +70,8 @@ describe("생성된 경복궁 타일 월드(있으면)", () => {
 });
 
 describe("pickSpawnChunk — 무작위 시작 청크 선택", () => {
-  const E = (cx: number, cz: number, objects: boolean, terrain: boolean): ChunkEntry => ({ cx, cz, objects, terrain });
+  const E = (cx: number, cz: number, objects: boolean, terrain: boolean, buildings?: number): ChunkEntry =>
+    ({ cx, cz, objects, terrain, ...(buildings !== undefined ? { buildings } : {}) });
   it("건물(objects)+지형 청크를 우선", () => {
     const chunks = [E(0, 0, false, true), E(1, 0, true, true), E(2, 0, false, false)];
     for (const u of [0, 0.3, 0.6, 0.99]) {
@@ -97,5 +98,35 @@ describe("pickSpawnChunk — 무작위 시작 청크 선택", () => {
       expect(c.cx).toBeLessThan(3); // 항상 밀집 블록에서(외딴 50,50 아님)
       expect(c.cz).toBeLessThan(3);
     }
+  });
+
+  // 핵심 회귀: 도로/수역만 있는 산악 청크(objects=true·buildings=0)는 스폰 후보에서 제외 — "산 위 시작" 방지
+  it("도로만 있는 산악 청크(buildings=0)는 제외하고 건물 청크를 스폰", () => {
+    const mountain: ChunkEntry[] = [];
+    for (let z = 0; z < 3; z++) for (let x = 0; x < 3; x++) mountain.push(E(x, z, true, true, 0)); // 3×3 등산로(건물 0)
+    const town = E(50, 50, true, true, 12); // 멀리 떨어진 건물 청크 1칸
+    const chunks = [...mountain, town];
+    for (const u of [0, 0.3, 0.6, 0.99]) {
+      const c = pickSpawnChunk(chunks, () => u, 2, 0.25)!;
+      expect(c.cx).toBe(50); // 산악(0..2)이 아무리 넓어도 건물 있는 마을로
+      expect(c.buildings).toBe(12);
+    }
+  });
+
+  it("밀집도 = 건물 수 합 — 건물 많은 코어 우선(같은 청크 수라도 건물 수로 가중)", () => {
+    // A 블록: 건물 1씩, B 블록: 건물 100씩 — 멀리 떨어뜨려 이웃 간섭 없음
+    const chunks: ChunkEntry[] = [];
+    for (let z = 0; z < 3; z++) for (let x = 0; x < 3; x++) chunks.push(E(x, z, true, true, 1));      // A(희박)
+    for (let z = 0; z < 3; z++) for (let x = 0; x < 3; x++) chunks.push(E(40 + x, 40 + z, true, true, 100)); // B(밀집)
+    for (const u of [0, 0.3, 0.6, 0.99]) {
+      const c = pickSpawnChunk(chunks, () => u, 2, 0.25)!;
+      expect(c.cx).toBeGreaterThanOrEqual(40); // 항상 건물 100짜리 B 블록
+    }
+  });
+
+  it("구 매니페스트(buildings 필드 없음)는 objects 불리언으로 폴백 — 하위호환", () => {
+    const chunks = [E(0, 0, false, true), E(1, 0, true, true), E(2, 0, true, true)]; // buildings 미지정
+    const c = pickSpawnChunk(chunks, () => 0)!;
+    expect(c.objects && c.terrain).toBe(true); // 건물 필드 없어도 objects 기준 동작
   });
 });

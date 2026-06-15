@@ -46,34 +46,42 @@ export const worldChunkPath = (cell: Cell, cx: number, cz: number, block = CHUNK
 export const tilesPath = (cell: Cell): string => `maps/${cell[0]}/${cell[1]}/tiles.json`;
 export const landmarkIndexPath = (): string => `maps/landmarks.json`;
 
-/** 존재하는 청크 1칸 — 오브젝트/지형 유무. */
+/** 존재하는 청크 1칸 — 오브젝트/지형 유무 + 건물 수(밀집 스폰용). */
 export interface ChunkEntry {
   cx: number;
   cz: number;
-  objects: boolean;
+  objects: boolean; // 건물·도로·수역·구역 중 하나라도 있으면 true
   terrain: boolean;
+  buildings?: number; // 이 청크의 건물 수(신 매니페스트). 미존재 시 objects 불리언으로 폴백.
+}
+
+/** 청크 건물 수 — 신 매니페스트는 buildings, 구 매니페스트는 objects 불리언(1/0)으로 폴백. 순수. */
+function buildingCount(c: ChunkEntry): number {
+  return c.buildings ?? (c.objects ? 1 : 0);
 }
 
 /**
  * 무작위 스폰 청크 선택 — **건물 밀집 도심 위주**. 작전구역 중심이 될 청크를 고른다.
  *
- * 밀집도 = 반경 `R` 청크 이웃 중 건물(objects) 청크 수. 건물+지형(terrain) 후보를 밀집도순 정렬해
- * **상위 `topFrac`(기본 25%)** 안에서 무작위 선택 → 도심 코어에 집중하되 매판 다른 위치(변주). 건물 청크가
- * 없으면(예: 에베레스트) 지형 청크, 그것도 없으면 아무 청크. 빈 목록은 null. rand: ()=>[0,1). 순수(테스트 가능).
+ * 밀집도 = 반경 `R` 청크 이웃의 **건물 수 합**(도로·수역만 있는 산악 청크는 건물 0 → 후보 제외).
+ * 건물 있는 + 지형(terrain) 후보를 밀집도순 정렬해 **상위 `topFrac`(기본 25%)** 안에서 무작위 선택
+ * → 도심 코어에 집중하되 매판 다른 위치(변주). 건물 청크가 없으면(예: 에베레스트) 지형 청크,
+ * 그것도 없으면 아무 청크. 빈 목록은 null. rand: ()=>[0,1). 순수(테스트 가능).
  */
 export function pickSpawnChunk(chunks: ChunkEntry[], rand: () => number, R = 2, topFrac = 0.25): ChunkEntry | null {
   if (chunks.length === 0) return null;
-  const candidates = chunks.filter((c) => c.objects && c.terrain); // 스폰 = 건물 + 디딜 지형
+  const candidates = chunks.filter((c) => buildingCount(c) > 0 && c.terrain); // 스폰 = 건물 + 디딜 지형(도로·수역만은 제외)
   if (candidates.length === 0) {
     const land = chunks.filter((c) => c.terrain);
     const pool = land.length > 0 ? land : chunks;
     return pool[Math.min(pool.length - 1, Math.floor(rand() * pool.length))];
   }
-  // 건물(objects) 청크 집합 — 이웃에 건물 청크가 많을수록 도심 밀집
-  const objKeys = new Set(chunks.filter((c) => c.objects).map((c) => `${c.cx}_${c.cz}`));
+  // 이웃 건물 수 합으로 밀집도 산정 — 건물이 빽빽할수록 큼(도심 코어)
+  const bmap = new Map<string, number>();
+  for (const c of chunks) { const b = buildingCount(c); if (b > 0) bmap.set(`${c.cx}_${c.cz}`, b); }
   const scored = candidates.map((c) => {
     let d = 0;
-    for (let dz = -R; dz <= R; dz++) for (let dx = -R; dx <= R; dx++) if (objKeys.has(`${c.cx + dx}_${c.cz + dz}`)) d++;
+    for (let dz = -R; dz <= R; dz++) for (let dx = -R; dx <= R; dx++) d += bmap.get(`${c.cx + dx}_${c.cz + dz}`) ?? 0;
     return { c, d };
   });
   scored.sort((a, b) => b.d - a.d); // 밀집도 내림차순

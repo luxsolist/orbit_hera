@@ -14,9601 +14,11201 @@
    "cx": -14,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 11
   },
   {
    "cx": 2,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 111
   },
   {
    "cx": 3,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 141
   },
   {
    "cx": 4,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 6,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 30
   },
   {
    "cx": 15,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 16,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 71,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 0,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 263
   },
   {
    "cx": 1,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 220
   },
   {
    "cx": 2,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 218
   },
   {
    "cx": 3,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 341
   },
   {
    "cx": 4,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": 5,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 6,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 99
   },
   {
    "cx": 15,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 24
   },
   {
    "cx": 16,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 17,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 23,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 22
   },
   {
    "cx": 24,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 25,
    "cz": 72,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -2,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": -1,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 225
   },
   {
    "cx": 0,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 45
   },
   {
    "cx": 1,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 72
   },
   {
    "cx": 2,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 130
   },
   {
    "cx": 3,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": 4,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 5,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 44
   },
   {
    "cx": 6,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 36
   },
   {
    "cx": 7,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 29
   },
   {
    "cx": 15,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 129
   },
   {
    "cx": 16,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 177
   },
   {
    "cx": 17,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 42
   },
   {
    "cx": 18,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 14
   },
   {
    "cx": 21,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 22,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 23,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 24,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 25,
    "cz": 73,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 34
   },
   {
    "cx": -14,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -7,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 25
   },
   {
    "cx": -1,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 273
   },
   {
    "cx": 0,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 224
   },
   {
    "cx": 1,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 35
   },
   {
    "cx": 2,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 131
   },
   {
    "cx": 3,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 5,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 34
   },
   {
    "cx": 6,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 40
   },
   {
    "cx": 7,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 9
   },
   {
    "cx": 11,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 12,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 11
   },
   {
    "cx": 16,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 22
   },
   {
    "cx": 17,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": 18,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 20,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 21,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 22,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": 24,
    "cz": 74,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 74,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -14,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -5,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -2,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 152
   },
   {
    "cx": -1,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 135
   },
   {
    "cx": 0,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 38
   },
   {
    "cx": 1,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 31
   },
   {
    "cx": 2,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 20
   },
   {
    "cx": 3,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 6,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 23
   },
   {
    "cx": 7,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 6
   },
   {
    "cx": 10,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 16,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 20,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 23,
    "cz": 75,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 75,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 75,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 9
   },
   {
    "cx": 1,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 9
   },
   {
    "cx": 2,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 9,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 10,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 11,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 15,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 76,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 24,
    "cz": 76,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 76,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -11,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -8,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 1,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 20
   },
   {
    "cx": 2,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 3,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": 6,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 47
   },
   {
    "cx": 7,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 16
   },
   {
    "cx": 9,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 6
   },
   {
    "cx": 10,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 16,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 93
   },
   {
    "cx": 23,
    "cz": 77,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 24,
    "cz": 77,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 77,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 12
   },
   {
    "cx": -12,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 25
   },
   {
    "cx": -11,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": -9,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -8,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -6,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 14
   },
   {
    "cx": 2,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": 5,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 16
   },
   {
    "cx": 6,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": 7,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 29
   },
   {
    "cx": 8,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 17
   },
   {
    "cx": 9,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 10,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 14,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 21,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 78,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 36
   },
   {
    "cx": 23,
    "cz": 78,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 78,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 78,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 41
   },
   {
    "cx": -12,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 121
   },
   {
    "cx": -11,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": -7,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -1,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 0,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 6
   },
   {
    "cx": 1,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 207
   },
   {
    "cx": 2,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 3,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 7,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 44
   },
   {
    "cx": 8,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 40
   },
   {
    "cx": 9,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 10,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 11,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 19,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 43
   },
   {
    "cx": 20,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 57
   },
   {
    "cx": 21,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 22,
    "cz": 79,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 79,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 79,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 79,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 31
   },
   {
    "cx": -12,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 141
   },
   {
    "cx": -11,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -10,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": -8,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": -1,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 209
   },
   {
    "cx": 2,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": 4,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 5,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 6,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 49
   },
   {
    "cx": 8,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 50
   },
   {
    "cx": 9,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 10,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 17,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 19,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 105
   },
   {
    "cx": 20,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": 21,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 22,
    "cz": 80,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 80,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 80,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 80,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 22
   },
   {
    "cx": -12,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 182
   },
   {
    "cx": -11,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 16
   },
   {
    "cx": -10,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 46
   },
   {
    "cx": -8,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 42
   },
   {
    "cx": -7,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 13
   },
   {
    "cx": 1,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 102
   },
   {
    "cx": 2,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 4,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 14
   },
   {
    "cx": 5,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": 6,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 112
   },
   {
    "cx": 8,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 34
   },
   {
    "cx": 9,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 10,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 9
   },
   {
    "cx": 18,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 27
   },
   {
    "cx": 19,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 83
   },
   {
    "cx": 20,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 81,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 81,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 81,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 81,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": -13,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 37
   },
   {
    "cx": -12,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 85
   },
   {
    "cx": -11,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 36
   },
   {
    "cx": -10,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": -9,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 59
   },
   {
    "cx": -8,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 61
   },
   {
    "cx": -7,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -6,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -5,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 37
   },
   {
    "cx": 1,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 115
   },
   {
    "cx": 2,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 15
   },
   {
    "cx": 3,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 4,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 5,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 11
   },
   {
    "cx": 6,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 9
   },
   {
    "cx": 7,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 237
   },
   {
    "cx": 8,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 86
   },
   {
    "cx": 9,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 10,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 13,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 20
   },
   {
    "cx": 15,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 15
   },
   {
    "cx": 16,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 51
   },
   {
    "cx": 19,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 85
   },
   {
    "cx": 20,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 22,
    "cz": 82,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 82,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 82,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 82,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 54
   },
   {
    "cx": -13,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 156
   },
   {
    "cx": -12,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 100
   },
   {
    "cx": -11,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 54
   },
   {
    "cx": -10,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 32
   },
   {
    "cx": -9,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 30
   },
   {
    "cx": -8,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -7,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 21
   },
   {
    "cx": -6,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 77
   },
   {
    "cx": 1,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 164
   },
   {
    "cx": 2,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 5,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 6,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 34
   },
   {
    "cx": 7,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 203
   },
   {
    "cx": 8,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 39
   },
   {
    "cx": 9,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 11,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 12,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 13,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 11
   },
   {
    "cx": 14,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 45
   },
   {
    "cx": 15,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 9
   },
   {
    "cx": 19,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 23
   },
   {
    "cx": 20,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 83,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 22,
    "cz": 83,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 83,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 83,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 83,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 21
   },
   {
    "cx": -13,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": -12,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 25
   },
   {
    "cx": -11,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 29
   },
   {
    "cx": -10,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": -9,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": -8,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": -6,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -5,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 0,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 140
   },
   {
    "cx": 1,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 44
   },
   {
    "cx": 2,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 4,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 5,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 6,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 43
   },
   {
    "cx": 7,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 256
   },
   {
    "cx": 8,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 62
   },
   {
    "cx": 9,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 21
   },
   {
    "cx": 10,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 29
   },
   {
    "cx": 11,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 13,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 14
   },
   {
    "cx": 14,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 15
   },
   {
    "cx": 15,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 19,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 20,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 21,
    "cz": 84,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 22,
    "cz": 84,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 84,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 84,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 84,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": -4,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": -3,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 6
   },
   {
    "cx": -2,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 47
   },
   {
    "cx": -1,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 0,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 133
   },
   {
    "cx": 1,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 95
   },
   {
    "cx": 2,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 87
   },
   {
    "cx": 3,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 257
   },
   {
    "cx": 4,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 20
   },
   {
    "cx": 5,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 28
   },
   {
    "cx": 6,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 123
   },
   {
    "cx": 7,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 131
   },
   {
    "cx": 8,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 47
   },
   {
    "cx": 9,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 32
   },
   {
    "cx": 10,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 29
   },
   {
    "cx": 11,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 12
   },
   {
    "cx": 12,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 14,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 15,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 16,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 19,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 20,
    "cz": 85,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 21,
    "cz": 85,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 85,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 85,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 85,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 85,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -8,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -4,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -2,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -1,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 44
   },
   {
    "cx": 0,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 76
   },
   {
    "cx": 1,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 20
   },
   {
    "cx": 2,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 64
   },
   {
    "cx": 3,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 363
   },
   {
    "cx": 4,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 34
   },
   {
    "cx": 5,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 104
   },
   {
    "cx": 6,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 180
   },
   {
    "cx": 7,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 127
   },
   {
    "cx": 8,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 217
   },
   {
    "cx": 9,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 104
   },
   {
    "cx": 10,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 107
   },
   {
    "cx": 11,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 46
   },
   {
    "cx": 12,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 13,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": 14,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": 15,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 41
   },
   {
    "cx": 19,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": 20,
    "cz": 86,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 21,
    "cz": 86,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 86,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 86,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 86,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 86,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 32
   },
   {
    "cx": -7,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 17
   },
   {
    "cx": -4,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -1,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 80
   },
   {
    "cx": 0,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 51
   },
   {
    "cx": 1,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 13
   },
   {
    "cx": 2,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 4,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 64
   },
   {
    "cx": 5,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 113
   },
   {
    "cx": 6,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 109
   },
   {
    "cx": 7,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 152
   },
   {
    "cx": 8,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 515
   },
   {
    "cx": 9,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 93
   },
   {
    "cx": 10,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 126
   },
   {
    "cx": 11,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 178
   },
   {
    "cx": 12,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 14,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 15,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 16,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 17,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 27
   },
   {
    "cx": 19,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 58
   },
   {
    "cx": 20,
    "cz": 87,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 21,
    "cz": 87,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 87,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 87,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 87,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 87,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -4,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -3,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 25
   },
   {
    "cx": -1,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 110
   },
   {
    "cx": 0,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 22
   },
   {
    "cx": 1,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 2,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 26
   },
   {
    "cx": 5,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 59
   },
   {
    "cx": 6,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 219
   },
   {
    "cx": 7,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 159
   },
   {
    "cx": 8,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 58
   },
   {
    "cx": 9,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 82
   },
   {
    "cx": 10,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 102
   },
   {
    "cx": 11,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 127
   },
   {
    "cx": 12,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 13,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 16
   },
   {
    "cx": 15,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 52
   },
   {
    "cx": 16,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 19
   },
   {
    "cx": 17,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 24
   },
   {
    "cx": 18,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 82
   },
   {
    "cx": 19,
    "cz": 88,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 50
   },
   {
    "cx": 20,
    "cz": 88,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 88,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 88,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 88,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 88,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 88,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 77
   },
   {
    "cx": -6,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 25
   },
   {
    "cx": -4,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": -3,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 19
   },
   {
    "cx": -1,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 30
   },
   {
    "cx": 0,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 2,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 53
   },
   {
    "cx": 3,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 24
   },
   {
    "cx": 4,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 100
   },
   {
    "cx": 5,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 58
   },
   {
    "cx": 6,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 193
   },
   {
    "cx": 7,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 74
   },
   {
    "cx": 8,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 38
   },
   {
    "cx": 9,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 76
   },
   {
    "cx": 10,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 54
   },
   {
    "cx": 11,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 69
   },
   {
    "cx": 12,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 42
   },
   {
    "cx": 13,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 18
   },
   {
    "cx": 14,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 112
   },
   {
    "cx": 15,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 417
   },
   {
    "cx": 16,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 62
   },
   {
    "cx": 17,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 15
   },
   {
    "cx": 18,
    "cz": 89,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 89,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 89,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 89,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 89,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 89,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 89,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 89,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -9,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 17
   },
   {
    "cx": -4,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 41
   },
   {
    "cx": -3,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 110
   },
   {
    "cx": -1,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 38
   },
   {
    "cx": 0,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 1,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 2,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 84
   },
   {
    "cx": 3,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 62
   },
   {
    "cx": 4,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 156
   },
   {
    "cx": 5,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 57
   },
   {
    "cx": 6,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 99
   },
   {
    "cx": 7,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 32
   },
   {
    "cx": 8,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 31
   },
   {
    "cx": 9,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 95
   },
   {
    "cx": 10,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 619
   },
   {
    "cx": 11,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 67
   },
   {
    "cx": 12,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 115
   },
   {
    "cx": 13,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 233
   },
   {
    "cx": 14,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 728
   },
   {
    "cx": 15,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 511
   },
   {
    "cx": 16,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 99
   },
   {
    "cx": 17,
    "cz": 90,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 18,
    "cz": 90,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 90,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 90,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 90,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 90,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 90,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 90,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 90,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 121
   },
   {
    "cx": -12,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -11,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -4,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 104
   },
   {
    "cx": -2,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 92
   },
   {
    "cx": -1,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 36
   },
   {
    "cx": 0,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 29
   },
   {
    "cx": 1,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 71
   },
   {
    "cx": 2,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 91
   },
   {
    "cx": 3,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 131
   },
   {
    "cx": 4,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 166
   },
   {
    "cx": 5,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 674
   },
   {
    "cx": 6,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 58
   },
   {
    "cx": 7,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 16
   },
   {
    "cx": 8,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 11
   },
   {
    "cx": 9,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 129
   },
   {
    "cx": 10,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1105
   },
   {
    "cx": 11,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 634
   },
   {
    "cx": 12,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 75
   },
   {
    "cx": 13,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 210
   },
   {
    "cx": 14,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 304
   },
   {
    "cx": 15,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 64
   },
   {
    "cx": 16,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 25
   },
   {
    "cx": 17,
    "cz": 91,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 18,
    "cz": 91,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 91,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 91,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 91,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 91,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 91,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 91,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 91,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 79
   },
   {
    "cx": -12,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -11,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": -10,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 6
   },
   {
    "cx": -7,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": -4,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 753
   },
   {
    "cx": -2,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 513
   },
   {
    "cx": -1,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 67
   },
   {
    "cx": 0,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 108
   },
   {
    "cx": 1,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 181
   },
   {
    "cx": 2,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 232
   },
   {
    "cx": 3,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 37
   },
   {
    "cx": 4,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 109
   },
   {
    "cx": 5,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 305
   },
   {
    "cx": 6,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 158
   },
   {
    "cx": 7,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 25
   },
   {
    "cx": 8,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 94
   },
   {
    "cx": 9,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 826
   },
   {
    "cx": 10,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 439
   },
   {
    "cx": 11,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 12,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 92,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 14,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 92,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -12,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -11,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 41
   },
   {
    "cx": -10,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": -9,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 9
   },
   {
    "cx": -8,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 26
   },
   {
    "cx": -7,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -6,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 75
   },
   {
    "cx": -2,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 153
   },
   {
    "cx": -1,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 24
   },
   {
    "cx": 0,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 1,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 20
   },
   {
    "cx": 2,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 11
   },
   {
    "cx": 3,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 16
   },
   {
    "cx": 4,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 115
   },
   {
    "cx": 5,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 415
   },
   {
    "cx": 6,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 359
   },
   {
    "cx": 7,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 556
   },
   {
    "cx": 8,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 886
   },
   {
    "cx": 9,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1198
   },
   {
    "cx": 10,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 45
   },
   {
    "cx": 11,
    "cz": 93,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 12,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 93,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -12,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -10,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -9,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 48
   },
   {
    "cx": -7,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 16
   },
   {
    "cx": -3,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 47
   },
   {
    "cx": -2,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 17
   },
   {
    "cx": -1,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 17
   },
   {
    "cx": 0,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 12
   },
   {
    "cx": 2,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 27
   },
   {
    "cx": 4,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 53
   },
   {
    "cx": 5,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 107
   },
   {
    "cx": 6,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 39
   },
   {
    "cx": 7,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 627
   },
   {
    "cx": 8,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1701
   },
   {
    "cx": 9,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 232
   },
   {
    "cx": 10,
    "cz": 94,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 62
   },
   {
    "cx": 11,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 94,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -12,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 15
   },
   {
    "cx": -9,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": -8,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -7,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 12
   },
   {
    "cx": -3,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 36
   },
   {
    "cx": -2,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": -1,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 0,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 6
   },
   {
    "cx": 1,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 46
   },
   {
    "cx": 2,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 3,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 86
   },
   {
    "cx": 4,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 23
   },
   {
    "cx": 5,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": 6,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 78
   },
   {
    "cx": 7,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 75
   },
   {
    "cx": 8,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 133
   },
   {
    "cx": 9,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 193
   },
   {
    "cx": 10,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 184
   },
   {
    "cx": 11,
    "cz": 95,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 12,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 95,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -12,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -11,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 28
   },
   {
    "cx": -10,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 13
   },
   {
    "cx": -9,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": -8,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": -7,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 85
   },
   {
    "cx": -6,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 11
   },
   {
    "cx": -5,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 16
   },
   {
    "cx": -4,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 916
   },
   {
    "cx": -3,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 261
   },
   {
    "cx": -2,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 44
   },
   {
    "cx": -1,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 0,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 32
   },
   {
    "cx": 1,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 83
   },
   {
    "cx": 2,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 58
   },
   {
    "cx": 3,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 177
   },
   {
    "cx": 4,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 5,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 6,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 31
   },
   {
    "cx": 7,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 120
   },
   {
    "cx": 8,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 20
   },
   {
    "cx": 9,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 51
   },
   {
    "cx": 10,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 28
   },
   {
    "cx": 11,
    "cz": 96,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 96,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 9
   },
   {
    "cx": -11,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": -10,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": -8,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 54
   },
   {
    "cx": -7,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 146
   },
   {
    "cx": -6,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": -5,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": -4,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 970
   },
   {
    "cx": -3,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 431
   },
   {
    "cx": -2,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 43
   },
   {
    "cx": -1,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 60
   },
   {
    "cx": 0,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 194
   },
   {
    "cx": 1,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 679
   },
   {
    "cx": 2,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 91
   },
   {
    "cx": 3,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 114
   },
   {
    "cx": 4,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 9
   },
   {
    "cx": 5,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 6,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": 7,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 20
   },
   {
    "cx": 8,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": 9,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 28
   },
   {
    "cx": 10,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 36
   },
   {
    "cx": 11,
    "cz": 97,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 97,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 12
   },
   {
    "cx": -12,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": -11,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 16
   },
   {
    "cx": -10,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": -9,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 67
   },
   {
    "cx": -8,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 85
   },
   {
    "cx": -7,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 18
   },
   {
    "cx": -6,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -4,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 36
   },
   {
    "cx": -3,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 57
   },
   {
    "cx": -2,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 50
   },
   {
    "cx": -1,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 43
   },
   {
    "cx": 0,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1132
   },
   {
    "cx": 1,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 171
   },
   {
    "cx": 2,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 48
   },
   {
    "cx": 3,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 91
   },
   {
    "cx": 4,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 66
   },
   {
    "cx": 5,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 71
   },
   {
    "cx": 6,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": 7,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 14
   },
   {
    "cx": 9,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 5
   },
   {
    "cx": 10,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 98,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 12,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 98,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -13,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 33
   },
   {
    "cx": -12,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 47
   },
   {
    "cx": -11,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 89
   },
   {
    "cx": -10,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 46
   },
   {
    "cx": -9,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 248
   },
   {
    "cx": -8,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 193
   },
   {
    "cx": -7,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 36
   },
   {
    "cx": -4,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 57
   },
   {
    "cx": -3,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 24
   },
   {
    "cx": -2,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 48
   },
   {
    "cx": -1,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 24
   },
   {
    "cx": 0,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 43
   },
   {
    "cx": 1,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 101
   },
   {
    "cx": 2,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 57
   },
   {
    "cx": 3,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 53
   },
   {
    "cx": 4,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 16
   },
   {
    "cx": 5,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 47
   },
   {
    "cx": 6,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 81
   },
   {
    "cx": 7,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 99,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 99,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": -9,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 8
   },
   {
    "cx": -8,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -7,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 65
   },
   {
    "cx": -4,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 32
   },
   {
    "cx": -3,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 23
   },
   {
    "cx": -2,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 56
   },
   {
    "cx": -1,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 14
   },
   {
    "cx": 0,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 1,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 47
   },
   {
    "cx": 2,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 9
   },
   {
    "cx": 3,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 7
   },
   {
    "cx": 5,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 49
   },
   {
    "cx": 6,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 133
   },
   {
    "cx": 7,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 43
   },
   {
    "cx": 8,
    "cz": 100,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 10
   },
   {
    "cx": 9,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 100,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -13,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": -11,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": -10,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 106
   },
   {
    "cx": -2,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 155
   },
   {
    "cx": -1,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 0,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 1,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 11
   },
   {
    "cx": 2,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 19
   },
   {
    "cx": 6,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 12
   },
   {
    "cx": 7,
    "cz": 101,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 23
   },
   {
    "cx": 8,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 101,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 102,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 102,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 55
   },
   {
    "cx": -3,
    "cz": 102,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 33
   },
   {
    "cx": -2,
    "cz": 102,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 19
   },
   {
    "cx": -1,
    "cz": 102,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 0,
    "cz": 102,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 102,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": 2,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 102,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 7,
    "cz": 102,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 12
   },
   {
    "cx": 8,
    "cz": 102,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 4
   },
   {
    "cx": 9,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 102,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 103,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 103,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 22
   },
   {
    "cx": -3,
    "cz": 103,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 42
   },
   {
    "cx": -2,
    "cz": 103,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 6
   },
   {
    "cx": -1,
    "cz": 103,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 103,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 2
   },
   {
    "cx": 1,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 2,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 103,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 8,
    "cz": 103,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 3
   },
   {
    "cx": 9,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 103,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 104,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 104,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -3,
    "cz": 104,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 1
   },
   {
    "cx": -2,
    "cz": 104,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 2,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 104,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 105,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 105,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 105,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 2,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 105,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 2,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 106,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 2,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 107,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 2,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 108,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 2,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 109,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -14,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -13,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -12,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -11,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -10,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -9,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -8,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -7,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -6,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -5,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -4,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -3,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -2,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": -1,
    "cz": 110,
    "objects": true,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 0,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 1,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 2,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 3,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 4,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 5,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 6,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 7,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 8,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 9,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 10,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 11,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 12,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 13,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 14,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 15,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 16,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 17,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 18,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 19,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 20,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 21,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 22,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 23,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 24,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   },
   {
    "cx": 25,
    "cz": 110,
    "objects": false,
-   "terrain": true
+   "terrain": true,
+   "buildings": 0
   }
  ]
 }

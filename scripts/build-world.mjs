@@ -177,7 +177,7 @@ for (const c of chunks.values()) {
     },
     underground: null,
   }));
-  entries.push({ cx: c.cx, cz: c.cz, objects: !!hasObj, terrain: !!c.terrain });
+  entries.push({ cx: c.cx, cz: c.cz, objects: !!hasObj, terrain: !!c.terrain, buildings: c.buildings.length });
 }
 entries.sort((a, b) => a.cz - b.cz || a.cx - b.cx);
 writeFileSync(`${cellDir}/tiles.json`, JSON.stringify({
