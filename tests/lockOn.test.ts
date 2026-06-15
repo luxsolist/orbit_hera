@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
-  lockOnWishH, lockOnVerticalTarget, bestAlignedInCone,
+  lockOnWishH, lockOnVerticalTarget, bestAlignedInCone, flyMoveDir,
   LOCK_FOLLOW_DIST, LOCK_BAND, LOCK_VERTICAL_DEAD,
 } from "../src/player/PlayerController";
 
@@ -191,6 +191,67 @@ describe("bestAlignedInCone — 조준 콘 안 최적 락온 후보", () => {
       { x: 0, y: 0, z: -10 }, // 전방(콘 밖)
     ];
     expect(bestAlignedInCone(O, up, pos, 30)).toBe(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+describe("flyMoveDir — 비행 이동 방향(락온 수평 자동 전진 통합)", () => {
+  // 정면(yaw=0, pitch=0) 기준: 전방 f3 = (0,0,-1), 우측 rightH = (1,0,0)
+  const F3 = { x: 0, y: 0, z: -1 };
+  const RIGHT = { x: 1, z: 0 };
+
+  it("수동 전진(fb=1) → 시선 전방, 락온 wish 무시(수동 우선)", () => {
+    const lock = { x: 1, z: 0 }; // 락온은 +x 접근이지만 수동 입력이 이김
+    const mv = flyMoveDir(1, 0, F3, RIGHT, lock);
+    expect(mv).toEqual({ x: 0, y: 0, z: -1 });
+  });
+
+  it("수동 스트레이프(lr=1) → 우측, 락온 wish 무시", () => {
+    const mv = flyMoveDir(0, 1, F3, RIGHT, { x: 0, z: -1 });
+    expect(mv).toEqual({ x: 1, y: 0, z: 0 });
+  });
+
+  it("핵심 회귀: 입력 없음 + 락온 → 락온 수평 wish로 자동 전진(이전엔 0이라 멈춤)", () => {
+    const lock = lockOnWishH(0, 0, 0, 100); // 먼 거리(+z 접근) 단위벡터
+    const mv = flyMoveDir(0, 0, F3, RIGHT, lock);
+    expect(mv.x).toBeCloseTo(lock.x, 6);
+    expect(mv.z).toBeCloseTo(lock.z, 6);
+    expect(mv.z).toBeGreaterThan(0);          // +z 방향 접근
+    expect(Math.hypot(mv.x, mv.z)).toBeGreaterThan(0); // 멈추지 않음
+  });
+
+  it("입력 없음 + 락온 wish가 대각선이어도 그대로 반영", () => {
+    const lock = lockOnWishH(0, 0, 60, 80); // 거리 100(>58 접근), 3:4 → (0.6, 0.8)
+    const mv = flyMoveDir(0, 0, F3, RIGHT, lock);
+    expect(mv.x).toBeCloseTo(0.6, 6);
+    expect(mv.z).toBeCloseTo(0.8, 6);
+    expect(mv.y).toBe(0); // 수직 성분 없음(수직 추적은 별도)
+  });
+
+  it("입력 없음 + 락온 없음 → 영벡터(호버, 자동 전진 안 함)", () => {
+    const mv = flyMoveDir(0, 0, F3, RIGHT, null);
+    expect(mv).toEqual({ x: 0, y: 0, z: 0 });
+  });
+
+  it("락온 밴드 안(wish=0) → 입력 없으면 영벡터(접근 정지/호버)", () => {
+    const lock = lockOnWishH(0, 0, 0, LOCK_FOLLOW_DIST); // 밴드 안 → {0,0}
+    const mv = flyMoveDir(0, 0, F3, RIGHT, lock);
+    expect(mv).toEqual({ x: 0, y: 0, z: 0 });
+  });
+
+  it("수동 입력이 하나라도 있으면(fb 또는 lr) 락온 무시 — 경계 보장", () => {
+    const lock = { x: 1, z: 1 };
+    expect(flyMoveDir(1, 0, F3, RIGHT, lock).x).toBe(0);   // fb만
+    expect(flyMoveDir(0, 1, F3, RIGHT, lock).z).toBe(0);   // lr만(우측 → z=0)
+    expect(flyMoveDir(-1, 0, F3, RIGHT, lock).z).toBe(1);  // 후진 → +z(락온 아님)
+  });
+
+  it("피치 포함 전방(위를 보고 전진) → 수직 성분 발생, 락온 미개입", () => {
+    // pitch +45°: f3 = (0, sin45, -cos45)
+    const f3 = { x: 0, y: Math.SQRT1_2, z: -Math.SQRT1_2 };
+    const mv = flyMoveDir(1, 0, f3, RIGHT, { x: 1, z: 0 });
+    expect(mv.y).toBeCloseTo(Math.SQRT1_2, 6); // 상승 성분
+    expect(mv.x).toBe(0);                        // 락온(+x) 무시
   });
 });
 

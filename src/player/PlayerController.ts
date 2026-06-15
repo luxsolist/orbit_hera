@@ -90,6 +90,25 @@ export function dirSpeedMult(mx: number, mz: number, fwd: { x: number; z: number
 }
 
 /**
+ * 비행 이동 방향(3D, 정규화 전) 계산 — 순수 함수.
+ * 수동 입력(fb 전후 / lr 좌우)이 있으면 시선 기준 3D 이동(f3=피치 포함 전방, rightH=수평 우측).
+ * 수동 입력이 전혀 없고 락온 wish(lockWishH)가 주어지면 수평 자동 전진(접근/후퇴) — 수직은 별도 처리.
+ * @returns 정규화 전 이동 벡터 {x,y,z}
+ */
+export function flyMoveDir(
+  fb: number, lr: number,
+  f3: { x: number; y: number; z: number },
+  rightH: { x: number; z: number },
+  lockWishH: { x: number; z: number } | null,
+): { x: number; y: number; z: number } {
+  let mvx = f3.x * fb + rightH.x * lr;
+  const mvy = f3.y * fb;
+  let mvz = f3.z * fb + rightH.z * lr;
+  if (fb === 0 && lr === 0 && lockWishH) { mvx = lockWishH.x; mvz = lockWishH.z; } // 입력 없음 + 락온 → 수평 추적
+  return { x: mvx, y: mvy, z: mvz };
+}
+
+/**
  * 수직 속도 1스텝 적분(보행 드론 점프/중력) — 상승: 정점까지 감속(riseGravity) /
  * 하강: 점점 빨라지다 종단속도(fallTerminal)로 일정 유지. 드론별 점프 스펙(j)을 받는다.
  */
@@ -309,10 +328,12 @@ export class PlayerController {
     } else if (move.mode === "fly") {
       // 시선 방향(피치 포함) 전후 + 수평 스트레이프 → 위/아래를 보고 전진하면 자연스럽게 상승/하강.
       const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
-      const f3x = -Math.sin(this.yaw) * cp, f3y = sp, f3z = -Math.cos(this.yaw) * cp;
+      const f3 = { x: -Math.sin(this.yaw) * cp, y: sp, z: -Math.cos(this.yaw) * cp };
       const fb = (this.input.isDown("KeyW") ? 1 : 0) - (this.input.isDown("KeyS") ? 1 : 0);
       const lr = (this.input.isDown("KeyD") ? 1 : 0) - (this.input.isDown("KeyA") ? 1 : 0);
-      let mvx = f3x * fb + rightH.x * lr, mvy = f3y * fb, mvz = f3z * fb + rightH.z * lr;
+      // 수동 입력 없음 + 락온 중 → 락온 수평 wish(접근/후퇴)로 자동 전진. 수직은 updateFlyVertical 담당.
+      const mv = flyMoveDir(fb, lr, f3, rightH, this._lockOnTarget ? wishH : null);
+      let mvx = mv.x, mvy = mv.y, mvz = mv.z;
       const ml = Math.hypot(mvx, mvy, mvz);
       if (ml > 1e-6) { mvx /= ml; mvy /= ml; mvz /= ml; } // 3D 단위 → 방향 무관 동일 최고속
       const spd = move.speed * this.input.moveScale * dirSpeedMult(mvx, mvz, fwdH); // 방향별 속도(후진 페널티)
