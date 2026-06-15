@@ -58,6 +58,8 @@ export interface DroneSpec {
   move: DroneMove;
   actions: ActionButton[]; // 모바일 동작 버튼(최대 2개)
   weapons: { primary: string; special: string }; // 무기 스펙 id 참조(public/weapons/<id>.json)
+  /** 락온 자동 추적 파라미터. 없으면 코드 기본값(followDist 50, band 8) 사용. */
+  lockOn?: { followDist: number; band: number };
 }
 
 /** 드론 카탈로그(선택 UI/관리용) 항목. */

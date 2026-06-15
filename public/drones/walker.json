@@ -24,5 +24,6 @@
     { "label": "JUMP", "key": "Space", "desc": "점프" },
     { "label": "DASH", "key": "ShiftLeft", "desc": "대시" }
   ],
-  "weapons": { "primary": "frequency-beam-heavy", "special": "special-barrage" }
+  "weapons": { "primary": "frequency-beam-heavy", "special": "special-barrage" },
+  "lockOn": { "followDist": 30, "band": 6 }
 }

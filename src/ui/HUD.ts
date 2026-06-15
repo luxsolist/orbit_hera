@@ -176,6 +176,11 @@ export class HUD {
     return el;
   }
 
+  /** 락온 상태를 크로스헤어에 반영. locked=true면 락온 링 표시, false면 해제. */
+  setLockOn(locked: boolean): void {
+    this.crosshair.classList.toggle("is-lockon", locked);
+  }
+
   flashFire() {
     this.crosshair.classList.add("is-firing");
     this.fireFlashTimer = 0.06;

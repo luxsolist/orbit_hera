@@ -82,6 +82,8 @@ export class MobileControls {
   private lookTouch: LookTouch | null = null;
   private activeMoveKeys = new Set<string>();
   private isPortrait = false;
+  // 조이스틱 더블탭 감지 — 탭 간 300ms 이내 연속 2회 = 락온 토글
+  private lastJoyTapTime = 0;
 
   constructor(private input: Input) {
     this.enabled = MobileControls.isTouchDevice();
@@ -330,6 +332,14 @@ export class MobileControls {
 
       const mid = window.innerWidth * 0.5;
       if (t.clientX < mid && this.moveTouch == null) {
+        // 더블탭(300ms 이내) → 락온 토글
+        const now = performance.now();
+        if (now - this.lastJoyTapTime < 300) {
+          this.input.lockOnPressed = true;
+          this.lastJoyTapTime = 0; // 트리플탭 방지
+        } else {
+          this.lastJoyTapTime = now;
+        }
         this.moveTouch = { id: t.identifier, startX: t.clientX, startY: t.clientY };
         this.showJoystickAt(t.clientX, t.clientY);
         handled = true;

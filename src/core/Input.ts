@@ -6,7 +6,7 @@ import { requestPointerLockSafely } from "./pointerLock";
  */
 // 게임 조작 키 — 락(플레이) 중 브라우저 기본동작(Space 스크롤 등) 차단해 전후좌우+상승/하강 동시 입력 보장.
 const GAME_KEYS = new Set([
-  "KeyW", "KeyA", "KeyS", "KeyD", "Space", "ShiftLeft", "ShiftRight", "KeyC",
+  "KeyW", "KeyA", "KeyS", "KeyD", "Space", "ShiftLeft", "ShiftRight", "KeyC", "Tab",
 ]);
 
 export class Input {
@@ -21,6 +21,8 @@ export class Input {
   fireHeld = false;
   /** 이번 프레임에 우클릭(특수 무기 발동)이 새로 눌렸는가 (엣지 트리거) */
   specialPressed = false;
+  /** 이번 프레임에 Tab(락온 토글)이 새로 눌렸는가 (엣지 트리거) */
+  lockOnPressed = false;
   /** 포인터 락(조준 모드) 활성 여부 */
   locked = false;
   /** 이동 속도 배율(0..1) — 모바일 조이스틱 조절량에 비례. 키보드는 항상 1(전속). */
@@ -30,9 +32,12 @@ export class Input {
 
   constructor(private canvas: HTMLCanvasElement) {
     window.addEventListener("keydown", (e) => {
-      // 락(플레이) 중엔 게임 키의 브라우저 기본동작(Space 스크롤 등) 차단 → WASD+Space/Shift 동시 입력 보장
+      // 락(플레이) 중엔 게임 키의 브라우저 기본동작(Space 스크롤·Tab 포커스이동 등) 차단
       if (this.locked && GAME_KEYS.has(e.code)) e.preventDefault();
-      if (!this.keys.has(e.code)) this.pressed.add(e.code); // OS 키 반복 제외
+      if (!this.keys.has(e.code)) {
+        this.pressed.add(e.code); // OS 키 반복 제외
+        if (this.locked && e.code === "Tab") this.lockOnPressed = true;
+      }
       this.keys.add(e.code);
     });
     window.addEventListener("keyup", (e) => {
@@ -127,6 +132,7 @@ export class Input {
   endFrame() {
     this.firePressed = false;
     this.specialPressed = false;
+    this.lockOnPressed = false;
     this.pressed.clear();
   }
 }

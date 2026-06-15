@@ -69,6 +69,16 @@ body.is-touch {
   border-color: var(--core-red);
   transform: translate(-50%, -50%) scale(1.25);
 }
+/* 락온 — 크로스헤어를 호박색 이중 링으로 강조 */
+.hud__crosshair.is-lockon {
+  border-color: var(--core-amber);
+  box-shadow: 0 0 0 2px var(--core-amber), 0 0 8px var(--core-amber);
+  transform: translate(-50%, -50%) scale(1.15);
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+}
+.hud__crosshair.is-lockon .crosshair__dot {
+  background: var(--core-amber);
+}
 .crosshair__dot {
   position: absolute;
   top: 50%;

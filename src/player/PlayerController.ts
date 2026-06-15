@@ -2,14 +2,81 @@ import * as THREE from "three";
 import type { Input } from "../core/Input";
 import type { GameWorld } from "../world/GameWorld";
 import type { DroneSpec, DroneMove, JumpSpec, FlyMove } from "./DroneSpec";
+import type { CoreEnemy } from "../enemies/CoreEnemy";
 
 const PITCH_LIMIT = Math.PI / 2 - 0.05;
 const MOVE_MAX_STEP = 0.8; // 수평 이동 1스텝 최대 거리 — 고속(대시) 터널링 방지 서브스테핑
 const ROLL_RATE = 6; // 비행 롤(뱅킹) 보간 응답속도
 const CEIL_FALL_RATE = 2.5; // 지표면 상대 천장이 낮아질 때(고지대→저지대) 부드럽게 하강하는 응답속도
+// 락온 자동 추적 파라미터
+export const LOCK_FOLLOW_DIST = 50;  // 유지할 목표 거리(m)
+export const LOCK_BAND = 8;          // 히스테리시스 밴드 반폭(m) — 이 안에선 수평 이동 없음(호버)
+export const LOCK_VERTICAL_DEAD = 5; // 수직 추적 데드밴드(m) — 이 안에선 수직 이동 없음
 export const HARD_CEILING = 5000; // 발밑 지면 위 최대 고도(m) — 어떤 기체도 지면 +5km 위로 못 올라감(지면 상대라 고지대 지형 8km↑ 에서도 작동, 절대 Y 아님)
 // 방향별 이동속도 배수(시선 기준) — 전진 1.0 / 옆 0.85 / 후진 0.6. 무한 백페달 카이팅 억제.
 const STRAFE_MULT = 0.85, BACK_MULT = 0.6;
+
+/**
+ * 락온 자동 추적 수평 wish 방향 계산 — 순수 함수.
+ * 플레이어(px,pz)에서 대상(tx,tz)까지 수평 거리 기반으로 접근/정지/후퇴 방향 반환.
+ * - dist > followDist + band → 접근(+방향 단위벡터)
+ * - dist < followDist - band → 후퇴(−방향 단위벡터)
+ * - 밴드 안 → 영벡터(정지, hVel 관성 감속)
+ * @returns {x, z} 단위벡터 또는 영벡터(정지)
+ */
+export function lockOnWishH(
+  px: number, pz: number,
+  tx: number, tz: number,
+  followDist = LOCK_FOLLOW_DIST,
+  band = LOCK_BAND,
+): { x: number; z: number } {
+  const dx = tx - px, dz = tz - pz;
+  const dist = Math.hypot(dx, dz);
+  if (dist < 1e-6) return { x: 0, z: 0 };
+  if (dist > followDist + band) return { x: dx / dist, z: dz / dist };       // 접근
+  if (dist < followDist - band) return { x: -dx / dist, z: -dz / dist };     // 후퇴
+  return { x: 0, z: 0 };                                                       // 밴드 내 정지
+}
+
+/**
+ * 락온 수직 추적 목표 속도 계산 — 순수 함수.
+ * 대상 y와 플레이어 y 차(dy)가 데드밴드 밖이면 비례 추력을 반환(최대 maxSpeed의 60%).
+ * 데드밴드 안이면 0(호버).
+ */
+export function lockOnVerticalTarget(
+  playerY: number, targetY: number,
+  maxSpeed: number,
+  dead = LOCK_VERTICAL_DEAD,
+): number {
+  const dy = targetY - playerY;
+  if (Math.abs(dy) <= dead) return 0;
+  return Math.sign(dy) * Math.min(maxSpeed * 0.6, Math.abs(dy) * 1.5);
+}
+
+/**
+ * 시선 방향 기준 조준 콘 안에서 가장 정렬된 후보 인덱스를 반환 — 순수 함수.
+ * EnemyManager.bestTargetInView 의 기하 코어. THREE 비의존({x,y,z}).
+ * @returns 후보 배열 인덱스, 없으면 -1
+ */
+export function bestAlignedInCone(
+  origin: { x: number; y: number; z: number },
+  aimDir: { x: number; y: number; z: number },
+  positions: ReadonlyArray<{ x: number; y: number; z: number }>,
+  coneDeg: number,
+): number {
+  const coneCos = Math.cos(coneDeg * (Math.PI / 180));
+  let bestIdx = -1, bestCos = -Infinity;
+  for (let i = 0; i < positions.length; i++) {
+    const p = positions[i];
+    const dx = p.x - origin.x, dy = p.y - origin.y, dz = p.z - origin.z;
+    const dist = Math.hypot(dx, dy, dz);
+    if (dist < 1e-3) continue;
+    const cos = (dx * aimDir.x + dy * aimDir.y + dz * aimDir.z) / dist;
+    if (cos < coneCos) continue;
+    if (cos > bestCos) { bestCos = cos; bestIdx = i; }
+  }
+  return bestIdx;
+}
 
 /**
  * 이동 방향(mx,mz)과 시선 수평벡터(fwd)의 정렬도로 속도 배수 산출 — 순수 함수.
@@ -113,6 +180,9 @@ export class PlayerController {
   private zoneCz = 0;
   private zoneRadius = 0; // 0 = 구역 제한 없음
 
+  // 락온 자동 추적
+  private _lockOnTarget: CoreEnemy | null = null;
+
   constructor(
     private input: Input,
     private world: GameWorld,
@@ -199,7 +269,25 @@ export class PlayerController {
     if (this.input.isDown("KeyS")) wishH.sub(fwdH);
     if (this.input.isDown("KeyD")) wishH.add(rightH);
     if (this.input.isDown("KeyA")) wishH.sub(rightH);
-    if (wishH.lengthSq() > 0) wishH.normalize();
+
+    // 락온 대상이 죽었으면 자동 해제
+    if (this._lockOnTarget && this._lockOnTarget.state !== "alive") {
+      this._lockOnTarget = null;
+    }
+
+    if (wishH.lengthSq() > 0) {
+      wishH.normalize(); // 수동 입력 우선 — 락온 추적 무시
+    } else if (this._lockOnTarget) {
+      // 수동 입력 없음 + 락온 중 → 드론 스펙 lockOn 파라미터 우선, 없으면 모듈 기본값
+      const lo = this.spec.lockOn;
+      const tp = this._lockOnTarget.group.position;
+      const w = lockOnWishH(
+        this.position.x, this.position.z, tp.x, tp.z,
+        lo?.followDist ?? LOCK_FOLLOW_DIST,
+        lo?.band ?? LOCK_BAND,
+      );
+      wishH.set(w.x, 0, w.z);
+    }
 
     // --- 회피 대시(평면 버스트) — 스펙에 dash 가 있는 드론만(보행). 비행은 dash 없음 → Shift=하강 ---
     const dash = this.spec.dash;
@@ -334,7 +422,11 @@ export class PlayerController {
     const up = this.input.isDown("Space") ? 1 : 0;
     // 하강: Shift(좌/우) + 대체키 C — Shift+WASD 키보드 고스팅(N-key rollover) 회피용
     const down = this.input.isDown("ShiftLeft") || this.input.isDown("ShiftRight") || this.input.isDown("KeyC") ? 1 : 0;
-    const target = lookClimb + (up - down) * move.verticalSpeed;
+    let target = lookClimb + (up - down) * move.verticalSpeed;
+    // 락온 + 수직 입력 없음 → 대상 수직 거리 유지(순수 함수 재사용)
+    if (up === 0 && down === 0 && this._lockOnTarget && this._lockOnTarget.state === "alive") {
+      target = lockOnVerticalTarget(this.position.y, this._lockOnTarget.group.position.y, move.verticalSpeed);
+    }
     const t = 1 - Math.exp(-move.accel * dt);
     this.velocityY += (target - this.velocityY) * t; // 목표 수직 속도로 가/감속(입력 없으면 0=호버)
     this.position.y += this.velocityY * dt;
@@ -415,6 +507,16 @@ export class PlayerController {
 
   clearZone() {
     this.zoneRadius = 0;
+  }
+
+  /** 락온 대상 설정/해제. null 이면 자동 추적 비활성. */
+  setLockOn(target: CoreEnemy | null): void {
+    this._lockOnTarget = target;
+  }
+
+  /** 현재 락온 대상(없으면 null). */
+  get lockOnTarget(): CoreEnemy | null {
+    return this._lockOnTarget;
   }
 
   /** 작전구역(월드 중심·반경) — 미니맵 경계 표시용. 구역 없으면 null. */

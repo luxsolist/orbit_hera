@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { CoreEnemy, chooseTarget, matchupMul, engageKeepDist, buildBoidGrid, recomputeSteer, CORE_GEO, SHELL_GEO, type Boid } from "./CoreEnemy";
 import type { GameWorld } from "../world/GameWorld";
 import type { PlayerController } from "../player/PlayerController";
+import { bestAlignedInCone } from "../player/PlayerController";
 import { DrainBeams } from "../fx/DrainBeams";
 import {
   DEFAULT_PLASMOID, rollAppearance, contactDamage, archetypeCount, pickSpawnType, pickBurstType, colorStrength01,
@@ -589,5 +590,19 @@ export class EnemyManager {
     this.burstMode = false;
     this.hasPrev = false; // 재입장 시 순간이동 변위로 인한 가짜 속도 스파이크 방지
     for (const v of this.vels) { v.x = v.y = v.z = 0; }
+  }
+
+  /**
+   * 락온 대상 선택 — 카메라 시선 방향(aimDir) 기준 조준 콘(coneDeg°) 안에서 가장 정렬된 살아있는 적.
+   * 락온 키를 눌렀을 때 Game 이 호출한다. 없으면 null.
+   */
+  bestTargetInView(origin: THREE.Vector3, aimDir: THREE.Vector3, coneDeg = 30): CoreEnemy | null {
+    const alive = this.enemies.filter((e) => e.state === "alive");
+    const positions = alive.map((e) => {
+      const p = e.group.position;
+      return { x: p.x, y: p.y, z: p.z };
+    });
+    const idx = bestAlignedInCone(origin, aimDir, positions, coneDeg);
+    return idx >= 0 ? alive[idx] : null;
   }
 }

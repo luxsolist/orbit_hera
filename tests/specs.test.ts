@@ -50,6 +50,15 @@ describe("드론 스펙(JSON)", () => {
 
       expect(existsSync(`${W}/${d.weapons.primary}.json`)).toBe(true); // dangling 참조 방지
       expect(existsSync(`${W}/${d.weapons.special}.json`)).toBe(true);
+
+      // lockOn 필드는 선택적이지만, 있으면 followDist > band > 0 이어야 함
+      if (d.lockOn != null) {
+        num(d.lockOn.followDist);
+        num(d.lockOn.band);
+        expect(d.lockOn.followDist).toBeGreaterThan(0);
+        expect(d.lockOn.band).toBeGreaterThan(0);
+        expect(d.lockOn.followDist).toBeGreaterThan(d.lockOn.band); // 밴드가 followDist보다 클 수 없음
+      }
     });
   }
 });

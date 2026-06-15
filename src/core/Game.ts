@@ -453,6 +453,28 @@ export class Game {
       s.beam.update(dt, this.input.fireHeld);
       s.special.update(dt, this.input.specialPressed);
       s.enemies.update(dt);
+
+      // 락온 토글(Tab / 조이스틱 더블탭)
+      if (this.input.lockOnPressed) {
+        const current = s.player.lockOnTarget;
+        if (current) {
+          // 이미 락온 → 해제
+          s.player.setLockOn(null);
+          this.hud.setLockOn(false);
+        } else {
+          // 락온 없음 → 조준 콘(30°) 안 최적 대상 선택
+          const target = s.enemies.bestTargetInView(
+            s.player.camera.position,
+            s.player.getAimDirection(),
+            30,
+          );
+          s.player.setLockOn(target);
+          this.hud.setLockOn(target !== null);
+        }
+      }
+      // 락온 대상이 사망하면 HUD도 즉시 해제
+      if (s.player.lockOnTarget === null) this.hud.setLockOn(false);
+
       s.brackets.update(s.player.camera, s.enemies.aliveMarkers); // 근거리 적에 코너 브래킷(TargetBrackets.RANGE)
       this.hud.setEnemyDirections(s.player.camera, s.enemies.aliveWorldPositions); // 조준선 둘레 방향 화살표
       this.hud.update(dt);
@@ -489,6 +511,9 @@ export class Game {
   private handlePlayerDeath() {
     const s = this.session;
     if (!s) return;
+    // 사망 시 락온 해제
+    s.player.setLockOn(null);
+    this.hud.setLockOn(false);
     if (s.instance.registerDeath()) {
       s.player.respawn(); // 스폰 복귀 + 짧은 무적. 적/미션은 그대로 진행
       this.hud.flashDamage();
