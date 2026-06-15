@@ -31,6 +31,9 @@
   ([tests/PlayerController.test.ts](../../tests/PlayerController.test.ts))
 - `spawnHeightAboveGround(move, eye)` — 스폰 시 지면 대비 높이: 비행 `min(spawnHeight, ceiling)`,
   보행 `eye`. ([tests/spawn.test.ts](../../tests/spawn.test.ts))
+- `applyDamage(hp, invuln, amount)` — 피해 적용 순수 전이: **머시 무적(`invuln>0`) 또는 사망(`hp≤0`)
+  중이면 무시**(`applied:false`, 상태 불변). 적용 시 hp를 0 하한으로 차감하고 `MERCY_INVULN(0.6s)` 무적 충전.
+  반환값 `{hp, invuln, applied}` — `applied`가 적 회복·HUD 피격 연출 게이트. (`MERCY_INVULN = 0.6` export)
 - `applyHeal(hp, maxHp, amount)` — 회복 순수 전이: **사망(hp≤0) 또는 비양수 회복이면 불변**(부활 불가),
   그 외엔 `min(maxHp, hp+amount)`로 가산(최대치 한도 클램프).
 
@@ -42,8 +45,8 @@
 5. 수평 속도 결정 — 보행/비행 분기(아래)
 6. **수평 적분 + 서브스테핑 충돌** — `MOVE_MAX_STEP=0.8m` 단위로 쪼개 `world.resolveCollision`
    적용(고속 대시 터널링 방지). 분리 법선으로 파고드는 속도만 제거 → 벽 슬라이딩
-7. 수직 — 보행 `updateWalkVertical(jump)` / 비행 `updateFlyVertical`, 직후 절대 하드리밋
-   `min(position.y, HARD_CEILING=5000)` 일괄 클램프(모든 기체 공통)
+7. 수직 — 보행 `updateWalkVertical(jump)` / 비행 `updateFlyVertical`, 직후 지면 상대 하드리밋
+   `min(position.y, heightAt(x,z) + HARD_CEILING + eye)` 일괄 클램프(모든 기체 공통)
 8. 주파수 재충전(`freqRegen`, 특수무기 발동 중엔 외부 억제)
 9. 카메라 동기화
 
@@ -62,14 +65,15 @@
 - **뱅킹 롤** — 좌우 스트레이프 시 카메라를 `rollDeg`까지 기울임(`ROLL_RATE=6` 보간).
 - 지면+`minAltitude`~천장(지면 대비) 사이로 고도 클램프. 대시 없음(`spec.dash` 미보유).
 
-### 상승 한도 — 지표면 상대 천장 + 절대 하드리밋
-- **공통 함수 `maxRiseAltitude(standY, rise)`** = `min(HARD_CEILING, standY + rise + eye)`(private).
+### 상승 한도 — 지표면 상대 천장 + 하드리밋
+- **공통 함수 `maxRiseAltitude(standY, rise, eye)`** = `standY + min(rise, HARD_CEILING) + eye`.
   보행 점프(`jump.maxRiseHeight`)와 비행 천장(`move.ceiling`)이 **둘 다 이 함수**를 거쳐 동일 코드로
   "최고 상승 고도(지표면 기준)"를 산출한다.
-- **`HARD_CEILING = 5000`(export)** — 지표 무관 절대 최고 고도(m). 향후 항공모함·보스급 콘텐츠도 못 넘는
-  글로벌 상한. 수직 적분 직후 `position.y`에 일괄 클램프(`min(position.y, HARD_CEILING)`).
+- **`HARD_CEILING = 5000`(export)** — **지면 상대** 최대 고도 상한(m). 발밑 지형(`heightAt`) + 5km 위로
+  어떤 기체도 못 올라간다. 에베레스트(지형 8km↑)에서도 지면 위로 정상 상승 가능(절대 Y 아님). 수직 적분
+  직후 `position.y = min(position.y, heightAt(x,z) + HARD_CEILING + eye)` 일괄 클램프.
 - **천장은 지면 대비(`standSurfaceY` 기준)** — 비행 `ceiling` 1km 기준, 1km 절벽 위에선 ~2km, 해수면 위에선 1km까지
-  도달(절대 `HARD_CEILING` 5km 클램프). 매 프레임 (x,z)에서 `standSurfaceY`를 재계산 → 수평 이동·동적 맵 지형에 자동 적응.
+  도달(`HARD_CEILING` 5km 상한 이내). 매 프레임 (x,z)에서 `standSurfaceY`를 재계산 → 수평 이동·동적 맵 지형에 자동 적응.
 - **하강 스무딩** — 고지대→저지대 이동으로 캡이 낮아질 땐 즉시 스냅하지 않고 `CEIL_FALL_RATE=2.5`로
   부드럽게 하강(0.5m 근접 시 안착).
 
@@ -78,8 +82,8 @@
 `isDead`(hp≤0), `reset()`(맵 스폰으로 위치/속도/자원 초기화). 스폰은 `placeAtSpawn()` —
 맵 `spawn{x,z,yaw}` + 드론별 높이.
 
-- **`takeDamage(amount): boolean`** — 0.6s 머시 무적/사망 중이면 무시하고 `false`, 적용 시 `true` 반환.
-  반환값으로 적 접촉 회복(`absorbEnergy`)·HUD 피격 연출을 게이트한다(무적 중 회복/연출 차단).
+- **`takeDamage(amount): boolean`** — 순수 `applyDamage`로 위임. 0.6s 머시 무적/사망 중이면 무시하고 `false`, 적용 시 `true` 반환.
+  반환값으로 적 접촉 회복·HUD 피격 연출을 게이트한다(무적 중 회복/연출 차단).
 
 - **`heal(amount)`** — 순수 `applyHeal`을 위임. **카이터/거머리 처치 시 흡수당했던 물질 HP 환수**
   (`EnemyManager.registerKill`의 `killRefund`)에 사용. 사망 시 부활 불가, `maxHp` 한도 클램프, 비양수 무시.

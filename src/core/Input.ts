@@ -1,3 +1,5 @@
+import { requestPointerLockSafely } from "./pointerLock";
+
 /**
  * 키보드 + Pointer Lock 마우스룩 입력 상태를 한 곳에서 관리.
  * - 키 상태는 프레임 간 누적(폴링), 마우스 이동량은 프레임마다 소비(consume).
@@ -80,8 +82,8 @@ export class Input {
     this.canvas.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
-  requestLock() {
-    this.canvas.requestPointerLock();
+  requestLock(): Promise<boolean> {
+    return requestPointerLockSafely(this.canvas);
   }
 
   isDown(code: string): boolean {

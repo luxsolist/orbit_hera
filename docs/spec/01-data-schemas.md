@@ -239,12 +239,40 @@ public/maps/<latCell>/<lonCell>/<cx>_<cz>.json   # 1024m 청크(결합):
 
 ---
 
+## 5. 미션 (`public/missions/`)
+
+### `index.json` — 미션 풀 (`MissionSpec[]`)
+
+배열의 각 항목이 하나의 미션. 출격 시 `pickMission`으로 랜덤 선택. 탐방 모드는 내장 `FREE_ROAM` 사용.
+
+| 필드 | 타입 | 의미 |
+| :--- | :--- | :--- |
+| `id` | string | 고유 식별자 |
+| `name` | string | 표시명 "국문 / ENGLISH" |
+| `kind` | `"eradicate"\|"defend-buildings"\|"defend-landmark"\|"survival"\|"free-roam"` | 미션 종류 |
+| `duration` | number | 제한시간(초). 0 = 무제한 |
+| `killTarget` | number | `eradicate` — 목표 처치 수 |
+| `maxBuildingLoss` | number | `defend-buildings` — 허용 건물 손실 채수 |
+| `maxLandmarkLoss` | number | `defend-landmark` — 허용 랜드마크 손실 수 |
+| `respawns` | number | 리스폰 허용 횟수. `<0` = 무한 |
+| `zoneRadius` | number | 작전구역 반경(m). 0 = 무제한 |
+| `spawnCount` | number | 일괄 스폰 수. 0 = 웨이브 모드 |
+| `spawnRadius` | number | 일괄 스폰 분산 반경(m, 시작 위치 기준) |
+| `totalHp` | number | 스폰 체력 총합 예산. 0 = 온도 롤 |
+| `bossHp` | number | 중간보스 1기 체력(`index 0`). 0 = 보스 없음 |
+
+소스 타입: [`src/game/mission.ts`](../../src/game/mission.ts) `MissionSpec`.
+풀 로드 실패 시 [`src/game/mission.ts`](../../src/game/mission.ts)의 내장 `DEFAULT_MISSIONS` 폴백(동치 보장).
+
+---
+
 ## 신규 콘텐츠 추가 (코드 수정 0)
 
 - **드론**: `public/drones/<id>.json` 작성 + `index.json`에 한 줄. `mode`로 보행/비행 자동 분기.
 - **무기**: `public/weapons/<id>.json` 작성 + `index.json`. 드론의 `weapons.{primary,special}`에서 참조.
 - **적**: `public/enemies/<id>.json` 작성 + `index.json`. 체력·색·크기·속도가 데이터로 산출된다.
 - **전장**: `public/maps/<id>.json` + `index.json`(lat/lon 포함). 특수 권역은 `precinct`로 기술.
+- **미션**: `public/missions/index.json`의 배열에 항목 추가. `DEFAULT_MISSIONS`와 동치를 유지.
 
 추가 즉시 [`tests/specs.test.ts`](../../tests/specs.test.ts)가 필수 필드·교차참조(dangling 무기/맵 id)·
 권역 스키마를 검증한다.

@@ -7,6 +7,7 @@
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { get } from "node:http";
+import zlib from "node:zlib";
 import { chromium } from "playwright";
 
 const PORT = 4178;
@@ -30,6 +31,113 @@ const preview = spawn("node_modules/.bin/vite", ["preview", "--port", String(POR
 
 const failures = [];
 const ok = (cond, msg) => { if (!cond) failures.push(msg); console.log(`  ${cond ? "✓" : "✗"} ${msg}`); };
+const VIEW_CLIP = { x: 490, y: 210, width: 300, height: 300 };
+
+function startErrorCapture(page) {
+  const errors = [];
+  page.removeAllListeners("console");
+  page.removeAllListeners("pageerror");
+  page.on("console", (e) => { if (e.type() === "error") errors.push(e.text()); });
+  page.on("pageerror", (e) => errors.push("PAGEERROR: " + e.message));
+  return errors;
+}
+
+async function captureClip(page, clip = VIEW_CLIP) {
+  for (let r = 0; r < 2; r++) {
+    try {
+      return await page.screenshot({ clip, timeout: 15000 });
+    } catch {
+      // 폰트대기/ReadPixels 플레이크 → 재시도
+    }
+  }
+  return null;
+}
+
+function decodePng(buf) {
+  let p = 8;
+  let width = 0, height = 0, bitDepth = 0, colorType = 0;
+  const idat = [];
+  while (p + 8 <= buf.length) {
+    const len = buf.readUInt32BE(p);
+    const type = buf.toString("ascii", p + 4, p + 8);
+    const data = buf.subarray(p + 8, p + 8 + len);
+    if (type === "IHDR") {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      bitDepth = data[8];
+      colorType = data[9];
+    } else if (type === "IDAT") {
+      idat.push(data);
+    } else if (type === "IEND") {
+      break;
+    }
+    p += 12 + len;
+  }
+  const ch = colorType === 2 ? 3 : colorType === 6 ? 4 : colorType === 0 ? 1 : 0;
+  if (bitDepth !== 8 || !ch) throw new Error(`unsupported PNG bitDepth=${bitDepth} colorType=${colorType}`);
+
+  const raw = zlib.inflateSync(Buffer.concat(idat));
+  const stride = width * ch;
+  const out = Buffer.alloc(height * stride);
+  let rp = 0;
+  for (let y = 0; y < height; y++) {
+    const f = raw[rp++];
+    for (let x = 0; x < stride; x++) {
+      const v = raw[rp++];
+      const a = x >= ch ? out[y * stride + x - ch] : 0;
+      const b = y > 0 ? out[(y - 1) * stride + x] : 0;
+      const c = x >= ch && y > 0 ? out[(y - 1) * stride + x - ch] : 0;
+      let r;
+      if (f === 0) r = v;
+      else if (f === 1) r = v + a;
+      else if (f === 2) r = v + b;
+      else if (f === 3) r = v + ((a + b) >> 1);
+      else if (f === 4) {
+        const pp = a + b - c, pa = Math.abs(pp - a), pb = Math.abs(pp - b), pc = Math.abs(pp - c);
+        r = v + (pa <= pb && pa <= pc ? a : pb <= pc ? b : c);
+      } else {
+        throw new Error("bad PNG filter " + f);
+      }
+      out[y * stride + x] = r & 0xff;
+    }
+  }
+  return { width, height, ch, data: out };
+}
+
+function analyzePngBytes(buf) {
+  const png = decodePng(buf);
+  let lumaSum = 0;
+  let saturationSum = 0;
+  let visible = 0;
+  const total = png.width * png.height;
+  for (let i = 0; i < total; i++) {
+    const off = i * png.ch;
+    const r = png.data[off];
+    const g = png.ch === 1 ? r : png.data[off + 1];
+    const b = png.ch === 1 ? r : png.data[off + 2];
+    const a = png.ch === 4 ? png.data[off + 3] : 255;
+    if (a < 8) continue;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    lumaSum += luma;
+    saturationSum += max - min;
+    if (luma > 12) visible++;
+  }
+  return {
+    avgLuma: lumaSum / Math.max(1, total),
+    avgSaturation: saturationSum / Math.max(1, total),
+    visibleRatio: visible / Math.max(1, total),
+  };
+}
+
+function isNonBlankCapture(buf) {
+  const a = analyzePngBytes(buf);
+  return {
+    ok: a.avgLuma > 18 && a.visibleRatio > 0.55 && a.avgSaturation > 4,
+    summary: `luma=${a.avgLuma.toFixed(1)} visible=${(a.visibleRatio * 100).toFixed(0)}% sat=${a.avgSaturation.toFixed(1)}`,
+  };
+}
 
 try {
   if (!(await waitServer())) throw new Error(`preview server not up on ${PORT}`);
@@ -39,9 +147,7 @@ try {
   // ─── 인트로 시네마틱: 버튼 재생 → 수 초 재생 → 예외/NaN 0, 캔버스 비-블랙, Esc 복귀 ───
   {
     console.log(`\n[intro] 시네마틱 재생`);
-    const errors = [];
-    page.on("console", (e) => { if (e.type() === "error") errors.push(e.text()); });
-    page.on("pageerror", (e) => errors.push("PAGEERROR: " + e.message));
+    const errors = startErrorCapture(page);
     await page.goto(BASE, { waitUntil: "load" });
     await page.locator("#storyBtn").waitFor({ state: "visible", timeout: 15000 });
     await page.locator("#storyBtn").click(); // 스토리 버튼 → 목록
@@ -54,15 +160,12 @@ try {
     });
     ok(introHidden, "인트로 재생 중(메뉴 오버레이 숨김)");
 
-    let size = 0;
-    for (let r = 0; r < 2 && size === 0; r++) {
-      try {
-        const buf = await page.screenshot({ clip: { x: 490, y: 210, width: 300, height: 300 }, timeout: 15000 });
-        size = buf.length;
-      } catch { /* 폰트대기 플레이크 → 재시도 */ }
+    const introCapture = await captureClip(page);
+    if (!introCapture) console.log("  · 인트로 캡처 불가(플레이크) — 블랙 검사 건너뜀");
+    else {
+      const view = isNonBlankCapture(introCapture);
+      ok(view.ok, `인트로 화면 비-블랙(${view.summary})`);
     }
-    if (size === 0) console.log("  · 인트로 캡처 불가(플레이크) — 블랙 검사 건너뜀");
-    else ok(size > 3000, `인트로 화면 비-블랙(PNG ${size}B > 3000)`);
 
     await page.keyboard.press("Escape"); // 즉시 종료 → 메뉴 복귀
     await page.locator(".zone-dot").first().waitFor({ state: "visible", timeout: 15000 });
@@ -73,11 +176,7 @@ try {
   for (let i = 0; i < maps.length; i++) {
     const m = maps[i];
     console.log(`\n[${m.id}] ${m.name}`);
-    const errors = [];
-    page.removeAllListeners("console");
-    page.removeAllListeners("pageerror");
-    page.on("console", (e) => { if (e.type() === "error") errors.push(e.text()); });
-    page.on("pageerror", (e) => errors.push("PAGEERROR: " + e.message));
+    const errors = startErrorCapture(page);
 
     await page.goto(BASE, { waitUntil: "load" });
     await page.waitForTimeout(800);
@@ -113,16 +212,13 @@ try {
     });
     ok(mmDrawn, "미니맵 렌더됨(프레임 루프 동작)");
 
-    // (4) 메인 WebGL 화면이 블랙/단색이 아님 — 중앙 클립 PNG 크기 휴리스틱
-    let size = 0;
-    for (let r = 0; r < 2 && size === 0; r++) {
-      try {
-        const buf = await page.screenshot({ clip: { x: 490, y: 210, width: 300, height: 300 }, timeout: 15000 });
-        size = buf.length;
-      } catch { /* 폰트대기 플레이크 → 재시도 */ }
+    // (4) 메인 WebGL 화면이 블랙/빈 화면이 아님 — PNG 압축 크기 대신 픽셀 통계로 검증
+    const mainCapture = await captureClip(page);
+    if (!mainCapture) console.log("  · WebGL 캡처 불가(플레이크) — 블랙 검사 건너뜀");
+    else {
+      const view = isNonBlankCapture(mainCapture);
+      ok(view.ok, `메인 화면 비-블랙(${view.summary})`);
     }
-    if (size === 0) console.log("  · WebGL 캡처 불가(플레이크) — 블랙 검사 건너뜀");
-    else ok(size > 3000, `메인 화면 비-블랙(PNG ${size}B > 3000)`);
 
     // (참고) 전투(자동빔 적중)는 포인터락이 필요한 playing 업데이트 게이트라 헤드리스에서 검증 불가 → 플레이테스트로 확인.
 

@@ -160,5 +160,5 @@ node scripts/build-maps.mjs <id> && node scripts/build-world.mjs <id> && node sc
 - **중앙선은 간선도로(폭≥16m: primary/secondary)에만** — 작은 도로까지 그리면 교차로에서 가는 노란선이 뒤엉킴. 굵기 0.4m.
 - **건물 footprint 기반 DEM 평탄화**([`dem.flattenUnderBuildings`](../../scripts/dem.mjs), build-world) — **건물 풋프린트 아래 격자 셀만** 형태학적 침식값(주변 지면)으로 치환, **산·공원 등 비건물 지형은 원본 보존**. terrarium DSM 의 건물 스파이크(도로 밑 솟음)는 제거하되 북한산(836m) 같은 봉우리는 안 깎임(도시+산 혼재 맵 = 서울). 전역 격자에 적용 후 `.flat.bin` 기록(청크 샘플·검증 동일, 멱등). raw DEM 은 `bareEarth:false`(전역 열림 끔, 봉우리 보존).
   - 순수 전역 산악(`dem.bareEarth` 열림+블러)은 건물 없는 맵 옵션으로 남김. 검증기는 자연 산악(`bareEarth:false`)에 `terrain-steep` 미적용(실제 급경사).
-- **고지대 지형 지원**: 비행 천장([`PlayerController.HARD_CEILING`](../../src/player/PlayerController.ts))은 절대 Y(5km)가 아니라 **발밑 지면 위 5km(지면 상대)** — 에베레스트(지형 8km↑)에서도 플레이어가 지면 위로 정상 위치/상승.
+- **고지대 지형 지원**: 비행 천장([`PlayerController.HARD_CEILING`](../../src/player/PlayerController.ts))은 **발밑 지면 위 5km(지면 상대, `heightAt(x,z) + 5000`)** — 에베레스트(지형 8km↑)에서도 플레이어가 지면 위로 정상 위치/상승(절대 Y 기준 아님).
 - **드레이프 높이(`sampleChunkHeight`)는 지형 메시 삼각분할(a,c,b)+(b,c,d)과 동일 보간**(bilinear 아님) — 렌더되는 삼각형 평면값과 정확히 일치해야 도로/면이 지형 위로 떠 비평면(새들) 셀에서도 초록이 솟지 않음. 레이캐스트 테스트로 회귀 가드.

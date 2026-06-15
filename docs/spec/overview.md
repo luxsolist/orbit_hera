@@ -139,20 +139,24 @@ src/
     Input.ts           # 키보드(동시입력)+Pointer Lock / 모바일 합성 락
     Sfx.ts             # 절차적 사운드  ·  Diagnostics.ts  # ?diag 온디바이스 진단
     math.ts            # 공용 순수 유틸(clamp/lerp/parseHexColor)
+  game/
+    GameInstance.ts    # 플레이타임 컨테이너(미션·타이머·리스폰·집계)
+    mission.ts         # 미션 명세/평가(순수) + 풀 선택 — 격멸/방어/사수/탐방
+    missions.ts        # 미션 풀 fetch(public/missions/index.json, 폴백 DEFAULT_MISSIONS)
   player/
-    PlayerController.ts # 보행/비행 FPS 컨트롤러(방향별 속도·비행 하한고도)
+    PlayerController.ts # 보행/비행 FPS 컨트롤러(방향별 속도·비행 하한고도·작전구역 클램프)
   weapons/
     FrequencyBeam.ts   # 빔(360°오토+수동, 듀얼 발사관)
     SpecialBarrage.ts / SpecialStream.ts  # 특수(콘 살포 / 오버드라이브)
     beamFx.ts(공유 발사·글로우) / DrainCycle.ts(소진형 상태기계) / targeting.ts
   enemies/
-    PlasmoidSpec.ts    # 온도(T)→색/체력/크기/속도/스폰분포/고도가중
-    CoreEnemy.ts / EnemyManager.ts        # 주입형 외형·3D 추적 / 스폰·웨이브
-  world/  World.ts, TerrainField.ts, CollisionWorld.ts, precinct.ts …
-  fx/     dissolve.ts, postprocessing.ts, damageNumbers.ts, TargetBrackets.ts
-  intro/  CinematicPlayer.ts, scenes.ts, helpers.ts, MenuBackground.ts
+    PlasmoidSpec.ts    # 온도(T)→색/체력/크기/속도/스폰분포/아키타입(고도가중 폐기)
+    CoreEnemy.ts / EnemyManager.ts        # 주입형 외형·3D 추적 / 스폰·웨이브·일괄스폰
+  world/  World.ts, StreamingWorld.ts, TerrainField.ts, CollisionWorld.ts, precinct.ts, BuildingCombat.ts …
+  fx/     dissolve.ts, postprocessing.ts, damageNumbers.ts, TargetBrackets.ts, DrainBeams.ts, EnergyWall.ts
+  intro/  CinematicPlayer.ts, scenes.ts, helpers.ts, CinematicAudio.ts, MenuBackground.ts
   ui/     MenuScreen.ts, HUD.ts, Minimap.ts, RearView.ts
-public/{drones,weapons,maps,enemies}/      # 런타임 데이터(JSON)
+public/{drones,weapons,maps,enemies,missions}/  # 런타임 데이터(JSON)
 ```
 
 ---

@@ -22,7 +22,7 @@
 `Game`이 `loadTerrainHeights`로 로드해 주입(없으면 절차적 폴백). 빌더별 역할은 [spec/03-maps.md](../spec/03-maps.md#렌더-구성-요소).
 
 외부 API: `heightAt(x,z)`(→ field 위임), `resolveCollision`/`topAt`(→ collision 위임),
-`queryMinimap(cx,cz,r,sink)`(미니맵용 근처 형상 방문), `update(px,pz)`(→ sky 태양 추종).
+`queryMinimap(cx,cz,r,sink)`(미니맵용 근처 형상 방문), `update(px,pz,py?)`(→ sky 태양 추종 + 스트리밍 청크 로드/언로드, `py`는 고도 기반 프리페치에 사용).
 
 ## StreamingWorld — 전지구 타일 월드(청크 스트리밍)
 
@@ -53,7 +53,7 @@
 
 ## SkyEnvironment — 대기/조명
 
-반구광 + 태양(평행광, 그림자 2048² · 프러스텀 ±420) + 보조광 + 하늘 배경/포그. `update(px,pz)`가
+반구광 + 태양(평행광, 그림자 2048² · 프러스텀 ±420) + 보조광 + 하늘 배경/포그. `update(px,pz,py?)`가
 태양과 그림자 프러스텀을 플레이어 위치로 평행이동(광원 방향 고정) → 큰 맵에서도 그림자 유지.
 
 ## 특수 권역 (Precinct)

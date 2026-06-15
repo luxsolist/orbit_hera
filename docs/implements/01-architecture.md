@@ -82,17 +82,19 @@ intro ─(컷씬 끝)─▶ menu ─(점 클릭→드론 선택)─▶ loading �
 
 ```
 selectMap(mapId, droneId, peaceful)       // peaceful=탐방 모드(적 미스폰, 재시작에도 유지)
-  fetchMap(mapId)                         // public/maps/<id>.json
+  fetchCatalog() → stream? StreamingWorld.create(lat,lon) : fetchMap + new World
   fetchDrone(droneId)                     // public/drones/<id>.json
   Promise.all[ fetchWeapon(primary),      // 드론의 weapons.{primary,special}
                fetchWeapon(special) ]
-  new World(scene, map)
+  fetchPlasmoid("plasmoid")               // 실패 시 DEFAULT_PLASMOID 폴백(전투 차단 방지)
   new PlayerController(input, world, aspect, drone)
   mobile.configure({ actions, fireLabel, specialLabel })   // 라벨은 무기 abbr
-  new EnemyManager / FrequencyBeam / SpecialBarrage / composer / RearView / Minimap
+  withAutoBoost(primarySpec, 2) if mobile  // 터치 보정: auto.range·assistConeDeg ×2(캐시 불변)
+  new EnemyManager / FrequencyBeam / SpecialBarrage·SpecialStream / composer / RearView / Minimap / TargetBrackets
   mission = peaceful ? FREE_ROAM : pickMission(fetchMissions(), random)  // 인스턴스마다 랜덤
   new GameInstance({ mission, players:[player], enemies, buildings })
-  session = { …, instance }; wireEvents(session); beginPlay()
+  wall = mission.zoneRadius>0 ? new EnergyWall(…) : undefined  // 작전구역 에너지 벽
+  session = { …, instance, wall }; wireEvents(session); beginPlay()
 ```
 
 각 fetch 실패는 `failToMenu(msg)`로 콘솔 기록 후 메뉴 복귀. 전장 1회 빌드 후 맵 변경은 reload.
@@ -106,7 +108,7 @@ selectMap(mapId, droneId, peaceful)       // peaceful=탐방 모드(적 미스�
 | Beam / Special | `onFired` | HUD 크로스헤어 점멸 |
 | Enemies | `onKill` | HUD 처치 수 |
 | Enemies | `onWaveChange(w)` | HUD 웨이브 |
-| Enemies | `onPlayerHit` | HUD 피격 비네팅 |
+| Enemies | `onPlayerHit` | HUD 피격 비네팅 + `sfx.sizzle()` 접촉음 |
 | BuildingCombat | `onDestroyed` | HUD 도시/랜드마크 손실 수 |
 | GameInstance | `onEnd(outcome)` | Game `endMission` — 결과 패널 |
 | MenuScreen | `onDeploy` / `onPlayIntro` | Game `selectMap` / `playIntro` |
@@ -120,10 +122,13 @@ intro: intro.update(dt) | 끝나면 showMenu()
 menu : menuBg.update(dt)                        // 배경 장면 렌더
 playing && locked && !mobile.isBlocked:
     player.update(dt)
-    world.update(px, pz)                        // 태양 그림자 추종
+    world.update(px, pz, py)                    // 태양 그림자 추종 + 청크 로드/언로드(스트리밍)
+    wall?.update(dt)                            // 작전구역 에너지 벽 애니메이션
     beam.update(dt, input.fireHeld)
     special.update(dt, input.specialPressed)
     enemies.update(dt)
+    brackets.update(camera, aliveMarkers)       // TargetBrackets — 적에 코너 브래킷
+    hud.setEnemyDirections(camera, positions)   // 조준선 둘레 방향 화살표
     hud.update + setHp/setFrequency/setSpecial
     instance.update(dt)                         // 미션 타이머/평가 → 종료 시 onEnd→endMission
     hud.updateMission(timeLeft, detail, respawns)

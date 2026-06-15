@@ -13,7 +13,7 @@
   도입(스키마 [../spec/01-data-schemas.md](../spec/01-data-schemas.md)).
 - **순수 코어 분리** — 적분/조준/스폰/투영 등 핵심 로직은 부수효과 없는 export 함수로 빼서 단위
   테스트로 고정(`stepVerticalVelocity`, `pursueStep`, `bestAlignedDir`, `archetypeCount`, `pickSpawnType`,
-  `chooseTarget`, `stickyMinIndex`, `kiterVelocity`, `applyHeal`, …).
+  `chooseTarget`, `stickyMinIndex`, `kiterVelocity`, `applyDamage`, `applyHeal`, …).
 - **콜백 배선** — 시스템 간 결합은 콜백(`onKill`, `onFired`, `onDeploy` …)으로 느슨하게.
 
 ## 문서 색인
@@ -48,7 +48,7 @@ src/
     missions.ts              미션 풀 fetch(public/missions/index.json, 폴백 DEFAULT_MISSIONS)
   player/
     DroneSpec.ts             드론 데이터 타입(보행/비행)
-    PlayerController.ts       데이터 구동 FPS 컨트롤러(보행/비행) + 순수 헬퍼(heal/applyHeal/respawn 포함)
+    PlayerController.ts       데이터 구동 FPS 컨트롤러(보행/비행) + 순수 헬퍼(applyDamage/applyHeal/respawn/작전구역 포함)
     drones.ts                드론 카탈로그/스펙 fetch
   weapons/
     WeaponSpec.ts            무기 타입(beam/barrage/stream) + damageForDistance/cooldownReadyFrac
