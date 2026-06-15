@@ -21,8 +21,10 @@ export class Input {
   fireHeld = false;
   /** 이번 프레임에 우클릭(특수 무기 발동)이 새로 눌렸는가 (엣지 트리거) */
   specialPressed = false;
-  /** 이번 프레임에 Tab(락온 토글)이 새로 눌렸는가 (엣지 트리거) */
+  /** 이번 프레임에 락온 토글(W 두번 연타)이 발생했는가 (엣지 트리거) */
   lockOnPressed = false;
+  /** 마지막 W 키다운 시각(ms) — 300ms 이내 재입력이면 더블탭(락온) 판정 */
+  private lastWTapTime = 0;
   /** 포인터 락(조준 모드) 활성 여부 */
   locked = false;
   /** 이동 속도 배율(0..1) — 모바일 조이스틱 조절량에 비례. 키보드는 항상 1(전속). */
@@ -36,7 +38,12 @@ export class Input {
       if (this.locked && GAME_KEYS.has(e.code)) e.preventDefault();
       if (!this.keys.has(e.code)) {
         this.pressed.add(e.code); // OS 키 반복 제외
-        if (this.locked && e.code === "Tab") this.lockOnPressed = true;
+        // 락온 토글 — W 두번 연타(300ms 이내). 전진 키 재사용이라 빠른 더블탭만 락온, 일반 전진엔 영향 없음.
+        if (this.locked && e.code === "KeyW") {
+          const now = performance.now();
+          if (now - this.lastWTapTime < 300) { this.lockOnPressed = true; this.lastWTapTime = 0; } // 트리플탭 방지
+          else this.lastWTapTime = now;
+        }
       }
       this.keys.add(e.code);
     });

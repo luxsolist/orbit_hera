@@ -1,16 +1,17 @@
 import * as THREE from "three";
 
 // 플라즈모이드 표식 — 카메라를 향하는 빌보드 "코너 브래킷"(네 모서리만 선).
-// 대상 크기에 맞춘 사각 프레임. HDR 붉은색으로 블룸에 걸려 가늘지만 밝게 빛난다(조준/식별 HUD). 거리 페이드.
+// 대상 크기에 맞춘 사각 프레임. 평소 노란색, 락온 대상만 붉은색. 선 굵기는 화면상 일정(거리 무관), 크기만 타깃에 맞춰 커짐.
 
 export const RANGE = 2000; // 이 거리(m) 이내의 적 모두 표시(2km)
 const CORNER_LEN = 0.45; // 변 절반(=1) 대비 코너 선 길이
-const MARGIN = 1.56; // 대상 반경 대비 프레임 반경(대상을 둘러쌈) — 기존 1.3 +20%
+const MARGIN = 2.2; // 대상 반경 대비 프레임 반경(대상을 둘러쌈) — 크게(기존 1.56 → 2.2)
 const MAX = 128; // 동시 표시 상한(풀) — 일괄 스폰(현 100) 전부 표식되도록 상향
 const BRACKET_OPACITY = 0.9; // 투명도(거리 무관 일정 — 거리별 색/농도 변화 없음)
 const THICK_SCREEN = 0.006; // 코너 선 절반 두께 = THICK_SCREEN·거리(m) → 화면상 두께 일정(타깃 크기·거리 무관). 클수록 두껍게
 const MAX_T_FRAC = 0.35; // 두께/프레임반경 상한 — 멀어 두께가 커지면 프레임에 최소 크기 부여(코너 뾰족점이 항상 바깥 향하도록)
-const BRACKET_COLOR = new THREE.Color(0xb00000); // 어두운 붉은색(블룸 임계 미만 — 솔리드)
+const BRACKET_COLOR = new THREE.Color(0xffd400); // 평소 — 노란색(솔리드)
+const LOCK_COLOR = new THREE.Color(0xff2030); // 락온 대상 — 붉은색
 
 /** 브래킷 투명도 — 거리 무관 일정(거리별 농도/색 변화 제거). 순수. */
 export function bracketOpacity(_dist: number): number {
@@ -106,8 +107,11 @@ export class TargetBrackets {
     }
   }
 
-  /** 매 프레임 — RANGE 이내 적에 브래킷(빌보드·대상 크기·거리 페이드) + 박스 위 체력 수치. */
-  update(camera: THREE.Camera, markers: readonly BracketMarker[]): void {
+  /**
+   * 매 프레임 — RANGE 이내 적에 브래킷(빌보드·대상 크기) + 박스 위 체력 수치.
+   * lockedPos 와 동일 참조(===)인 마커는 붉은색(락온 강조), 나머지는 노란색.
+   */
+  update(camera: THREE.Camera, markers: readonly BracketMarker[], lockedPos: THREE.Vector3 | null = null): void {
     camera.updateMatrixWorld();
     camera.matrixWorldInverse.copy(camera.matrixWorld).invert(); // 이 프레임 투영 정확성 보장
     camera.getWorldPosition(_camPos);
@@ -132,6 +136,7 @@ export class TargetBrackets {
       const t = bracketHalfThick(dist); // 절반 두께(화면상 일정)
       writeBracketGeo(b.geometry, bracketFrameRadius(m.radius, t), t); // 프레임=타깃 크기(두께 대비 최소 보장)
       this.mats[i].opacity = op;
+      this.mats[i].color.set(lockedPos !== null && m.pos === lockedPos ? LOCK_COLOR : BRACKET_COLOR); // 락온=빨강, 그 외 노랑
 
       // 체력 수치 — 박스 상단을 화면에 투영해 라벨 배치(카메라 뒤면 숨김)
       const label = this.acquireLabel(i);

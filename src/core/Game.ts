@@ -454,7 +454,7 @@ export class Game {
       s.special.update(dt, this.input.specialPressed);
       s.enemies.update(dt);
 
-      // 락온 토글(Tab / 조이스틱 더블탭)
+      // 락온 토글(W 두번 연타 / 조이스틱 더블탭)
       if (this.input.lockOnPressed) {
         const current = s.player.lockOnTarget;
         if (current) {
@@ -475,7 +475,8 @@ export class Game {
       // 락온 대상이 사망하면 HUD도 즉시 해제
       if (s.player.lockOnTarget === null) this.hud.setLockOn(false);
 
-      s.brackets.update(s.player.camera, s.enemies.aliveMarkers); // 근거리 적에 코너 브래킷(TargetBrackets.RANGE)
+      const lockedPos = s.player.lockOnTarget ? s.player.lockOnTarget.group.position : null;
+      s.brackets.update(s.player.camera, s.enemies.aliveMarkers, lockedPos); // 코너 브래킷(락온=빨강·그 외 노랑)
       this.hud.setEnemyDirections(s.player.camera, s.enemies.aliveWorldPositions); // 조준선 둘레 방향 화살표
       this.hud.update(dt);
 
