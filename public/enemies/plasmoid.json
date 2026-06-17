@@ -54,7 +54,7 @@
       "speed": 89,
       "speedMin": 67,
       "turnRateDeg": 100,
-      "keepDist": 60,
+      "keepDist": 35,
       "keepBand": 12,
       "strafeMix": 0,
       "orbitRef": 35,

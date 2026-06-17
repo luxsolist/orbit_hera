@@ -25,5 +25,5 @@
     { "label": "DASH", "key": "ShiftLeft", "desc": "대시" }
   ],
   "weapons": { "primary": "frequency-beam-heavy", "special": "special-barrage" },
-  "lockOn": { "followDist": 30, "band": 6 }
+  "lockOn": { "followDist": 60, "band": 12 }
 }

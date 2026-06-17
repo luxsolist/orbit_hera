@@ -20,5 +20,5 @@
     { "label": "▼", "key": "ShiftLeft", "desc": "하강" }
   ],
   "weapons": { "primary": "frequency-beam-light", "special": "special-overdrive" },
-  "lockOn": { "followDist": 50, "band": 8 }
+  "lockOn": { "followDist": 24, "band": 12 }
 }

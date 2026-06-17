@@ -37,7 +37,8 @@ const _m4 = new THREE.Matrix4(); // 인스턴스 행렬 임시
 const _col = new THREE.Color(); // 인스턴스 색 임시
 const AGGRO_PENALTY = 0.4; // 어그로 분산 — 이미 표적이 된 플레이어당 거리 점수 가산(한 명에게 몰빵 방지)
 const MISMATCH_PENALTY = 3.0; // 상성 불일치 표적 점수 배수(>1) — 적이 자기 상성 드론을 우선(MP 혼합팀). 절대 배제 아닌 가중
-const KITER_CLOSE_MUL = 0.45; // 카이터가 비상성(워커) 표적을 노릴 때 keepDist 축소 배수(60→27 ≈ 워커 자동조준 내)
+const KITER_CLOSE_MUL = 1.0; // 카이터가 비상성(워커) 표적을 노릴 때 keepDist 배수. 워커가 장거리 빔(AA)을 갖게 되어 좁힐 필요 없음 → 모기는 거리 유지, 워커가 지상에서 격추.
+const KITER_CROSS_FRAC = 0.5; // 매칭 완화 — 워커도 카이터(모기)를 끌어오는 교차 비율(워커 1인당 모기 물량 ×이 값). 워커=만능 AA, 플라이어는 공중 특화 유지(러셔는 워커 전용).
 
 const _centroid = new THREE.Vector3(); // 스폰 무게중심 임시(프레임당 동기 사용)
 const _btarget = new THREE.Vector3(); // 건물 표적 좌표 임시(프레임당 동기 사용)
@@ -257,7 +258,8 @@ export class EnemyManager {
     const cx = c.x, cz = c.z; // 구역 중심 = 스폰 무게중심(스냅샷 — 루프 중 갱신되는 임시 벡터 회피)
     const lim = Math.min(radius > 0 ? radius : 1500, this.world.bounds - 6);
     for (let i = 0; i < count; i++) {
-      const type = pickBurstType(walkers, flyers, Math.random);
+      // 매칭 완화 — 워커도 카이터(모기)를 일부 끌어오도록 플라이어 가중에 워커 교차분을 더한다(웨이브 스폰과 동일 의도).
+      const type = pickBurstType(walkers, flyers + walkers * KITER_CROSS_FRAC, Math.random);
       const ang = Math.random() * Math.PI * 2;
       const rr = Math.sqrt(Math.random()) * lim; // 원판 균등 분포(√ 보정)
       this.spawnOne(type, cx + Math.cos(ang) * rr, cz + Math.sin(ang) * rr, BURST_ROLL_WAVE, hps[i]);
@@ -275,7 +277,11 @@ export class EnemyManager {
     }
     const a = this.spec.archetypes;
     this.pendingRusher = archetypeCount(a.rusher, this.wave, walkers);
-    this.pendingKiter = archetypeCount(a.kiter, this.wave, flyers);
+    // 매칭 완화 — 카이터(모기) 물량 = 플라이어 정수 비례 + 워커 교차분(워커도 공중 원거리 적에 대응).
+    // walkers=0이면 교차분 0 → 종전(플라이어 비례)과 동치. 러셔는 워커 전용 유지(플라이어=공중 특화).
+    this.pendingKiter =
+      archetypeCount(a.kiter, this.wave, flyers) +
+      Math.round(archetypeCount(a.kiter, this.wave, walkers) * KITER_CROSS_FRAC);
     this.spawnTimer = 0;
     this.onWaveChange?.(this.wave);
   }

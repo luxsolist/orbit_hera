@@ -259,16 +259,16 @@ describe("flyMoveDir — 비행 이동 방향(락온 수평 자동 전진 통합
 describe("드론 스펙 lockOn 값 — JSON 수치 검증", () => {
   const load = (p: string) => JSON.parse(readFileSync(p, "utf8"));
 
-  it("walker: followDist=30, band=6 (중주파 빔 refDist=30과 일치)", () => {
+  it("walker: followDist=60, band=12 (AA 스탠드오프 — maxMult 컷오프 75m 안 유지창 48–72m)", () => {
     const d = load("public/drones/walker.json");
-    expect(d.lockOn?.followDist).toBe(30);
-    expect(d.lockOn?.band).toBe(6);
+    expect(d.lockOn?.followDist).toBe(60);
+    expect(d.lockOn?.band).toBe(12);
   });
 
-  it("flyer: followDist=50, band=8 (경주파 빔 minMult 유지 구간 활용)", () => {
+  it("flyer: followDist=24, band=12 (경주파 빔 refDist=24 정합 + 정지거리 v/accel≈12m 흡수)", () => {
     const d = load("public/drones/flyer.json");
-    expect(d.lockOn?.followDist).toBe(50);
-    expect(d.lockOn?.band).toBe(8);
+    expect(d.lockOn?.followDist).toBe(24);
+    expect(d.lockOn?.band).toBe(12);
   });
 
   it("walker lockOnWishH: 30m 거리 → 밴드 안(정지)", () => {
@@ -278,19 +278,19 @@ describe("드론 스펙 lockOn 값 — JSON 수치 검증", () => {
     expect(w.z).toBe(0);
   });
 
-  it("walker lockOnWishH: 37m → 접근(30+6+1=37 > followDist+band=36)", () => {
+  it("walker lockOnWishH: 73m → 접근(60+12+1=73 > followDist+band=72)", () => {
     const { followDist, band } = load("public/drones/walker.json").lockOn;
     const w = lockOnWishH(0, 0, 0, followDist + band + 1, followDist, band);
     expect(Math.hypot(w.x, w.z)).toBeCloseTo(1, 5); // 접근 단위벡터
   });
 
-  it("walker lockOnWishH: 23m → 후퇴(30-6-1=23 < followDist-band=24)", () => {
+  it("walker lockOnWishH: 47m → 후퇴(60-12-1=47 < followDist-band=48)", () => {
     const { followDist, band } = load("public/drones/walker.json").lockOn;
     const w = lockOnWishH(0, 0, 0, followDist - band - 1, followDist, band);
     expect(Math.hypot(w.x, w.z)).toBeCloseTo(1, 5); // 후퇴 단위벡터
   });
 
-  it("flyer lockOnWishH: 59m → 접근(50+8+1=59 > followDist+band=58)", () => {
+  it("flyer lockOnWishH: 37m → 접근(24+12+1=37 > followDist+band=36)", () => {
     const { followDist, band } = load("public/drones/flyer.json").lockOn;
     const w = lockOnWishH(0, 0, 0, followDist + band + 1, followDist, band);
     expect(Math.hypot(w.x, w.z)).toBeCloseTo(1, 5);

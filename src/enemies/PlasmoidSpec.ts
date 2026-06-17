@@ -318,7 +318,7 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
     kiter: {
       name: "모기 플라즈모이드 / SKEETER",
       spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, killRefund: 8, speed: 89, speedMin: 67,
-      turnRateDeg: 100, keepDist: 60, keepBand: 12, strafeMix: 0, orbitRef: 35, evadeGain: 0.85,
+      turnRateDeg: 100, keepDist: 35, keepBand: 12, strafeMix: 0, orbitRef: 35, evadeGain: 0.85,
       attackRange: 95, drainDamage: 1.4, drainInterval: 1.5,
     },
   },
