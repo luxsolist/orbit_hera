@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { coneTargets, bestAlignedDir, nearestInCone } from "../src/weapons/targeting";
+import { coneTargets, bestAlignedDir, nearestInCone, nearestVisibleInCone } from "../src/weapons/targeting";
 
 // 에임 어시스트·자동발사·일제사격이 공유하는 콘 조준 선별의 순수 로직 가드.
 
@@ -67,5 +67,52 @@ describe("nearestInCone — 거리순 N개", () => {
       { x: 10, y: 0, z: 0 }, // 콘 밖
     ];
     expect(nearestInCone(O, FWD, ps, 100, CONE_45, 5)).toHaveLength(1);
+  });
+});
+
+describe("nearestVisibleInCone — 시야 확보된 최근접(자동발사 건물 차폐)", () => {
+  const ALL_VISIBLE = () => false; // 아무도 안 가림
+  const FWD360 = -1; // coneCos=-1 = 360°
+
+  it("아무도 안 가리면 최근접 적 반환", () => {
+    const ps = [
+      { x: 0, y: 0, z: -30 },
+      { x: 0, y: 0, z: -10 }, // 최근접
+      { x: 0, y: 0, z: -20 },
+    ];
+    const t = nearestVisibleInCone(O, FWD, ps, 100, CONE_45, ALL_VISIBLE);
+    expect(t?.index).toBe(1);
+  });
+
+  it("최근접이 건물에 가리면 그 다음으로 가까운 시야 확보 적 선택", () => {
+    const ps = [
+      { x: 0, y: 0, z: -10 }, // 최근접이지만 가림
+      { x: 0, y: 0, z: -20 }, // 시야 확보
+      { x: 0, y: 0, z: -30 },
+    ];
+    const t = nearestVisibleInCone(O, FWD, ps, 100, CONE_45, (i) => i === 0);
+    expect(t?.index).toBe(1);
+  });
+
+  it("모두 가리면 null (자동발사 안 함)", () => {
+    const ps = [
+      { x: 0, y: 0, z: -10 },
+      { x: 0, y: 0, z: -20 },
+    ];
+    expect(nearestVisibleInCone(O, FWD, ps, 100, CONE_45, () => true)).toBeNull();
+  });
+
+  it("coneCos=-1(넓은 콘): 좁은 콘 밖의 비스듬한 적도 후보, 가까운 가린 적은 건너뜀", () => {
+    const ps = [
+      { x: 0, y: 0, z: -8 },    // 정면 8m, 가림
+      { x: 17, y: 0, z: -10 },  // ~60° 비스듬(cos≈0.51, CONE_45 밖이나 coneCos=-1 안), 시야 확보
+    ];
+    const t = nearestVisibleInCone(O, FWD, ps, 100, FWD360, (i) => i === 0);
+    expect(t?.index).toBe(1);
+  });
+
+  it("사거리 밖 적은 가림 여부와 무관하게 제외", () => {
+    const ps = [{ x: 0, y: 0, z: -500 }]; // 사거리 100 밖
+    expect(nearestVisibleInCone(O, FWD, ps, 100, FWD360, ALL_VISIBLE)).toBeNull();
   });
 });

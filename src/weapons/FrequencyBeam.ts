@@ -6,7 +6,7 @@ import { DamageNumbers } from "../fx/damageNumbers";
 import type { BeamSpec } from "./WeaponSpec";
 import { makeGlowTexture, BeamPool, fireEmitters, type BeamStyle } from "./beamFx";
 import { parseHexColor } from "../core/math";
-import { bestAlignedDir, nearestInCone } from "./targeting";
+import { bestAlignedDir, nearestVisibleInCone } from "./targeting";
 
 // 적중 임팩트 FX(프레젠테이션 — 무기 밸런스와 무관해 코드 고정. 데미지/사거리/연사 등 전투
 // 수치는 모두 BeamSpec(JSON)에서 주입된다.)
@@ -243,10 +243,17 @@ export class FrequencyBeam {
     return dir ? new THREE.Vector3(dir.x, dir.y, dir.z) : null;
   }
 
-  /** 오토파이어 조준 — 사거리(spec.auto.range) 안 360° 최근접 적 방향(콘 무시). 없으면 null. */
+  /**
+   * 오토파이어 조준 — 사거리(spec.auto.range) 안 360°에서 **시야가 확보된**(건물 비차폐) 최근접 적 방향.
+   * 건물 뒤 적은 자동발사 대상에서 제외(허공 발사 방지). 모두 가려져 있으면 null.
+   */
   private acquireAutoFireTarget(origin: THREE.Vector3): THREE.Vector3 | null {
     const aim = this.player.getAimDirection(); // 콘=360°(cos -1)이라 포함 판정엔 무관, 방향은 origin→적
-    const t = nearestInCone(origin, aim, this.enemies.aliveWorldPositions, this.spec.auto.range, -1, 1)[0];
+    const positions = this.enemies.aliveWorldPositions;
+    const world = this.player.gameWorld;
+    const t = nearestVisibleInCone(origin, aim, positions, this.spec.auto.range, -1, (i) =>
+      world.segmentHitsBuilding(origin.x, origin.y, origin.z, positions[i].x, positions[i].y, positions[i].z) <= 1
+    );
     return t ? new THREE.Vector3(t.dir.x, t.dir.y, t.dir.z) : null;
   }
 }

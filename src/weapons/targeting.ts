@@ -74,3 +74,21 @@ export function nearestInCone(
     .sort((a, b) => a.dist - b.dist)
     .slice(0, max);
 }
+
+/**
+ * 콘+사거리 안에서 **시야가 확보된**(건물 비차폐) 가장 가까운 단일 타깃. 없으면 null.
+ * blocked(index)=true 인 후보는 건너뛴다 → 건물 뒤 적은 자동발사 대상이 되지 않음(허공 발사 방지).
+ * 가까운 순으로 검사하므로 시야 확보된 최근접 적을 반환.
+ */
+export function nearestVisibleInCone(
+  origin: Vec3,
+  aimDir: Vec3,
+  positions: ReadonlyArray<Vec3>,
+  range: number,
+  coneCos: number,
+  blocked: (index: number) => boolean
+): ConeTarget | null {
+  const cands = coneTargets(origin, aimDir, positions, range, coneCos).sort((a, b) => a.dist - b.dist);
+  for (const t of cands) if (!blocked(t.index)) return t;
+  return null;
+}
