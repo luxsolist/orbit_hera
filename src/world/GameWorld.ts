@@ -31,6 +31,11 @@ export interface GameWorld {
   topAt(x: number, z: number): number;
   /** 원(반경 radius, 발높이 feetY)을 장애물 밖으로 밀어낸 위치. */
   resolveCollision(x: number, z: number, radius: number, feetY: number): { x: number; z: number };
+  /**
+   * 시야 차폐 — 3D 선분 (sx,sy,sz)→(ex,ey,ez) 이 건물/바위 솔리드에 처음 막히는 지점의 매개변수 t∈[0,1].
+   * 막힘 없으면 Infinity. 빔/드레인의 건물 관통 차단(선분이 옥상 위로 지나가면 통과)에 사용.
+   */
+  segmentHitsBuilding(sx: number, sy: number, sz: number, ex: number, ey: number, ez: number): number;
   /** 시야 반경 내 지형/건물/콜라이더를 (내부 노출 없이) 싱크로 방문. */
   queryMinimap(cx: number, cz: number, radius: number, sink: MinimapSink): void;
   /** 매 프레임 — 그림자 추종 + (스트리밍) 청크 로드/언로드. y=현재 고도(스트리밍 LOD용, 모놀리식은 무시). */

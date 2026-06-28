@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { EnemyManager } from "../enemies/EnemyManager";
 import type { DamageNumbers } from "../fx/damageNumbers";
+import type { GameWorld } from "../world/GameWorld";
 import { damageForDistance, type DamageFalloff } from "./WeaponSpec";
 
 // 무기 공용 발광 빔 FX — 글로우 텍스처 + 빔(실린더)·임팩트 글로우 스프라이트 + 발사관 일제 사격.
@@ -108,6 +109,7 @@ export interface EmitterContext {
   enemies: EnemyManager;
   damageNumbers: DamageNumbers;
   beamPool: BeamPool;
+  world: GameWorld; // 건물 시야 차폐(빔이 건물을 관통 못하게) 질의
 }
 
 /** 한 번의 발사 명세 — 발사관 오프셋마다 레이캐스트·타격·빔. onHit 으로 무기별 추가 FX(임팩트 등) 주입. */
@@ -132,13 +134,24 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
   // (1) 명중 판정 — 중앙 단일 레이(반드시 조준 대상을 관통 → 작은/쪼그라든 적도 적중)
   ctx.raycaster.set(shot.origin, shot.dir);
   const hit = ctx.raycaster.intersectObjects(ctx.enemies.hitMeshes, false)[0];
-  const endPoint = beamEnd(hit, shot.origin, shot.dir, shot.range);
-  const enemy = hit && ctx.enemies.enemyFromHit(hit); // 셸 InstancedMesh → instanceId → 적
-  if (enemy) {
-    const dmg = emitterDamage(hit.distance, shot.baseDamage, n, shot.falloff); // 발사관 수만큼 합산
-    ctx.damageNumbers.spawn(endPoint, dmg);
-    shot.onHit?.(endPoint, hit, shot.dir);
-    if (enemy.applyFrequencyHit(dmg)) ctx.enemies.registerKill(enemy);
+  const enemyDist = hit ? hit.distance : Infinity;
+  // 건물 시야 차폐 — 사거리 끝까지 선분으로 검사. 건물이 적보다 가까우면 빔이 막혀 적중 무효(관통 차단).
+  const o = shot.origin, d = shot.dir, R = shot.range;
+  const bt = ctx.world.segmentHitsBuilding(o.x, o.y, o.z, o.x + d.x * R, o.y + d.y * R, o.z + d.z * R);
+  const buildDist = bt <= 1 ? bt * R : Infinity;
+  let endPoint: THREE.Vector3;
+  if (buildDist < enemyDist) {
+    // 건물에 막힘 — 빔은 건물 표면에서 멈추고 뒤 적은 피해 없음
+    endPoint = o.clone().addScaledVector(d, buildDist);
+  } else {
+    endPoint = beamEnd(hit, o, d, R);
+    const enemy = hit && ctx.enemies.enemyFromHit(hit); // 셸 InstancedMesh → instanceId → 적
+    if (enemy) {
+      const dmg = emitterDamage(hit!.distance, shot.baseDamage, n, shot.falloff); // 발사관 수만큼 합산
+      ctx.damageNumbers.spawn(endPoint, dmg);
+      shot.onHit?.(endPoint, hit!, shot.dir);
+      if (enemy.applyFrequencyHit(dmg)) ctx.enemies.registerKill(enemy);
+    }
   }
   // (2) 시각 — 발사관마다 좌우 오프셋에서 적중점으로 수렴하는 빔
   const side = sideVector(shot.dir, _side);

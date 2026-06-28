@@ -286,6 +286,80 @@ export class CollisionWorld {
     return best;
   }
 
+  /**
+   * 시야 차폐 — 3D 선분 (sx,sy,sz)→(ex,ey,ez) 이 솔리드(건물 OBB/오목 삼각형/담장/바위, 지면~옥상 top)에
+   * 처음 막히는 지점의 매개변수 t∈[0,1] 을 반환(막힘 없으면 Infinity). 빔이 옥상(top) 위로 지나가면 통과,
+   * 파괴되어 개방된(top=-Infinity) 건물은 무시. 빔/드레인의 건물 관통 차단에 사용.
+   */
+  segmentBlocked(sx: number, sy: number, sz: number, ex: number, ey: number, ez: number): number {
+    const dx = ex - sx, dy = ey - sy, dz = ez - sz;
+    let best = Infinity;
+    // XZ 구간 [t0,t1](선분 내부 = footprint 내부)에서 y(t)<top 이 되는 첫 t 를 best 로 갱신.
+    const consider = (t0: number, t1: number, top: number): void => {
+      if (t0 < 0) t0 = 0;
+      if (t1 > 1) t1 = 1;
+      if (t1 < t0) return;
+      const y0 = sy + dy * t0;
+      let tHit: number;
+      if (y0 < top) tHit = t0;             // 진입 시점에 이미 옥상 아래 → 즉시 차폐
+      else if (dy >= 0) return;            // 상승 중 + 이미 옥상 위 → 계속 위 → 통과
+      else {                               // 하강 중 → 옥상 아래로 내려가는 시점
+        tHit = t0 + (top - y0) / dy;
+        if (tHit > t1) return;
+      }
+      if (tHit < best) best = tHit;
+    };
+    // 건물 OBB(선분-OBB: 로컬 프레임 슬랩)
+    this.boxGrid.querySegment(sx, sz, ex, ez, (b) => {
+      const rx = sx - b.cx, rz = sz - b.cz;
+      const lu = rx * b.ux + rz * b.uz, lv = -rx * b.uz + rz * b.ux;
+      const du = dx * b.ux + dz * b.uz, dv = -dx * b.uz + dz * b.ux;
+      let t0 = -Infinity, t1 = Infinity;
+      if (Math.abs(du) < 1e-9) { if (lu < -b.hu || lu > b.hu) return; }
+      else { let a = (-b.hu - lu) / du, c = (b.hu - lu) / du; if (a > c) { const s = a; a = c; c = s; } t0 = Math.max(t0, a); t1 = Math.min(t1, c); }
+      if (Math.abs(dv) < 1e-9) { if (lv < -b.hv || lv > b.hv) return; }
+      else { let a = (-b.hv - lv) / dv, c = (b.hv - lv) / dv; if (a > c) { const s = a; a = c; c = s; } t0 = Math.max(t0, a); t1 = Math.min(t1, c); }
+      if (t0 <= t1) consider(t0, t1, b.top);
+    });
+    // 오목 건물 삼각형(선분-삼각형: 3변 반평면 클리핑)
+    this.triGrid.querySegment(sx, sz, ex, ez, (t) => {
+      let t0 = 0, t1 = 1;
+      const vx = [t.ax, t.bx, t.cx], vz = [t.az, t.bz, t.cz];
+      for (let k = 0; k < 3; k++) {
+        const px = vx[k], pz = vz[k], qx = vx[(k + 1) % 3], qz = vz[(k + 1) % 3];
+        let nx = -(qz - pz), nz = qx - px;                       // 변에 수직
+        if (nx * (t.mx - px) + nz * (t.mz - pz) < 0) { nx = -nx; nz = -nz; } // 내부(무게중심) 향하게
+        const c = nx * (sx - px) + nz * (sz - pz), s = nx * dx + nz * dz;    // f(t)=c+s·t ≥ 0 = 내부
+        if (Math.abs(s) < 1e-12) { if (c < 0) { t0 = 1; t1 = 0; break; } }
+        else { const tc = -c / s; if (s > 0) t0 = Math.max(t0, tc); else t1 = Math.min(t1, tc); }
+        if (t0 > t1) break;
+      }
+      if (t0 <= t1) consider(t0, t1, t.top);
+    });
+    // 담장 박스(선분-AABB 슬랩) — 개수 적음
+    for (const w of this.walls) {
+      let t0 = -Infinity, t1 = Infinity;
+      if (Math.abs(dx) < 1e-9) { if (sx < w.x0 || sx > w.x1) continue; }
+      else { let a = (w.x0 - sx) / dx, c = (w.x1 - sx) / dx; if (a > c) { const s = a; a = c; c = s; } t0 = Math.max(t0, a); t1 = Math.min(t1, c); }
+      if (Math.abs(dz) < 1e-9) { if (sz < w.z0 || sz > w.z1) continue; }
+      else { let a = (w.z0 - sz) / dz, c = (w.z1 - sz) / dz; if (a > c) { const s = a; a = c; c = s; } t0 = Math.max(t0, a); t1 = Math.min(t1, c); }
+      if (t0 <= t1) consider(t0, t1, w.top);
+    }
+    // 원기둥(바위/전각/동상)(선분-원: 2차방정식) — 개수 적음
+    const A = dx * dx + dz * dz;
+    if (A > 1e-9) {
+      for (const cc of this.circles) {
+        const fx = sx - cc.x, fz = sz - cc.z;
+        const B = 2 * (fx * dx + fz * dz), C = fx * fx + fz * fz - cc.radius * cc.radius;
+        const disc = B * B - 4 * A * C;
+        if (disc < 0) continue;
+        const sq = Math.sqrt(disc);
+        consider((-B - sq) / (2 * A), (-B + sq) / (2 * A), cc.top);
+      }
+    }
+    return best;
+  }
+
   // ─────────────── 질의(표현: 미니맵 등, 할당 회피) ───────────────
 
   /** 영역 근처 건물 OBB 의 4모서리(월드 [x0,z0,x1,z1,x2,z2,x3,z3])를 방문. */

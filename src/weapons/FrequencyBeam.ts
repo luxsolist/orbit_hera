@@ -216,7 +216,7 @@ export class FrequencyBeam {
     if (!this.player.spendFrequency(cost)) return; // 주파수 부족(볼리당 1회만 소모)
     this.sfx?.beam(); // 발사음(수동/자동 동일) — 실제 발사된 경우에만
     fireEmitters(
-      { raycaster: this.raycaster, enemies: this.enemies, damageNumbers: this.damageNumbers, beamPool: this.beamPool },
+      { raycaster: this.raycaster, enemies: this.enemies, damageNumbers: this.damageNumbers, beamPool: this.beamPool, world: this.player.gameWorld },
       {
         origin: this.player.camera.position,
         dir,

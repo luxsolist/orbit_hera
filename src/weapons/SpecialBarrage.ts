@@ -85,10 +85,17 @@ export class SpecialBarrage implements SpecialWeapon {
     }
 
     const muzzle = muzzleFrom(origin, aimDir);
+    const world = this.player.gameWorld;
 
     for (const t of targets) {
       // 콘 표적이 곧 적 — 셸 인스턴싱으로 개체별 메시가 없어 표적 위치로 직접 적용(레이캐스트 불요).
       const endPoint = origin.clone().addScaledVector(t.dir, t.dist);
+      // 건물 시야 차폐 — 적과의 사이가 건물로 막히면 빔은 건물 표면에서 멈추고 피해 없음(관통 차단).
+      const bt = world.segmentHitsBuilding(origin.x, origin.y, origin.z, endPoint.x, endPoint.y, endPoint.z);
+      if (bt <= 1) {
+        this.spawnBeamVisual(muzzle, origin.clone().addScaledVector(t.dir, t.dist * bt));
+        continue;
+      }
       const enemy = t.enemy;
       if (enemy.state === "alive") {
         const dmg = damageForDistance(t.dist, this.spec.salvoDamage, this.spec.falloff);

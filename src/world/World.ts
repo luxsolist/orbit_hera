@@ -73,6 +73,10 @@ export class World implements GameWorld {
     return this.collision.topAt(x, z);
   }
 
+  segmentHitsBuilding(sx: number, sy: number, sz: number, ex: number, ey: number, ez: number): number {
+    return this.collision.segmentBlocked(sx, sy, sz, ex, ey, ez);
+  }
+
   /** 미니맵 등 표현 레이어: 시야 반경 내 지형/건물/콜라이더를 (내부 노출 없이) 싱크로 방문. */
   queryMinimap(cx: number, cz: number, radius: number, sink: MinimapSink): void {
     // 수역(폴리곤) — 개수 적어 선형 + 중심 컬링

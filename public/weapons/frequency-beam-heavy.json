@@ -3,10 +3,10 @@
   "name": "중주파 빔 / HEAVY BEAM",
   "abbr": "빔",
   "type": "beam",
-  "range": 400,
+  "range": 3000,
   "color": "0x60ffff",
   "beamLifetime": 0.1,
   "manual": { "damage": 150, "freqCost": 14, "fireInterval": 0.15, "assistConeDeg": 13 },
-  "auto": { "damage": 45, "freqCost": 4, "fireInterval": 0.2, "range": 200 },
-  "falloff": { "refDist": 120, "maxMult": 1.6, "minMult": 1.0 }
+  "auto": { "damage": 45, "freqCost": 4, "fireInterval": 0.2, "range": 3000 },
+  "falloff": { "refDist": 1000, "maxMult": 1.5, "minMult": 0.3 }
 }

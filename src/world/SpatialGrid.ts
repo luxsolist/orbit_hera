@@ -53,6 +53,45 @@ export class SpatialGrid<T> {
     return Math.min(this.rows - 1, Math.max(0, Math.floor((z - this.oz) / this.cell)));
   }
 
+  /**
+   * 선분 (ax,az)→(bx,az) 이 지나는 셀의 아이템만 (중복 없이) 방문 — Amanatides&Woo 격자 순회.
+   * 긴 빔(시야 차폐)의 브로드페이즈: 선분 길이/셀 수만큼만 셀을 방문(영역 query 의 면적 폭발 회피).
+   */
+  querySegment(ax: number, az: number, bx: number, bz: number, visit: (t: T) => void): void {
+    if (!this.buckets.length) return;
+    const e = ++this.epoch;
+    const visitCell = (c: number, r: number): void => {
+      if (c < 0 || c >= this.cols || r < 0 || r >= this.rows) return;
+      const bucket = this.buckets[r * this.cols + c];
+      for (let k = 0; k < bucket.length; k++) {
+        const idx = bucket[k];
+        if (this.stamp[idx] === e) continue;
+        this.stamp[idx] = e;
+        visit(this.items[idx]);
+      }
+    };
+    // 셀 단위 좌표
+    const x0 = (ax - this.ox) / this.cell, z0 = (az - this.oz) / this.cell;
+    const x1 = (bx - this.ox) / this.cell, z1 = (bz - this.oz) / this.cell;
+    let c = Math.floor(x0), r = Math.floor(z0);
+    const cEnd = Math.floor(x1), rEnd = Math.floor(z1);
+    const dcx = x1 - x0, dcz = z1 - z0;
+    const stepC = dcx > 0 ? 1 : dcx < 0 ? -1 : 0;
+    const stepR = dcz > 0 ? 1 : dcz < 0 ? -1 : 0;
+    const tDeltaC = stepC !== 0 ? Math.abs(1 / dcx) : Infinity;
+    const tDeltaR = stepR !== 0 ? Math.abs(1 / dcz) : Infinity;
+    let tMaxC = stepC > 0 ? (c + 1 - x0) * tDeltaC : stepC < 0 ? (x0 - c) * tDeltaC : Infinity;
+    let tMaxR = stepR > 0 ? (r + 1 - z0) * tDeltaR : stepR < 0 ? (z0 - r) * tDeltaR : Infinity;
+    visitCell(c, r);
+    // 셀 수 상한 가드(무한루프 방지) — 격자 전체 둘레 정도면 충분
+    let guard = this.cols + this.rows + 4;
+    while ((c !== cEnd || r !== rEnd) && guard-- > 0) {
+      if (tMaxC < tMaxR) { c += stepC; tMaxC += tDeltaC; }
+      else { r += stepR; tMaxR += tDeltaR; }
+      visitCell(c, r);
+    }
+  }
+
   /** 영역 [minX,minZ,maxX,maxZ] 과 겹치는 셀의 아이템을 (중복 없이) 방문. */
   query(minX: number, minZ: number, maxX: number, maxZ: number, visit: (t: T) => void): void {
     if (!this.buckets.length) return;

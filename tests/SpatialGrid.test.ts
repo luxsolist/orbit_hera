@@ -50,4 +50,49 @@ describe("SpatialGrid", () => {
     const g = new SpatialGrid(items, bound, 8);
     expect(collect(g, -10, -10, 200, 10)).toHaveLength(20);
   });
+
+  describe("querySegment — 선분이 지나는 셀만 방문", () => {
+    const seg = (g: SpatialGrid<Box>, ax: number, az: number, bx: number, bz: number): number[] => {
+      const out: number[] = [];
+      g.querySegment(ax, az, bx, bz, (b) => out.push(b.id));
+      return out.sort((a, b) => a - b);
+    };
+
+    it("선분 경로 위 아이템만 방문(경로 밖 제외)", () => {
+      const items: Box[] = [
+        { id: 1, minX: 0, minZ: 0, maxX: 2, maxZ: 2 },        // 경로 위
+        { id: 2, minX: 50, minZ: 0, maxX: 52, maxZ: 2 },      // 경로 위(x축)
+        { id: 3, minX: 25, minZ: 80, maxX: 27, maxZ: 82 },    // 멀리 떨어진 곳
+      ];
+      const g = new SpatialGrid(items, bound, 16);
+      const hit = seg(g, 1, 1, 51, 1); // z≈1 따라 x 1→51
+      expect(hit).toContain(1);
+      expect(hit).toContain(2);
+      expect(hit).not.toContain(3);
+    });
+
+    it("멀티셀 아이템도 1회만 방문(epoch dedup)", () => {
+      const big: Box = { id: 7, minX: 0, minZ: 0, maxX: 40, maxZ: 40 };
+      const g = new SpatialGrid([big], bound, 8);
+      let count = 0;
+      g.querySegment(-5, 5, 45, 5, () => count++);
+      expect(count).toBe(1);
+    });
+
+    it("빈 격자는 아무것도 방문 안 함", () => {
+      const g = new SpatialGrid<Box>([], bound);
+      expect(seg(g, -100, -100, 100, 100)).toEqual([]);
+    });
+
+    it("대각선 선분도 경로상의 아이템을 방문", () => {
+      const items: Box[] = [
+        { id: 1, minX: 0, minZ: 0, maxX: 2, maxZ: 2 },
+        { id: 2, minX: 30, minZ: 30, maxX: 32, maxZ: 32 },
+      ];
+      const g = new SpatialGrid(items, bound, 8);
+      const hit = seg(g, 1, 1, 31, 31);
+      expect(hit).toContain(1);
+      expect(hit).toContain(2);
+    });
+  });
 });

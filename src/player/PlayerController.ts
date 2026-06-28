@@ -63,6 +63,7 @@ export function bestAlignedInCone(
   aimDir: { x: number; y: number; z: number },
   positions: ReadonlyArray<{ x: number; y: number; z: number }>,
   coneDeg: number,
+  maxDist = Infinity,
 ): number {
   const coneCos = Math.cos(coneDeg * (Math.PI / 180));
   let bestIdx = -1, bestCos = -Infinity;
@@ -70,7 +71,7 @@ export function bestAlignedInCone(
     const p = positions[i];
     const dx = p.x - origin.x, dy = p.y - origin.y, dz = p.z - origin.z;
     const dist = Math.hypot(dx, dy, dz);
-    if (dist < 1e-3) continue;
+    if (dist < 1e-3 || dist > maxDist) continue; // 거리 상한(락온 획득 사거리) 밖 제외
     const cos = (dx * aimDir.x + dy * aimDir.y + dz * aimDir.z) / dist;
     if (cos < coneCos) continue;
     if (cos > bestCos) { bestCos = cos; bestIdx = i; }
@@ -234,6 +235,11 @@ export class PlayerController {
 
   get worldPosition(): THREE.Vector3 {
     return this.position;
+  }
+
+  /** 연결된 전장(충돌/건물 질의). 빔 시야 차폐(건물 통과 차단)에서 사용. */
+  get gameWorld(): GameWorld {
+    return this.world;
   }
 
   /** 시점 yaw(라디안). 미니맵 회전·후방 카메라 방향 산출에 사용 */

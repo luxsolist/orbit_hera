@@ -7,7 +7,7 @@ import { DEFAULT_PLASMOID } from "../src/enemies/PlasmoidSpec";
 
 const makeManager = () => {
   const scene = new THREE.Scene();
-  const world = { heightAt: () => 0, bounds: 1000, topAt: () => -Infinity, resolveCollision: (x: number, z: number) => ({ x, z }) } as any;
+  const world = { heightAt: () => 0, bounds: 1000, topAt: () => -Infinity, resolveCollision: (x: number, z: number) => ({ x, z }), segmentHitsBuilding: () => Infinity } as any;
   const player = {
     worldPosition: new THREE.Vector3(0, 2, 0),
     isDead: false,

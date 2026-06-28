@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
 import { damageForDistance, cooldownReadyFrac, withAutoBoost, type BeamSpec } from "../src/weapons/WeaponSpec";
 
 // frequency-beam.json 의 falloff 기준
@@ -54,5 +55,43 @@ describe("withAutoBoost — 자동조준/사격 강화(모바일 플라이어)",
     withAutoBoost(base, 2);
     expect(base.auto.range).toBe(50);
     expect(base.manual.assistConeDeg).toBe(28);
+  });
+});
+
+// 실제 무기 JSON 의 거리 감쇠 — 3km 에서 1/3 + 워커=완만/플라이어=급감 정체성(refDist=1000 공통).
+describe("에너지빔 JSON — 3km 1/3 감쇠 + 워커/플라이어 정체성", () => {
+  const loadW = (id: string) => JSON.parse(readFileSync(`public/weapons/${id}.json`, "utf8"));
+  const heavy = loadW("frequency-beam-heavy"); // 워커(중주파)
+  const light = loadW("frequency-beam-light"); // 플라이어(경주파)
+
+  it("중주파(워커): 3km 에서 기본의 1/3, 사거리·자동발사 3km", () => {
+    expect(heavy.falloff.refDist).toBe(1000);
+    expect(damageForDistance(3000, 150, heavy.falloff)).toBeCloseTo(50, 5); // 150/3
+    expect(heavy.range).toBe(3000);
+    expect(heavy.auto.range).toBe(3000);
+  });
+
+  it("경주파(플라이어): 3km 에서 기본의 1/3, 사거리·자동발사 3km", () => {
+    expect(light.falloff.refDist).toBe(1000);
+    const effBase = 39 * 2; // 듀얼 발사관(muzzleOffsets 길이 2)
+    expect(light.muzzleOffsets).toHaveLength(2);
+    expect(damageForDistance(3000, effBase, light.falloff)).toBeCloseTo(26, 5); // 78/3
+    expect(light.range).toBe(3000);
+    expect(light.auto.range).toBe(3000);
+  });
+
+  it("워커=완만(낮은 근접 스파이크·높은 원거리 바닥) / 플라이어=급감(높은 스파이크·낮은 바닥)", () => {
+    expect(heavy.falloff.maxMult).toBeLessThan(light.falloff.maxMult);   // 1.5 < 4.0(근접)
+    expect(heavy.falloff.minMult).toBeGreaterThan(light.falloff.minMult); // 0.3 > 0.1(원거리 바닥)
+  });
+
+  it("근접 상한 클램프: 워커 1.5×·플라이어 4.0×", () => {
+    expect(damageForDistance(100, 100, heavy.falloff)).toBeCloseTo(150, 5); // 1.5x cap
+    expect(damageForDistance(100, 100, light.falloff)).toBeCloseTo(400, 5); // 4.0x cap
+  });
+
+  it("1km 기준 거리에서는 두 빔 모두 배수 1.0(refDist=1000)", () => {
+    expect(damageForDistance(1000, 100, heavy.falloff)).toBeCloseTo(100, 5);
+    expect(damageForDistance(1000, 100, light.falloff)).toBeCloseTo(100, 5);
   });
 });

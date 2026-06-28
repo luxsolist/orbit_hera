@@ -186,6 +186,10 @@ export class StreamingWorld implements GameWorld {
     return this.collision.resolveCollision(x, z, radius, feetY);
   }
 
+  segmentHitsBuilding(sx: number, sy: number, sz: number, ex: number, ey: number, ez: number): number {
+    return this.collision.segmentBlocked(sx, sy, sz, ex, ey, ez);
+  }
+
   queryMinimap(cx: number, cz: number, radius: number, sink: MinimapSink): void {
     for (const o of this.objReg.values()) {
       for (const w of o.water) {

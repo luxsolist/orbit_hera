@@ -195,6 +195,41 @@ describe("bestAlignedInCone — 조준 콘 안 최적 락온 후보", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+describe("bestAlignedInCone — 락온 획득 거리 상한(maxDist, 3km 빔 정합)", () => {
+  it("maxDist 밖(5km)의 적은 제외 → -1", () => {
+    expect(bestAlignedInCone(O, FWD, [{ x: 0, y: 0, z: -5000 }], 30, 3000)).toBe(-1);
+  });
+
+  it("maxDist 안(2km)의 적은 선택", () => {
+    expect(bestAlignedInCone(O, FWD, [{ x: 0, y: 0, z: -2000 }], 30, 3000)).toBe(0);
+  });
+
+  it("경계: 정확히 maxDist 는 포함(초과만 제외)", () => {
+    expect(bestAlignedInCone(O, FWD, [{ x: 0, y: 0, z: -3000 }], 30, 3000)).toBe(0);
+  });
+
+  it("콘 안의 먼 적(2.9km)은 잡되, 콘 밖의 가까운 적은 무시", () => {
+    const pos = [
+      { x: 0, y: 0, z: -2900 },   // 정면 2.9km(콘 안·maxDist 안)
+      { x: 5000, y: 0, z: -100 }, // 측면(콘 밖)
+    ];
+    expect(bestAlignedInCone(O, FWD, pos, 30, 3000)).toBe(0);
+  });
+
+  it("정렬도가 더 높아도 maxDist 밖이면 제외 → maxDist 안의 차선 정렬 적 선택", () => {
+    const pos = [
+      { x: 0, y: 0, z: -5000 },   // 정면 정렬 최고지만 5km(상한 밖)
+      { x: 200, y: 0, z: -2000 }, // 약간 옆 2km(상한 안)
+    ];
+    expect(bestAlignedInCone(O, FWD, pos, 30, 3000)).toBe(1);
+  });
+
+  it("maxDist 생략 → 거리 무제한(기존 동작 보존)", () => {
+    expect(bestAlignedInCone(O, FWD, [{ x: 0, y: 0, z: -100000 }], 30)).toBe(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 describe("flyMoveDir — 비행 이동 방향(락온 수평 자동 전진 통합)", () => {
   // 정면(yaw=0, pitch=0) 기준: 전방 f3 = (0,0,-1), 우측 rightH = (1,0,0)
   const F3 = { x: 0, y: 0, z: -1 };

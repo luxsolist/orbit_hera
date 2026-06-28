@@ -120,3 +120,85 @@ describe("CollisionWorld — building roof (step-on)", () => {
     expect(c.topAt(4, 4)).toBe(-Infinity); // 빈 노치
   });
 });
+
+describe("CollisionWorld — segmentBlocked (빔/드레인 건물 시야 차폐)", () => {
+  it("OBB 건물(옥상 높이 12)을 가로지르는 낮은 빔은 막힌다(t∈[0,1])", () => {
+    const c = new CollisionWorld();
+    c.addFootprintBox([-3, -3, 3, -3, 3, 3, -3, 3], 0, 12); // [-3,3]² 옥상 12
+    c.finalize();
+    // (-10,2)→(10,2) 건물 한가운데 통과, 높이 2 < 옥상 12 → 차폐
+    const t = c.segmentBlocked(-10, 2, 0, 10, 2, 0);
+    expect(t).toBeLessThanOrEqual(1);
+    expect(t).toBeGreaterThan(0);
+    // 진입 지점 ≈ x=-3 → 전체 20m 중 7m → t≈0.35
+    expect(t).toBeCloseTo(0.35, 2);
+  });
+
+  it("옥상(top) 위로 지나가는 빔은 통과(Infinity)", () => {
+    const c = new CollisionWorld();
+    c.addFootprintBox([-3, -3, 3, -3, 3, 3, -3, 3], 0, 12);
+    c.finalize();
+    expect(c.segmentBlocked(-10, 20, 0, 10, 20, 0)).toBe(Infinity); // y=20 > 옥상 12
+  });
+
+  it("건물 footprint 를 벗어난 빔은 통과(Infinity)", () => {
+    const c = new CollisionWorld();
+    c.addFootprintBox([-3, -3, 3, -3, 3, 3, -3, 3], 0, 12);
+    c.finalize();
+    expect(c.segmentBlocked(-10, 2, 50, 10, 2, 50)).toBe(Infinity); // z=50 footprint 밖
+  });
+
+  it("파괴되어 개방된(openBuildingAt) 건물은 차폐하지 않는다", () => {
+    const c = new CollisionWorld();
+    c.addFootprintBox([-3, -3, 3, -3, 3, 3, -3, 3], 0, 12);
+    c.finalize();
+    expect(c.segmentBlocked(-10, 2, 0, 10, 2, 0)).toBeLessThanOrEqual(1); // 파괴 전 막힘
+    c.openBuildingAt(0, 0); // 잔해 위 통과 개방(top=-Infinity)
+    expect(c.segmentBlocked(-10, 2, 0, 10, 2, 0)).toBe(Infinity); // 이제 통과
+  });
+
+  it("바위(원기둥) 도 낮은 빔을 막는다", () => {
+    const c = new CollisionWorld();
+    c.addCircle(0, 0, 5, 10);
+    c.finalize();
+    expect(c.segmentBlocked(-20, 2, 0, 20, 2, 0)).toBeLessThanOrEqual(1); // 반경 5 관통
+    expect(c.segmentBlocked(-20, 15, 0, 20, 15, 0)).toBe(Infinity); // 윗면 10 위로
+  });
+
+  it("오목(L자) 건물 — 솔리드 팔은 막고 빈 노치만 지나는 빔은 통과", () => {
+    const c = new CollisionWorld();
+    c.addFootprintBox([0, 0, 6, 0, 6, 2, 2, 2, 2, 6, 0, 6], 0, 9); // L자 → 삼각 콜라이더
+    c.finalize();
+    expect(c.segmentBlocked(-5, 2, 1, 11, 2, 1)).toBeLessThanOrEqual(1); // 바닥 팔(z=1) 관통 → 막힘
+    expect(c.segmentBlocked(3, 2, 4, 5, 2, 4)).toBe(Infinity); // 빈 노치(x2~6,z2~6) 안만 지남
+  });
+
+  it("담장(addWallBox) 도 낮은 빔을 막고 윗면 위로는 통과", () => {
+    const c = new CollisionWorld();
+    c.addWallBox(-1, 1, -10, 10, 5); // x[-1,1], z[-10,10], 윗면 5
+    c.finalize();
+    expect(c.segmentBlocked(-10, 2, 0, 10, 2, 0)).toBeLessThanOrEqual(1); // y2 < 5 → 막힘
+    expect(c.segmentBlocked(-10, 8, 0, 10, 8, 0)).toBe(Infinity); // y8 > 5 → 통과
+  });
+
+  it("진입 시 옥상 위였다가 footprint 내부에서 옥상 아래로 내려오는 하강 빔은 막힌다", () => {
+    const c = new CollisionWorld();
+    c.addAabbBox(-3, 3, -3, 3, 10); // 옥상 10
+    c.finalize();
+    // (-3,20)→(3,0): 진입 y≈20>10, 내부 하강해 옥상 10 아래로 교차(t=0.5)
+    expect(c.segmentBlocked(-3, 20, 0, 3, 0, 0)).toBeCloseTo(0.5, 5);
+  });
+
+  it("건물 내부(옥상 아래)에서 출발하는 빔은 즉시 막힘(t≈0)", () => {
+    const c = new CollisionWorld();
+    c.addAabbBox(-3, 3, -3, 3, 10);
+    c.finalize();
+    expect(c.segmentBlocked(0, 2, 0, 50, 2, 0)).toBeCloseTo(0, 6);
+  });
+
+  it("막힘 없으면 Infinity (빈 세계)", () => {
+    const c = new CollisionWorld();
+    c.finalize();
+    expect(c.segmentBlocked(-10, 2, 0, 10, 2, 0)).toBe(Infinity);
+  });
+});

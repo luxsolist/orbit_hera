@@ -73,7 +73,7 @@ export class SpecialStream implements SpecialWeapon {
     const assist = bestAlignedDir(cam, aim, this.enemies.aliveWorldPositions, this.spec.range, this.assistCos);
     const dir = assist ? new THREE.Vector3(assist.x, assist.y, assist.z) : aim;
     fireEmitters(
-      { raycaster: this.raycaster, enemies: this.enemies, damageNumbers: this.damageNumbers, beamPool: this.beamPool },
+      { raycaster: this.raycaster, enemies: this.enemies, damageNumbers: this.damageNumbers, beamPool: this.beamPool, world: this.player.gameWorld },
       {
         origin: cam,
         dir,

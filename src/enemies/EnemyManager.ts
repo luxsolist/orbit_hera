@@ -24,6 +24,7 @@ const AWARENESS_RADIUS_SQ = AWARENESS_RADIUS * AWARENESS_RADIUS;
 const AWARENESS_LOSE_RADIUS = 360; // 인식 해제 반경(m) — 이보다 멀어지면 건물 공격 복귀
 const AWARENESS_LOSE_SQ = AWARENESS_LOSE_RADIUS * AWARENESS_LOSE_RADIUS;
 const BUILDING_SEEK_R = 700; // 플레이어가 멀 때 공격할 주변 건물 탐색 반경(m)
+const LOCK_ACQUIRE_RANGE = 3000; // 락온 획득 사거리(m) — 빔 사거리(3km)와 정합. 이 밖의 적은 락온/자동추적 불가.
 const STEER_STRIDE = 3; // 원거리 적 조향 재계산 주기(프레임) — 라운드로빈 분산
 const NEAR_DIST = 250; // 이 거리(m) 이내는 매 프레임 재계산(교전 감각 — 스폰 반경 전체 커버, 끊김 방지)
 const NEAR_DIST_SQ = NEAR_DIST * NEAR_DIST;
@@ -384,6 +385,8 @@ export class EnemyManager {
     const range = drain ? k.attackRange : ATTACK_RANGE;
     const cooldown = drain ? k.drainInterval : 1.0;
     const amount = drain ? k.drainDamage : contactDamage(this.spec, enemy.maxHp);
+    // 드레인빔(원거리)은 건물을 관통 못함 — 표적 플레이어와의 사이가 건물로 막히면 드레인 불가(쿨다운 미소모, 시야 확보 시 재시도).
+    if (drain && player && this.world.segmentHitsBuilding(from.x, from.y, from.z, targetPos.x, targetPos.y, targetPos.z) <= 1) return false;
     if (!enemy.tryAttack(targetPos, range, cooldown)) return false;
 
     let landed = false, destroyed = false;
@@ -602,13 +605,13 @@ export class EnemyManager {
    * 락온 대상 선택 — 카메라 시선 방향(aimDir) 기준 조준 콘(coneDeg°) 안에서 가장 정렬된 살아있는 적.
    * 락온 키를 눌렀을 때 Game 이 호출한다. 없으면 null.
    */
-  bestTargetInView(origin: THREE.Vector3, aimDir: THREE.Vector3, coneDeg = 30): CoreEnemy | null {
+  bestTargetInView(origin: THREE.Vector3, aimDir: THREE.Vector3, coneDeg = 30, maxDist = LOCK_ACQUIRE_RANGE): CoreEnemy | null {
     const alive = this.enemies.filter((e) => e.state === "alive");
     const positions = alive.map((e) => {
       const p = e.group.position;
       return { x: p.x, y: p.y, z: p.z };
     });
-    const idx = bestAlignedInCone(origin, aimDir, positions, coneDeg);
+    const idx = bestAlignedInCone(origin, aimDir, positions, coneDeg, maxDist);
     return idx >= 0 ? alive[idx] : null;
   }
 }
