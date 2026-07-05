@@ -40,7 +40,7 @@
       "spawnAltMax": 60,
       "countBase": 6,
       "countCap": 12,
-      "killRefund": 5,
+      "killRefund": 0,
       "speed": 17,
       "speedMin": 12
     },
@@ -50,7 +50,7 @@
       "spawnAltMax": 300,
       "countBase": 3,
       "countCap": 5,
-      "killRefund": 8,
+      "killRefund": 0,
       "speed": 89,
       "speedMin": 67,
       "turnRateDeg": 100,

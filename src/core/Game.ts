@@ -271,10 +271,10 @@ export class Game {
       specialLabel: specialWeapon.abbr,
     });
     const enemies = new EnemyManager(this.scene, world, [player], plasmoidSpec); // MP 대응: 플레이어 배열(현재 1인)
-    // 모바일 — 자동조준(에임어시스트 콘)·자동사격(360° 소프트락 사거리)을 2배(터치 조준 난도 보정).
-    // 워커 32→64, 플라이어 100→200. 데스크탑은 무영향. 캐시 스펙 불변(복제).
+    // 모바일 — 에임어시스트 콘만 2배(터치 조준 난도 보정), 자동사격 사거리는 데스크탑과 동일(1km, rangeMul 1.0).
+    // 데스크탑은 무영향. 캐시 스펙 불변(복제).
     const primarySpec = this.mobile.enabled
-      ? withAutoBoost(primaryWeapon as BeamSpec, 2.0)
+      ? withAutoBoost(primaryWeapon as BeamSpec, 2.0, 1.0)
       : (primaryWeapon as BeamSpec);
     const beam = new FrequencyBeam(this.scene, player, enemies, primarySpec, this.sfx);
     // 특수무기 타입별 구동 — barrage(콘 살포) / stream(오버드라이브 듀얼 연사). 판별 유니온 내로잉(캐스트 X).

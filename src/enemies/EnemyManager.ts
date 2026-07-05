@@ -19,12 +19,29 @@ const KITER_CEILING = 1020; // 도주형 상승 상한(지면 대비, m) — 비
 const TARGET_HYSTERESIS = 1.2; // 표적 교체 문턱 — 현재 표적이 최근접의 1.2배 이내면 유지(깜빡임 방지)
 // 플레이어 인식 범위(awareness) — 기본은 건물 공격, 플레이어가 이 안에 들면 플레이어 공격으로 전환.
 // 한번 인식하면 LOSE 거리까지 계속 추격(히스테리시스: 들어오면 계속, 벗어나면 다시 건물). 플레이테스트로 조정.
-const AWARENESS_RADIUS = 200; // 인식(전환) 반경(m)
+const AWARENESS_RADIUS = 500; // 인식(전환) 반경(m)
 const AWARENESS_RADIUS_SQ = AWARENESS_RADIUS * AWARENESS_RADIUS;
-const AWARENESS_LOSE_RADIUS = 360; // 인식 해제 반경(m) — 이보다 멀어지면 건물 공격 복귀
+const AWARENESS_LOSE_RADIUS = 900; // 인식 해제 반경(m) — 이보다 멀어지면 건물 공격 복귀(획득의 1.8배 히스테리시스)
+// 피격 유발 인식 — 플레이어가 때린 플라즈모이드 반경 이 거리 안의 개체도 플레이어를 인식(provoked 래치).
+const PROVOKE_RADIUS = 100; // 피격 전파 반경(m)
+const PROVOKE_RADIUS_SQ = PROVOKE_RADIUS * PROVOKE_RADIUS;
 const AWARENESS_LOSE_SQ = AWARENESS_LOSE_RADIUS * AWARENESS_LOSE_RADIUS;
+
+/**
+ * 플레이어 교전 여부(순수) — provoked(피격 유발)면 거리 무관 교전.
+ * 아니면 인식 반경 히스테리시스: 미교전(wasEngaged=false)은 acquireSq 안에서만 신규 인식,
+ * 교전 중(wasEngaged=true)은 loseSq 까지 유지(그 밖이면 이탈). 표적이 없으면(hasTarget=false) 미교전.
+ */
+export function engagesPlayer(
+  hasTarget: boolean, wasEngaged: boolean, targetDistSq: number, provoked: boolean, acquireSq: number, loseSq: number,
+): boolean {
+  if (!hasTarget) return false;
+  if (provoked) return true;
+  return targetDistSq <= (wasEngaged ? loseSq : acquireSq);
+}
+
 const BUILDING_SEEK_R = 700; // 플레이어가 멀 때 공격할 주변 건물 탐색 반경(m)
-const LOCK_ACQUIRE_RANGE = 3000; // 락온 획득 사거리(m) — 빔 사거리(3km)와 정합. 이 밖의 적은 락온/자동추적 불가.
+const LOCK_ACQUIRE_RANGE = 5000; // 락온 획득 사거리(m) — 5km(자동사격/빔 2km보다 김). 이 밖의 적은 락온/자동추적 불가.
 const STEER_STRIDE = 3; // 원거리 적 조향 재계산 주기(프레임) — 라운드로빈 분산
 const NEAR_DIST = 250; // 이 거리(m) 이내는 매 프레임 재계산(교전 감각 — 스폰 반경 전체 커버, 끊김 방지)
 const NEAR_DIST_SQ = NEAR_DIST * NEAR_DIST;
@@ -525,8 +542,9 @@ export class EnemyManager {
       const idx = this.pickTarget(p, enemy.targetIndex, enemy.isKiter); // 상성 가중 포함
       // 기본 = 건물 공격. 플레이어가 인식 범위(AWARENESS_RADIUS) 안에 들면 플레이어로 전환하고,
       // 한번 인식하면 AWARENESS_LOSE_RADIUS 까지 계속 추격(히스테리시스). 벗어나면 다시 건물.
-      const detectSq = enemy.targetIndex >= 0 ? AWARENESS_LOSE_SQ : AWARENESS_RADIUS_SQ;
-      if (idx < 0 || targets[idx].pos.distanceToSquared(p) > detectSq) {
+      // provoked(피격 유발)면 거리 게이트를 무시하고 살아있는 플레이어를 계속 추격.
+      const distSq = idx >= 0 ? targets[idx].pos.distanceToSquared(p) : Infinity;
+      if (!engagesPlayer(idx >= 0, enemy.targetIndex >= 0, distSq, enemy.provoked, AWARENESS_RADIUS_SQ, AWARENESS_LOSE_SQ)) {
         enemy.targetIndex = -1;
         this.buildingStep(enemy, p, dt, boids, grid, myIdx);
         continue;
@@ -572,6 +590,15 @@ export class EnemyManager {
     // 웨이브 종료 판정 — 탐방/일괄 스폰 모드면 자동 재시작 안 함(일괄은 미션 인스턴스가 종료 판정)
     if (!this.peaceful && !this.burstMode && this.pendingRusher + this.pendingKiter === 0 && this.enemies.length === 0) {
       this.startNextWave();
+    }
+  }
+
+  /** 피격 유발 인식 — 플레이어가 때린 플라즈모이드 반경 PROVOKE_RADIUS 안의 살아있는 개체를 provoked 로 전환. */
+  provokeNear(hit: CoreEnemy) {
+    const c = hit.group.position;
+    for (const e of this.enemies) {
+      if (e.state !== "alive" || e.provoked) continue;
+      if (e.group.position.distanceToSquared(c) <= PROVOKE_RADIUS_SQ) e.provoked = true;
     }
   }
 

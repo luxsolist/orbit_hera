@@ -14,6 +14,13 @@ describe("CoreEnemy 외형 주입", () => {
   });
 });
 
+describe("provoked 피격 유발 래치", () => {
+  it("기본값 false — 스폰 직후엔 미도발", () => {
+    const e = new CoreEnemy(new THREE.Vector3(), APP, 5);
+    expect(e.provoked).toBe(false);
+  });
+});
+
 describe("applyFrequencyHit 상태 전이", () => {
   it("체력 차감 → 0 이하면 dissolving, 사망 후 무시", () => {
     const e = new CoreEnemy(new THREE.Vector3(), APP, 5);

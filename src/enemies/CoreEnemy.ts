@@ -321,6 +321,7 @@ export class CoreEnemy {
   hp: number;
   readonly color: number; // 발광/표면 색(드레인 빔 연출 등에서 참조)
   killRefund = 0; // 처치 시 플레이어 HP 환수(아키타입에서 주입)
+  provoked = false; // 피격 유발 인식 래치 — 플레이어 공격에 노출되면 거리 무관 계속 추격
   archetypeName = ""; // 아키타입 표시명(모기/거머리 …) — HUD/로그용
   targetIndex = -1; // 현재 추적 대상 플레이어 인덱스(MP 멀티타깃 — 매니저가 관리, 히스테리시스)
   buildingId: string | null = null; // 플레이어가 사거리 밖일 때 공격 중인 건물(2순위 표적)

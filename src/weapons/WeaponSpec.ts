@@ -26,12 +26,13 @@ export interface BeamSpec {
   falloff: DamageFalloff;
 }
 
-/** 자동조준/사격 강화 — 자동사격 사거리(auto.range)·에임어시스트 콘(manual.assistConeDeg)에 배수 적용한 새 스펙. 원본 불변. 순수. */
-export function withAutoBoost(spec: BeamSpec, mul: number): BeamSpec {
+/** 자동조준/사격 강화 — 에임어시스트 콘(manual.assistConeDeg)·자동사격 사거리(auto.range)에 각각 배수 적용한 새 스펙.
+ *  rangeMul 미지정 시 coneMul 과 동일(하위호환). 원본 불변. 순수. */
+export function withAutoBoost(spec: BeamSpec, coneMul: number, rangeMul: number = coneMul): BeamSpec {
   return {
     ...spec,
-    manual: { ...spec.manual, assistConeDeg: spec.manual.assistConeDeg * mul },
-    auto: { ...spec.auto, range: spec.auto.range * mul },
+    manual: { ...spec.manual, assistConeDeg: spec.manual.assistConeDeg * coneMul },
+    auto: { ...spec.auto, range: spec.auto.range * rangeMul },
   };
 }
 

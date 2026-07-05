@@ -45,6 +45,16 @@ describe("withAutoBoost — 자동조준/사격 강화(모바일 플라이어)",
     expect(b.auto.range).toBe(100);
     expect(b.manual.assistConeDeg).toBe(56);
   });
+  it("rangeMul 생략 시 coneMul 과 동일(하위호환)", () => {
+    const b = withAutoBoost(base, 3);
+    expect(b.auto.range).toBe(150); // 50×3
+    expect(b.manual.assistConeDeg).toBe(84); // 28×3
+  });
+  it("콘/사거리 배수 분리 — 모바일(콘 2×, 사거리 1× = 데스크탑 동일)", () => {
+    const b = withAutoBoost(base, 2, 1);
+    expect(b.manual.assistConeDeg).toBe(56); // 콘만 2배(터치 조준 보정)
+    expect(b.auto.range).toBe(50);           // 사거리는 원본 유지(1배)
+  });
   it("그 외 수치는 불변(damage·freqCost·range 등)", () => {
     const b = withAutoBoost(base, 2);
     expect(b.auto.damage).toBe(5);
@@ -64,20 +74,20 @@ describe("에너지빔 JSON — 3km 1/3 감쇠 + 워커/플라이어 정체성",
   const heavy = loadW("frequency-beam-heavy"); // 워커(중주파)
   const light = loadW("frequency-beam-light"); // 플라이어(경주파)
 
-  it("중주파(워커): 3km 에서 기본의 1/3, 사거리·자동발사 3km", () => {
+  it("중주파(워커): 3km 에서 기본의 1/3, 빔 사거리 2km·자동발사 1km", () => {
     expect(heavy.falloff.refDist).toBe(1000);
     expect(damageForDistance(3000, 150, heavy.falloff)).toBeCloseTo(50, 5); // 150/3
-    expect(heavy.range).toBe(3000);
-    expect(heavy.auto.range).toBe(3000);
+    expect(heavy.range).toBe(2000);
+    expect(heavy.auto.range).toBe(1000);
   });
 
-  it("경주파(플라이어): 3km 에서 기본의 1/3, 사거리·자동발사 3km", () => {
+  it("경주파(플라이어): 3km 에서 기본의 1/3, 빔 사거리 2km·자동발사 1km", () => {
     expect(light.falloff.refDist).toBe(1000);
     const effBase = 39 * 2; // 듀얼 발사관(muzzleOffsets 길이 2)
     expect(light.muzzleOffsets).toHaveLength(2);
     expect(damageForDistance(3000, effBase, light.falloff)).toBeCloseTo(26, 5); // 78/3
-    expect(light.range).toBe(3000);
-    expect(light.auto.range).toBe(3000);
+    expect(light.range).toBe(2000);
+    expect(light.auto.range).toBe(1000);
   });
 
   it("워커=완만(낮은 근접 스파이크·높은 원거리 바닥) / 플라이어=급감(높은 스파이크·낮은 바닥)", () => {

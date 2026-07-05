@@ -88,6 +88,7 @@ function harness(opts: {
   const dmgs: { point: THREE.Vector3; dmg: number }[] = [];
   const applied: number[] = [];
   const kills: unknown[] = [];
+  const provoked: unknown[] = [];
   const onHits: THREE.Vector3[] = [];
 
   const hit = opts.hitDist !== undefined
@@ -97,7 +98,7 @@ function harness(opts: {
 
   const ctx = {
     raycaster: { set() {}, intersectObjects: () => (hit ? [hit] : []) },
-    enemies: { hitMeshes: [], enemyFromHit: () => enemy, registerKill: (e: unknown) => kills.push(e) },
+    enemies: { hitMeshes: [], enemyFromHit: () => enemy, registerKill: (e: unknown) => kills.push(e), provokeNear: (e: unknown) => provoked.push(e) },
     damageNumbers: { spawn: (p: THREE.Vector3, d: number) => dmgs.push({ point: p.clone(), dmg: d }) },
     beamPool: { spawn: (f: THREE.Vector3, t: THREE.Vector3) => spawned.push({ from: f.clone(), to: t.clone() }) },
     world: { segmentHitsBuilding: () => opts.bt ?? Infinity },
@@ -114,7 +115,7 @@ function harness(opts: {
     onHit: (end) => onHits.push(end.clone()),
   };
   fireEmitters(ctx, shot);
-  return { spawned, dmgs, applied, kills, onHits };
+  return { spawned, dmgs, applied, kills, provoked, onHits, enemy };
 }
 
 describe("fireEmitters — 건물 시야 차폐", () => {
@@ -163,6 +164,22 @@ describe("fireEmitters — 건물 시야 차폐", () => {
   it("차폐 시에는 처치 판정 없음(registerKill 미호출)", () => {
     const r = harness({ hitDist: 200, killOnHit: true, bt: 100 / 3000 });
     expect(r.kills).toHaveLength(0);
+    expect(r.applied).toHaveLength(0);
+  });
+
+  it("적 적중 → provokeNear(피격 개체)로 피격 유발 전파, 피해 적용 전에 호출", () => {
+    const r = harness({ hitDist: 200 });
+    expect(r.provoked).toEqual([r.enemy]); // 피격당한 개체를 기준으로 전파
+  });
+
+  it("적 미적중 → provokeNear 미호출", () => {
+    const r = harness({}); // 적 없음
+    expect(r.provoked).toHaveLength(0);
+  });
+
+  it("건물 차폐로 적중 무효 → provokeNear 미호출(피해도 없음)", () => {
+    const r = harness({ hitDist: 200, bt: 100 / 3000 });
+    expect(r.provoked).toHaveLength(0);
     expect(r.applied).toHaveLength(0);
   });
 

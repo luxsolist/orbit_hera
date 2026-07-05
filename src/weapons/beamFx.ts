@@ -150,6 +150,7 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
       const dmg = emitterDamage(hit!.distance, shot.baseDamage, n, shot.falloff); // 발사관 수만큼 합산
       ctx.damageNumbers.spawn(endPoint, dmg);
       shot.onHit?.(endPoint, hit!, shot.dir);
+      ctx.enemies.provokeNear(enemy); // 피격 유발 인식 — 반경 내 개체(피격 개체 포함)도 플레이어 추격
       if (enemy.applyFrequencyHit(dmg)) ctx.enemies.registerKill(enemy);
     }
   }

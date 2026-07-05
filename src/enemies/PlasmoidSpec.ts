@@ -313,11 +313,11 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
   archetypes: {
     rusher: {
       name: "거머리 플라즈모이드 / LEECH",
-      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 12, killRefund: 5, speed: 17, speedMin: 12,
+      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 12, killRefund: 0, speed: 17, speedMin: 12,
     },
     kiter: {
       name: "모기 플라즈모이드 / SKEETER",
-      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, killRefund: 8, speed: 89, speedMin: 67,
+      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, killRefund: 0, speed: 89, speedMin: 67,
       turnRateDeg: 100, keepDist: 35, keepBand: 12, strafeMix: 0, orbitRef: 35, evadeGain: 0.85,
       attackRange: 95, drainDamage: 1.4, drainInterval: 1.5,
     },

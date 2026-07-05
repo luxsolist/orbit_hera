@@ -3,11 +3,11 @@
   "name": "경주파 빔 / LIGHT BEAM",
   "abbr": "빔",
   "type": "beam",
-  "range": 3000,
+  "range": 2000,
   "color": "0x90ffff",
   "beamLifetime": 0.08,
   "muzzleOffsets": [-0.55, 0.55],
   "manual": { "damage": 39, "freqCost": 7, "fireInterval": 0.085, "assistConeDeg": 28 },
-  "auto": { "damage": 15, "freqCost": 2, "fireInterval": 0.13, "range": 3000 },
+  "auto": { "damage": 15, "freqCost": 2, "fireInterval": 0.13, "range": 1000 },
   "falloff": { "refDist": 1000, "maxMult": 4.0, "minMult": 0.1 }
 }
