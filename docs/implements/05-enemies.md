@@ -2,6 +2,12 @@
 
 소스: [PlasmoidSpec.ts](../../src/enemies/PlasmoidSpec.ts), [CoreEnemy.ts](../../src/enemies/CoreEnemy.ts), [EnemyManager.ts](../../src/enemies/EnemyManager.ts), [DrainBeams.ts](../../src/fx/DrainBeams.ts), [plasmoids.ts](../../src/enemies/plasmoids.ts), 데이터: [public/enemies/plasmoid.json](../../public/enemies/plasmoid.json)
 
+> 세계관 물리 해석(플라즈모이드 = 6차원 본체의 3차원 투영, 온도 T = KK 준위, 흡수 = 영점 에너지 수확)과
+> 파생 메커닉 로드맵(위상 이탈·강제 결어긋남·균열 스폰·씨앗 장)은 [../spec/05-dimensional-cosmology.md](../spec/05-dimensional-cosmology.md)(정본) 참조.
+> ⚠️ 공격 체계(접촉 흡수/드레인)는 직무 기반 체계로 재정립이 결정됨(정본:
+> [서사편 §6](../private/05x-narrative-truth.md) ⚠️스포일러) — 이 문서는 구현 교체 전까지의
+> 현행 사양을 기술한다.
+
 ## PlasmoidSpec — 온도(T) 단일 노브 + 고유 아키타입 데이터 시스템
 
 적 1종을 `PlasmoidSpec`(JSON)으로 외부화. **온도 T(별 표면온도, K)** 하나가 색·체력가중치·희귀도·기본속도를 묶는다 — 저온=적색·최약, 고온=청백·최강(별 색온도 메타포). 색은 `"0xRRGGBB"` 문자열(JSON 0x 리터럴 불가) → `parseHexColor`.

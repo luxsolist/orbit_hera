@@ -74,11 +74,17 @@
 
 ## 인트로 / 메뉴 배경
 
+> ✅ 컷씬은 **개정 세계관**([spec/overview §4](../spec/overview.md)) 반영판 — 아무것도 떨어지지
+> 않는다: 오무아무아(탐침의 투영) 횡단 → **투영 소멸** → **심해 균열 개방**(바늘구멍) → 균열
+> 확장(흡수) → 플라즈모이드 상승 → 해변 집 **디테일 상실 → 붕괴**. (구 휴면 코어 산포/입수/침강
+> 씬은 제거 — 8씬 → 6씬.)
+
 - **CinematicPlayer** — 전용 씬/카메라로 인트로 컷씬 재생. 각 `scene`은 `build → update(t) → dispose`.
   종료 시 `disposeComposer`(블룸 패스 RT 포함)·`disposeObject`(지오+텍스처)로 GPU 자원 해제.
-- **scenes / helpers** — 오무아무아 횡단, 휴면 코어 산포, 입수, 코어 성장, **해변 집 붕괴**(조각화 `shatterBox`/
+- **scenes / helpers** — 오무아무아 횡단, 투영 소멸(`sceneVanish`), 심해 균열 개방(`sceneRupture`),
+  균열 확장, 플라즈모이드 상승, **해변 집 디테일 상실 → 붕괴**(재질색 플랫 톤 lerp + 조각화 `shatterBox`/
   모임지붕 `roofFace`/낙하 `fallFrag`) 등 장면 정의 + 결정적 난수(`rng`), ease, 카메라 보간(`track`).
-  인트로의 휴면 코어·코어·플라즈모이드 색은 **플라즈모이드 온도 시스템**(`colorAt`)에서 파생([tests/introHelpers.test.ts](../../tests/introHelpers.test.ts)).
+  인트로의 코어·플라즈모이드 색은 **플라즈모이드 온도 시스템**(`colorAt`)에서 파생([tests/introHelpers.test.ts](../../tests/introHelpers.test.ts)).
 - **MenuBackground** — 메뉴(전장 선택) 배경으로 인트로 장면 중 하나를 랜덤 재생, 끝나면 다른 장면으로
   교체하며 사이를 **검정 페이드(0.7s)** 전환. 페이드 div는 캔버스 위·메뉴 오버레이 아래. 이탈 시 컴포저 해제.
 - **CinematicAudio** ([intro/CinematicAudio.ts](../../src/intro/CinematicAudio.ts)) — 인트로 컷씬 전용
