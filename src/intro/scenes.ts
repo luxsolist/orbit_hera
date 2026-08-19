@@ -4,18 +4,18 @@ import type { Frag } from "./helpers";
 import {
   ease, rng, lump, track, spinAlong, makeSwarm, updateSwarm,
   starfield, sun, oumuamua, lights, underLights,
-  earth, moon, seabed, makeCore, plasmoidSwarm, beachHouse, fallFrag, makeDormantCore,
-  setState, getState, DORMANT_ORANGE, PLAS_STRONG, CORE_TEMP, SPACE_COL, DEEP_COL, SPIN_RATE, FWD1,
+  seabed, makeCore, plasmoidSwarm, beachHouse, fallFrag,
+  setState, getState, PLAS_STRONG, CORE_TEMP, SPACE_COL, DEEP_COL, SPIN_RATE, FWD1,
 } from "./helpers";
 
 // 인트로 군집 userData 상태(병렬 Float32Array) — setState/getState 로 타입 안전 접근.
-interface CoreSwarmState { birth: Float32Array; vel: Float32Array; off: Float32Array; }
-interface VelState { vel: Float32Array; }
 interface DebrisState { sx: Float32Array; delay: Float32Array; travel: Float32Array; }
 interface RiseSwarmState { py: Float32Array; px: Float32Array; pz: Float32Array; sp: Float32Array; sz: Float32Array; ph: Float32Array; }
-interface HouseState { wallFrags: Frag[]; roofFrags: Frag[]; }
+interface HouseState { wallFrags: Frag[]; roofFrags: Frag[]; mats?: { m: THREE.MeshStandardMaterial; c: THREE.Color }[]; }
 
-// 인트로 컷씬(스펙 4장 1~6번). 공용 빌딩블록은 helpers.ts, 여기는 씬별 연출/타임라인만.
+// 인트로 컷씬(spec/overview §4 개정 시나리오 — 세계관 정본 반영판).
+// 아무것도 떨어지지 않는다: 오무아무아 = 탐침의 투영(횡단 → 소멸), 균열은 심해에서 직접 열린다.
+// 공용 빌딩블록은 helpers.ts, 여기는 씬별 연출/타임라인만.
 
 const _look = new THREE.Vector3();
 
@@ -42,15 +42,16 @@ export const sceneOumuamua: CutScene = {
   },
 };
 
-// ─────────────── 씬 2: 코어 흩어짐 ───────────────
+// ─────────────── 씬 2: 투영 소멸 — 탐침이 시야에서 꺼진다 ───────────────
+// 아무것도 떨어지지 않는다: 스캔을 마친 오무아무아(탐침의 투영)가 비행 중 명멸하며 접히듯 사라진다.
 const DUR2 = 6.5;
-const CORE_COUNT = 15; // 소수(열몇 개)만
+const VANISH_T = DUR2 * 0.58; // 투영 거둠 시작
+const VANISH_LEN = 1.5; // 거둠 소요(s)
 const START2 = new THREE.Vector3(-7, 0, 1.5); // 씬2 시작 위치
 const FWD = new THREE.Vector3(1, 0.05, -0.16).normalize(); // 비행 방향(한쪽으로 쭉)
 const ASPD = 1.5; // 소행성 속도
 const RIGHT = new THREE.Vector3().crossVectors(FWD, new THREE.Vector3(0, 1, 0)).normalize();
 const UP = new THREE.Vector3().crossVectors(RIGHT, FWD).normalize();
-const _emit = new THREE.Vector3();
 /** 씬2 소행성 위치(시간 time) — FWD 로 비행 + 진행 수직(UP)으로 완만한 아치(씬1과 유사). */
 function rock2Pos(out: THREE.Vector3, time: number): THREE.Vector3 {
   const d = ASPD * time;
@@ -62,190 +63,83 @@ function rock2Pos(out: THREE.Vector3, time: number): THREE.Vector3 {
   );
 }
 
-export const sceneDispersal: CutScene = {
-  name: "dispersal",
+export const sceneVanish: CutScene = {
+  name: "vanish",
   duration: DUR2,
   build(ctx) {
-    ctx.scene.background = new THREE.Color(0x04060c);
+    ctx.scene.background = SPACE_COL.clone();
     ctx.scene.add(starfield(900, 23));
-    lights(ctx.scene); // 씬1과 동일 조명(카메라/피사체 무빙도 유사, 보는 각도만 다름)
+    lights(ctx.scene); // 씬1과 동일 조명 — 보는 각도만 다름
     const rock = oumuamua();
     rock.position.copy(START2);
     ctx.scene.add(rock);
-
-    // 소수의 코어 — 크기는 미세 먼지급 유지하되 밝은 오렌지로 발광(낙하/입수/침강 코어과 통일). 회전 결 나선 방출 → 서서히 멀어짐.
-    const orange = new THREE.Color(DORMANT_ORANGE);
-    const mat = new THREE.MeshStandardMaterial({ color: orange.clone().multiplyScalar(0.2), emissive: DORMANT_ORANGE, emissiveIntensity: 2.2, roughness: 0.5, metalness: 0 });
-    const inst = makeSwarm(new THREE.IcosahedronGeometry(0.03, 0), mat, CORE_COUNT, "cores"); // 코어 10cm급 — 크기 유지(최소 가시)
-    const birth = new Float32Array(CORE_COUNT);
-    const vel = new Float32Array(CORE_COUNT * 3); // 전진(같은 방향) + 반경(서서히 멀어짐) + 접선(회전 결)
-    const off = new Float32Array(CORE_COUNT * 3); // 방출점: 긴 축 둘레 표면(각도 phi)
-    const r = rng(7);
-    const hidden = new THREE.Matrix4().makeScale(0, 0, 0);
-    for (let i = 0; i < CORE_COUNT; i++) {
-      birth[i] = 0.6 + r() * 4.2; // 비행 내내 회전 결을 따라 하나씩
-      // 방출 각도 = 그 순간의 스핀 각도(회전 결) + 약간 분산 → 코어들이 나선으로 배열됨
-      const phi = SPIN_RATE * birth[i] + (r() - 0.5) * 0.5;
-      const c = Math.cos(phi), s = Math.sin(phi);
-      // 긴 축(FWD) 둘레의 반경 방향 r̂ / 접선 방향 t̂(스핀 결)
-      const rdx = RIGHT.x * c + UP.x * s, rdy = RIGHT.y * c + UP.y * s, rdz = RIGHT.z * c + UP.z * s;
-      const tdx = -RIGHT.x * s + UP.x * c, tdy = -RIGHT.y * s + UP.y * c, tdz = -RIGHT.z * s + UP.z * c;
-      const radSp = 0.22 + r() * 0.24; // 서서히 멀어지는 반경 속도(느림)
-      const tanSp = 0.32 + r() * 0.24; // 회전 결을 따라가는 접선 속도
-      const fwdF = 0.92 + r() * 0.06; // 거의 같은 전진(살짝 느림)
-      vel[i * 3] = FWD.x * ASPD * fwdF + rdx * radSp + tdx * tanSp;
-      vel[i * 3 + 1] = FWD.y * ASPD * fwdF + rdy * radSp + tdy * tanSp;
-      vel[i * 3 + 2] = FWD.z * ASPD * fwdF + rdz * radSp + tdz * tanSp;
-      off[i * 3] = rdx * 0.9; // 긴 축 둘레 표면에서 방출
-      off[i * 3 + 1] = rdy * 0.9;
-      off[i * 3 + 2] = rdz * 0.9;
-      inst.setMatrixAt(i, hidden);
-    }
-    setState<CoreSwarmState>(inst, { birth, vel, off });
-    ctx.scene.add(inst);
   },
-  update(t, _dt, ctx) {
+  update(t, dt, ctx) {
     const rock = ctx.scene.getObjectByName("rock")!;
     rock2Pos(rock.position, t); // 아치를 그리며 비행(씬1과 유사)
     spinAlong(rock, FWD, SPIN_RATE * t); // 긴 축 = 비행 방향, 그 축 둘레로 천천히 스크류 회전
 
-    const inst = ctx.scene.getObjectByName("cores") as THREE.InstancedMesh;
-    const { birth, vel, off } = getState<CoreSwarmState>(inst);
-    updateSwarm(inst, (i, m4) => {
-      const age = t - birth[i];
-      if (age <= 0) {
-        m4.makeScale(0, 0, 0); // 아직 방출 전
-      } else {
-        const grow = Math.min(1, age * 3);
-        // 방출점 = 그때 소행성 위치(아치) + 회전 결 표면 오프셋, 이후 자기 속도로 비행
-        rock2Pos(_emit, birth[i]);
-        m4.makeScale(grow, grow, grow).setPosition(
-          _emit.x + off[i * 3] + vel[i * 3] * age,
-          _emit.y + off[i * 3 + 1] + vel[i * 3 + 1] * age,
-          _emit.z + off[i * 3 + 2] + vel[i * 3 + 2] * age
-        );
-      }
-    });
-    // 카메라 무빙(씬1식 이징 트랙) — 보는 각도만 다르게(왼쪽-약간아래 → 오른쪽-위 크레인)
+    // 투영 거둠 — 그림자가 접히듯: 진행 축은 유지한 채 명멸하며 얇아지다 사라진다(폭발/파편 없음).
+    const u = Math.min(1, Math.max(0, (t - VANISH_T) / VANISH_LEN));
+    if (u > 0) {
+      const flicker = u < 1 ? 1 + Math.sin(t * 42) * 0.3 * (1 - u) : 0; // 사라지는 동안 명멸
+      const thin = Math.max(0.0001, (1 - ease(u)) * flicker); // 단면이 얇아짐
+      rock.scale.set(Math.max(0.0001, 1 - ease(u) * 0.55), thin, thin); // 긴 축은 늦게, 둘레는 먼저 접힘
+    }
+    const stars = ctx.scene.getObjectByName("stars");
+    if (stars) stars.rotation.y += dt * 0.01;
+    // 카메라는 소멸 지점을 계속 응시 — 텅 빈 별밭에 잠시 머무는 여백이 연출의 핵심
     track(ctx, t / DUR2, [-15, 1, 12], [7, 6.5, 11], rock.position);
   },
 };
 
-// ─────────────── 씬 3: 바다 낙하(3분할) ───────────────
-const FALL_DIR = new THREE.Vector3(0, -0.12, -1).normalize(); // 씬3a 비행 방향(지구 쪽)
-
-// 씬 3a — 멀리 지구 절반이 보이고, 카메라가 코어 바로 뒤를 추적하며 지구로 비행
-const DUR3A = 5;
-export const sceneFall: CutScene = {
-  name: "fall",
-  duration: DUR3A,
+// ─────────────── 씬 3: 심해 균열 개방 — 바늘구멍이 열린다 ───────────────
+// 마리아나 해구 최심부, 아무것도 없던 어둠 속에서 최초 균열(~10cm)이 바깥에서 뚫린다.
+const DUR3 = 6;
+const RUPTURE_T = 1.8; // 정적 후 개방 시작(s) — 어둠을 먼저 보여준다
+export const sceneRupture: CutScene = {
+  name: "rupture",
+  duration: DUR3,
   build(ctx) {
-    ctx.scene.background = SPACE_COL.clone();
-    ctx.scene.fog = null;
-    ctx.scene.add(starfield(900, 31));
-    ctx.scene.add(new THREE.AmbientLight(0x2a3a52, 1.25));
-    const sun = new THREE.DirectionalLight(0xfff4e2, 3.0);
-    sun.position.set(40, 55, 120); // 카메라(+Z) 쪽 → 태평양 면이 환하게 보이도록
-    ctx.scene.add(sun);
-    const e = earth(125); // 크게(태평양 중심) + 깊이 아래로 → 상부 반원만, 북반구 대륙 일부 노출
-    e.position.set(0, -132, -150);
-    ctx.scene.add(e);
-    const m = moon(6); // 매끈한 달 — 더 크게, 오른쪽·위
-    m.position.set(78, 20, -150);
-    ctx.scene.add(m);
-    ctx.scene.add(makeDormantCore(0.5, 2.0)); // 블룸 과다로 지구가 씻기지 않게 약간 낮춤
-  },
-  update(t, dt, ctx) {
-    const e = ctx.scene.getObjectByName("earth");
-    if (e) e.rotation.y += dt * 0.03;
-    const coreObj = ctx.scene.getObjectByName("core3")!;
-    const d = 6 * t; // 지구 쪽으로 비행
-    coreObj.position.set(FALL_DIR.x * d, 6 + FALL_DIR.y * d, 30 + FALL_DIR.z * d);
-    coreObj.scale.setScalar(1 + Math.sin(t * 6) * 0.06);
-    // 카메라: 코어 바로 뒤(근접) — 지구가 정면 멀리
-    ctx.camera.position.set(coreObj.position.x - FALL_DIR.x * 7, coreObj.position.y - FALL_DIR.y * 7 + 2, coreObj.position.z - FALL_DIR.z * 7);
-    ctx.camera.lookAt(coreObj.position);
-  },
-};
-
-// 씬 3b — 망망대해 수평선 배경, 코어이 바닷물로 첨벙 입수
-const DUR3B = 4;
-const SPL = 44;
-export const sceneSplash: CutScene = {
-  name: "splash",
-  duration: DUR3B,
-  build(ctx) {
-    ctx.scene.background = new THREE.Color(0x8fb4d6); // 낮 하늘
-    ctx.scene.fog = new THREE.Fog(0x8fb4d6, 130, 800); // 수평선 헤이즈
-    ctx.scene.add(new THREE.AmbientLight(0x9fb8cc, 1.7));
-    const sun = new THREE.DirectionalLight(0xffffff, 2.2);
-    sun.position.set(40, 70, 30);
-    ctx.scene.add(sun);
-    const sea = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.MeshStandardMaterial({ color: 0x2f6f97, roughness: 0.45, metalness: 0.1 }));
-    sea.rotation.x = -Math.PI / 2;
-    ctx.scene.add(sea);
-    ctx.scene.add(makeDormantCore(0.45, 2.0));
-    const sp = makeSwarm(new THREE.IcosahedronGeometry(0.13, 0), new THREE.MeshStandardMaterial({ color: 0xe3f1ff, roughness: 0.3 }), SPL, "splash");
-    const vel = new Float32Array(SPL * 3), r = rng(61), hidden = new THREE.Matrix4().makeScale(0, 0, 0);
-    for (let i = 0; i < SPL; i++) {
-      const a = r() * Math.PI * 2, out = 1.2 + r() * 2.4;
-      vel[i * 3] = Math.cos(a) * out;
-      vel[i * 3 + 1] = 4.5 + r() * 4; // 위로 솟구침
-      vel[i * 3 + 2] = Math.sin(a) * out;
-      sp.setMatrixAt(i, hidden);
-    }
-    setState<VelState>(sp, { vel });
-    ctx.scene.add(sp);
-  },
-  update(t, _dt, ctx) {
-    const coreObj = ctx.scene.getObjectByName("core3") as THREE.Mesh;
-    const splashT = 2.2;
-    const sy = t < splashT ? 28 * (1 - t / splashT) : -3 * ((t - splashT) / (DUR3B - splashT));
-    coreObj.position.set(0, sy, 0);
-    coreObj.visible = sy > -1.6;
-    (coreObj.material as THREE.MeshStandardMaterial).emissiveIntensity = sy > 0 ? 2.0 : 0.6;
-    const sp = ctx.scene.getObjectByName("splash") as THREE.InstancedMesh;
-    const { vel } = getState<VelState>(sp), age = t - splashT;
-    updateSwarm(sp, (i, m4) => {
-      if (age <= 0) m4.makeScale(0, 0, 0);
-      else {
-        const y = vel[i * 3 + 1] * age - 9 * age * age; // 위로 솟았다 중력으로 낙하
-        const s = y < -0.4 ? 0 : 0.9;
-        m4.makeScale(s, s, s).setPosition(vel[i * 3] * age, y, vel[i * 3 + 2] * age);
-      }
-    });
-    ctx.camera.position.set(7, 3.2, 13); // 낮게 수평선 보며 입수 포착
-    ctx.camera.lookAt(_look.set(0, 1.5, 0));
-  },
-};
-
-// 씬 3c — 멀리 마리아나 해구가 어둡게, 클로즈업된 코어이 천천히 가라앉음
-const DUR3C = 5;
-export const sceneSink: CutScene = {
-  name: "sink",
-  duration: DUR3C,
-  build(ctx) {
-    ctx.scene.background = new THREE.Color(0x12455c);
-    ctx.scene.fog = new THREE.FogExp2(0x12455c, 0.009); // 옅게 → 해구가 멀리까지 보임
-    ctx.scene.add(new THREE.AmbientLight(0x356b86, 2.0));
-    const top = new THREE.DirectionalLight(0x9fcfe8, 2.4);
+    ctx.scene.background = new THREE.Color(0x06121c); // 최심부 — 씬 중 가장 어둡게
+    ctx.scene.fog = new THREE.FogExp2(0x06121c, 0.012);
+    ctx.scene.add(new THREE.AmbientLight(0x1d4257, 1.4));
+    const top = new THREE.DirectionalLight(0x6fa3bd, 0.7); // 형태만 겨우 보이는 미광
     top.position.set(8, 80, 12);
     ctx.scene.add(top);
-    const sb = seabed(); // 마리아나 해구(멀리 보임)
-    sb.position.set(0, -26, -34);
+    const sb = seabed();
+    sb.position.set(0, -8, -6);
     ctx.scene.add(sb);
-    ctx.scene.add(makeDormantCore(0.6, 1.8)); // 수중이지만 밝은 오렌지 통일(낙하·입수와 동일 톤)
+    // 최초 균열 — 바늘구멍: 아주 작은 발광점 + 점광(주변 해저를 붉게 물들임)
+    const rup = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1, 2),
+      new THREE.MeshStandardMaterial({ color: 0x2a0604, emissive: 0xff2408, emissiveIntensity: 3.2, roughness: 0.5 })
+    );
+    rup.name = "rupture";
+    rup.position.set(0, -7.3, -2);
+    rup.scale.setScalar(0.0001); // 없음에서 시작
+    ctx.scene.add(rup);
+    const pl = new THREE.PointLight(0xff3411, 0, 70, 1.2);
+    pl.name = "ruplight";
+    pl.position.set(0, -6.9, -2);
+    ctx.scene.add(pl);
   },
   update(t, _dt, ctx) {
-    const coreObj = ctx.scene.getObjectByName("core3")!;
-    coreObj.position.set(0, 7 - (t / DUR3C) * 15, 0); // 천천히 가라앉음
-    coreObj.rotation.y += 0.004;
-    ctx.camera.position.set(coreObj.position.x + 3, coreObj.position.y + 1.1, coreObj.position.z + 4.6); // 클로즈업
-    ctx.camera.lookAt(coreObj.position);
+    const k = t / DUR3;
+    const rup = ctx.scene.getObjectByName("rupture")!;
+    const pl = ctx.scene.getObjectByName("ruplight") as THREE.PointLight;
+    // 정적(어둠) → 점화 → 미세하게 벌어짐. 크기는 끝까지 "바늘구멍~손톱" 스케일 유지(성장은 씬4의 몫).
+    const open = Math.max(0, (t - RUPTURE_T) / (DUR3 - RUPTURE_T));
+    const s = 0.001 + ease(open) * 0.32;
+    rup.scale.setScalar(s * (1 + Math.sin(t * 7) * 0.15)); // 갓 열린 균열의 불안정한 박동
+    pl.intensity = ease(open) * 130 * (1 + Math.sin(t * 5) * 0.2);
+    // 카메라: 어둠 속을 천천히 밀고 들어가 점을 응시(푸시 인)
+    ctx.camera.position.set(2.6 - k * 1.2, -5.0 - k * 1.0, 6.5 - k * 3.0);
+    ctx.camera.lookAt(_look.set(0, -7.1, -2));
   },
 };
 
-// ─────────────── 씬 4: 코어 성장(주변 물질 흡입) ───────────────
+// ─────────────── 씬 4: 균열(코어) 확장 — 주변 물질의 에너지 흡수 ───────────────
 const DUR4 = 7;
 const DEBRIS = 46;
 const CORE4 = new THREE.Vector3(0, 2, 0);
@@ -389,9 +283,10 @@ export const sceneRise: CutScene = {
   },
 };
 
-// ─────────────── 씬 6: 해변 집 — 플라즈모이드 통과 → 붕괴 ───────────────
+// ─────────────── 씬 6: 해변 집 — 플라즈모이드 통과 → 디테일 상실 → 붕괴 ───────────────
 const DUR6 = 7.5;
 const TC6 = DUR6 * 0.46; // 붕괴 시작(플라즈모이드가 집 중앙 통과)
+const _flat = new THREE.Color(0x8a8478); // 디테일(색 정보)을 잃은 물질의 단일 무광 톤
 export const sceneHouse: CutScene = {
   name: "house",
   duration: DUR6,
@@ -410,7 +305,20 @@ export const sceneHouse: CutScene = {
     sea.rotation.x = -Math.PI / 2;
     sea.position.set(0, 0.05, -60);
     ctx.scene.add(sea);
-    ctx.scene.add(beachHouse());
+    const house = beachHouse();
+    ctx.scene.add(house);
+    // 디테일 상실 캐시 — 붕괴 직전 집이 먼저 질감(색 정보)을 잃고 단조로운 다면체가 된다(영점 에너지 상실의 시각화, spec/overview §4).
+    const ud6 = getState<HouseState>(house);
+    const seen = new Set<THREE.Material>();
+    const mats: { m: THREE.MeshStandardMaterial; c: THREE.Color }[] = [];
+    house.traverse((o) => {
+      const mm = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined;
+      if (mm && mm.color && !seen.has(mm)) {
+        seen.add(mm);
+        mats.push({ m: mm, c: mm.color.clone() });
+      }
+    });
+    ud6.mats = mats;
     const plas = new THREE.Mesh(
       new THREE.IcosahedronGeometry(0.8, 2),
       new THREE.MeshStandardMaterial({ color: new THREE.Color(PLAS_STRONG).multiplyScalar(0.1), emissive: PLAS_STRONG, emissiveIntensity: 0.8, roughness: 0.6 })
@@ -423,7 +331,13 @@ export const sceneHouse: CutScene = {
     plas.position.set(-11 + (t / DUR6) * 22, 2.2, 0); // 집을 가로질러 통과
     const house = ctx.scene.getObjectByName("house") as THREE.Group;
     const ud = getState<HouseState>(house);
-    // 통과 시 벽이 제자리에서 다수 조각으로 갈라져 와르르 무너져 내림(TC6 기점)
+    // ① 디테일 상실 — 플라즈모이드가 다가오는 동안(붕괴 1.6s 전부터) 색·질감이 단일 무광 톤으로
+    //    바랜다: 붕괴보다 먼저 "정보(디테일)"가 사라진다.
+    const fade = ease(Math.min(1, Math.max(0, (t - (TC6 - 1.6)) / 1.4)));
+    if (ud.mats && fade > 0) {
+      for (const e of ud.mats) e.m.color.copy(e.c).lerp(_flat, fade);
+    }
+    // ② 통과 시 벽이 제자리에서 다수 조각으로 갈라져 와르르 무너져 내림(TC6 기점)
     for (const f of ud.wallFrags) fallFrag(f, t - TC6);
     // 약간 뒤 지붕이 잘게 파사삭 부서져 내림(TC6+0.5 기점)
     for (const f of ud.roofFrags) fallFrag(f, t - (TC6 + 0.5));
@@ -432,7 +346,7 @@ export const sceneHouse: CutScene = {
   },
 };
 
-/** 인트로 컷씬 시퀀스(스펙 4장 1~6번 전체). */
+/** 인트로 컷씬 시퀀스(spec/overview §4 개정 시나리오 — 횡단·소멸·균열 개방·확장·상승·집 붕괴). */
 export function introScenes(): CutScene[] {
-  return [sceneOumuamua, sceneDispersal, sceneFall, sceneSplash, sceneSink, sceneCore, sceneRise, sceneHouse];
+  return [sceneOumuamua, sceneVanish, sceneRupture, sceneCore, sceneRise, sceneHouse];
 }

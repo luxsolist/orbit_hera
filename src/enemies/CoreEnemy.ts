@@ -6,6 +6,9 @@ export const SHELL_GEO = new THREE.IcosahedronGeometry(1, 2); // 셸(본체·레
 export const CORE_GEO = new THREE.IcosahedronGeometry(0.42, 1); // 발광 코어 — EnemyManager 가 InstancedMesh 로 일괄 렌더
 
 const PULSE_RATE = 4; // 박동 위상 속도(rad/s)
+export const KILL_STAGGER_SEC = 0.35; // 동시 경직 — 한 기 처치 시 전 개체가 같은 순간 움찔(처치 직후 안전창)
+const STAGGER_SHRINK = 0.93; // 경직 중 수축 배율(전장 전체가 함께 움찔하는 시각 신호)
+const DISSOLVE_DRIFT_SPEED = 4.0; // 소산 표류 최고 속도(m/s) — 디졸브 입자가 균열 앵커 방향으로 흐름(진행도 비례)
 const BOB_RATE = 2; // 자유 부유 위상 속도(rad/s)
 const BOB_AMPLITUDE = 0.4; // 자유 부유 상하 진폭(m)
 const STOP_DIST = 2.2; // 이 거리 이내면 추적 정지(접촉 교전 거리)
@@ -15,6 +18,30 @@ const SEP_GAIN = 0.7; // 분리 가중(추격 대비) — 겹치면 강하게 �
 const KITER_FLEE_LEAD = 0.35; // 카이터가 플레이어 미래 위치를 예측해 회피하는 리드(s) — 원돌기 무력화
 const HOME_WANDER = 2.0; // 카이터 방위(homeDir) 무작위 표류 속도 — 살아있는 동안 xyz 전 방향으로 자유 이동(구면 랜덤워크)
 const _pred = { x: 0, y: 0, z: 0 }; // 예측 위치 임시(프레임당 동기 사용)
+
+// 박동 동기화 — 전장의 모든 개체가 **정확히 같은 위상**으로 맥동한다(개체별 무작위 위상 폐기).
+// EnemyManager.update 가 프레임당 1회 전진시키고 모든 개체가 공유 위상을 읽는다.
+let globalPulse = Math.random() * Math.PI * 2;
+/** 공유 박동 위상 전진 — 매 프레임 1회(EnemyManager). */
+export function advanceGlobalPulse(dt: number): void {
+  globalPulse += dt * PULSE_RATE;
+}
+/** 현재 공유 박동 위상(rad). */
+export function globalPulsePhase(): number {
+  return globalPulse;
+}
+
+/**
+ * 소산 표류 1스텝(순수) — 디졸브 중 입자가 앵커(균열) 방향으로 흐르는 수평 변위.
+ * 진행도(progress 0..1)에 비례해 가속, 앵커에 거의 닿았으면 0. y 는 불변(수평 표류).
+ */
+export function dissolveDriftStep(pos: Vec3, anchor: Vec3, progress: number, dt: number, speed = DISSOLVE_DRIFT_SPEED): Vec3 {
+  const dx = anchor.x - pos.x, dz = anchor.z - pos.z;
+  const d = Math.hypot(dx, dz);
+  if (d < 1e-3 || progress <= 0) return { x: 0, y: 0, z: 0 };
+  const k = (speed * progress * dt) / d;
+  return { x: dx * k, y: 0, z: dz * k };
+}
 
 export type EnemyState = "alive" | "dissolving" | "dead";
 
@@ -325,10 +352,11 @@ export class CoreEnemy {
   archetypeName = ""; // 아키타입 표시명(모기/거머리 …) — HUD/로그용
   targetIndex = -1; // 현재 추적 대상 플레이어 인덱스(MP 멀티타깃 — 매니저가 관리, 히스테리시스)
   buildingId: string | null = null; // 플레이어가 사거리 밖일 때 공격 중인 건물(2순위 표적)
+  driftAnchor: Vec3 | null = null; // 소산 표류 앵커(균열 위치) — 매니저가 주입(공유 참조)
 
   private dissolveProgress = 0;
   private hitFlash = 0; // 피격 순간 1 → 빠르게 감쇠하며 흰색 번쩍임
-  private pulsePhase = Math.random() * Math.PI * 2;
+  private staggerLeft = 0; // 동시 경직 잔여(s) — 어디선가 동료가 처치되면 전 개체가 함께 움찔
   private bobPhase = Math.random() * Math.PI * 2;
   private speed: number;
   private attackCooldown = 0;
@@ -420,10 +448,22 @@ export class CoreEnemy {
     this.baseScale = Math.min(this.maxScale, this.baseScale * (1 + amount / Math.max(1, this.maxHp)));
   }
 
+  /** 동시 경직 — 다른 개체가 처치되는 순간 함께 움찔(이동·공격 정지 + 수축). 살아있을 때만. */
+  stagger(sec = KILL_STAGGER_SEC): void {
+    if (this.state !== "alive") return;
+    this.staggerLeft = Math.max(this.staggerLeft, sec);
+    this.coreBright = 5.5; // 같은 순간 전장 전체가 밝게 움찔 — 한 몸의 신호
+  }
+
+  get isStaggered(): boolean {
+    return this.staggerLeft > 0;
+  }
+
   update(dt: number, target: THREE.Vector3, speedScale = 1, steer?: SteerInput) {
-    this.pulsePhase += dt * PULSE_RATE;
     this.bobPhase += dt * BOB_RATE;
-    if (this.updateVisual(dt)) this.updateMotion(dt, target, speedScale, steer); // 소멸 중이 아니면 이동
+    const staggered = this.staggerLeft > 0;
+    if (staggered) this.staggerLeft = Math.max(0, this.staggerLeft - dt);
+    if (this.updateVisual(dt) && !staggered) this.updateMotion(dt, target, speedScale, steer); // 소멸/경직 중엔 이동 생략
   }
 
   /** FX 갱신 — 피격 플래시·디졸브·박동/스케일. 살아있으면 true(이동 처리 진행). */
@@ -439,18 +479,26 @@ export class CoreEnemy {
       this.shellMat.setProgress(this.dissolveProgress);
       this.coreScale = Math.max(0, 1 - this.dissolveProgress * 1.2); // 코어 수축(인스턴스로 렌더)
       this.coreBright = 4.5 * (1 - this.dissolveProgress);
+      // 소산 표류 — 흩어지는 입자가 균열(앵커) 방향으로 흐른다. 모든 죽음이 한 곳을 가리킨다.
+      if (this.driftAnchor) {
+        const p = this.group.position;
+        const s = dissolveDriftStep(p, this.driftAnchor, this.dissolveProgress, dt);
+        p.x += s.x;
+        p.z += s.z;
+      }
       if (this.dissolveProgress >= 1) this.state = "dead";
       return false;
     }
 
-    // 체력 비율에 따라 쪼그라들기(스펙: 쪼그라뜨려 소멸)
+    // 체력 비율에 따라 쪼그라들기(스펙: 쪼그라뜨려 소멸) — 박동은 전역 공유 위상(전 개체 동기)
     const hpRatio = this.hp / this.maxHp;
     const shrink = 0.55 + 0.45 * hpRatio;
-    const pulse = 1 + Math.sin(this.pulsePhase) * 0.06;
-    this.group.scale.setScalar(this.baseScale * shrink * pulse);
-    this.shellMat.setPulse((Math.sin(this.pulsePhase) + 1) * 0.5);
+    const pulse = 1 + Math.sin(globalPulse) * 0.06;
+    const stag = this.staggerLeft > 0 ? STAGGER_SHRINK : 1; // 경직 중 일제 수축(움찔)
+    this.group.scale.setScalar(this.baseScale * shrink * pulse * stag);
+    this.shellMat.setPulse((Math.sin(globalPulse) + 1) * 0.5);
     this.coreScale = 1;
-    this.coreBright = THREE.MathUtils.lerp(this.coreBright, 1.8 + Math.sin(this.pulsePhase) * 0.8, 0.1);
+    this.coreBright = THREE.MathUtils.lerp(this.coreBright, 1.8 + Math.sin(globalPulse) * 0.8, 0.1);
     return true;
   }
 
@@ -495,9 +543,9 @@ export class CoreEnemy {
     pos.y += BOB_AMPLITUDE * BOB_RATE * Math.cos(this.bobPhase) * dt; // 누적 X 미세 흔들림
   }
 
-  /** 공격 가능 여부 (사거리 + 쿨다운 게이트). cooldown 으로 접촉(1s)/카이터 드레인 간격을 분기. */
+  /** 공격 가능 여부 (사거리 + 쿨다운 게이트 + 경직 중 불가). cooldown 으로 접촉(1s)/카이터 드레인 간격을 분기. */
   tryAttack(playerPos: THREE.Vector3, range: number, cooldown = 1.0): boolean {
-    if (this.state !== "alive" || this.attackCooldown > 0) return false;
+    if (this.state !== "alive" || this.attackCooldown > 0 || this.staggerLeft > 0) return false;
     const d = this.group.position.distanceTo(playerPos);
     if (d <= range) {
       this.attackCooldown = cooldown;

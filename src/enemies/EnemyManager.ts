@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { CoreEnemy, chooseTarget, matchupMul, engageKeepDist, buildBoidGrid, recomputeSteer, CORE_GEO, SHELL_GEO, type Boid } from "./CoreEnemy";
+import { CoreEnemy, chooseTarget, matchupMul, engageKeepDist, buildBoidGrid, recomputeSteer, advanceGlobalPulse, KILL_STAGGER_SEC, CORE_GEO, SHELL_GEO, type Boid } from "./CoreEnemy";
 import type { GameWorld } from "../world/GameWorld";
 import type { PlayerController } from "../player/PlayerController";
 import { bestAlignedInCone } from "../player/PlayerController";
@@ -93,6 +93,7 @@ export class EnemyManager {
   private spawnTimer = 0;
   private peaceful = false; // 탐방 모드 — 웨이브 미시작 + 클리어 시 자동 재시작 억제
   private burstMode = false; // 일괄 스폰 모드 — 웨이브 미사용(미션: 구역 내 N마리 한번에) + 클리어 시 자동 재시작 억제
+  private riftAnchor: Vec3 = { x: 0, y: 0, z: 0 }; // 소산 표류 앵커(균열 위치 프록시 — 일괄 스폰 중심). 개체와 공유 참조.
   // 작전구역(존) — 플라즈모이드도 이 원(중심·반경) 밖으로 못 나간다. radius 0 = 무제한.
   private zoneCx = 0;
   private zoneCz = 0;
@@ -274,6 +275,7 @@ export class EnemyManager {
     const hps = distributeHp(totalHp, bossHp, count, Math.random); // 체력 예산 배분(합=totalHp, [0]=보스)
     const c = this.playersCentroid(_centroid);
     const cx = c.x, cz = c.z; // 구역 중심 = 스폰 무게중심(스냅샷 — 루프 중 갱신되는 임시 벡터 회피)
+    this.riftAnchor.x = cx; this.riftAnchor.z = cz; // 소산 표류 앵커 = 전장(균열) 중심 — 공유 참조라 기존 개체도 함께 갱신
     const lim = Math.min(radius > 0 ? radius : 1500, this.world.bounds - 6);
     for (let i = 0; i < count; i++) {
       // 매칭 완화 — 워커도 카이터(모기)를 일부 끌어오도록 플라이어 가중에 워커 교차분을 더한다(웨이브 스폰과 동일 의도).
@@ -378,6 +380,7 @@ export class EnemyManager {
     enemy.glow = 1 + GLOW_STRENGTH * g01; // 청백(강)일수록 밝게 빛남(블룸)
     enemy.killRefund = arche.killRefund;
     enemy.archetypeName = arche.name;
+    enemy.driftAnchor = this.riftAnchor; // 소산 표류 앵커(공유 참조) — 죽음이 균열 방향을 가리킴
     this.enemies.push(enemy);
     // 살아있는 동안은 셸 InstancedMesh 로 렌더 — 그룹(개별 메시)은 디졸브 시작 시에만 씬에 추가.
   }
@@ -508,6 +511,7 @@ export class EnemyManager {
 
   update(dt: number) {
     this.frame++;
+    advanceGlobalPulse(dt); // 박동 동기화 — 전 개체 공유 위상(프레임당 1회)
     this.world.buildings?.update(dt); // 건물 피격 틴트/붕괴 연출 진행
     this.tickSpawns(dt);
     this.buildTargets(dt);
@@ -606,6 +610,9 @@ export class EnemyManager {
     this.killCount += 1;
     // 처치 = 흡수당한 물질 회수(HP 환수). 사망 지점 최근접 플레이어에게(근사).
     if (enemy) this.nearestPlayer(enemy.group.position)?.heal(enemy.killRefund);
+    // 동시 경직 — 전장의 모든 개체가 같은 순간 움찔(이동·공격 잠깐 정지 + 일제 수축).
+    // 플레이어에게는 "처치 직후 안전창" 테크닉으로 읽힌다.
+    for (const e of this.enemies) if (e !== enemy) e.stagger(KILL_STAGGER_SEC);
     this.onKill?.();
   }
 
