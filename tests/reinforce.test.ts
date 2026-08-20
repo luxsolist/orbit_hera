@@ -149,6 +149,83 @@ describe("deploy 모델(훅 ①) — roster/horde 투입기", () => {
   });
 });
 
+describe("엣지 가드 — 낙인탄 시야·분출 상한·랜드마크 폴백·소유 파문·MP 스케일", () => {
+  const makeWorld = (seg: number, bc?: any) => ({
+    heightAt: () => 0, bounds: 5000, topAt: () => -Infinity,
+    resolveCollision: (x: number, z: number) => ({ x, z }), segmentHitsBuilding: () => seg,
+    buildings: bc,
+  }) as any;
+  const makePlayer = (mode: "walk" | "fly" = "walk") => ({
+    worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
+    spec: { move: { mode } }, takeDamage: () => false, heal: () => {},
+  }) as any;
+  const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };
+
+  it("마커 낙인탄은 건물에 시야가 막히면 발사하지 않는다(LOS 게이트)", () => {
+    const blocked = new EnemyManager(new THREE.Scene(), makeWorld(0.5), [makePlayer()], DEFAULT_PLASMOID);
+    blocked.startRoster([{ role: "marker", count: 2, hp: 1000 }], 100);
+    tick(blocked, 60 * 12); // 12s — 발사 간격(7s)을 넘겨도
+    expect(blocked.brandCount(0)).toBe(0); // 차폐 — 낙인 없음
+
+    const clear = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), [makePlayer()], DEFAULT_PLASMOID);
+    clear.startRoster([{ role: "marker", count: 2, hp: 1000 }], 100);
+    tick(clear, 60 * 12); // 유도탄 비행(22m/s·≤220m) 포함
+    expect(clear.brandCount(0)).toBeGreaterThan(0); // 시야 확보 — 낙인 부착
+  });
+
+  it("잡몹 분출은 전장 생존 상한(40)에서 멈춘다(무한 팽창 방지)", () => {
+    const em = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), [makePlayer()], DEFAULT_PLASMOID);
+    em.startBossDeploy({ bossHp: 1e9, projections: 1, emit: { role: "rusher", hp: 100, count: 5, interval: 0.05 } }, 300);
+    tick(em, 60 * 10); // 10s — 상한 없으면 ~1000기
+    const alive = em.aliveEnemies.length;
+    expect(alive).toBeLessThanOrEqual(45); // 게이트 통과 후 배치(count 5)까지 허용
+    tick(em, 60 * 3);
+    expect(em.aliveEnemies.length).toBeLessThanOrEqual(45); // 정체 유지
+  });
+
+  it("aggro=landmark 인데 로드된 랜드마크가 없으면 일반 건물로 폴백", () => {
+    const bc = {
+      update: () => {},
+      nearestTarget: () => ({ id: "b1", x: 300, y: 5, z: 0 }),
+      nearestLandmark: () => null, // 미로드
+      targetPos: (_id: string, out: THREE.Vector3) => { out.set(300, 5, 0); return true; },
+      damage: () => "none",
+    };
+    const em = new EnemyManager(new THREE.Scene(), makeWorld(Infinity, bc), [makePlayer()], DEFAULT_PLASMOID);
+    em.startRoster([{ role: "rusher", count: 1, hp: 1000 }], 100);
+    em.setAggro("landmark");
+    tick(em, 30);
+    expect(em.aliveEnemies[0].buildingId).toBe("b1"); // 폴백
+  });
+
+  it("소유 파문(ownSweep) — 파문 앵커가 살아있는 보스 위치, 소산 후 균열로 폴백", () => {
+    const em = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), [makePlayer()], DEFAULT_PLASMOID);
+    em.startBossDeploy({ bossHp: 5000, projections: 1, ownSweep: true }, 300);
+    const boss = em.aliveEnemies.find((e) => e.sharedPool)!;
+    const a1 = (em as any).sweepAnchor();
+    expect(a1.x).toBeCloseTo(boss.group.position.x, 6);
+    expect(a1.z).toBeCloseTo(boss.group.position.z, 6);
+    if (boss.applyFrequencyHit(1e9)) em.registerKill(boss);
+    tick(em, 60); // 소산 정리
+    const a2 = (em as any).sweepAnchor();
+    expect(a2).toBe((em as any).riftAnchor); // 균열 폴백
+  });
+
+  it("MP 스케일(2인) — horde 물량·상한 ×2, roster 비보스 ×2·보스 그룹은 팀 공유 1", () => {
+    const players = [makePlayer("walk"), makePlayer("fly")];
+    const h = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), players, DEFAULT_PLASMOID);
+    h.startHorde(10, 200, 500, { concurrentCap: 4, reinforceInterval: 0.1 });
+    expect(h.aliveMarkers.length).toBe(5); // 초기 = ceil(4×2×0.6)
+    tick(h, 60 * 5);
+    expect(h.aliveMarkers.length).toBe(8); // 상한 4×2
+
+    const r = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), players, DEFAULT_PLASMOID);
+    r.startRoster([{ role: "rusher", count: 3, hp: 500 }, { role: "boss", count: 1, hp: 3000 }], 500);
+    expect(r.aliveEnemies.filter((e) => !e.sharedPool).length).toBe(6); // 3×2
+    expect(r.aliveEnemies.filter((e) => e.sharedPool).length).toBe(3); // 투영 3 — 그룹 1 유지
+  });
+});
+
 describe("어그로 성향(훅 ④) — building/landmark 직행, provoked 만 플레이어 교전", () => {
   const makeBc = () => ({
     update: () => {},

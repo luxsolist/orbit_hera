@@ -34,7 +34,7 @@ import type { MapCatalogEntry, NormalizedMap } from "../world/MapData";
 import { GameInstance, runDeploy } from "../game/GameInstance";
 import { fetchMissions } from "../game/missions";
 import type { MissionOutcome } from "../game/mission";
-import { pickMissionV2, FREE_ROAM_V2, DEFAULT_MISSIONS_V2 } from "../game/missionV2";
+import { pickMissionV2, FREE_ROAM_V2, DEFAULT_MISSIONS_V2, resonanceScore } from "../game/missionV2";
 
 type GameState = "intro" | "menu" | "loading" | "playing" | "paused" | "dead";
 
@@ -608,8 +608,7 @@ export class Game {
     if (s) {
       const st = s.enemies.stats;
       const sweepTotal = st.sweepHits + st.sweepCleanPasses;
-      const score =
-        kills * 10 + st.markerKills * 25 + st.sweepCleanPasses * 40 + st.zenoFreezes * 5 + (success ? 500 : 0);
+      const score = resonanceScore(kills, st, success); // 순수 공식(missionV2) — 테스트 가드
       sub += `\n근원 격파 ${st.markerKills} · 파문 무상 통과 ${st.sweepCleanPasses}/${sweepTotal} · 관측 고정 ${st.zenoFreezes}`;
       sub += `\n공명 점수 ${score}`;
     }

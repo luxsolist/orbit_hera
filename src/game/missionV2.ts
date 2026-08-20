@@ -340,6 +340,21 @@ export function runnableV2(spec: MissionSpecV2): boolean {
   return goalOk && deployOk && modifiersOk;
 }
 
+/** 결과 화면 채점 입력(EnemyManager.stats 부분집합) — 표면 어휘 독해는 implements/08. */
+export interface CombatScoreStats {
+  markerKills: number; //      근원 격파
+  zenoFreezes: number; //      관측 고정(동결 진입 수)
+  sweepCleanPasses: number; // 파문 무상 통과
+}
+
+/**
+ * 공명 점수(순수) — "어떻게 싸웠는가"의 집계. W5 공명 각인(서사편 §7)의 선행 형태:
+ * 실패 유형이 다양할수록(정화·근원 격파·무상 통과·관측 고정) 점수가 오른다.
+ */
+export function resonanceScore(kills: number, st: CombatScoreStats, success: boolean): number {
+  return kills * 10 + st.markerKills * 25 + st.sweepCleanPasses * 40 + st.zenoFreezes * 5 + (success ? 500 : 0);
+}
+
 /** 미션 풀에서 u∈[0,1) 비례로 하나 선택(순수 — 난수 주입). 빈 풀은 탐방으로 폴백. */
 export function pickMissionV2(pool: readonly MissionSpecV2[], u: number): MissionSpecV2 {
   if (pool.length === 0) return FREE_ROAM_V2;

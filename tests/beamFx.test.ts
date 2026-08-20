@@ -83,6 +83,8 @@ function harness(opts: {
   bt?: number;           // segmentHitsBuilding 반환(생략 = Infinity = 건물 없음)
   killOnHit?: boolean;   // applyFrequencyHit 가 true(처치) 반환
   muzzleOffsets?: number[];
+  zeno?: { slowPerSec: number; freezeAfter: number }; // 관측 고정(W1) 스펙 전달
+  damageMul?: number;    // 호위 방패 감쇄(표시 데미지 반영 검증)
 }) {
   const spawned: { from: THREE.Vector3; to: THREE.Vector3 }[] = [];
   const dmgs: { point: THREE.Vector3; dmg: number }[] = [];
@@ -90,11 +92,18 @@ function harness(opts: {
   const kills: unknown[] = [];
   const provoked: unknown[] = [];
   const onHits: THREE.Vector3[] = [];
+  const zenoed: unknown[] = [];
+  const enemyHits: boolean[] = [];
 
   const hit = opts.hitDist !== undefined
     ? ({ distance: opts.hitDist, point: new THREE.Vector3(0, 0, -opts.hitDist), face: { normal: new THREE.Vector3(0, 0, 1) } } as unknown as THREE.Intersection)
     : undefined;
-  const enemy = { state: "alive", applyFrequencyHit: (d: number) => { applied.push(d); return !!opts.killOnHit; } };
+  const enemy = {
+    state: "alive",
+    damageMul: opts.damageMul ?? 1,
+    applyZeno: (z: unknown) => zenoed.push(z),
+    applyFrequencyHit: (d: number) => { applied.push(d); return !!opts.killOnHit; },
+  };
 
   const ctx = {
     raycaster: { set() {}, intersectObjects: () => (hit ? [hit] : []) },
@@ -112,10 +121,12 @@ function harness(opts: {
     falloff: { refDist: 1000, maxMult: 1.5, minMult: 0.3 },
     range: 3000,
     style: { beamColor: 0, glowColor: 0, radius: 1, glowScale: 1 },
+    zeno: opts.zeno,
     onHit: (end) => onHits.push(end.clone()),
+    onEnemyHit: (killed) => enemyHits.push(killed),
   };
   fireEmitters(ctx, shot);
-  return { spawned, dmgs, applied, kills, provoked, onHits, enemy };
+  return { spawned, dmgs, applied, kills, provoked, onHits, enemy, zenoed, enemyHits };
 }
 
 describe("fireEmitters — 건물 시야 차폐", () => {
@@ -197,5 +208,37 @@ describe("fireEmitters — 건물 시야 차폐", () => {
     expect(r.spawned[0].to.z).toBeCloseTo(-100, 5);
     expect(r.spawned[1].to.z).toBeCloseTo(-100, 5);
     expect(r.applied).toHaveLength(0);
+  });
+});
+
+describe("fireEmitters — 관측 고정(zeno)·처치 콜백·방패 감쇄 표시", () => {
+  it("zeno 스펙이 명중한 적에게 전달된다(W1 — 지속 조사 노출)", () => {
+    const z = { slowPerSec: 0.4, freezeAfter: 1.2 };
+    const r = harness({ hitDist: 200, zeno: z });
+    expect(r.zenoed).toEqual([z]);
+  });
+
+  it("zeno 미지정/미스/차폐면 applyZeno 호출 없음", () => {
+    expect(harness({ hitDist: 200 }).zenoed).toHaveLength(0); // 스펙 없음
+    expect(harness({ zeno: { slowPerSec: 0.4, freezeAfter: 1.2 } }).zenoed).toHaveLength(0); // 미스
+    expect(harness({ hitDist: 200, zeno: { slowPerSec: 0.4, freezeAfter: 1.2 }, bt: 100 / 3000 }).zenoed).toHaveLength(0); // 차폐
+  });
+
+  it("onEnemyHit(killed) — 명중 시 처치 여부와 함께 호출(히트스톱 훅), 미스면 없음", () => {
+    expect(harness({ hitDist: 200 }).enemyHits).toEqual([false]);
+    expect(harness({ hitDist: 200, killOnHit: true }).enemyHits).toEqual([true]);
+    expect(harness({}).enemyHits).toHaveLength(0);
+  });
+
+  it("처치 시 registerKill — onEnemyHit 와 동일 프레임 순서 보장", () => {
+    const r = harness({ hitDist: 200, killOnHit: true });
+    expect(r.kills).toHaveLength(1);
+    expect(r.enemyHits).toEqual([true]);
+  });
+
+  it("호위 방패(damageMul) — 표시 데미지 = 적용치(감쇄 반영), 적용 원값은 그대로 전달", () => {
+    const r = harness({ hitDist: 200, damageMul: 0.3 });
+    expect(r.dmgs[0].dmg).toBeCloseTo(150 * 0.3, 5); // 표시 = 45(적이 내부에서 감쇄 적용)
+    expect(r.applied).toEqual([150]); // applyFrequencyHit 에는 원값(내부에서 ×damageMul)
   });
 });

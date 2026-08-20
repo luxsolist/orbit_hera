@@ -157,3 +157,20 @@ describe("BuildingCombat — destroyedBuildings / destroyedLandmarks 집계", ()
     expect(bc.destroyedBuildings).toBe(2);
   });
 });
+
+describe("nearestLandmark — 어그로 변조(aggro: landmark)용 최근접 랜드마크(훅 ④)", () => {
+  it("반경 무제한 최근접 선택, 파괴된 랜드마크는 제외", () => {
+    const bc = new BuildingCombat();
+    bc.registerLandmark(new THREE.Group(), 100, 0, 30, 10, 10, 500);
+    bc.registerLandmark(new THREE.Group(), 3000, 0, 30, 10, 10, 500); // 아주 멀어도 후보
+    const near = bc.nearestLandmark(0, 0)!;
+    expect(near.id).toBe("l100_0");
+    // 가까운 쪽 파괴 → 먼 쪽으로 전환
+    bc.damage("l100_0", 9999);
+    expect(bc.nearestLandmark(0, 0)!.id).toBe("l3000_0");
+  });
+
+  it("랜드마크가 없으면 null(호출부는 일반 건물 폴백)", () => {
+    expect(new BuildingCombat().nearestLandmark(0, 0)).toBeNull();
+  });
+});

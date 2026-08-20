@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   toLegacy, fromLegacy, evaluateMissionV2, runnableV2, missionDurationV2, deployKillCredits,
-  deployRoleCredits, missionObjectiveTextV2, missionProgressTextV2,
+  deployRoleCredits, missionObjectiveTextV2, missionProgressTextV2, resonanceScore,
   DEFAULT_MISSIONS_V2, FREE_ROAM_V2, type MissionSpecV2,
 } from "../src/game/missionV2";
 import { DEFAULT_MISSIONS, type MissionRuntime } from "../src/game/mission";
@@ -234,5 +234,28 @@ describe("v2 런타임 부속 — duration/runnable/로더 정규화", () => {
 
   it("normalizeMissionPool — v1 항목(goal 없음)은 fromLegacy 로 수용", () => {
     expect(normalizeMissionPool(DEFAULT_MISSIONS)).toEqual(DEFAULT_MISSIONS.map(fromLegacy));
+  });
+
+  it("fromLegacy — free-roam(v1) → goal free-roam + deploy none", () => {
+    const fr = fromLegacy({
+      id: "free-roam", name: "탐방 / EXPLORE", kind: "free-roam",
+      duration: 0, killTarget: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: -1,
+      zoneRadius: 0, spawnCount: 0, spawnRadius: 0, totalHp: 0, bossHp: 0, concurrentCap: 0, reinforceInterval: 0,
+    });
+    expect(fr.goal).toEqual({ type: "free-roam" });
+    expect(fr.deploy).toEqual({ model: "none" });
+    expect(fr.fail.respawns).toBe(-1);
+  });
+});
+
+describe("resonanceScore — 결과 화면 공명 점수(순수)", () => {
+  const st = { markerKills: 2, zenoFreezes: 4, sweepCleanPasses: 3 };
+  it("가중 합산 + 성공 보너스 500", () => {
+    // 30×10 + 2×25 + 3×40 + 4×5 = 300+50+120+20 = 490 (+500)
+    expect(resonanceScore(30, st, false)).toBe(490);
+    expect(resonanceScore(30, st, true)).toBe(990);
+  });
+  it("무전과 실패 = 0", () => {
+    expect(resonanceScore(0, { markerKills: 0, zenoFreezes: 0, sweepCleanPasses: 0 }, false)).toBe(0);
   });
 });

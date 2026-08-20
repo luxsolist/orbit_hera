@@ -167,9 +167,9 @@ src/
     Sfx.ts             # 절차적 사운드  ·  Diagnostics.ts  # ?diag 온디바이스 진단
     math.ts            # 공용 순수 유틸(clamp/lerp/parseHexColor)
   game/
-    GameInstance.ts    # 플레이타임 컨테이너(미션·타이머·리스폰·집계)
-    mission.ts         # 미션 명세/평가(순수) + 풀 선택 — 격멸/방어/사수/탐방
-    missions.ts        # 미션 풀 fetch(public/missions/index.json, 폴백 DEFAULT_MISSIONS)
+    GameInstance.ts    # 플레이타임 컨테이너(미션·타이머·리스폰·집계 + 페이즈 드라이버)
+    mission.ts / missionV2.ts  # 미션 v1 계약 / v2 3축 체계(승리·실패·투입·변조 — 정본 06-missions)
+    missions.ts        # 미션 풀 fetch/정규화(v1 수용, 폴백 DEFAULT_MISSIONS_V2)
   player/
     PlayerController.ts # 보행/비행 FPS 컨트롤러(방향별 속도·비행 하한고도·작전구역 클램프)
   weapons/
@@ -177,9 +177,10 @@ src/
     SpecialBarrage.ts / SpecialStream.ts  # 특수(콘 살포 / 오버드라이브)
     beamFx.ts(공유 발사·글로우) / DrainCycle.ts(소진형 상태기계) / targeting.ts
   enemies/
-    PlasmoidSpec.ts    # 온도(T)→색/체력/크기/속도/스폰분포/아키타입(고도가중 폐기)
-    CoreEnemy.ts / EnemyManager.ts        # 주입형 외형·3D 추적 / 스폰·웨이브·일괄스폰
-  world/  World.ts, StreamingWorld.ts, TerrainField.ts, CollisionWorld.ts, precinct.ts, BuildingCombat.ts …
+    PlasmoidSpec.ts    # 온도(T)→색/체력/크기/속도 + 직무 아키타입(러셔/카이터/소인체) + 피라미드 배분
+    CoreEnemy.ts / EnemyManager.ts        # 직무 거동·공유 체력·관측 고정 / 투입기 4종·균열 증원·보스 행동
+    BrandSystem.ts     # 낙인 유도탄 + 심판 파문(전장 이벤트 — 서사편 §6.1 ① 구현)
+  world/  World.ts, StreamingWorld.ts, TerrainField.ts, CollisionWorld.ts, precinct.ts, BuildingCombat.ts, entanglement.ts(얽힘 택소노미) …
   fx/     dissolve.ts, postprocessing.ts, damageNumbers.ts, TargetBrackets.ts, DrainBeams.ts, EnergyWall.ts
   intro/  CinematicPlayer.ts, scenes.ts, helpers.ts, CinematicAudio.ts, MenuBackground.ts
   ui/     MenuScreen.ts, HUD.ts, Minimap.ts, RearView.ts
@@ -197,4 +198,9 @@ v3.0 1차 마일스톤은 **"게임이 돌아간다"**를 체감하는 최소 �
 - [x] 외계 코어 적 유닛 — 박동 애니메이션, 플레이어 추적 AI, 웨이브 스폰
 - [x] 원격 접속 HUD(체력/주파수 게이지/크로스헤어/처치 수)
 
-**다음 단계(로드맵):** 전투 체계 재정립 — 적 공격 재정립 + 관측 병기([서사편 §6·§7](../private/05x-narrative-truth.md) ⚠️) + 위상 이탈/균열 스폰/전조 콘솔([차원 명세 §4.2 우선순위](05-dimensional-cosmology.md)). 그 위에 Link Swap(기체 전환), 무인 병기 종류 분화, RTS 빌드업, 온라인 협동. *(실지형 스트리밍은 완료 — §5.)*
+**다음 단계(로드맵):** 전투 체계 재정립 **1단계 완료**(낙인+심판 파문·관측 고정 W1·점진 투입·다중 투영
+보스 — [서사편 §6.10/§7.5](../private/05x-narrative-truth.md) ⚠️) + **미션 v2 3축 체계·패턴 18종 가동**
+([06-missions](06-missions.md)). 이후: 재정립 2단계(관측 계류 W2·복구 사격 W4·건물 낙인/커터·준위 강등)
+→ 계시 콘텐츠(동시 타격 실험 → 보상 보스) → 봉합전·부유 요새 → Link Swap(기체 전환)·무인 병기 분화
+→ 전 세계 도시 확대(얽힘 택소노미 기반 미션 자동 생성 — 06-missions §8) → RTS 빌드업 → 온라인 협동.
+*(실지형 스트리밍은 완료 — §5.)*

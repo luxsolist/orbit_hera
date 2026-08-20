@@ -89,6 +89,10 @@
   (`EnemyManager.registerKill`의 `killRefund`)에 사용. 사망 시 부활 불가, `maxHp` 한도 클램프, 비양수 무시.
   ※ 아직 패시브 HP 자연 회복은 없다(향후 업그레이드 시스템 항목).
 
+- **손맛/변조(시각 전용·게임플레이 변조)** — `kick(rad)`: 수동 사격 반동(시각 피치 오프셋, 지수 복귀 —
+  조준각 불변) / `shake(amp)`: 피격·파문 셰이크(무작위 지터 감쇠) — 둘 다 `syncCamera` 에서 뷰에만 합성.
+  `freqRegenMul`: 게이지 회복 배수(미션 변조 "옅은 장" — Game 이 출격마다 지정).
+
 - **사망 시 포인터락 해제 가드** — `Game.onDeath()`는 데스크톱일 때만 `document.exitPointerLock?.()` 호출.
   모바일은 합성 락이라 생략하고 옵셔널 체이닝을 써, iPad WebKit에서 `exitPointerLock` 미지원/실패로
   예외가 나 사망 패널이 안 뜨는 문제를 막는다.

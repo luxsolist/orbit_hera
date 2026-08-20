@@ -116,21 +116,24 @@ selectMap(mapId, droneId, peaceful)       // peaceful=탐방 모드(적 미스�
 ## 프레임 루프 (`frame`)
 
 ```
-dt = min(clock.getDelta(), 0.05)               // 스파이크 클램프
+rawDt = min(clock.getDelta(), 0.05)             // 스파이크 클램프
+dt = hitstopLeft > 0 ? 0 : rawDt                // 히트스톱(수동 명중 25ms/처치 45~60ms) — 시뮬레이션만 정지
 
 intro: intro.update(dt) | 끝나면 showMenu()
 menu : menuBg.update(dt)                        // 배경 장면 렌더
 playing && locked && !mobile.isBlocked:
-    player.update(dt)
+    player.update(dt)                           // 시점 회전은 마우스 델타 기반 — 히트스톱 중에도 반응
     world.update(px, pz, py)                    // 태양 그림자 추종 + 청크 로드/언로드(스트리밍)
     wall?.update(dt)                            // 작전구역 에너지 벽 애니메이션
+    tickZoneShrink(dt)                          // 구역 축소 변조(zoneShrink) — 주기 도래 시 벽 재생성
     beam.update(dt, input.fireHeld)
     special.update(dt, input.specialPressed)
     enemies.update(dt)
     brackets.update(camera, aliveMarkers)       // TargetBrackets — 적에 코너 브래킷
     hud.setEnemyDirections(camera, positions)   // 조준선 둘레 방향 화살표
-    hud.update + setHp/setFrequency/setSpecial
-    instance.update(dt)                         // 미션 타이머/평가 → 종료 시 onEnd→endMission
+    hud.setReckoning(sweepWarnLeft, brandCount) // 낙인/심판 파문 경고
+    hud.update(rawDt) + setHp/setFrequency/setSpecial   // HUD 페이드는 실시간(히트스톱 무관)
+    instance.update(dt)                         // 미션 타이머/평가 + 페이즈 드라이버 → 종료 시 onEnd→endMission
     hud.updateMission(timeLeft, detail, respawns)
     if player.isDead && state=="playing" → handlePlayerDeath()  // 리스폰 or 미션 실패
 input.endFrame()                                // 엣지 플래그 리셋
@@ -140,3 +143,6 @@ playing: rearView.render(); minimap.render()
 
 핵심: **`dt` 상한 0.05s**로 탭 복귀 시 물리 폭주 방지. 시뮬레이션은 `playing && locked`일 때만,
 **렌더는 항상**(일시정지 화면도 그려짐). `input.endFrame()`은 매 프레임 호출해 엣지 입력을 정리.
+**손맛 배선**(wireEvents): 수동 발사 → `player.kick`(반동), 수동 명중/처치 → `hitstop`, 피격 →
+`player.shake` + `hud.flashDamageFrom`(피해 방향), 파문 통과 → `hud.pulseSweep` + `sfx.reckoning` + 셰이크.
+미션 변조는 투입 직후 지정: `setAggro` · `setSweepPeriodMul` · `player.freqRegenMul` · `zoneShrink`.

@@ -139,6 +139,24 @@ describe("BrandSystem — 낙인 부착·파문 타격·근원 격파 소산", (
     expect(sys.warnLeft).not.toBeNull();
   });
 
+  it("유도탄 TTL 소멸 — 닿지 못한 탄은 수명이 다하면 조용히 사라진다(낙인 없음)", () => {
+    const { target, sys, marker } = setup();
+    target.worldPosition.set(10000, 2, 0); // 도달 불가(22m/s × TTL 14s ≪ 10km)
+    sys.launch(new THREE.Vector3(20, 2, 0), 0, marker, TOMB);
+    tick(sys, TOMB.projTtl + 1);
+    expect(sys.brandCount(0)).toBe(0);
+  });
+
+  it("표적 사망 시 비행 중 유도탄 소멸(fizzle) — 죽은 드론에 낙인 없음", () => {
+    const { target, sys, marker } = setup();
+    target.worldPosition.set(200, 2, 0);
+    sys.launch(new THREE.Vector3(0, 2, 0), 0, marker, TOMB);
+    tick(sys, 1); // 비행 중
+    (target as { isDead: boolean }).isDead = true;
+    tick(sys, TOMB.projTtl);
+    expect(sys.brandCount(0)).toBe(0);
+  });
+
   it("clear — 낙인·유도탄 정리 + 주기 재무장", () => {
     const { sys, marker } = setup();
     sys.launch(new THREE.Vector3(20, 2, 0), 0, marker, TOMB);

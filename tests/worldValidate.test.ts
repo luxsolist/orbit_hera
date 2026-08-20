@@ -273,7 +273,8 @@ describe("validateSpawn — 스폰 지표면 sanity", () => {
 // 실제 생성된 경복궁 타일 월드(있으면) — error 0 회귀 가드. 데이터/파이프라인 변경 시 자동 검출.
 describe("실데이터 회귀 가드(생성된 경복궁 타일)", () => {
   const tp = "public/maps/37/126/tiles.json";
-  it.runIf(existsSync(tp))("매니페스트·청크·플래그·이음새 모두 error 0", () => {
+  // 실데이터 전수 검사라 5초를 넘길 수 있음(부하 시 플레이크 관찰) — 넉넉한 개별 타임아웃.
+  it.runIf(existsSync(tp))("매니페스트·청크·플래그·이음새 모두 error 0", { timeout: 20000 }, () => {
     const m = JSON.parse(readFileSync(tp, "utf8"));
     let errs: string[] = [...codes(validateManifest(m), "error")];
     const loaded: any[] = [];

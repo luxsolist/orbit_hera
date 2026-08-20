@@ -90,6 +90,15 @@
 
 소스: [BuildingCombat.ts](../../src/world/BuildingCombat.ts) · 가드: [tests/buildingCombat.test.ts](../../tests/buildingCombat.test.ts)
 
+- **`nearestLandmark(x, z)`** — 어그로 변조(`aggro: "landmark"` — 미션 훅 ④)용 최근접 intact 랜드마크
+  질의. 랜드마크는 소수라 반경 무제한 전수 탐색(전장 반대편이라도 직행 표적). 없으면 null → 호출부가
+  일반 건물 폴백.
+- **랜드마크 얽힘 분류** — `Landmark.cls`(MapData)에 얽힘 택소노미 유형(6종 — 정본
+  [spec/06-missions §8](../spec/06-missions.md))이 실린다. 분류기·메타(표시명/브리핑/저항 배율)는
+  [entanglement.ts](../../src/world/entanglement.ts)(순수 — OSM 태그 자동 분류 `classifyOsmTags` 포함,
+  [tests/entanglement.test.ts](../../tests/entanglement.test.ts)). 파이프라인 통과: `maps.config.mjs`
+  `cls` → `build-maps.mjs` bake → 타일 데이터(반영엔 `npm run build:map` 재생성 필요).
+
 도시 건물·랜드마크에 **체력**을 부여해 플라즈모이드의 공격 대상으로 만든다(적의 공격 경로는
 [05-enemies](05-enemies.md#매-프레임-군집-조향--공격-update) 참고). `World`/`StreamingWorld`가 빌드 시
 건물을 등록(`registerBuilding`/`registerLandmark`)하고, `EnemyManager`가 표적 질의(`nearestTarget`)·피해

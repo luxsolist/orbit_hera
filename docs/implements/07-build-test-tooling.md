@@ -48,6 +48,15 @@
 > 데이터 검증(`specs.test.ts`)은 tsc가 못 보는 `public/*.json`의 누락/오타/dangling 참조(무기·맵·적 id)와
 > 권역 스키마를 빌드 타임에 차단한다. `DEFAULT_PLASMOID ≡ plasmoid.json` 동치도 테스트로 고정(드리프트 방지).
 
+## e2e 플레이테스트 하네스 — [tests/e2e/playtest.mjs](../../tests/e2e/playtest.mjs) (수동 도구)
+
+모바일 합성 락(hasTouch) 경로로 **헤드리스에서 게임 루프를 실제 구동**하고 HUD DOM 을 주기 샘플링해
+전투 타임라인(처치·HP·낙인·심판 파문·미션 상태)을 수집한다 — 유닛이 못 잡는 회귀(파문 진앙 면제 버그,
+미션 로드 실패 등)를 실플레이로 검증하는 용도(CI 미편입). 서버 기동 후
+`node tests/e2e/playtest.mjs <base> <mapId> <WALKER|FLYER> <seconds> <outPrefix>` — summary JSON(타임라인·
+이벤트·gameSec 시간 지연 보정치)과 스크린샷을 남긴다. 헤드리스 렌더 지연으로 게임 시간이 1/3~1/5 로
+흐르므로 절대 수치보다 거동 관찰용.
+
 ## e2e 스모크 — [tests/e2e/smoke.mjs](../../tests/e2e/smoke.mjs)
 
 빌드 산출물을 Playwright로 띄워 먼저 **인트로 시네마틱**(재생 중 비-블랙·Esc 메뉴 복귀·에러 0)을 검증한 뒤,

@@ -31,8 +31,17 @@
 ## HUD
 
 체력/주파수 게이지(**화면 상단 가운데** `.hud__gauges`, 좌우 나란히), 크로스헤어(발사 점멸 `flashFire`),
-처치 수/웨이브, 특수무기 쿨다운 링(진행률·잔여초·발동중), 피격 비네팅(`flashDamage`), 유닛명. DOM은
-[index.html](../../index.html)에 정적 배치, 런타임에 갱신.
+처치 수/웨이브(페이즈 미션에선 페이즈 번호), 특수무기 쿨다운 링(진행률·잔여초·발동중), 피격
+비네팅(`flashDamage`), 유닛명. DOM은 [index.html](../../index.html)에 정적 배치, 런타임에 갱신.
+동적 생성 요소(전투 재정립·손맛 패스):
+
+- **낙인/심판 파문 경고**(`.hud__reckoning`, `setReckoning(warnLeft, brands)`) — 크로스헤어 아래 중앙.
+  낙인 수("⚠ 낙인 ×n — 근원을 격파하라", 적색) + 파문 도래 카운트다운/통과 중(주황). Game 이 매 프레임
+  `enemies.sweepWarnLeft`/`brandCount` 를 폴링.
+- **파문 전면 펄스**(`.hud__sweeppulse`, `pulseSweep(strong)`) — 파면이 플레이어를 통과하는 순간
+  가장자리에서 차오르는 붉은 워시(낙인 피해면 진하게). `Sfx.reckoning`(초저역 쿠웅+럼블)과 동조.
+- **피해 방향 인디케이터**(`flashDamageFrom(camera, source)`) — 피해 발원 월드 좌표를 화면 각도로
+  투영해 조준선 둘레(적 화살표보다 바깥 88px)에 큰 붉은 쐐기를 0.7s 표시(풀 6, aimArrow 재사용).
 
 ### 미션 배너 (`#missionBar`)
 
@@ -120,10 +129,13 @@
   **선 두께는 화면상 일정**(`bracketHalfThick = THICK_SCREEN·거리`)에 따라 분리 제어. 두께는 모서리 **안쪽으로만** 들어가 ㄱ자 두 팔이
   외곽 꼭짓점에 맞물림 → **뾰족한 점이 항상 바깥**(+ 두께 대비 최소 크기 클램프 `MAX_T_FRAC`로 원거리에서도 외향 보장). ([tests/targetBrackets.test.ts](../../tests/targetBrackets.test.ts))
   브래킷 위에 적의 **현재 체력 수치**(`marker.hp`)를 DOM 라벨로 박스 상단에 표시 — 화면 투영, 카메라 뒤(`z>1`)면 숨김, 사망·일시정지엔 `hide()`로 잔상 제거.
+- **Sfx.reckoning(hit)** — 심판 파문 통과음: 초저역 피치 드롭 "쿠웅"(64→30Hz) + 로우패스 럼블 스웰,
+  낙인 피해(hit) 시 더 크고 길게 + 소각 링 한 점. 구역 축소(zoneShrink) 스텝에도 재사용(경계가 조여드는 신호).
 - **EnergyWall** ([fx/EnergyWall.ts](../../src/fx/EnergyWall.ts)) — 작전구역 경계의 **반투명 에너지 벽**(반경
   `zoneRadius` 원통, `ShaderMaterial`). DoubleSide·depthWrite 끔(투과), **거리 페이드**(uNear 800/uFar 2600 —
   멀면 사라지고 경계 근처에서 진해짐, 원경 호리병 방지), 위로 흐르는 에너지 밴드 + 세로 격자선 + 프레넬,
   HDR 호박색이라 블룸에 걸려 발광. 지면(`heightAt(spawn)`) 기준 수직 범위(−200~+1600m)로 세워 고지대 맵 대응.
   `Game`이 존 있을 때 생성하고 프레임마다 `update(dt)`로 애니메이션, 종료 시 `dispose()`.
+  구역 축소 변조(`zoneShrink`) 스텝마다 dispose 후 새 반경으로 재생성(미니맵 존 호는 `player.zone` 자동 추종).
 - **Diagnostics** ([core/Diagnostics.ts](../../src/core/Diagnostics.ts)) — URL `?diag` 시 화면 오버레이로
   WebGL 컨텍스트 손실/전역 에러/`renderer.info` 스냅샷/프레임 하트비트 표시(온디바이스 진단).

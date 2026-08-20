@@ -162,3 +162,12 @@ node scripts/build-maps.mjs <id> && node scripts/build-world.mjs <id> && node sc
   - 순수 전역 산악(`dem.bareEarth` 열림+블러)은 건물 없는 맵 옵션으로 남김. 검증기는 자연 산악(`bareEarth:false`)에 `terrain-steep` 미적용(실제 급경사).
 - **고지대 지형 지원**: 비행 천장([`PlayerController.HARD_CEILING`](../../src/player/PlayerController.ts))은 **발밑 지면 위 5km(지면 상대, `heightAt(x,z) + 5000`)** — 에베레스트(지형 8km↑)에서도 플레이어가 지면 위로 정상 위치/상승(절대 Y 기준 아님).
 - **드레이프 높이(`sampleChunkHeight`)는 지형 메시 삼각분할(a,c,b)+(b,c,d)과 동일 보간**(bilinear 아님) — 렌더되는 삼각형 평면값과 정확히 일치해야 도로/면이 지형 위로 떠 비평면(새들) 셀에서도 초록이 솟지 않음. 레이캐스트 테스트로 회귀 가드.
+
+## 랜드마크 얽힘 분류 (`cls`)
+
+랜드마크는 **얽힘 택소노미** 유형(`cls`: deep-roots/ritual/archive/resonance/relay/memorial —
+정본 [06-missions §8](06-missions.md))으로 분류된다. 수동 지정(`scripts/maps.config.mjs`, 경복궁 일대
+11개 분류 완료) 또는 OSM 태그 자동 분류(`classifyOsmTags` —
+[entanglement.ts](../../src/world/entanglement.ts))로 편입되며, 파이프라인이 타일 데이터로 통과시켜
+런타임 `Landmark.cls` 가 된다(반영엔 `npm run build:map` 재생성 필요). 미션 표적 선정·해제 저항·브리핑
+문구의 단일 출처 — 전 세계 도시 확장 시 "어디를 지키는가 = 그 도시의 인문 지리"의 기반.
