@@ -11,6 +11,17 @@ export interface DamageFalloff {
   minMult: number; // 원거리 하한
 }
 
+/**
+ * 관측 고정(내부 id: zeno, 서사편 §7.2 W1) — 같은 대상을 지속 조사하면 행동이 감속되다 동결된다.
+ * 노출(연속 피관측 시간)이 freezeAfter 에 닿으면 완전 정지(이동·공격·발사 게이트). 물리 독해:
+ * 연속 측정의 전이 동결(§1.6 결어긋남 유도의 지속 조사 극한). 적용/감쇠 규칙은 CoreEnemy 쪽.
+ */
+export interface ZenoSpec {
+  slowPerSec: number; // 노출 1초당 감속량(속도 배수 1 → 1−slowPerSec·노출)
+  freezeAfter: number; // 이 노출(s) 이상이면 동결(완전 정지)
+  graceSec?: number; // 히트 간 이 간격(s) 이내면 "지속 조사"로 간주(기본 CoreEnemy ZENO_GRACE)
+}
+
 /** 기본무기(히트스캔 빔) — 자동발사 + 수동발사(에임 어시스트). */
 export interface BeamSpec {
   id: string;
@@ -24,6 +35,7 @@ export interface BeamSpec {
   manual: { damage: number; freqCost: number; fireInterval: number; assistConeDeg: number };
   auto: { damage: number; freqCost: number; fireInterval: number; range: number }; // coneDeg 제거(360° 오토 전환으로 미사용)
   falloff: DamageFalloff;
+  zeno?: ZenoSpec; // 관측 고정(W1) — 지속 조사 감속→동결. 없으면 순수 피해 무기
 }
 
 /** 자동조준/사격 강화 — 에임어시스트 콘(manual.assistConeDeg)·자동사격 사거리(auto.range)에 각각 배수 적용한 새 스펙.
@@ -72,6 +84,7 @@ export interface StreamSpec {
   colorBeam: string;
   colorGlow: string;
   falloff: DamageFalloff;
+  zeno?: ZenoSpec; // 관측 고정(W1) — 풀 스로틀 단일 관측(제논 극대화, 서사편 §7.3)
 }
 
 export type WeaponSpec = BeamSpec | BarrageSpec | StreamSpec;

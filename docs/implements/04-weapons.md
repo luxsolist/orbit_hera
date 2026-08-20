@@ -29,6 +29,23 @@
 단일 레이** 1회뿐이고 데미지만 발사관 수배(듀얼=2×) — 과거 좌우 평행 듀얼빔(`[-0.55, 0.55]`) 사이로
 작거나 쪼그라든 적이 빠져 무피해("좀비")로 남던 버그를 막는다. walker=heavy(단발), flyer=light(듀얼).
 
+## 손맛 훅 — 히트스톱·반동·피격 연출
+
+- **히트스톱**(`Game.hitstop`) — 수동 명중 25ms / 처치 45~60ms 동안 시뮬레이션 dt=0(시점 회전은 델타 기반이라 유지).
+  `fireEmitters.onEnemyHit(killed)` → `FrequencyBeam.onManualHit`(수동만) + `EnemyManager.onKill`(공통) 경유.
+- **반동 킥**(`PlayerController.kick`) — 수동 사격 0.006rad / 특수 볼리 0.0035rad, 시각 전용 피치 오프셋(조준각 불변) 지수 복귀.
+- **피격 셰이크 + 방향 인디케이터** — `onPlayerHit(damage, source)` 의 발원 좌표로 `HUD.flashDamageFrom`(조준선 둘레 붉은 쐐기)
+  + `player.shake`. 파문 통과는 `onSweepPass(branded)` → 화면 펄스(`HUD.pulseSweep`)·저음(`Sfx.reckoning`)·셰이크.
+
+## 관측 고정 (내부 id: zeno — 서사편 §7.2 W1)
+
+같은 대상을 **지속 조사**하면 행동이 감속되다 **동결**된다 — 빔의 정체성이 "버스트 DPS"에서 "붙드는 무기"로 확장(물리 독해: 연속 측정의 전이 동결, §1.6). 데이터는 무기 스펙 `zeno{ slowPerSec, freezeAfter, graceSec? }`([01](../spec/01-data-schemas.md)):
+
+- 적중마다 `fireEmitters`가 `enemy.applyZeno(spec.zeno)` 호출 — 히트 간격이 `graceSec`(기본 `ZENO_GRACE` 0.5s) 이내면 "지속 조사"로 **노출**(피관측 시간)이 누적되고, 끊기면 2배속 감쇠(순수 `zenoExposureStep`).
+- 속도 배수 = `1 − slowPerSec·노출`(하한 0.3), 노출 ≥ `freezeAfter` 면 **0 = 동결**(순수 `zenoSlowMul`) — 이동 정지 + `tryAttack` 게이트(접촉·드레인·**낙인탄 장전** 전부 인터럽트). 동결 중 코어가 밝게 고정되는 시각 신호.
+- 적용 무기: 중주파(하드 — `0.4/1.2`), 경주파(소프트 — `0.3/2.0`), 오버드라이브(극대 — `0.6/0.7`; 풀 스로틀 단일 관측). 수동·오토 공통(오토 = 백그라운드 관측 스레드). 배러지는 미적용(브로드캐스트 관측 상성은 §7.3 후속).
+- 테스트: [tests/zeno.test.ts](../../tests/zeno.test.ts). 표면 어휘는 "관측 고정"(§8.2) — zeno 는 코드 전용.
+
 ## SpecialBarrage — 다중 빔 살포 (특수)
 
 `update(dt, triggerPressed)` — 상태는 공유 `DrainCycle`(아래)에 위임:

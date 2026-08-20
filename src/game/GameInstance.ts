@@ -1,10 +1,51 @@
 import type { PlayerController } from "../player/PlayerController";
 import type { EnemyManager } from "../enemies/EnemyManager";
 import type { BuildingCombat } from "../world/BuildingCombat";
+import type { MissionOutcome, MissionStatus, MissionRuntime } from "./mission";
 import {
-  evaluateMission, missionObjectiveText, missionProgressText,
-  type MissionSpec, type MissionOutcome, type MissionStatus, type MissionRuntime,
-} from "./mission";
+  evaluateMissionV2, missionObjectiveTextV2, missionProgressTextV2, missionDurationV2,
+  type MissionSpecV2, type MissionDeploy,
+} from "./missionV2";
+
+/**
+ * deploy 명세 → EnemyManager 투입기 매핑(훅 ①⑤⑥ 공용). phased 는 첫 페이즈만 실행하고
+ * 이후 페이즈는 GameInstance 가 트리거(전멸/afterSec)마다 fresh=false 로 이어 투입한다
+ * (킬/채점 카운터 유지, HUD 웨이브 = 페이즈 번호). none/빈 명세는 웨이브 폴백.
+ */
+export function runDeploy(enemies: EnemyManager, d: MissionDeploy, fresh: boolean): void {
+  switch (d.model) {
+    case "pyramid":
+      if (d.count > 0) {
+        enemies.startBurst(d.count, d.spawnRadius, d.totalHp, d.bossHp,
+          { concurrentCap: d.concurrentCap, reinforceInterval: d.reinforceInterval, fresh });
+        return;
+      }
+      break;
+    case "horde":
+      if (d.count > 0) {
+        enemies.startHorde(d.count, d.unitHp, d.spawnRadius,
+          { concurrentCap: d.concurrentCap, reinforceInterval: d.reinforceInterval, fresh });
+        return;
+      }
+      break;
+    case "roster":
+      if (d.units.length > 0) {
+        enemies.startRoster(d.units, d.spawnRadius, undefined, fresh);
+        return;
+      }
+      break;
+    case "boss":
+      enemies.startBossDeploy(d, d.spawnRadius, fresh);
+      return;
+    case "phased":
+      if (d.phases.length > 0) {
+        runDeploy(enemies, d.phases[0].deploy, fresh);
+        return;
+      }
+      break;
+  }
+  enemies.start(true); // 폴백 — 웨이브
+}
 
 /** HUD/오버레이용 인스턴스 상태 스냅샷(평문). */
 export interface InstanceSnapshot {
@@ -18,7 +59,7 @@ export interface InstanceSnapshot {
 }
 
 export interface InstanceOpts {
-  mission: MissionSpec;
+  mission: MissionSpecV2;
   players: PlayerController[]; // 멀티플레이 대응 — 팀 전체(현재 1인)
   enemies: EnemyManager;
   buildings?: BuildingCombat;
@@ -31,10 +72,11 @@ export interface InstanceOpts {
  * **플라즈모이드/건물/랜드마크 상태**를 집계하고, 매 프레임 미션 상태를 평가한다. 종료(성공/실패)는
  * `onEnd` 콜백으로 1회 통지한다. 멀티플레이 시 `players[]` 로 팀 전체를 이 인스턴스가 관장하도록 설계.
  *
- * 평가 로직 자체는 순수 [mission.ts](./mission.ts) 에 두고, 여기선 런타임 집계/타이머/콜백만 담당한다.
+ * 평가 로직 자체는 순수 [missionV2.ts](./missionV2.ts)(v2 — 복합 실패 조건, 훅 ②)에 두고,
+ * 여기선 런타임 집계/타이머/콜백만 담당한다.
  */
 export class GameInstance {
-  readonly mission: MissionSpec;
+  readonly mission: MissionSpecV2;
   private players: PlayerController[];
   private enemies: EnemyManager;
   private buildings?: BuildingCombat;
@@ -42,6 +84,7 @@ export class GameInstance {
   private elapsed = 0; //       경과 시간(초)
   private deaths = 0; //        누적 기체 파괴 수
   private respawnsUsed = 0; //  사용한 리스폰 수
+  private phaseIdx = 0; //      phased 투입의 현재 페이즈(훅 ⑥)
   private _outcome: MissionOutcome = { status: "active", progress: 0, reason: "" };
 
   /** 미션 종료(성공/실패)로 전이하는 프레임에 1회 호출. */
@@ -59,6 +102,7 @@ export class GameInstance {
     this.elapsed = 0;
     this.deaths = 0;
     this.respawnsUsed = 0;
+    this.phaseIdx = 0;
     this._outcome = { status: "active", progress: 0, reason: "" };
   }
 
@@ -69,13 +113,14 @@ export class GameInstance {
   get playerCount(): number { return this.players.length; } // MP — 팀 인원
 
   get timeLeft(): number {
-    if (this.mission.duration <= 0) return Infinity;
-    return Math.max(0, this.mission.duration - this.elapsed);
+    const dur = missionDurationV2(this.mission);
+    if (dur <= 0) return Infinity;
+    return Math.max(0, dur - this.elapsed);
   }
 
   get respawnsLeft(): number {
-    if (this.mission.respawns < 0) return Infinity;
-    return Math.max(0, this.mission.respawns - this.respawnsUsed);
+    if (this.mission.fail.respawns < 0) return Infinity;
+    return Math.max(0, this.mission.fail.respawns - this.respawnsUsed);
   }
 
   /** 현재 시스템 상태를 평가 입력으로 집계(부수효과 없음). */
@@ -86,16 +131,29 @@ export class GameInstance {
       buildingsDestroyed: this.buildings?.destroyedBuildings ?? 0,
       landmarksDestroyed: this.buildings?.destroyedLandmarks ?? 0,
       deaths: this.deaths,
+      roleKills: this.enemies.roleKills, // 직무별 처치(훅 ③ purge-role)
     };
   }
 
   /** 매 프레임 — 타이머 진행 + 미션 평가. 종료 전이 시 onEnd 1회(이후 비활성). */
   update(dt: number): void {
     if (this._outcome.status !== "active") return;
-    if (this.mission.kind !== "free-roam") this.elapsed += dt;
-    const out = evaluateMission(this.mission, this.runtime());
+    if (this.mission.goal.type !== "free-roam") this.elapsed += dt;
+    this.advancePhase(); // phased 투입 — 다음 페이즈 트리거 감시(훅 ⑥)
+    const out = evaluateMissionV2(this.mission, this.runtime());
     this._outcome = out;
     if (out.status !== "active") this.onEnd?.(out);
+  }
+
+  /** phased — 다음 페이즈 조건(afterSec 지정 시 그 시각, 아니면 현 전장 전멸) 충족 시 이어 투입. */
+  private advancePhase(): void {
+    const d = this.mission.deploy;
+    if (d.model !== "phased" || this.phaseIdx >= d.phases.length - 1) return;
+    const next = d.phases[this.phaseIdx + 1];
+    const ready = next.afterSec !== undefined ? this.elapsed >= next.afterSec : this.enemies.fieldCleared;
+    if (!ready) return;
+    this.phaseIdx++;
+    runDeploy(this.enemies, next.deploy, false); // 카운터 유지 — HUD 웨이브 = 페이즈 번호
   }
 
   /**
@@ -104,8 +162,8 @@ export class GameInstance {
    */
   registerDeath(): boolean {
     this.deaths++;
-    const infinite = this.mission.respawns < 0;
-    if (infinite || this.respawnsUsed < this.mission.respawns) {
+    const budget = this.mission.fail.respawns;
+    if (budget < 0 || this.respawnsUsed < budget) {
       this.respawnsUsed++;
       return true;
     }
@@ -120,8 +178,8 @@ export class GameInstance {
   snapshot(): InstanceSnapshot {
     const rt = this.runtime();
     return {
-      objective: missionObjectiveText(this.mission),
-      detail: missionProgressText(this.mission, rt),
+      objective: missionObjectiveTextV2(this.mission),
+      detail: missionProgressTextV2(this.mission, rt),
       timeLeft: this.timeLeft,
       respawnsLeft: this.respawnsLeft,
       progress: this._outcome.progress,

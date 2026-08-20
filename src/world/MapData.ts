@@ -77,6 +77,8 @@ export interface Landmark {
   excludeR?: number;
   /** 랜드마크 고유 체력(일반 건물과 별개) — 미지정 시 BuildingCombat 기본값. */
   hp?: number;
+  /** 얽힘 유형(택소노미 — [entanglement.ts]) — 미션 표적 선정·해제 저항·브리핑의 단일 출처. */
+  cls?: import("./entanglement").EntanglementClass;
 }
 
 export interface Mountain {

@@ -82,6 +82,7 @@ export class SpecialStream implements SpecialWeapon {
         falloff: this.spec.falloff,
         range: this.spec.range,
         style: this.style,
+        zeno: this.spec.zeno, // 풀 스로틀 단일 관측 — 제논 극대화(서사편 §7.3)
       }
     );
     this.sfx?.overdrive(); // 볼리당 1회 — 묵직하되 짧은 연사 전용음

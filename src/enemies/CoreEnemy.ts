@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { createDissolveMaterial, type DissolveMaterial } from "../fx/dissolve";
 import type { Vec3 } from "../core/math";
+import type { ZenoSpec } from "../weapons/WeaponSpec";
+import type { PlasmoidArchetype } from "./PlasmoidSpec";
 
 export const SHELL_GEO = new THREE.IcosahedronGeometry(1, 2); // 셸(본체·레이캐스트) — 살아있는 적은 InstancedMesh 로 일괄 렌더
 export const CORE_GEO = new THREE.IcosahedronGeometry(0.42, 1); // 발광 코어 — EnemyManager 가 InstancedMesh 로 일괄 렌더
@@ -44,6 +46,24 @@ export function dissolveDriftStep(pos: Vec3, anchor: Vec3, progress: number, dt:
 }
 
 export type EnemyState = "alive" | "dissolving" | "dead";
+
+// ─────────────────────── 관측 고정(내부 id: zeno — 서사편 §7.2 W1) ───────────────────────
+// 같은 대상 지속 조사 시 행동 감속→동결. "노출" = 연속 피관측 시간(히트 간격이 grace 이내면 연속).
+// 관측이 끊기면 노출이 빠르게 감쇠한다. 표면 어휘는 "관측 고정"(§8.2) — zeno 는 코드 전용.
+export const ZENO_GRACE = 0.5; // 히트 간 이 간격(s) 이내 = 지속 조사(무기 graceSec 미지정 시)
+const ZENO_DECAY = 2.0; // 관측 끊김 시 노출 감쇠 배속(1초 노출이 0.5초 만에 풀림)
+const ZENO_MIN_MUL = 0.3; // 동결 전 감속 하한(완전 정지는 동결에서만)
+
+/** 노출 1스텝(순수) — 마지막 히트 후 grace 이내면 dt 만큼 누적, 지나면 ZENO_DECAY 배속 감쇠. */
+export function zenoExposureStep(exposure: number, sinceHit: number, grace: number, dt: number): number {
+  return sinceHit <= grace ? exposure + dt : Math.max(0, exposure - dt * ZENO_DECAY);
+}
+
+/** 노출 → 속도 배수(순수). 동결(노출 ≥ freezeAfter)이면 0, 아니면 1−slowPerSec·노출(하한 클램프). */
+export function zenoSlowMul(exposure: number, slowPerSec: number, freezeAfter: number): number {
+  if (exposure >= freezeAfter) return 0;
+  return Math.max(ZENO_MIN_MUL, 1 - slowPerSec * exposure);
+}
 
 /** 군집 조향 입력(EnemyManager 제공) — 플레이어 속도(예측 요격) + 동료 스냅샷·자기 인덱스(분리). */
 export interface SteerInput {
@@ -349,10 +369,20 @@ export class CoreEnemy {
   readonly color: number; // 발광/표면 색(드레인 빔 연출 등에서 참조)
   killRefund = 0; // 처치 시 플레이어 HP 환수(아키타입에서 주입)
   provoked = false; // 피격 유발 인식 래치 — 플레이어 공격에 노출되면 거리 무관 계속 추격
-  archetypeName = ""; // 아키타입 표시명(모기/거머리 …) — HUD/로그용
+  archetypeName = ""; // 아키타입 표시명(모기/거머리/소인체 …) — HUD/로그용
+  role: PlasmoidArchetype = "rusher"; // 행동 직무(스폰 시 주입) — 공격 경로 분기(marker 는 낙인탄 전용)
+  // 투입 직무(훅 ③ purge-role 집계용) — 행동은 role 이 결정하고, 이 태그는 미션 계약을 따른다:
+  // elite(고체력 러셔)·boss(다중 투영)는 행동상 rusher 지만 별개 직무로 집계된다. 기본 = role.
+  deployRole: PlasmoidArchetype | "elite" | "boss" = "rusher";
   targetIndex = -1; // 현재 추적 대상 플레이어 인덱스(MP 멀티타깃 — 매니저가 관리, 히스테리시스)
   buildingId: string | null = null; // 플레이어가 사거리 밖일 때 공격 중인 건물(2순위 표적)
   driftAnchor: Vec3 | null = null; // 소산 표류 앵커(균열 위치) — 매니저가 주입(공유 참조)
+  zenoLatch = false; // 관측 고정 집계 래치(매니저 — 동결 진입 1회만 카운트)
+  // 다중 투영(§2.6 — 보스): 여러 투영이 하나의 체력을 공유. 어느 구를 때려도 같은 풀이 줄고,
+  // 풀 소진 시 전 투영이 함께 소산(처치 크레딧은 killCredited 로 1회만).
+  sharedPool: { hp: number; maxHp: number; killCredited: boolean } | null = null;
+  // 받는 피해 배수(훅 ⑤ 호위 방패 — 호위 생존 중 <1, 전멸 시 매니저가 1 복원). 표시 데미지도 이 값 반영.
+  damageMul = 1;
 
   private dissolveProgress = 0;
   private hitFlash = 0; // 피격 순간 1 → 빠르게 감쇠하며 흰색 번쩍임
@@ -365,6 +395,10 @@ export class CoreEnemy {
   private vel: Vec3 = { x: 0, y: 0, z: 0 }; // 카이터 속도 상태(선회 캡용)
   private kiter?: KiterParams; // 설정 시 도주형 행동
   private kiterKeepBase = 0; // 기본 keepDist(상성 폴백에서 좁혔다 복원할 기준)
+  // 관측 고정(zeno) — 지속 조사 노출 상태. 무기가 applyZeno 로 갱신, update 가 누적/감쇠.
+  private zeno?: ZenoSpec;
+  private zenoExposure = 0;
+  private zenoSince = Infinity; // 마지막 피관측 히트 후 경과(s)
 
   constructor(position: THREE.Vector3, appearance: CoreAppearance, speed = 4.5) {
     this.baseScale = appearance.diameter / 2; // 지오메트리 지름 2(반지름 1) → 실제 지름 = scale·2
@@ -388,15 +422,32 @@ export class CoreEnemy {
     this.group.position.copy(position);
   }
 
-  /** 주파수 빔 적중 처리. 반환값: 이번 타격으로 처치되었는가 */
+  /** 주파수 빔 적중 처리. 반환값: 이번 타격으로 처치되었는가(공유 풀은 그룹 전체에서 1회만 true) */
   applyFrequencyHit(damage: number): boolean {
     if (this.state !== "alive") return false;
-    this.hp -= damage;
+    damage *= this.damageMul; // 호위 방패 감쇄(훅 ⑤) — 모든 무기 경로 공통
 
     // 박동 발광 강화 + 피격 순간 표면 전체가 흰색으로 번쩍(타격감)
     this.coreBright = 6.5;
     this.hitFlash = 1;
 
+    if (this.sharedPool) {
+      // 다중 투영 — 어느 구를 때려도 같은 풀이 준다(같은 체력이니까). 소진 시 이 투영부터 소산,
+      // 나머지 투영은 매니저가 forceDissolve 로 동반 소산. 처치 크레딧은 그룹당 1회.
+      const pool = this.sharedPool;
+      pool.hp -= damage;
+      this.hp = Math.max(0, pool.hp);
+      if (pool.hp <= 0) {
+        this.state = "dissolving";
+        if (!pool.killCredited) {
+          pool.killCredited = true;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    this.hp -= damage;
     if (this.hp <= 0) {
       this.hp = 0;
       this.state = "dissolving";
@@ -405,9 +456,38 @@ export class CoreEnemy {
     return false;
   }
 
-  /** 접촉으로 흡수한 에너지만큼 자가 회복(체력 ↑, 최대치 한도). 살아있을 때만. */
+  /** 공유 풀 소진 시 동반 소산(처치 크레딧 없음) — 매니저가 형제 투영에 호출. */
+  forceDissolve(): void {
+    if (this.state !== "alive") return;
+    this.hp = 0;
+    this.state = "dissolving";
+  }
+
+  /** 관측 고정(zeno) 노출 — 빔 적중마다 호출. 파라미터는 마지막으로 조사한 무기 것을 따른다. */
+  applyZeno(z: ZenoSpec): void {
+    if (this.state !== "alive") return;
+    this.zeno = z;
+    this.zenoSince = 0;
+  }
+
+  /** 현재 관측 감속 배수(1=정상, 0=동결). 이동 적분에 곱한다. */
+  get zenoMul(): number {
+    return this.zeno ? zenoSlowMul(this.zenoExposure, this.zeno.slowPerSec, this.zeno.freezeAfter) : 1;
+  }
+
+  /** 동결 여부 — 이동·공격(낙인 장전 포함) 전면 정지. "붙들고 있는 것만으로 인터럽트"(W1). */
+  get isZenoFrozen(): boolean {
+    return !!this.zeno && this.zenoExposure >= this.zeno.freezeAfter;
+  }
+
+  /** 접촉으로 흡수한 에너지만큼 자가 회복(체력 ↑, 최대치 한도). 살아있을 때만. 공유 풀은 풀에 가산. */
   absorbEnergy(amount: number): void {
     if (this.state !== "alive") return;
+    if (this.sharedPool) {
+      this.sharedPool.hp = Math.min(this.sharedPool.maxHp, this.sharedPool.hp + amount);
+      this.hp = this.sharedPool.hp;
+      return;
+    }
     this.hp = Math.min(this.maxHp, this.hp + amount);
   }
 
@@ -443,8 +523,16 @@ export class CoreEnemy {
    */
   grow(amount: number): void {
     if (this.state !== "alive" || amount <= 0) return;
-    this.maxHp += amount;
-    this.hp = Math.min(this.maxHp, this.hp + amount);
+    if (this.sharedPool) {
+      // 다중 투영 — 성장도 풀 공유(한 손의 회복). 시각 성장은 개체별 유지.
+      this.sharedPool.maxHp += amount;
+      this.sharedPool.hp = Math.min(this.sharedPool.maxHp, this.sharedPool.hp + amount);
+      this.hp = this.sharedPool.hp;
+      this.maxHp = this.sharedPool.maxHp;
+    } else {
+      this.maxHp += amount;
+      this.hp = Math.min(this.maxHp, this.hp + amount);
+    }
     this.baseScale = Math.min(this.maxScale, this.baseScale * (1 + amount / Math.max(1, this.maxHp)));
   }
 
@@ -463,7 +551,15 @@ export class CoreEnemy {
     this.bobPhase += dt * BOB_RATE;
     const staggered = this.staggerLeft > 0;
     if (staggered) this.staggerLeft = Math.max(0, this.staggerLeft - dt);
-    if (this.updateVisual(dt) && !staggered) this.updateMotion(dt, target, speedScale, steer); // 소멸/경직 중엔 이동 생략
+    // 관측 고정(zeno) 노출 누적/감쇠 — 노출 소진 + 관측 끊김이면 상태 해제
+    if (this.zeno) {
+      this.zenoSince += dt;
+      const grace = this.zeno.graceSec ?? ZENO_GRACE;
+      this.zenoExposure = zenoExposureStep(this.zenoExposure, this.zenoSince, grace, dt);
+      if (this.zenoExposure <= 0 && this.zenoSince > grace) this.zeno = undefined;
+    }
+    // 소멸/경직/동결 중엔 이동 생략
+    if (this.updateVisual(dt) && !staggered && !this.isZenoFrozen) this.updateMotion(dt, target, speedScale, steer);
   }
 
   /** FX 갱신 — 피격 플래시·디졸브·박동/스케일. 살아있으면 true(이동 처리 진행). */
@@ -499,6 +595,7 @@ export class CoreEnemy {
     this.shellMat.setPulse((Math.sin(globalPulse) + 1) * 0.5);
     this.coreScale = 1;
     this.coreBright = THREE.MathUtils.lerp(this.coreBright, 1.8 + Math.sin(globalPulse) * 0.8, 0.1);
+    if (this.isZenoFrozen) this.coreBright = 5.0; // 동결 — 코어가 밝게 못 박힌 듯 고정(관측에 붙들림)
     return true;
   }
 
@@ -509,6 +606,7 @@ export class CoreEnemy {
   private updateMotion(dt: number, target: THREE.Vector3, speedScale: number, steer?: SteerInput) {
     if (this.attackCooldown > 0) this.attackCooldown -= dt;
 
+    const zm = this.zenoMul; // 관측 감속 — 조향은 그대로, 변위 적분만 늦춘다(캐시 속도와 일관)
     const pos = this.group.position;
     if (steer) {
       const recompute = steer.recompute !== false; // 프레임 분산: false 면 this.vel 재사용
@@ -535,17 +633,17 @@ export class CoreEnemy {
         this.vel = steerVelocity(pos, aim, speed, STOP_DIST, steer.boids, steer.index, SEP_MARGIN, SEP_GAIN, steer.grid);
       }
       const v = this.vel; // 재계산했으면 새 값, 아니면 캐시
-      pos.x += v.x * dt; pos.y += v.y * dt; pos.z += v.z * dt;
+      pos.x += v.x * dt * zm; pos.y += v.y * dt * zm; pos.z += v.z * dt * zm;
     } else {
-      const next = pursueStep(pos, target, this.speed * speedScale, dt, STOP_DIST); // 표적 없음/디졸브 — 단순 호밍
+      const next = pursueStep(pos, target, this.speed * speedScale * zm, dt, STOP_DIST); // 표적 없음/디졸브 — 단순 호밍
       pos.set(next.x, next.y, next.z);
     }
     pos.y += BOB_AMPLITUDE * BOB_RATE * Math.cos(this.bobPhase) * dt; // 누적 X 미세 흔들림
   }
 
-  /** 공격 가능 여부 (사거리 + 쿨다운 게이트 + 경직 중 불가). cooldown 으로 접촉(1s)/카이터 드레인 간격을 분기. */
+  /** 공격 가능 여부 (사거리 + 쿨다운 + 경직/동결 게이트). cooldown 으로 접촉/드레인/낙인탄 간격을 분기. */
   tryAttack(playerPos: THREE.Vector3, range: number, cooldown = 1.0): boolean {
-    if (this.state !== "alive" || this.attackCooldown > 0 || this.staggerLeft > 0) return false;
+    if (this.state !== "alive" || this.attackCooldown > 0 || this.staggerLeft > 0 || this.isZenoFrozen) return false;
     const d = this.group.position.distanceTo(playerPos);
     if (d <= range) {
       this.attackCooldown = cooldown;

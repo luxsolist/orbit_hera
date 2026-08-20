@@ -22,6 +22,7 @@ function bakeLandmarks(landmarks) {
       x: lm.x,
       z: lm.z,
       ...(lm.rot ? { rot: lm.rot } : {}),
+      ...(lm.cls ? { cls: lm.cls } : {}), // 얽힘 유형(택소노미) 통과 — 06-missions §8
       mats: r.mats,
       parts: r.parts,
       colliders: r.colliders,

@@ -8,11 +8,31 @@
   },
   "color": {
     "stops": [
-      { "temp": 3000,  "color": "0xff3b30", "weight": 1.0 },
-      { "temp": 4500,  "color": "0xff8a3b", "weight": 1.6 },
-      { "temp": 6000,  "color": "0xfff2c8", "weight": 2.6 },
-      { "temp": 8000,  "color": "0xcfe2ff", "weight": 3.6 },
-      { "temp": 12000, "color": "0x4aa6ff", "weight": 5.0 }
+      {
+        "temp": 3000,
+        "color": "0xff3b30",
+        "weight": 1.0
+      },
+      {
+        "temp": 4500,
+        "color": "0xff8a3b",
+        "weight": 1.6
+      },
+      {
+        "temp": 6000,
+        "color": "0xfff2c8",
+        "weight": 2.6
+      },
+      {
+        "temp": 8000,
+        "color": "0xcfe2ff",
+        "weight": 3.6
+      },
+      {
+        "temp": 12000,
+        "color": "0x4aa6ff",
+        "weight": 5.0
+      }
     ]
   },
   "visual": {
@@ -40,7 +60,7 @@
       "spawnAltMax": 60,
       "countBase": 6,
       "countCap": 12,
-      "killRefund": 0,
+      "killRefund": 5,
       "speed": 17,
       "speedMin": 12
     },
@@ -50,7 +70,7 @@
       "spawnAltMax": 300,
       "countBase": 3,
       "countCap": 5,
-      "killRefund": 0,
+      "killRefund": 8,
       "speed": 89,
       "speedMin": 67,
       "turnRateDeg": 100,
@@ -62,6 +82,33 @@
       "attackRange": 95,
       "drainDamage": 1.4,
       "drainInterval": 1.5
+    },
+    "marker": {
+      "name": "소인체 플라즈모이드 / BRANDER",
+      "spawnAltMin": 40,
+      "spawnAltMax": 160,
+      "countBase": 2,
+      "countCap": 4,
+      "killRefund": 8,
+      "speed": 30,
+      "speedMin": 22,
+      "turnRateDeg": 90,
+      "keepDist": 70,
+      "keepBand": 18,
+      "tomb": {
+        "projSpeed": 22,
+        "projTurnRateDeg": 70,
+        "projTtl": 14,
+        "fireRange": 220,
+        "fireInterval": 7,
+        "sweepDamage": 18
+      }
     }
+  },
+  "sweep": {
+    "period": 30,
+    "speed": 250,
+    "warnSec": 5,
+    "maxRadius": 1600
   }
 }

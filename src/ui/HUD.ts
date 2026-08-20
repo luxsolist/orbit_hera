@@ -5,6 +5,10 @@ import { aimArrow, arrowOffset } from "./aimArrows";
 const ARROW_RING_RADIUS = 26; // 조준선 둘레 화살표 반경(px) — 크로스헤어(34px) 바로 바깥
 const ARROW_DEAD_CONE_TAN = Math.tan((9 * Math.PI) / 180); // 정면 중앙 9° 데드콘(이미 보이는 적은 숨김)
 const ARROW_MAX = 16; // 화살표 동시 표시 상한(풀)
+const DMG_RING_RADIUS = 88; // 피해 방향 인디케이터 반경(px) — 적 화살표보다 바깥, 크게
+const DMG_WEDGE_LIFE = 0.7; // 피해 방향 인디케이터 수명(s)
+const DMG_WEDGE_MAX = 6; // 동시 표시 상한(풀)
+const SWEEP_PULSE_LIFE = 0.55; // 파문 통과 화면 펄스 수명(s)
 
 /**
  * 원격 접속 HUD 오버레이 제어.
@@ -24,6 +28,11 @@ export class HUD {
 
   private arrowLayer: HTMLDivElement; // 조준선 중심에 위치한 화살표 컨테이너(0 크기 원점)
   private arrows: HTMLDivElement[] = [];
+  private reckoning!: HTMLDivElement; // 낙인/심판 파문 경고(동적 생성)
+  private sweepPulse!: HTMLDivElement; // 파문 통과 전면 펄스(동적 생성)
+  private sweepPulseTimer = 0;
+  private sweepPulsePeak = 0;
+  private dmgWedges: { el: HTMLDivElement; life: number }[] = []; // 피해 방향 인디케이터 풀
   private _v = new THREE.Vector3();
 
   private fireFlashTimer = 0;
@@ -66,11 +75,28 @@ export class HUD {
     this.damage.className = "hud__damage";
     this.root.appendChild(this.damage);
 
+    // 낙인/심판 파문 경고(동적 생성) — 크로스헤어 아래 중앙. 표면 어휘만 사용(§8.2).
+    this.reckoning = document.createElement("div");
+    this.reckoning.className = "hud__reckoning";
+    this.reckoning.style.cssText =
+      "position:fixed;left:50%;top:60%;transform:translateX(-50%);display:none;" +
+      "font:600 14px/1.4 monospace;letter-spacing:0.08em;text-align:center;pointer-events:none;z-index:5;" +
+      "text-shadow:0 0 8px currentColor";
+    this.root.appendChild(this.reckoning);
+
     // 적 방향 화살표 레이어 — 화면 중심(조준선)을 원점으로 하는 0 크기 컨테이너
     this.arrowLayer = document.createElement("div");
     this.arrowLayer.style.cssText =
       "position:fixed;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:4";
     this.root.appendChild(this.arrowLayer);
+
+    // 파문 통과 전면 펄스 — 가장자리에서 차오르는 붉은 워시(피해 비네팅과 별개의 이벤트 임팩트)
+    this.sweepPulse = document.createElement("div");
+    this.sweepPulse.className = "hud__sweeppulse";
+    this.sweepPulse.style.cssText =
+      "position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;" +
+      "background:radial-gradient(ellipse at center, rgba(255,60,40,0) 35%, rgba(255,36,24,0.55) 100%)";
+    this.root.appendChild(this.sweepPulse);
   }
 
   setActive(active: boolean) {
@@ -176,6 +202,65 @@ export class HUD {
     return el;
   }
 
+  /**
+   * 낙인/심판 파문 상태 — 매 프레임 폴링 갱신.
+   * @param sweepWarnLeft 파문 예고 잔여(s). 0=파면 통과 중, null=비표시
+   * @param brands 현재 낙인 수(0=없음)
+   */
+  setReckoning(sweepWarnLeft: number | null, brands: number) {
+    let msg = "";
+    if (brands > 0) msg = `⚠ 낙인 ×${brands} — 근원을 격파하라`;
+    if (sweepWarnLeft !== null) {
+      const sweepMsg = sweepWarnLeft > 0 ? `심판 파문 도래 ${Math.ceil(sweepWarnLeft)}s` : "심판 파문 통과 중";
+      msg = msg ? `${msg}\n${sweepMsg}` : sweepMsg;
+    }
+    if (!msg) {
+      this.reckoning.style.display = "none";
+      return;
+    }
+    // 낙인이 있으면 위협(적색), 파문 예고만이면 주의(주황)
+    this.reckoning.style.color = brands > 0 ? "#ff453a" : "#ff9f0a";
+    this.reckoning.style.whiteSpace = "pre";
+    if (this.reckoning.textContent !== msg) this.reckoning.textContent = msg;
+    this.reckoning.style.display = "block";
+  }
+
+  /** 심판 파문 통과 순간 화면 펄스 — strong(낙인 피해)이면 더 진하게. */
+  pulseSweep(strong: boolean) {
+    this.sweepPulsePeak = strong ? 1 : 0.45;
+    this.sweepPulseTimer = SWEEP_PULSE_LIFE;
+  }
+
+  /**
+   * 피해 방향 인디케이터 — 피해 발원 월드 좌표를 화면 각도로 투영해 조준선 둘레(적 화살표보다
+   * 바깥)에 큰 붉은 쐐기를 잠깐 표시. "어디서 맞았는지"의 즉답.
+   */
+  flashDamageFrom(camera: THREE.Camera, source: Vec3) {
+    camera.updateMatrixWorld();
+    this._v.set(source.x, source.y, source.z);
+    camera.worldToLocal(this._v);
+    const { angle } = aimArrow(this._v.x, this._v.y, this._v.z, 0); // 데드콘 0 — 정면 피해도 표시
+    const { x, y } = arrowOffset(angle, DMG_RING_RADIUS);
+    // 풀 획득 — 여유 슬롯 또는 가장 오래된 쐐기 재사용
+    let slot = this.dmgWedges.find((w) => w.life <= 0);
+    if (!slot && this.dmgWedges.length < DMG_WEDGE_MAX) {
+      const el = document.createElement("div");
+      el.style.cssText =
+        "position:absolute;left:0;top:0;width:0;height:0;transform-origin:center;display:none;" +
+        "border-left:11px solid transparent;border-right:11px solid transparent;" +
+        "border-bottom:20px solid #ff2d20;filter:drop-shadow(0 0 6px #ff2d20);will-change:transform,opacity";
+      this.arrowLayer.appendChild(el);
+      slot = { el, life: 0 };
+      this.dmgWedges.push(slot);
+    }
+    if (!slot) slot = this.dmgWedges.reduce((a, b) => (a.life < b.life ? a : b));
+    slot.life = DMG_WEDGE_LIFE;
+    slot.el.style.display = "block";
+    slot.el.style.opacity = "1";
+    slot.el.style.transform =
+      `translate(-50%,-50%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${angle.toFixed(3)}rad)`;
+  }
+
   /** 락온 상태를 크로스헤어에 반영. locked=true면 락온 링 표시, false면 해제. */
   setLockOn(locked: boolean): void {
     this.crosshair.classList.toggle("is-lockon", locked);
@@ -199,6 +284,19 @@ export class HUD {
     if (this.damageFlashTimer > 0) {
       this.damageFlashTimer -= dt;
       if (this.damageFlashTimer <= 0) this.damage.classList.remove("is-hit");
+    }
+    // 파문 펄스 — 즉시 피크 후 수명 비례 페이드
+    if (this.sweepPulseTimer > 0) {
+      this.sweepPulseTimer -= dt;
+      const t = Math.max(0, this.sweepPulseTimer / SWEEP_PULSE_LIFE);
+      this.sweepPulse.style.opacity = String(this.sweepPulsePeak * t);
+    }
+    // 피해 방향 쐐기 페이드
+    for (const w of this.dmgWedges) {
+      if (w.life <= 0) continue;
+      w.life -= dt;
+      if (w.life <= 0) w.el.style.display = "none";
+      else w.el.style.opacity = String(Math.min(1, w.life / (DMG_WEDGE_LIFE * 0.6)));
     }
   }
 }

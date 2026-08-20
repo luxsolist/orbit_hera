@@ -58,19 +58,20 @@ export const MAPS = [
       { x: 206, z: -15, r: 13 }, // 건춘문
       { x: -259, z: -85, r: 13 }, // 영추문
     ],
+    // cls = 얽힘 유형(택소노미 — src/world/entanglement.ts, docs/spec/06-missions.md §8)
     landmarks: [
-      { type: "geunjeongjeon", x: 0, z: -189 },
-      { type: "gwanghwamun", x: -9, z: 234 },
-      { type: "gyeonghoeru", x: -95, z: -235 },
-      { type: "statue-sejong", x: -11, z: 572 },
-      { type: "statue-yi", x: -4, z: 783 },
+      { type: "geunjeongjeon", x: 0, z: -189, cls: "deep-roots" },
+      { type: "gwanghwamun", x: -9, z: 234, cls: "deep-roots" },
+      { type: "gyeonghoeru", x: -95, z: -235, cls: "deep-roots" },
+      { type: "statue-sejong", x: -11, z: 572, cls: "memorial" },
+      { type: "statue-yi", x: -4, z: 783, cls: "memorial" },
       // 주변 명소(실측 위치)
-      { type: "blue-house", x: -73, z: -961 }, // 청와대
-      { type: "folk-museum", x: 182, z: -399 }, // 국립민속박물관(5층 목탑)
-      { type: "mmca", x: 327, z: -113 }, // 국립현대미술관 서울관
-      { type: "sejong-center", x: -123, z: 632, rot: 1.571 }, // 세종문화회관(세종대로 동향)
-      { type: "dongsipjagak", x: 214, z: 210 }, // 동십자각
-      { type: "jogyesa", x: 443, z: 430 }, // 조계사
+      { type: "blue-house", x: -73, z: -961, cls: "deep-roots" }, // 청와대
+      { type: "folk-museum", x: 182, z: -399, cls: "archive" }, // 국립민속박물관(5층 목탑)
+      { type: "mmca", x: 327, z: -113, cls: "archive" }, // 국립현대미술관 서울관
+      { type: "sejong-center", x: -123, z: 632, rot: 1.571, cls: "resonance" }, // 세종문화회관(세종대로 동향)
+      { type: "dongsipjagak", x: 214, z: 210, cls: "deep-roots" }, // 동십자각
+      { type: "jogyesa", x: 443, z: 430, cls: "ritual" }, // 조계사
     ],
   },
   // 레거시 manhattan/osaka/paris(스트리밍 이전 monolithic)는 카탈로그 비노출·미사용이라 제거됨.

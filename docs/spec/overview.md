@@ -10,6 +10,7 @@
 > - [03-maps.md](03-maps.md) — 전장 로스터 + 월드 데이터 모델(특수 권역)
 > - [04-controls-gameplay.md](04-controls-gameplay.md) — 조작(데스크톱/모바일) + 전투/웨이브 규칙
 > - [05-dimensional-cosmology.md](05-dimensional-cosmology.md) — **차원 명세(공개 물리편)**: 브레인월드 우주론·양자장 이론 기반 세계관 재해석 + 파생 메커닉(정본)
+> - [06-missions.md](06-missions.md) — **미션/종료조건 체계(정본)**: 3축 분해(승리·실패·투입) + v2 스키마 + 패턴 카탈로그 20종
 > - [../private/05x-narrative-truth.md](../private/05x-narrative-truth.md) — **서사편(⚠️비공개)**: 계시 구조·큰 서사·전투 재정립 — 전체 스포일러, 공개 배포 시 `docs/private/` 제외
 > - 코드 구조/구현 세부는 [../implements/](../implements/README.md).
 

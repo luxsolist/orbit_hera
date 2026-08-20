@@ -2,7 +2,7 @@ import * as THREE from "three";
 import type { EnemyManager } from "../enemies/EnemyManager";
 import type { DamageNumbers } from "../fx/damageNumbers";
 import type { GameWorld } from "../world/GameWorld";
-import { damageForDistance, type DamageFalloff } from "./WeaponSpec";
+import { damageForDistance, type DamageFalloff, type ZenoSpec } from "./WeaponSpec";
 
 // 무기 공용 발광 빔 FX — 글로우 텍스처 + 빔(실린더)·임팩트 글로우 스프라이트 + 발사관 일제 사격.
 // FrequencyBeam(시안)·SpecialBarrage(호박색)가 색/반경만 달리해 공유한다.
@@ -121,7 +121,9 @@ export interface EmitterShot {
   falloff: DamageFalloff;
   range: number;
   style: BeamStyle;
+  zeno?: ZenoSpec; // 관측 고정(W1) — 적중마다 대상 노출 갱신(지속 조사 감속→동결)
   onHit?: (endPoint: THREE.Vector3, hit: THREE.Intersection, dir: THREE.Vector3) => void;
+  onEnemyHit?: (killed: boolean) => void; // 적 명중 확정 후(처치 여부 포함) — 히트스톱 등 손맛 훅
 }
 
 /**
@@ -148,10 +150,13 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
     const enemy = hit && ctx.enemies.enemyFromHit(hit); // 셸 InstancedMesh → instanceId → 적
     if (enemy) {
       const dmg = emitterDamage(hit!.distance, shot.baseDamage, n, shot.falloff); // 발사관 수만큼 합산
-      ctx.damageNumbers.spawn(endPoint, dmg);
+      ctx.damageNumbers.spawn(endPoint, dmg * (enemy.damageMul ?? 1)); // 표시 = 실제 적용치(호위 방패 감쇄 반영)
       shot.onHit?.(endPoint, hit!, shot.dir);
       ctx.enemies.provokeNear(enemy); // 피격 유발 인식 — 반경 내 개체(피격 개체 포함)도 플레이어 추격
-      if (enemy.applyFrequencyHit(dmg)) ctx.enemies.registerKill(enemy);
+      if (shot.zeno) enemy.applyZeno(shot.zeno); // 관측 고정(W1) — 붙들고 있으면 감속→동결
+      const killed = enemy.applyFrequencyHit(dmg);
+      if (killed) ctx.enemies.registerKill(enemy);
+      shot.onEnemyHit?.(killed);
     }
   }
   // (2) 시각 — 발사관마다 좌우 오프셋에서 적중점으로 수렴하는 빔

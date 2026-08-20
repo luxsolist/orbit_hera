@@ -4,9 +4,10 @@ import type { GameWorld } from "../world/GameWorld";
 import type { PlayerController } from "../player/PlayerController";
 import { bestAlignedInCone } from "../player/PlayerController";
 import { DrainBeams } from "../fx/DrainBeams";
+import { BrandSystem } from "./BrandSystem";
 import {
   DEFAULT_PLASMOID, rollAppearance, contactDamage, archetypeCount, pickSpawnType, pickBurstType, colorStrength01,
-  distributeHp, appearanceForHp,
+  distributeHp, pyramidHp, appearanceForHp,
   type PlasmoidSpec, type PlasmoidKiterArchetype, type PlasmoidArchetype,
 } from "./PlasmoidSpec";
 import { clampToDisk, type Vec3 } from "../core/math";
@@ -57,8 +58,51 @@ const AGGRO_PENALTY = 0.4; // 어그로 분산 — 이미 표적이 된 플레�
 const MISMATCH_PENALTY = 3.0; // 상성 불일치 표적 점수 배수(>1) — 적이 자기 상성 드론을 우선(MP 혼합팀). 절대 배제 아닌 가중
 const KITER_CLOSE_MUL = 1.0; // 카이터가 비상성(워커) 표적을 노릴 때 keepDist 배수. 워커가 장거리 빔(AA)을 갖게 되어 좁힐 필요 없음 → 모기는 거리 유지, 워커가 지상에서 격추.
 const KITER_CROSS_FRAC = 0.5; // 매칭 완화 — 워커도 카이터(모기)를 끌어오는 교차 비율(워커 1인당 모기 물량 ×이 값). 워커=만능 AA, 플라이어는 공중 특화 유지(러셔는 워커 전용).
+const MARKER_BURST_FRAC = 0.15; // 미션 투입 중 마커(소인체) 비율 — 미션 종류 비례 개편(§6.8) 전 임시 상수
+// 점진 투입(균열 증원) — 초기엔 잡몹 소수, 이후 균열에서 강도 오름차순 보충(피라미드 큐).
+const RIFT_OFFSET_FRAC = 0.5; // 균열 앵커를 전장 중심에서 투입 반경 ×이 값만큼 이격 — 위협 방향이 읽히게
+const INITIAL_CAP_FRAC = 0.6; // 초기 투입 수 = 동시 상한 ×이 값(즉시 교전 밀도)
+const REINFORCE_RETRY = 0.3; // 상한 초과로 증원 보류 시 재시도 간격(s)
+const REINFORCE_R_MIN = 40; // 증원 스폰 링 내반경(m, 균열 앵커 기준)
+const REINFORCE_R_MAX = 200; // 증원 스폰 링 외반경(m)
+// 다중 투영 보스(§2.6) — 보스 예산 1기가 HP 공유 구체 여러 개로 투영된다(하나의 손, 여러 그림자).
+const BOSS_PROJECTIONS = 3; // 투영 수
+const BOSS_SPEED_MULS = [0.6, 0.85, 1.1] as const; // 투영별 속도 차 — "가장 느리고 가까운 구를 때린다"
+const BOSS_VIS_HP_FRAC = 0.5; // 투영 렌더 크기 산정 HP 비율(전 풀 크기로 3기를 그리면 과대)
+const BOSS_KILL_REFUND = 15; // 보스 처치 환수(그룹당 1회)
+const BOSS_FILAMENT_CD = 0.18; // 피격 시 투영 간 빛 필라멘트 스로틀(s) — "이어져 있다"는 복선 연출
+const ROSTER_CLUSTER_R = 70; // 로스터 유닛 그룹 산개 반경(m) — 그룹이 한 덩어리로 읽히게(진형 자리)
+const BOSS_EMIT_ALIVE_CAP = 40; // 분출 게이트 — 전장 생존 수가 이 이상이면 분출 보류(무한 팽창 방지)
+const BOSS_EMIT_R_MIN = 30; // 분출 위치 링(보스 투영 기준, m)
+const BOSS_EMIT_R_MAX = 90;
+const HEAL_FX_CD = 0.5; // 회복 링크 필라멘트 연출 간격(s) — "이어져 있다"의 가독(끊으려면 떼어놓아라)
+
+/**
+ * 조합 투입 단위(훅 ① — 06-missions §2 `RosterUnit` 의 엔진측 계약, 구조 동일).
+ * role: 아키타입 그대로 | `elite`(고체력 러셔 — 색·크기는 HP 가 결정) | `boss`(다중 투영 그룹 ×count).
+ * shield(훅 ⑤): 지정 시 이 유닛은 **같은 투입의 다른 유닛(호위)이 살아있는 동안** 받는 피해가
+ * shield 배(0..1)로 감쇄 — "호위 붕괴" 문법. 호위 전멸 시 감쇄 해제.
+ */
+export interface DeployUnit {
+  role: PlasmoidArchetype | "elite" | "boss";
+  count: number;
+  hp: number;
+  shield?: number;
+}
+
+/** 보스 투입 구성(훅 ⑤ — deploy `boss` 의 엔진측 계약). */
+export interface BossDeployCfg {
+  bossHp: number; //       그룹당 체력(HP 공유 풀)
+  projections?: number; // 그룹당 투영 수(기본 BOSS_PROJECTIONS)
+  groups?: number; //      보스 그룹 수(쌍생 = 2). 기본 1
+  escort?: DeployUnit[]; // 수행원(로스터 규칙과 동일 — shield 사용 가능)
+  emit?: { role: PlasmoidArchetype; hp: number; count: number; interval: number }; // 잡몹 주기 분출(성숙체)
+  ownSweep?: boolean; //   보스 소유 파문 — 파문 원점이 살아있는 보스를 따라간다
+  healLink?: { range: number; rate: number }; // 그룹 간 상호 회복(쌍생) — range 내면 초당 rate
+}
 
 const _centroid = new THREE.Vector3(); // 스폰 무게중심 임시(프레임당 동기 사용)
+const _sweepAnchor: Vec3 = { x: 0, y: 0, z: 0 }; // 보스 소유 파문 앵커 임시(프레임당 동기 사용)
 const _btarget = new THREE.Vector3(); // 건물 표적 좌표 임시(프레임당 동기 사용)
 const ZERO_VEL: Vec3 = { x: 0, y: 0, z: 0 }; // 정적 건물 표적 — 예측 리드 없음
 
@@ -99,8 +143,20 @@ export class EnemyManager {
   private zoneCz = 0;
   private zoneR = 0;
   private _clampOut = { x: 0, z: 0 }; // clampToDisk 결과 재사용
-  private pendingRusher = 0; // 아키타입별 잔여 스폰 예산(거머리 떼 / 모기 소수정예 독립 조절)
+  private pendingRusher = 0; // 아키타입별 잔여 스폰 예산(거머리 떼 / 모기 소수정예 / 소인체 독립 조절)
   private pendingKiter = 0;
+  private pendingMarker = 0;
+  private brand: BrandSystem; // 낙인 유도탄 + 심판 파문(서사편 §6.1)
+  // 점진 투입(균열 증원) 상태 — startBurst(concurrentCap>0)가 채우고 tickReinforce 가 소비
+  private reinforceQueue: { hp: number; boss: boolean }[] = []; // 잔여 증원(강도 오름차순, 마지막 = 보스)
+  private reinforceTimer = 0;
+  private reinforceInterval = 1.5;
+  private concurrentCap = 0; // 0 = 점진 투입 비활성(레거시 일괄)
+  private burstCx = 0; // 초기 투입 중심(플레이어 무게중심 스냅샷)
+  private burstCz = 0;
+  private burstLim = 0; // 초기 투입 분산 반경(월드 경계 클램프 후)
+  private burstWalkers = 0; // 투입 시점 드론 구성(아키타입 추첨용 스냅샷)
+  private burstFlyers = 0;
   // 군집 조향용 — 플레이어별 속도 추정(예측 요격) + 살아있는 적 스냅샷(분리)
   private prevPos: THREE.Vector3[] = [];
   private vels: Vec3[] = [];
@@ -114,8 +170,28 @@ export class EnemyManager {
   private matchMul: number[] = []; // pickTarget 상성 가중 스크래치
 
   onKill?: () => void;
-  onPlayerHit?: (damage: number) => void;
+  onPlayerHit?: (damage: number, source?: Vec3) => void; // source = 피해 발원 위치(방향 인디케이터용)
   onWaveChange?: (wave: number) => void;
+  onSweepPass?: (branded: boolean) => void; // 심판 파문이 플레이어 위치를 통과(화면 펄스·저음)
+
+  // 전투 채점 집계(결과 화면) — 표면 어휘만(§8.2): 근원 격파·파문 무상 통과·관측 고정
+  readonly stats = { markerKills: 0, zenoFreezes: 0, sweepHits: 0, sweepCleanPasses: 0 };
+  // 투입 직무별 처치 집계(훅 ③ purge-role) — 보스는 그룹당 1(처치 크레딧과 동일 계약)
+  readonly roleKills: Record<PlasmoidArchetype | "elite" | "boss", number> = {
+    rusher: 0, kiter: 0, marker: 0, elite: 0, boss: 0,
+  };
+  // 어그로 성향(훅 ④ — 미션 변조 `modifiers.aggro`): player = 현행(인식 반경 내 플레이어 전환),
+  // building/landmark = 표적 직행 — 플레이어는 **때려야만**(provoked) 어그로가 끌린다.
+  private aggro: "player" | "landmark" | "building" = "player";
+  private bossGroups: CoreEnemy[][] = []; // 다중 투영 보스 그룹들(필라멘트·동반 소산 — roster 는 복수 가능)
+  private bossFilamentCd = 0;
+  // 보스 행동(훅 ⑤ — startBossDeploy 가 설정, clear 가 해제)
+  private bossEmit: BossDeployCfg["emit"] | null = null; // 잡몹 주기 분출
+  private bossEmitTimer = 0;
+  private bossOwnSweep = false; // 파문 원점 = 살아있는 보스(없으면 균열 폴백)
+  private bossHealLink: BossDeployCfg["healLink"] | null = null; // 그룹 간 상호 회복
+  private healFxCd = 0;
+  private shieldGroups: { shielded: CoreEnemy[]; escorts: CoreEnemy[] }[] = []; // 호위 방패(훅 ⑤)
 
   constructor(
     scene: THREE.Scene, world: GameWorld, players: PlayerController[],
@@ -127,6 +203,18 @@ export class EnemyManager {
     this.spec = spec;
     this.kiterArche = spec.archetypes.kiter;
     this.drain = new DrainBeams(scene);
+    // 낙인/파문 — 파문이 낙인 붙은 플레이어를 통과하면 피해(머시 무적은 takeDamage 가 거름, 낙인은 소모됨)
+    this.brand = new BrandSystem(scene, players, spec.sweep);
+    this.brand.onSweepHit = (idx, dmg) => {
+      const pl = this.players[idx];
+      if (pl && pl.takeDamage(dmg)) this.onPlayerHit?.(dmg, this.riftAnchor); // 발원 = 균열(파문 원점)
+    };
+    this.brand.onSweepPass = (_idx, branded) => {
+      // 통과 임팩트(펄스·저음) + 채점 집계 — 낙인 없이 넘기면 "무상 통과"(잘한 판의 지표)
+      if (branded) this.stats.sweepHits++;
+      else this.stats.sweepCleanPasses++;
+      this.onSweepPass?.(branded);
+    };
 
     // 코어 InstancedMesh — 살아있는/디졸브 개체 코어 일괄 렌더(MeshBasic + instanceColor = 발광).
     this.coreInst = new THREE.InstancedMesh(CORE_GEO, new THREE.MeshBasicMaterial(), INST_CAP);
@@ -231,6 +319,11 @@ export class EnemyManager {
     return out;
   }
 
+  /** 어그로 성향 설정(훅 ④) — 미션 변조. 투입(start*) 후 호출(clear 가 "player" 로 리셋). */
+  setAggro(mode: "player" | "landmark" | "building"): void {
+    this.aggro = mode;
+  }
+
   /** 작전구역(존) 설정 — 플라즈모이드를 이 원 안으로 제한. radius≤0 이면 해제. */
   setZone(cx: number, cz: number, radius: number): void {
     this.zoneCx = cx;
@@ -245,46 +338,238 @@ export class EnemyManager {
     this.killCount = 0;
     this.peaceful = !spawn;
     this.burstMode = false;
+    // 균열 앵커(소산 표류·파문 중심) — 웨이브 모드는 전투 개시 지점(플레이어 무게중심)을 균열 프록시로
+    const c = this.playersCentroid(_centroid);
+    this.riftAnchor.x = c.x;
+    this.riftAnchor.z = c.z;
     if (spawn) this.startNextWave();
     else this.onWaveChange?.(0); // 탐방 모드 — HUD 웨이브 0
   }
 
   /**
-   * 일괄 스폰 — 웨이브 대신 구역(반경 radius) 안에 `count` 마리를 **한 번에** 투입.
-   * **체력 총합 = totalHp**(예산 배분): index 0 = 중간보스(bossHp), 나머지는 총합을 무작위로 나눠 가진다.
+   * 미션 투입 — 웨이브 대신 **체력 총합 = totalHp** 예산으로 `count` 마리를 투입한다.
    * HP가 클수록 색은 고온(청백)·크기 대형(`appearanceForHp`). 아키타입은 전장 구성 비례(자기정렬).
-   * **MP 1인당 스케일**: count·totalHp 를 살아있는 플레이어 수 N 배(보스는 팀당 1기 유지) → 1인당 체감 일정.
+   * **MP 1인당 스케일**: count·totalHp·동시 상한을 살아있는 플레이어 수 N 배(보스는 팀당 1기 유지).
    * 클리어 후 자동 재시작하지 않는다(미션 종료는 인스턴스가 판정).
+   *
+   * `concurrentCap > 0`(점진 투입): 피라미드 배분(`pyramidHp` — 잡몹→중견→정예→보스 순 큐)으로
+   * 초기 소수만 즉시 투입하고, 나머지는 **균열 앵커**(중심에서 이격 — 위협 방향)에서
+   * `reinforceInterval` 간격으로 동시 상한 미만일 때 1기씩 증원. 뒤로 갈수록 강해지고 보스가 마지막.
+   * `concurrentCap ≤ 0`(레거시 일괄): 전량 즉시 투입(`distributeHp`, [0]=보스).
    */
-  startBurst(count: number, radius: number, totalHp: number, bossHp: number) {
-    this.clear();
-    this.wave = 1;
-    this.killCount = 0;
+  startBurst(count: number, radius: number, totalHp: number, bossHp: number,
+    opts?: { concurrentCap?: number; reinforceInterval?: number; fresh?: boolean }) {
+    const cap0 = Math.max(0, opts?.concurrentCap ?? 0);
+    const n = this.beginMissionDeploy(radius, cap0 > 0, opts?.fresh ?? true); // 레거시 일괄은 균열 앵커 = 전장 중심
+    // MP 1인당 스케일 — 인원 N 만큼 물량·체력 총합·동시 상한을 키운다(보스 1기는 팀 공유).
+    count = Math.round(count * n);
+    totalHp = totalHp * n;
+    const cap = Math.round(cap0 * n);
+    this.reinforceInterval = opts?.reinforceInterval && opts.reinforceInterval > 0 ? opts.reinforceInterval : 1.5;
+
+    if (cap <= 0) {
+      // 레거시 일괄 — 전량 즉시(구 모델. 미션 데이터가 concurrentCap 0 일 때만)
+      const hps = distributeHp(totalHp, bossHp, count, Math.random); // [0] = 보스
+      for (let i = 0; i < count; i++) this.spawnBurstOne({ hp: hps[i], boss: i === 0 && bossHp > 0 }, true);
+    } else {
+      this.concurrentCap = cap;
+      const hps = pyramidHp(totalHp, bossHp, count, Math.random); // 잡몹→중견→정예, 마지막 = 보스
+      this.reinforceQueue = hps.map((hp, i) => ({ hp, boss: bossHp > 0 && i === hps.length - 1 }));
+      // 초기 투입 — 상한의 일부(잡몹 위주: 큐 앞쪽)를 전장에 넓게 배치해 즉시 교전 밀도 확보
+      const initial = Math.min(this.reinforceQueue.length, Math.max(1, Math.ceil(cap * INITIAL_CAP_FRAC)));
+      for (let i = 0; i < initial; i++) this.spawnBurstOne(this.reinforceQueue.shift()!, true);
+      this.reinforceTimer = this.reinforceInterval;
+    }
+    this.onWaveChange?.(this.wave);
+  }
+
+  /**
+   * 대량 군집 투입(deploy `horde` — 훅 ①, 06-missions §1) — 균일 저체력 `unitHp` × `count`.
+   * 피라미드와 같은 균열 증원 인프라(동시 상한 + 간격 보충)를 쓰되 강도 상승 곡선/보스 없음 —
+   * 핵앤슬래시 전용 압력(패턴 1~4). MP 는 물량·상한 ×인원.
+   */
+  startHorde(count: number, unitHp: number, radius: number,
+    opts: { concurrentCap: number; reinforceInterval: number; fresh?: boolean }) {
+    const n = this.beginMissionDeploy(radius, true, opts.fresh ?? true);
+    count = Math.round(count * n);
+    this.concurrentCap = Math.max(1, Math.round(opts.concurrentCap * n));
+    this.reinforceInterval = opts.reinforceInterval > 0 ? opts.reinforceInterval : 0.5;
+    this.reinforceQueue = Array.from({ length: count }, () => ({ hp: unitHp, boss: false }));
+    const initial = Math.min(this.reinforceQueue.length, Math.max(1, Math.ceil(this.concurrentCap * INITIAL_CAP_FRAC)));
+    for (let i = 0; i < initial; i++) this.spawnBurstOne(this.reinforceQueue.shift()!, true);
+    this.reinforceTimer = this.reinforceInterval;
+    this.onWaveChange?.(this.wave);
+  }
+
+  /**
+   * 고정 조합 투입(deploy `roster` — 훅 ①) — 증원 없이 전량 즉시. 유닛 그룹마다 전장 링 위
+   * 한 점 주위에 **밀집 배치**(진형 자리 — 편대 가독; formation 필드는 조합 정립 단계에서 확장).
+   * role: rusher/kiter/marker = 아키타입 그대로, `elite` = 고체력 러셔(색·크기는 HP 가 결정 — 청백),
+   * `boss` = 다중 투영 그룹(count = 그룹 수, 팀 공유 — MP 스케일 제외). MP 는 비보스 물량 ×인원.
+   */
+  startRoster(units: readonly DeployUnit[], radius: number, bossProjections = BOSS_PROJECTIONS, fresh = true) {
+    const n = this.beginMissionDeploy(radius, true, fresh);
+    this.spawnRosterUnits(units, n, bossProjections);
+    this.onWaveChange?.(this.wave);
+  }
+
+  /**
+   * 보스 투입(deploy `boss` — 훅 ⑤) — 그룹 ×groups 의 다중 투영 + 수행원(escort, 로스터 규칙).
+   * 분출(emit)·소유 파문(ownSweep)·회복 링크(healLink)는 update 루프의 보스 행동으로 구동된다.
+   */
+  startBossDeploy(cfg: BossDeployCfg, radius: number, fresh = true) {
+    const n = this.beginMissionDeploy(radius, true, fresh);
+    const groups = Math.max(1, cfg.groups ?? 1);
+    const projections = cfg.projections ?? BOSS_PROJECTIONS;
+    for (let g = 0; g < groups; g++) this.spawnBossProjections(cfg.bossHp, projections);
+    if (cfg.escort?.length) this.spawnRosterUnits(cfg.escort, n, projections);
+    this.bossEmit = cfg.emit ?? null;
+    this.bossEmitTimer = cfg.emit?.interval ?? 0;
+    this.bossOwnSweep = !!cfg.ownSweep;
+    this.bossHealLink = cfg.healLink ?? null;
+    this.onWaveChange?.(this.wave);
+  }
+
+  /** 로스터 유닛 스폰 공통 — 클러스터 배치 + 직무 태깅 + 호위 방패(shield) 그룹 수집. */
+  private spawnRosterUnits(units: readonly DeployUnit[], n: number, bossProjections: number) {
+    const shielded: CoreEnemy[] = [];
+    const escorts: CoreEnemy[] = [];
+    for (const u of units) {
+      if (u.role === "boss") {
+        for (let i = 0; i < u.count; i++) this.spawnBossProjections(u.hp, bossProjections);
+        continue;
+      }
+      // 유닛 그룹 클러스터 — 링 반경 35~65% 위 한 점 + 그룹 내 산개
+      const ang = Math.random() * Math.PI * 2;
+      const cr = this.burstLim * (0.35 + Math.random() * 0.3);
+      const cx = this.burstCx + Math.cos(ang) * cr;
+      const cz = this.burstCz + Math.sin(ang) * cr;
+      const type: PlasmoidArchetype = u.role === "elite" ? "rusher" : u.role;
+      for (let i = 0; i < u.count * n; i++) {
+        const a2 = Math.random() * Math.PI * 2;
+        const rr = Math.sqrt(Math.random()) * ROSTER_CLUSTER_R;
+        const e = this.spawnOne(type, cx + Math.cos(a2) * rr, cz + Math.sin(a2) * rr, BURST_ROLL_WAVE, u.hp);
+        e.deployRole = u.role; // elite 등 미션 계약 직무 태깅(purge-role 집계 — 행동은 type 그대로)
+        if (u.shield !== undefined) {
+          e.damageMul = Math.min(1, Math.max(0, u.shield)); // 받는 피해 배수 0..1
+          shielded.push(e);
+        } else escorts.push(e);
+      }
+    }
+    if (shielded.length && escorts.length) this.shieldGroups.push({ shielded, escorts });
+    else for (const e of shielded) e.damageMul = 1; // 호위 없는 방패는 무효(즉시 원복)
+  }
+
+  /**
+   * 미션 투입 공통 준비 — 모드 플래그·드론 구성/전장 중심 스냅샷·균열 앵커 배치.
+   * offsetRift=true 면 앵커를 중심에서 이격(위협 방향 — 소산 표류·파문·증원이 한 점을 가리킴).
+   * fresh=false(페이즈 계속 — 훅 ⑥)면 필드·킬/채점 카운터를 유지하고 웨이브 표기만 +1(페이즈 = 웨이브).
+   * 반환: MP 스케일 N(살아있는 인원, ≥1).
+   */
+  private beginMissionDeploy(radius: number, offsetRift: boolean, fresh = true): number {
+    if (fresh) {
+      this.clear();
+      this.wave = 1;
+      this.killCount = 0;
+    } else {
+      this.wave += 1;
+    }
     this.peaceful = false;
     this.burstMode = true;
-
     let walkers = 0, flyers = 0;
     for (const pl of this.players) {
       if (pl.spec.move.mode === "fly") flyers++;
       else walkers++;
     }
-    // MP 1인당 스케일 — 인원 N 만큼 물량·체력 총합을 키운다(보스 1기는 팀 공유). 아키타입 비율은 pickBurstType 이 구성대로.
-    const n = Math.max(1, walkers + flyers);
-    count = Math.round(count * n);
-    totalHp = totalHp * n;
-    const hps = distributeHp(totalHp, bossHp, count, Math.random); // 체력 예산 배분(합=totalHp, [0]=보스)
+    this.burstWalkers = walkers;
+    this.burstFlyers = flyers;
     const c = this.playersCentroid(_centroid);
-    const cx = c.x, cz = c.z; // 구역 중심 = 스폰 무게중심(스냅샷 — 루프 중 갱신되는 임시 벡터 회피)
-    this.riftAnchor.x = cx; this.riftAnchor.z = cz; // 소산 표류 앵커 = 전장(균열) 중심 — 공유 참조라 기존 개체도 함께 갱신
-    const lim = Math.min(radius > 0 ? radius : 1500, this.world.bounds - 6);
-    for (let i = 0; i < count; i++) {
-      // 매칭 완화 — 워커도 카이터(모기)를 일부 끌어오도록 플라이어 가중에 워커 교차분을 더한다(웨이브 스폰과 동일 의도).
-      const type = pickBurstType(walkers, flyers + walkers * KITER_CROSS_FRAC, Math.random);
+    this.burstCx = c.x; // 스냅샷 — 루프 중 갱신되는 임시 벡터 회피
+    this.burstCz = c.z;
+    this.burstLim = Math.min(radius > 0 ? radius : 1500, this.world.bounds - 6);
+    if (offsetRift) {
       const ang = Math.random() * Math.PI * 2;
-      const rr = Math.sqrt(Math.random()) * lim; // 원판 균등 분포(√ 보정)
-      this.spawnOne(type, cx + Math.cos(ang) * rr, cz + Math.sin(ang) * rr, BURST_ROLL_WAVE, hps[i]);
+      const rd = this.burstLim * RIFT_OFFSET_FRAC;
+      this.riftAnchor.x = c.x + Math.cos(ang) * rd;
+      this.riftAnchor.z = c.z + Math.sin(ang) * rd;
+    } else {
+      this.riftAnchor.x = c.x;
+      this.riftAnchor.z = c.z;
     }
-    this.onWaveChange?.(1);
+    return Math.max(1, walkers + flyers);
+  }
+
+  /** 미션 투입 1마리 — 보스는 다중 투영으로, 그 외엔 아키타입 추첨 + 배치(wide=전장 원판 / 균열 링). */
+  private spawnBurstOne(entry: { hp: number; boss: boolean }, wide: boolean) {
+    if (entry.boss) {
+      this.spawnBossProjections(entry.hp);
+      return;
+    }
+    // 매칭 완화 — 워커도 카이터(모기)를 일부 끌어오도록 플라이어 가중에 워커 교차분을 더한다.
+    const type: PlasmoidArchetype =
+      Math.random() < MARKER_BURST_FRAC
+        ? "marker"
+        : pickBurstType(this.burstWalkers, this.burstFlyers + this.burstWalkers * KITER_CROSS_FRAC, Math.random);
+    const ang = Math.random() * Math.PI * 2;
+    let x: number, z: number;
+    if (wide) {
+      const rr = Math.sqrt(Math.random()) * this.burstLim; // 원판 균등 분포(√ 보정)
+      x = this.burstCx + Math.cos(ang) * rr;
+      z = this.burstCz + Math.sin(ang) * rr;
+    } else {
+      const rr = REINFORCE_R_MIN + Math.random() * (REINFORCE_R_MAX - REINFORCE_R_MIN); // 균열 주변 링
+      x = this.riftAnchor.x + Math.cos(ang) * rr;
+      z = this.riftAnchor.z + Math.sin(ang) * rr;
+    }
+    this.spawnOne(type, x, z, BURST_ROLL_WAVE, entry.hp);
+  }
+
+  /**
+   * 다중 투영 보스(§2.6) — 보스 예산 1기를 **HP 공유 구체 BOSS_PROJECTIONS 기**로 균열 주변에 투영.
+   * 어느 구를 때려도 같은 풀이 줄고(같은 체력이니까 — 가장 느리고 가까운 구가 정답), 풀 소진 시
+   * 전 투영 동반 소산(처치 크레딧·환수는 1회 — 미션 격멸 수 계약 유지). 피격 시 투영 사이에 빛
+   * 필라멘트가 스치는 연출은 update 루프(§1.10 계시 복선 — "이어져 있다").
+   */
+  private spawnBossProjections(totalHp: number, projections = BOSS_PROJECTIONS) {
+    const pool = { hp: totalHp, maxHp: totalHp, killCredited: false };
+    const ap = appearanceForHp(this.spec, totalHp * BOSS_VIS_HP_FRAC);
+    const g01 = colorStrength01(this.spec.color.stops, ap.temp);
+    const lim = this.world.bounds - 6;
+    const group: CoreEnemy[] = [];
+    this.bossGroups.push(group);
+    for (let i = 0; i < projections; i++) {
+      const ang = (i / projections) * Math.PI * 2 + Math.random() * 0.7;
+      const rr = REINFORCE_R_MIN + Math.random() * (REINFORCE_R_MAX - REINFORCE_R_MIN);
+      const x = THREE.MathUtils.clamp(this.riftAnchor.x + Math.cos(ang) * rr, -lim, lim);
+      const z = THREE.MathUtils.clamp(this.riftAnchor.z + Math.sin(ang) * rr, -lim, lim);
+      const y = this.world.heightAt(x, z) + 30 + Math.random() * 50;
+      const spd = this.spec.archetypes.rusher.speedMin * BOSS_SPEED_MULS[i % BOSS_SPEED_MULS.length];
+      const e = new CoreEnemy(new THREE.Vector3(x, y, z), { maxHp: totalHp, diameter: ap.diameter, color: ap.color }, spd);
+      e.role = "rusher"; // 저속 접촉 압박형(추격) — 낙인/드레인 없음
+      e.deployRole = "boss"; // 투입 직무 — purge-role(boss) 집계(크레딧은 그룹당 1: registerKill 1회 계약)
+      e.sharedPool = pool;
+      e.killRefund = BOSS_KILL_REFUND;
+      e.archetypeName = this.spec.archetypes.rusher.name;
+      e.glow = 1 + GLOW_STRENGTH * g01;
+      e.driftAnchor = this.riftAnchor;
+      this.enemies.push(e);
+      group.push(e);
+    }
+  }
+
+  /** 균열 증원 — 동시 개체 수가 상한 미만일 때 간격마다 큐에서 1기(처치가 곧 증원 유입 = 압력 항상성). */
+  private tickReinforce(dt: number) {
+    if (!this.burstMode || this.reinforceQueue.length === 0) return;
+    this.reinforceTimer -= dt;
+    if (this.reinforceTimer > 0) return;
+    let alive = 0;
+    for (const e of this.enemies) if (e.state === "alive") alive++;
+    if (alive >= this.concurrentCap) {
+      this.reinforceTimer = REINFORCE_RETRY; // 상한 — 자리 날 때까지 짧게 재시도
+      return;
+    }
+    this.spawnBurstOne(this.reinforceQueue.shift()!, false);
+    this.reinforceTimer = this.reinforceInterval;
   }
 
   private startNextWave() {
@@ -302,6 +587,8 @@ export class EnemyManager {
     this.pendingKiter =
       archetypeCount(a.kiter, this.wave, flyers) +
       Math.round(archetypeCount(a.kiter, this.wave, walkers) * KITER_CROSS_FRAC);
+    // 마커(소인체) — 드론 종류 무관 전원 비례(낙인탄은 지상/공중 모두 위협 — §6.7 대응 축은 사냥 상성)
+    this.pendingMarker = archetypeCount(a.marker, this.wave, walkers + flyers);
     this.spawnTimer = 0;
     this.onWaveChange?.(this.wave);
   }
@@ -323,7 +610,7 @@ export class EnemyManager {
    *  hpOverride 를 주면 그 HP로 외형 산출(예산 배분 일괄 스폰), 없으면 온도 롤(rollAppearance). */
   private spawnOne(type: PlasmoidArchetype, px?: number, pz?: number, rollWave = this.wave, hpOverride?: number) {
     const a = this.spec.archetypes;
-    const arche = type === "kiter" ? a.kiter : a.rusher;
+    const arche = type === "kiter" ? a.kiter : type === "marker" ? a.marker : a.rusher;
 
     // 위치: 명시(일괄 스폰) 또는 플레이어 무게중심 주변 근거리 밴드. 고도는 아키타입 밴드(카이터=상공, 러셔=지표).
     const lim = this.world.bounds - 6;
@@ -373,16 +660,31 @@ export class EnemyManager {
         evadeGain: k.evadeGain,
         homeDir: { x: rr * Math.cos(th), y: cz, z: rr * Math.sin(th) },
       });
+    } else if (type === "marker") {
+      // 마커(소인체) — 중거리 유영(카이터 이동 재사용, 회피 옵션 없음) + 낙인탄(공격은 update 루프에서 분기).
+      const mk = a.marker;
+      enemy = new CoreEnemy(new THREE.Vector3(x, y, z), app);
+      const cz = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.max(0, 1 - cz * cz));
+      enemy.setKiter({
+        speed: spd,
+        turnRate: THREE.MathUtils.degToRad(mk.turnRateDeg),
+        keepDist: mk.keepDist,
+        keepBand: mk.keepBand,
+        homeDir: { x: rr * Math.cos(th), y: cz, z: rr * Math.sin(th) },
+      });
     } else {
       // 러셔 — 추격+접촉(setKiter 미호출 → isKiter false).
       enemy = new CoreEnemy(new THREE.Vector3(x, y, z), app, spd);
     }
+    enemy.role = type;
+    enemy.deployRole = type; // 투입 직무 기본값 = 행동 직무(roster 의 elite 는 호출부가 덮어씀)
     enemy.glow = 1 + GLOW_STRENGTH * g01; // 청백(강)일수록 밝게 빛남(블룸)
     enemy.killRefund = arche.killRefund;
     enemy.archetypeName = arche.name;
     enemy.driftAnchor = this.riftAnchor; // 소산 표류 앵커(공유 참조) — 죽음이 균열 방향을 가리킴
     this.enemies.push(enemy);
     // 살아있는 동안은 셸 InstancedMesh 로 렌더 — 그룹(개별 메시)은 디졸브 시작 시에만 씬에 추가.
+    return enemy;
   }
 
   /** 도주형 고도 클램프 — 지면 아래로 가라앉지 않고(시인성), 수직 회피로 천장 위로 달아나지 않게(추격 가능). */
@@ -400,7 +702,8 @@ export class EnemyManager {
    * 반환: 이 타격으로 **건물이 파괴**됐으면 true(호출부가 건물 표적 해제).
    */
   private attack(enemy: CoreEnemy, targetPos: THREE.Vector3, from: THREE.Vector3, player: PlayerController | null, buildingId: string | null): boolean {
-    const drain = enemy.isKiter;
+    if (enemy.role === "marker") return false; // 마커는 접촉/드레인 없음 — 낙인탄 전용(markerFire, 건물 낙인은 커터 단계 🔭)
+    const drain = enemy.role === "kiter"; // 이동은 마커도 카이터형(isKiter) — 공격 분기는 직무(role)로
     const k = this.kiterArche;
     const range = drain ? k.attackRange : ATTACK_RANGE;
     const cooldown = drain ? k.drainInterval : 1.0;
@@ -420,7 +723,7 @@ export class EnemyManager {
     if (landed) {
       enemy.grow(amount); // 흡수=성장(러셔·카이터 공통)
       if (drain) this.drain.spawn(from, targetPos, enemy.color);
-      if (player) this.onPlayerHit?.(amount);
+      if (player) this.onPlayerHit?.(amount, from); // 발원 = 가해 개체 위치(피해 방향 인디케이터)
     }
     return destroyed;
   }
@@ -432,9 +735,12 @@ export class EnemyManager {
   private buildingStep(enemy: CoreEnemy, p: THREE.Vector3, dt: number, boids: Boid[], grid: ReturnType<typeof buildBoidGrid> | undefined, myIdx: number) {
     const bc = this.world.buildings;
     if (!bc) { enemy.update(dt, p, 1); return; } // 건물 없는 전장 → 정지(부유)
-    // 현 표적이 없거나(또는 파괴/언로드됨) → 최근접 건물 재탐색
+    // 현 표적이 없거나(또는 파괴/언로드됨) → 재탐색. aggro=landmark 면 랜드마크 직행(거리 무제한 —
+    // "그들이 먼저 노린다"), 없으면 일반 건물 폴백.
     if (enemy.buildingId == null || !bc.targetPos(enemy.buildingId, _btarget)) {
-      const found = bc.nearestTarget(p.x, p.z, BUILDING_SEEK_R);
+      const found = this.aggro === "landmark"
+        ? bc.nearestLandmark(p.x, p.z) ?? bc.nearestTarget(p.x, p.z, BUILDING_SEEK_R)
+        : bc.nearestTarget(p.x, p.z, BUILDING_SEEK_R);
       enemy.buildingId = found ? found.id : null;
       if (!found) { enemy.update(dt, p, 1); return; } // 주변 건물 없음 → 정지
       _btarget.set(found.x, found.y, found.z);
@@ -444,6 +750,17 @@ export class EnemyManager {
     enemy.update(dt, _btarget, 1, steer);
     if (enemy.isKiter) this.clampKiterAltitude(p); // 도주형은 지면 아래로 가라앉지 않게
     if (this.attack(enemy, _btarget, p, null, enemy.buildingId)) enemy.buildingId = null; // 파괴 시 표적 해제
+  }
+
+  /**
+   * 마커(소인체) 공격 — 사거리·시야(건물 비차폐)·쿨다운 통과 시 표적 드론에게 낙인 유도탄 발사.
+   * 관측 고정(zeno) 동결 중이면 tryAttack 이 거른다 — "빔을 붙들고 있는 것만으로 장전 인터럽트"(W1).
+   */
+  private markerFire(enemy: CoreEnemy, from: THREE.Vector3, targetPos: THREE.Vector3, targetIdx: number): void {
+    const tomb = this.spec.archetypes.marker.tomb;
+    if (this.world.segmentHitsBuilding(from.x, from.y, from.z, targetPos.x, targetPos.y, targetPos.z) <= 1) return; // 차폐
+    if (!enemy.tryAttack(targetPos, tomb.fireRange, tomb.fireInterval)) return;
+    this.brand.launch(from, targetIdx, enemy, tomb);
   }
 
   /** 사망 지점 최근접 플레이어(처치 환수 대상 근사 — MP 무기 소유자 미배선 단계). */
@@ -496,16 +813,17 @@ export class EnemyManager {
     return chooseTarget(dists, this.load, currentIdx, AGGRO_PENALTY, TARGET_HYSTERESIS, this.scores, matchMul);
   }
 
-  /** 점진적 스폰 — 두 아키타입 예산을 잔여 비율로 섞어 SPAWN_INTERVAL 마다 1마리씩 투입. */
+  /** 점진적 스폰 — 세 아키타입 예산을 잔여 비율로 섞어 SPAWN_INTERVAL 마다 1마리씩 투입. */
   private tickSpawns(dt: number) {
-    if (this.pendingRusher + this.pendingKiter <= 0) return;
+    if (this.pendingRusher + this.pendingKiter + this.pendingMarker <= 0) return;
     this.spawnTimer -= dt;
     if (this.spawnTimer > 0) return;
-    const type = pickSpawnType(this.pendingRusher, this.pendingKiter, Math.random);
+    const type = pickSpawnType(this.pendingRusher, this.pendingKiter, this.pendingMarker, Math.random);
     if (!type) return;
     this.spawnOne(type);
     if (type === "rusher") this.pendingRusher -= 1;
-    else this.pendingKiter -= 1;
+    else if (type === "kiter") this.pendingKiter -= 1;
+    else this.pendingMarker -= 1;
     this.spawnTimer = SPAWN_INTERVAL;
   }
 
@@ -514,6 +832,7 @@ export class EnemyManager {
     advanceGlobalPulse(dt); // 박동 동기화 — 전 개체 공유 위상(프레임당 1회)
     this.world.buildings?.update(dt); // 건물 피격 틴트/붕괴 연출 진행
     this.tickSpawns(dt);
+    this.tickReinforce(dt); // 미션 점진 투입(균열 증원) — 웨이브 모드에선 무동작
     this.buildTargets(dt);
     const targets = this.targets;
 
@@ -536,6 +855,17 @@ export class EnemyManager {
     let bi = 0; // boids 인덱스(alive 순회 동기)
     for (const enemy of this.enemies) {
       const p = enemy.group.position;
+      if (enemy.state === "alive") {
+        // 다중 투영 동기 — 풀 소진 시 동반 소산, 생존 중엔 표시 HP 를 풀로 미러(브래킷·수축 동기)
+        if (enemy.sharedPool) {
+          if (enemy.sharedPool.hp <= 0) enemy.forceDissolve();
+          else enemy.hp = enemy.sharedPool.hp;
+        }
+        // 관측 고정 집계 — 동결 진입 1회만(래치). 결과 화면 "관측 고정 n" 채점.
+        if (enemy.isZenoFrozen) {
+          if (!enemy.zenoLatch) { enemy.zenoLatch = true; this.stats.zenoFreezes++; }
+        } else enemy.zenoLatch = false;
+      }
       if (enemy.state !== "alive") {
         // 디졸브 시작 → 개별 메시(디졸브 셰이더)로 렌더하도록 씬에 추가(살아있을 땐 인스턴스드라 씬 밖).
         if (enemy.state === "dissolving" && enemy.group.parent === null) this.scene.add(enemy.group);
@@ -548,7 +878,9 @@ export class EnemyManager {
       // 한번 인식하면 AWARENESS_LOSE_RADIUS 까지 계속 추격(히스테리시스). 벗어나면 다시 건물.
       // provoked(피격 유발)면 거리 게이트를 무시하고 살아있는 플레이어를 계속 추격.
       const distSq = idx >= 0 ? targets[idx].pos.distanceToSquared(p) : Infinity;
-      if (!engagesPlayer(idx >= 0, enemy.targetIndex >= 0, distSq, enemy.provoked, AWARENESS_RADIUS_SQ, AWARENESS_LOSE_SQ)) {
+      // 어그로 변조(훅 ④): building/landmark 성향은 인식 반경 0 — 때려서 provoked 될 때만 플레이어 교전
+      const acquireSq = this.aggro === "player" ? AWARENESS_RADIUS_SQ : 0;
+      if (!engagesPlayer(idx >= 0, enemy.targetIndex >= 0, distSq, enemy.provoked, acquireSq, AWARENESS_LOSE_SQ)) {
         enemy.targetIndex = -1;
         this.buildingStep(enemy, p, dt, boids, grid, myIdx);
         continue;
@@ -564,7 +896,8 @@ export class EnemyManager {
       // 도주형 = 예측 회피·원거리 드레인 / 추격형 = 예측 요격·접촉. 공격은 공통 attack()(흡수=성장).
       enemy.update(dt, t.pos, 1, steer);
       if (enemy.isKiter) this.clampKiterAltitude(p); // 지면 아래로 가라앉지 않게
-      this.attack(enemy, t.pos, p, t.player, null);
+      if (enemy.role === "marker") this.markerFire(enemy, p, t.pos, idx);
+      else this.attack(enemy, t.pos, p, t.player, null);
     }
 
     // 작전구역 경계 — 살아있는 플라즈모이드를 원 안으로 클램프(밖으로 못 나감). 수직(고도)은 별도 처리.
@@ -578,7 +911,30 @@ export class EnemyManager {
       }
     }
 
+    // 다중 투영 피격 필라멘트 — 한 구가 맞는 순간 같은 그룹 형제 투영으로 빛이 스침("이어져 있다", §1.10 복선)
+    if (this.bossFilamentCd > 0) this.bossFilamentCd -= dt;
+    if (this.bossGroups.length && this.bossFilamentCd <= 0) {
+      for (const group of this.bossGroups) {
+        const hit = group.find((e) => e.state === "alive" && e.flash > 0.7);
+        if (!hit) continue;
+        for (const s of group) {
+          if (s !== hit && s.state === "alive") this.drain.spawn(hit.group.position, s.group.position, hit.color);
+        }
+        this.bossFilamentCd = BOSS_FILAMENT_CD;
+        break; // 프레임당 한 그룹만(스로틀 공유)
+      }
+    }
+
+    this.updateBossBehaviors(dt); // 훅 ⑤ — 호위 방패 해제·잡몹 분출·회복 링크
+
     this.drain.update(dt);
+
+    // 낙인 유도탄 + 심판 파문 — 전투 중에만(탐방은 전장 이벤트 없음).
+    // 앵커 = 균열(리프트 앵커), 보스 소유 파문(ownSweep)이면 살아있는 보스 위치.
+    if (!this.peaceful) {
+      const anchor = this.sweepAnchor();
+      this.brand.update(dt, anchor, this.world.heightAt(anchor.x, anchor.z));
+    }
 
     // 죽은 적 정리
     for (let i = this.enemies.length - 1; i >= 0; i--) {
@@ -592,9 +948,106 @@ export class EnemyManager {
     this.updateInstances(); // 살아있는 셸 + 코어 일괄 렌더(InstancedMesh)
 
     // 웨이브 종료 판정 — 탐방/일괄 스폰 모드면 자동 재시작 안 함(일괄은 미션 인스턴스가 종료 판정)
-    if (!this.peaceful && !this.burstMode && this.pendingRusher + this.pendingKiter === 0 && this.enemies.length === 0) {
+    if (!this.peaceful && !this.burstMode
+      && this.pendingRusher + this.pendingKiter + this.pendingMarker === 0 && this.enemies.length === 0) {
       this.startNextWave();
     }
+  }
+
+  /** 파문 예고 잔여(s) — HUD 폴링용. 탐방/비활성은 null. */
+  get sweepWarnLeft(): number | null {
+    return this.peaceful ? null : this.brand.warnLeft;
+  }
+
+  /** 파문 주기 배수(미션 변조 sweepPeriodMul) — 투입 후 지정. */
+  setSweepPeriodMul(mul: number): void {
+    this.brand.setPeriodMul(mul);
+  }
+
+  /** 전장이 비었는가(생존 0 + 증원/웨이브 예산 0) — 페이즈 전환 트리거(훅 ⑥). */
+  get fieldCleared(): boolean {
+    if (this.reinforceQueue.length > 0 || this.pendingRusher + this.pendingKiter + this.pendingMarker > 0) return false;
+    for (const e of this.enemies) if (e.state === "alive") return false;
+    return true;
+  }
+
+  /** 첫 살아있는 보스 투영(분출·소유 파문 호스트). 없으면 null. */
+  private firstAliveBoss(): CoreEnemy | null {
+    for (const g of this.bossGroups) for (const e of g) if (e.state === "alive") return e;
+    return null;
+  }
+
+  /** 파문 원점 — 보스 소유 파문이면 살아있는 보스 위치(전부 소산 시 균열 폴백). */
+  private sweepAnchor(): Vec3 {
+    if (this.bossOwnSweep) {
+      const host = this.firstAliveBoss();
+      if (host) {
+        const p = host.group.position;
+        _sweepAnchor.x = p.x; _sweepAnchor.y = p.y; _sweepAnchor.z = p.z;
+        return _sweepAnchor;
+      }
+    }
+    return this.riftAnchor;
+  }
+
+  /** 보스 행동(훅 ⑤) — 호위 방패 해제 · 잡몹 분출 · 회복 링크(+연출 필라멘트). */
+  private updateBossBehaviors(dt: number) {
+    // 호위 방패 — 호위 전멸 시 감쇄 해제("호위 붕괴")
+    for (let i = this.shieldGroups.length - 1; i >= 0; i--) {
+      const g = this.shieldGroups[i];
+      if (g.escorts.every((e) => e.state !== "alive")) {
+        for (const e of g.shielded) e.damageMul = 1;
+        this.shieldGroups.splice(i, 1);
+      }
+    }
+    // 잡몹 분출(성숙체) — 살아있는 보스 주변 링에서 주기 분출(전장 생존 상한 게이트)
+    if (this.bossEmit) {
+      this.bossEmitTimer -= dt;
+      if (this.bossEmitTimer <= 0) {
+        const host = this.firstAliveBoss();
+        let alive = 0;
+        for (const e of this.enemies) if (e.state === "alive") alive++;
+        if (host && alive < BOSS_EMIT_ALIVE_CAP) {
+          const hp = host.group.position;
+          for (let i = 0; i < this.bossEmit.count; i++) {
+            const ang = Math.random() * Math.PI * 2;
+            const rr = BOSS_EMIT_R_MIN + Math.random() * (BOSS_EMIT_R_MAX - BOSS_EMIT_R_MIN);
+            const e = this.spawnOne(this.bossEmit.role, hp.x + Math.cos(ang) * rr, hp.z + Math.sin(ang) * rr, BURST_ROLL_WAVE, this.bossEmit.hp);
+            e.deployRole = this.bossEmit.role;
+          }
+        }
+        this.bossEmitTimer = this.bossEmit.interval;
+      }
+    }
+    // 회복 링크(쌍생) — 서로 range 안인 그룹 쌍의 풀이 함께 회복(연출: 그룹 대표 간 필라멘트)
+    if (this.bossHealLink && this.bossGroups.length >= 2) {
+      if (this.healFxCd > 0) this.healFxCd -= dt;
+      const reps: { pool: NonNullable<CoreEnemy["sharedPool"]>; e: CoreEnemy }[] = [];
+      for (const g of this.bossGroups) {
+        const live = g.find((e) => e.state === "alive");
+        if (live?.sharedPool && live.sharedPool.hp > 0) reps.push({ pool: live.sharedPool, e: live });
+      }
+      const r2 = this.bossHealLink.range * this.bossHealLink.range;
+      for (let i = 0; i < reps.length; i++) {
+        for (let j = i + 1; j < reps.length; j++) {
+          if (reps[i].pool === reps[j].pool) continue;
+          const a = reps[i].e.group.position, b = reps[j].e.group.position;
+          if (a.distanceToSquared(b) > r2) continue;
+          const heal = this.bossHealLink.rate * dt;
+          reps[i].pool.hp = Math.min(reps[i].pool.maxHp, reps[i].pool.hp + heal);
+          reps[j].pool.hp = Math.min(reps[j].pool.maxHp, reps[j].pool.hp + heal);
+          if (this.healFxCd <= 0) {
+            this.drain.spawn(a, b, reps[i].e.color); // 회복 실 가시화 — "떼어놓거나 함께 태워라"
+            this.healFxCd = HEAL_FX_CD;
+          }
+        }
+      }
+    }
+  }
+
+  /** 플레이어의 현재 낙인 수(HUD 폴링용). */
+  brandCount(playerIdx = 0): number {
+    return this.brand.brandCount(playerIdx);
   }
 
   /** 피격 유발 인식 — 플레이어가 때린 플라즈모이드 반경 PROVOKE_RADIUS 안의 살아있는 개체를 provoked 로 전환. */
@@ -610,6 +1063,12 @@ export class EnemyManager {
     this.killCount += 1;
     // 처치 = 흡수당한 물질 회수(HP 환수). 사망 지점 최근접 플레이어에게(근사).
     if (enemy) this.nearestPlayer(enemy.group.position)?.heal(enemy.killRefund);
+    // 마커 격파 — 그 개체의 유도탄·낙인 소산("마커 우선 격파" 카운터, §6.1) + 채점·직무별 집계
+    if (enemy) {
+      this.brand.notifyDead(enemy);
+      if (enemy.role === "marker") this.stats.markerKills++;
+      this.roleKills[enemy.deployRole]++; // purge-role(훅 ③) — 보스는 그룹당 1회(크레딧 계약)
+    }
     // 동시 경직 — 전장의 모든 개체가 같은 순간 움찔(이동·공격 잠깐 정지 + 일제 수축).
     // 플레이어에게는 "처치 직후 안전창" 테크닉으로 읽힌다.
     for (const e of this.enemies) if (e !== enemy) e.stagger(KILL_STAGGER_SEC);
@@ -623,6 +1082,7 @@ export class EnemyManager {
     }
     this.enemies = [];
     this.drain.clear();
+    this.brand.clear(); // 유도탄·낙인·파면 정리 + 파문 주기 재무장
     this.instanceEnemies.length = 0; // 인스턴스 비우기(재입장 시 잔상 방지)
     this.coreInst.count = 0;
     this.coreInst.instanceMatrix.needsUpdate = true;
@@ -630,6 +1090,24 @@ export class EnemyManager {
     this.shellInst.instanceMatrix.needsUpdate = true;
     this.pendingRusher = 0;
     this.pendingKiter = 0;
+    this.pendingMarker = 0;
+    this.reinforceQueue = [];
+    this.reinforceTimer = 0;
+    this.concurrentCap = 0;
+    this.bossGroups = [];
+    this.bossFilamentCd = 0;
+    this.bossEmit = null;
+    this.bossEmitTimer = 0;
+    this.bossOwnSweep = false;
+    this.bossHealLink = null;
+    this.healFxCd = 0;
+    this.shieldGroups = [];
+    this.stats.markerKills = 0;
+    this.stats.zenoFreezes = 0;
+    this.stats.sweepHits = 0;
+    this.stats.sweepCleanPasses = 0;
+    for (const k of Object.keys(this.roleKills) as (keyof typeof this.roleKills)[]) this.roleKills[k] = 0;
+    this.aggro = "player"; // 어그로 변조 리셋 — 미션이 투입 후 setAggro 로 재지정
     this.burstMode = false;
     this.hasPrev = false; // 재입장 시 순간이동 변위로 인한 가짜 속도 스파이크 방지
     for (const v of this.vels) { v.x = v.y = v.z = 0; }

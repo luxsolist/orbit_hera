@@ -81,6 +81,7 @@ fallGravity, fallTerminal, maxRiseHeight, coyoteTime }`.
 | `manual{ damage, freqCost, fireInterval, assistConeDeg }` | 좌클릭 수동 사격(에임 어시스트 콘) |
 | `auto{ damage, freqCost, fireInterval, range }` | 근거리 360° 오토파이어(콘 없음 — 최근접 소프트락) |
 | `falloff{ refDist, maxMult, minMult }` | 거리 비례 위력(아래 [02](02-drones-weapons.md#데미지-모델)) |
+| `zeno?{ slowPerSec, freezeAfter, graceSec? }` | **관측 고정(W1)** — 같은 대상 지속 조사 시 감속→동결. 노출 1초당 `slowPerSec` 감속, 노출 `freezeAfter`s 이상이면 완전 정지(이동·공격 게이트). 히트 간격이 `graceSec`(기본 0.5s) 이내면 "지속 조사". 수동·오토 공통 적용 |
 
 오토와 수동은 **독립 쿨다운**으로 같은 프레임에 동시 발사 가능하다(`auto.coneDeg`는 360° 전환으로 제거됨).
 
@@ -115,6 +116,7 @@ fallGravity, fallTerminal, maxRiseHeight, coyoteTime }`.
 | `beamLifetime` | 빔 잔상 수명 s |
 | `colorBeam`, `colorGlow` | 빔/글로우 색 |
 | `falloff{ refDist, maxMult, minMult }` | 거리 비례 위력(특수는 일반보다 완만) |
+| `zeno?{ slowPerSec, freezeAfter, graceSec? }` | 관측 고정(W1) — BeamSpec 과 동일. 오버드라이브 = 풀 스로틀 단일 관측(강한 값 권장) |
 
 특수무기(`barrage`/`stream`)는 공통 `SpecialWeapon` 인터페이스(update/reset/cooldownReady/
 cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(사용 종료) 후부터** 시작한다.
@@ -148,6 +150,8 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 | `contact.strengthMul` | number | 강함 s=1 추가 배수 → `×(1+strengthMul·s)` |
 | `archetypes.rusher` | `RusherArchetype` | 지상 돌격형(거머리) — 접근+접촉 흡수 |
 | `archetypes.kiter` | `KiterArchetype` | 공중 도주형(모기) — 거리 유지+원거리 드레인 |
+| `archetypes.marker` | `MarkerArchetype` | 중거리 유영(소인체) — 낙인 유도탄(무피해) + 심판 파문 연계 |
+| `sweep` | `SweepSpec` | **심판 파문**(전장 이벤트) — `period`(주기 s), `speed`(파면 확장 m/s), `warnSec`(HUD 예고 s), `maxRadius`(소멸 반경 m) |
 
 **`ColorStop`**: `{ temp(K), color("0xRRGGBB"), weight(체력 가중치, 최저색=1.0 기준) }`.
 
@@ -161,6 +165,12 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 색 강도 `colorStrength01`로 보간(적색=`speed`, 청백=`speedMin`). 물량은 매칭 드론 수에 비례(러셔=워커, 카이터=플라이어).
 
 **`RusherArchetype`** = 베이스(추가 필드 없음 — 접근+접촉 흡수).
+
+**`MarkerArchetype`** (베이스 + ): `turnRateDeg`/`keepDist`/`keepBand`(카이터형 유영 파라미터 부분집합) +
+`tomb{ projSpeed, projTurnRateDeg, projTtl, fireRange, fireInterval, sweepDamage }` — 낙인 유도탄(느린 호밍,
+명중 시 **낙인** 부착·무피해). 낙인 붙은 드론만 심판 파문(`sweep`) 통과 시 낙인 1개당 `sweepDamage` 피해.
+카운터: 유도탄 회피 / 근원 마커 격파(그 개체의 낙인·유도탄 소산). 물량은 드론 종류 무관 전원 비례.
+접촉·드레인 없음(공격은 낙인탄 전용). 표시명 규칙: [서사편 §8.2] — 인게임 표면은 "소인체/낙인/심판 파문"만.
 
 **`KiterArchetype`** (베이스 + ): `turnRateDeg`(선회 상한 °/s), `keepDist`(유지 적정거리 m),
 `keepBand`(히스테리시스 반폭 m), `strafeMix`(`homeDir` 없을 때 폴백 거동: 1=접선 선회 / 0=도주), `orbitRef`(이 접선속도 m/s에서
@@ -243,7 +253,10 @@ public/maps/<latCell>/<lonCell>/<cx>_<cz>.json   # 1024m 청크(결합):
 
 ### `index.json` — 미션 풀 (`MissionSpec[]`)
 
-배열의 각 항목이 하나의 미션. 출격 시 `pickMission`으로 랜덤 선택. 탐방 모드는 내장 `FREE_ROAM` 사용.
+배열의 각 항목이 하나의 미션(v1). 출격 시 `pickMission`으로 랜덤 선택. 탐방 모드는 내장 `FREE_ROAM` 사용.
+
+> 미션 체계 정본(3축 분해 · **v2 스키마** · 패턴 카탈로그 20종)은 [06-missions](06-missions.md).
+> 현행 JSON 은 v1 을 유지하고, v2 는 [`missionV2.ts`](../../src/game/missionV2.ts) `toLegacy()` 로 단계 도입한다.
 
 | 필드 | 타입 | 의미 |
 | :--- | :--- | :--- |
@@ -256,10 +269,12 @@ public/maps/<latCell>/<lonCell>/<cx>_<cz>.json   # 1024m 청크(결합):
 | `maxLandmarkLoss` | number | `defend-landmark` — 허용 랜드마크 손실 수 |
 | `respawns` | number | 리스폰 허용 횟수. `<0` = 무한 |
 | `zoneRadius` | number | 작전구역 반경(m). 0 = 무제한 |
-| `spawnCount` | number | 일괄 스폰 수. 0 = 웨이브 모드 |
-| `spawnRadius` | number | 일괄 스폰 분산 반경(m, 시작 위치 기준) |
-| `totalHp` | number | 스폰 체력 총합 예산. 0 = 온도 롤 |
-| `bossHp` | number | 중간보스 1기 체력(`index 0`). 0 = 보스 없음 |
+| `spawnCount` | number | 총 투입 수(초기 + 증원). 0 = 웨이브 모드 |
+| `spawnRadius` | number | 초기 투입 분산 반경(m, 시작 위치 기준) |
+| `totalHp` | number | 투입 체력 총합 예산. 0 = 온도 롤 |
+| `bossHp` | number | 중간보스 1기 체력 — 피라미드 최상층, **증원 큐 마지막**(클라이맥스). 0 = 보스 없음 |
+| `concurrentCap` | number | **동시 개체 수 상한**(1인 기준, MP ×인원). >0 = 점진 투입(`pyramidHp` 피라미드 배분 + 균열 증원), 0 = 레거시 일괄(전량 즉시, `distributeHp`) |
+| `reinforceInterval` | number | 증원 간격(s) — 동시 상한 미만일 때 균열 앵커 주변에서 1기씩 보충 |
 
 소스 타입: [`src/game/mission.ts`](../../src/game/mission.ts) `MissionSpec`.
 풀 로드 실패 시 [`src/game/mission.ts`](../../src/game/mission.ts)의 내장 `DEFAULT_MISSIONS` 폴백(동치 보장).

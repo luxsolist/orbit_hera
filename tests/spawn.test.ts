@@ -48,16 +48,26 @@ describe("archetypeCount — 아키타입별 웨이브·인원 비례 물량", (
   });
 });
 
-describe("pickSpawnType — 잔여 예산 비율 가중 추첨", () => {
+describe("pickSpawnType — 잔여 예산 비율 가중 추첨(러셔/카이터/마커)", () => {
   it("한 종만 남으면 그 종(난수 무관)", () => {
-    expect(pickSpawnType(6, 0, () => 0.0)).toBe("rusher");
-    expect(pickSpawnType(6, 0, () => 0.99)).toBe("rusher");
-    expect(pickSpawnType(0, 3, () => 0.0)).toBe("kiter");
+    expect(pickSpawnType(6, 0, 0, () => 0.0)).toBe("rusher");
+    expect(pickSpawnType(6, 0, 0, () => 0.99)).toBe("rusher");
+    expect(pickSpawnType(0, 3, 0, () => 0.0)).toBe("kiter");
+    expect(pickSpawnType(0, 0, 2, () => 0.0)).toBe("marker");
+    expect(pickSpawnType(0, 0, 2, () => 0.99)).toBe("marker");
   });
-  it("둘 다 남으면 잔여 비율로 분기", () => {
-    // 잔여 [3,1] → total 4: rand·4<3 이면 러셔
-    expect(pickSpawnType(3, 1, () => 0.1)).toBe("rusher"); // 0.4 < 3
-    expect(pickSpawnType(3, 1, () => 0.99)).toBe("kiter"); // 3.96 ≥ 3
+  it("여럿 남으면 잔여 비율로 분기", () => {
+    // 잔여 [3,1,0] → total 4: rand·4<3 이면 러셔
+    expect(pickSpawnType(3, 1, 0, () => 0.1)).toBe("rusher"); // 0.4 < 3
+    expect(pickSpawnType(3, 1, 0, () => 0.99)).toBe("kiter"); // 3.96 ≥ 3
+    // 잔여 [2,1,1] → total 4: 구간 [0,2)=러셔 [2,3)=카이터 [3,4)=마커
+    expect(pickSpawnType(2, 1, 1, () => 0.49)).toBe("rusher"); // 1.96
+    expect(pickSpawnType(2, 1, 1, () => 0.6)).toBe("kiter"); // 2.4
+    expect(pickSpawnType(2, 1, 1, () => 0.8)).toBe("marker"); // 3.2
   });
-  it("둘 다 0이면 null", () => expect(pickSpawnType(0, 0, () => 0.5)).toBeNull());
+  it("예산 0 인 종은 배제(중간 종이 0 이어도 경계 안전)", () => {
+    expect(pickSpawnType(2, 0, 2, () => 0.5)).toBe("marker"); // 2.0 ≥ 2(러셔 구간 밖) → 마커
+    expect(pickSpawnType(2, 0, 2, () => 0.49)).toBe("rusher");
+  });
+  it("전부 0이면 null", () => expect(pickSpawnType(0, 0, 0, () => 0.5)).toBeNull());
 });

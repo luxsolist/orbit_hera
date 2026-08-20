@@ -50,6 +50,10 @@ export class FrequencyBeam {
 
   /** 빔/임팩트가 발광해야 하므로 fired 상태를 HUD로 알림 */
   onFired?: () => void;
+  /** 수동(조준) 발사 순간 — 반동 킥 등 손맛 훅(오토는 제외 — 상시 흔들림 방지). */
+  onManualFired?: () => void;
+  /** 수동 발사가 적에 명중(killed = 이번 타로 처치) — 히트스톱 훅. */
+  onManualHit?: (killed: boolean) => void;
 
   constructor(
     private scene: THREE.Scene,
@@ -208,13 +212,14 @@ export class FrequencyBeam {
     const origin = this.player.camera.position;
     const aimDir = this.player.getAimDirection().clone();
     const assistDir = this.acquireAssistTarget(origin, aimDir);
-    this.fireAt(assistDir ?? aimDir, this.spec.manual.freqCost, this.spec.manual.damage);
+    this.fireAt(assistDir ?? aimDir, this.spec.manual.freqCost, this.spec.manual.damage, true);
   }
 
   /** 공통 발사 경로 — 비용 차감(볼리당 1회)·발사음 후 발사관 일제 사격(공유 fireEmitters). */
-  private fireAt(dir: THREE.Vector3, cost: number, baseDamage: number) {
+  private fireAt(dir: THREE.Vector3, cost: number, baseDamage: number, manual = false) {
     if (!this.player.spendFrequency(cost)) return; // 주파수 부족(볼리당 1회만 소모)
     this.sfx?.beam(); // 발사음(수동/자동 동일) — 실제 발사된 경우에만
+    if (manual) this.onManualFired?.(); // 반동 킥 — 조준 사격의 발사감
     fireEmitters(
       { raycaster: this.raycaster, enemies: this.enemies, damageNumbers: this.damageNumbers, beamPool: this.beamPool, world: this.player.gameWorld },
       {
@@ -225,7 +230,9 @@ export class FrequencyBeam {
         falloff: this.spec.falloff,
         range: this.spec.range,
         style: this.style,
+        zeno: this.spec.zeno, // 관측 고정(W1) — 수동·오토 공통(오토 = 백그라운드 관측 스레드)
         onHit: (endPoint, hit, d) => this.spawnImpact(endPoint, hit.face?.normal, d), // 임팩트/스파크는 기본빔만
+        onEnemyHit: manual ? (killed) => this.onManualHit?.(killed) : undefined, // 히트스톱은 수동만
       }
     );
     this.onFired?.();

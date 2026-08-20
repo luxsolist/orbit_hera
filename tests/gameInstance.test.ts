@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { GameInstance } from "../src/game/GameInstance";
-import { FREE_ROAM, DEFAULT_MISSIONS } from "../src/game/mission";
 import type { MissionSpec } from "../src/game/mission";
+import { FREE_ROAM_V2 as FREE_ROAM, DEFAULT_MISSIONS_V2, fromLegacy } from "../src/game/missionV2";
 
 // ── 경량 mock ────────────────────────────────────────────────────────────────
 const makeEnemies = (killCount = 0) => ({ killCount } as any);
@@ -15,12 +15,15 @@ const makeBuildings = (b = 0, l = 0) => ({
   destroyedLandmarks: l,
 }) as any;
 
-const spec = (p: Partial<MissionSpec> = {}): MissionSpec => ({
-  id: "t", name: "t", kind: "eradicate", duration: 60, killTarget: 10,
-  maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: 2,
-  zoneRadius: 5000, spawnCount: 100, spawnRadius: 1500, totalHp: 70000, bossHp: 10000,
-  ...p,
-});
+// v1 부분 명세로 조립 후 fromLegacy 로 v2 변환 — 어댑터 경로를 함께 검증(런타임은 v2).
+const spec = (p: Partial<MissionSpec> = {}) =>
+  fromLegacy({
+    id: "t", name: "t", kind: "eradicate", duration: 60, killTarget: 10,
+    maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: 2,
+    zoneRadius: 5000, spawnCount: 100, spawnRadius: 1500, totalHp: 70000, bossHp: 10000,
+    concurrentCap: 26, reinforceInterval: 1.5,
+    ...p,
+  });
 
 // ─────────────────────────────────────────────────────────────────────────────
 describe("GameInstance.start() — 리셋", () => {
@@ -178,15 +181,15 @@ describe("GameInstance — timeLeft / respawnsLeft getters", () => {
 
 describe("GameInstance.snapshot()", () => {
   it("탐방이 아닌 경우 objective/detail/timeLeft/respawnsLeft 채워짐", () => {
-    const mission = DEFAULT_MISSIONS.find((m) => m.kind === "eradicate")!;
+    const mission = DEFAULT_MISSIONS_V2.find((m) => m.goal.type === "purge")!;
     const inst = new GameInstance({ mission, players: makePlayers(), enemies: makeEnemies(5) });
     inst.start();
     inst.update(10);
     const s = inst.snapshot();
     expect(s.objective).toBeTruthy();
-    expect(s.detail).toBeTruthy(); // "5 / 100"
-    expect(s.timeLeft).toBeCloseTo(mission.duration - 10, 4);
-    expect(s.respawnsLeft).toBe(mission.respawns);
+    expect(s.detail).toBeTruthy(); // "5 / 45"
+    expect(s.timeLeft).toBeCloseTo(mission.fail.timeLimit - 10, 4);
+    expect(s.respawnsLeft).toBe(mission.fail.respawns);
     expect(s.status).toBe("active");
   });
 
@@ -199,13 +202,67 @@ describe("GameInstance.snapshot()", () => {
   });
 
   it("건물 손실 집계 — buildings 있을 때 snapshot에 반영", () => {
-    const mission = DEFAULT_MISSIONS.find((m) => m.kind === "defend-buildings")!;
+    const mission = DEFAULT_MISSIONS_V2.find((m) => m.goal.type === "guard" && m.goal.target === "buildings")!;
     const buildings = makeBuildings(3, 0);
     const inst = new GameInstance({ mission, players: makePlayers(), enemies: makeEnemies(), buildings });
     inst.start();
     inst.update(1);
     const s = inst.snapshot();
     expect(s.detail).toContain("3"); // "손실 3 / 10"
+  });
+});
+
+describe("GameInstance — phased 페이즈 드라이버(훅 ⑥)", () => {
+  const hordePhase = (count: number) =>
+    ({ model: "horde", count, unitHp: 300, concurrentCap: 40, reinforceInterval: 0.4, spawnRadius: 1000 }) as const;
+  const phasedMission = () => ({
+    id: "p", name: "p / P",
+    goal: { type: "survive", seconds: 300 } as const,
+    fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    deploy: {
+      model: "phased" as const,
+      phases: [
+        { deploy: hordePhase(10) },
+        { deploy: hordePhase(20) }, // afterSec 없음 — 전멸 트리거
+        { deploy: hordePhase(30), afterSec: 100 }, // 시각 트리거
+      ],
+    },
+    zoneRadius: 3000,
+  });
+  const makeEnemiesMock = () => ({
+    killCount: 0,
+    fieldCleared: false,
+    startHorde: vi.fn(),
+    roleKills: {},
+  }) as any;
+
+  it("전멸 트리거 — fieldCleared 가 참이 되면 다음 페이즈를 fresh=false 로 투입", () => {
+    const enemies = makeEnemiesMock();
+    const inst = new GameInstance({ mission: phasedMission() as any, players: makePlayers(), enemies });
+    inst.start();
+    inst.update(1);
+    expect(enemies.startHorde).not.toHaveBeenCalled(); // 페이즈 0 은 Game(beginPlay)이 투입 — 여기선 감시만
+    enemies.fieldCleared = true;
+    inst.update(1);
+    expect(enemies.startHorde).toHaveBeenCalledTimes(1); // 페이즈 1 투입
+    expect(enemies.startHorde.mock.calls[0][0]).toBe(20);
+    expect(enemies.startHorde.mock.calls[0][3].fresh).toBe(false); // 카운터 유지
+  });
+
+  it("시각 트리거(afterSec) — 전멸과 무관하게 경과 시각 도달 시 투입", () => {
+    const enemies = makeEnemiesMock();
+    const inst = new GameInstance({ mission: phasedMission() as any, players: makePlayers(), enemies });
+    inst.start();
+    enemies.fieldCleared = true;
+    inst.update(1); // 페이즈 1(전멸 트리거)
+    enemies.fieldCleared = false;
+    inst.update(50); // elapsed 51 < 100
+    expect(enemies.startHorde).toHaveBeenCalledTimes(1);
+    inst.update(50); // elapsed 101 ≥ 100 → 페이즈 2
+    expect(enemies.startHorde).toHaveBeenCalledTimes(2);
+    expect(enemies.startHorde.mock.calls[1][0]).toBe(30);
+    inst.update(50); // 마지막 페이즈 — 더 없음
+    expect(enemies.startHorde).toHaveBeenCalledTimes(2);
   });
 });
 

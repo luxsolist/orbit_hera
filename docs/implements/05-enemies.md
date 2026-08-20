@@ -14,12 +14,13 @@
 
 그 위에 개체 행동을 **고유 아키타입**(`archetypes.{rusher, kiter}`)으로 정의한다 — 어느 드론이 플레이하든 무관(MP 혼합 전장 대응). 온도(T) 시스템은 색·체력·시각크기·기본속도·희귀도를 그대로 구동하되, **이동 난이도는 더 이상 고도로 변하지 않는다**(과거 "고도 가중" 시스템 폐기).
 
-스펙 구조(`PlasmoidSpec`): `hp`(`PlasmoidHpSpec`), `color.stops`(`ColorStop[]`), `visual`(`PlasmoidVisualSpec`), `spawn`(`PlasmoidSpawnSpec`), `contact`(`PlasmoidContactSpec`), `archetypes`(`PlasmoidArchetypesSpec` = `{rusher, kiter}`).
+스펙 구조(`PlasmoidSpec`): `hp`(`PlasmoidHpSpec`), `color.stops`(`ColorStop[]`), `visual`(`PlasmoidVisualSpec`), `spawn`(`PlasmoidSpawnSpec`), `contact`(`PlasmoidContactSpec`), `archetypes`(`PlasmoidArchetypesSpec` = `{rusher, kiter, marker}`), `sweep`(`SweepSpec` — 심판 파문 전장 이벤트).
 
 ### 아키타입 — 행동을 드론에서 분리
 - **카이터 = "모기 플라즈모이드 / SKEETER"**(공중형, `PlasmoidKiterArchetype`): `keepDist` 거리를 유지하되 **keepDist 구(球) 위 개체 고유 방위(`homeDir`)** 로 향해 무리가 xy·z 모두 고르게 분산하고, 사거리에서 **드레인 빔**(`drainDamage`/`drainInterval`)으로 원거리 공격. `homeDir`은 매 프레임 **구면 랜덤워크로 표류**해 한 마리도 죽기 전까지 xyz 전 방향으로 자유 유영(`HOME_WANDER`). 너무 가까우면 직접 도주(`KITER_FLEE_LEAD` 예측 리드), 플레이어 원돌기엔 **수직 회피**(개체별 위/아래 무작위 = `homeDir.y` 부호; `orbitRef`/`evadeGain`). 상공(`spawnAlt` 80–300m)에 소수(`countBase 3`, `countCap 5`) 등장, 처치 환수 8. 튜닝: 속도 `speed 89`↔`speedMin 67`(플라이어 최고속 −20%~−40%), `turnRateDeg 100`, `keepDist 60`, `keepBand 12`, `attackRange 95`, `drainDamage 1.4`, `drainInterval 1.5`.
 - **러셔 = "거머리 플라즈모이드 / LEECH"**(지상형, `PlasmoidRusherArchetype`): 적극 **접근**해 **접촉**으로 흡수(`spec.contact`). 속도 `speed 17`↔`speedMin 12`(워커 최고속 19.44보다 약간 느려 공격할 틈을 줌). 지표(`spawnAlt` 0–60m)에 떼(`countBase 6`, `countCap 12`)로 등장, 처치 환수 5.
-- 공통 베이스(`PlasmoidArchetypeBase`): `name`(표시명 "국문 / ENGLISH"), `spawnAltMin/spawnAltMax`, `countBase/countCap`, `killRefund`. 스폰 시 각 개체에 `archetypeName`·`killRefund`·`targetIndex`가 실린다.
+- **마커 = "소인체 플라즈모이드 / BRANDER"**(중공형, `PlasmoidMarkerArchetype` — 서사편 §6.1 ① MARK): 카이터형 유영(`turnRateDeg 90`/`keepDist 70`/`keepBand 18`, 회피 옵션 없음)으로 중거리를 맴돌며 **낙인 유도탄**(`tomb`: `projSpeed 22`, `projTurnRateDeg 70`, `projTtl 14`, `fireRange 220`, `fireInterval 7`)을 발사. 명중해도 무피해 — **낙인**만 부착되고(표적당 상한 5), 주기적 **심판 파문**이 지나갈 때 낙인 1개당 `sweepDamage 18` 피해(최대 90 — 워커는 만피에서 생존, 플라이어는 방치 시 치명). 카운터: 느린 유도탄 회피(선회 캡이라 스트레이프로 흘림) / **근원 마커 격파**(그 개체의 낙인·유도탄 소산) / 관측 고정(W1)으로 장전 동결. 물량은 드론 종류 무관 전원 비례(`countBase 2`, `countCap 4`), 중고도(`spawnAlt` 40–160m). 접촉·드레인 없음, 처치 환수 8(최우선 표적 보상). 건물 낙인은 커터(§6.10-2) 단계에서 도입 예정 🔭.
+- 공통 베이스(`PlasmoidArchetypeBase`): `name`(표시명 "국문 / ENGLISH"), `spawnAltMin/spawnAltMax`, `countBase/countCap`, `killRefund`. 스폰 시 각 개체에 `archetypeName`·`killRefund`·`targetIndex`·`role`(직무 — 공격 경로 분기)이 실린다.
 
 ### "분리형" 모델 — 체력 ↔ 보이는 크기 디커플링
 1. **체력(밸런스)** `plasmoidHp(spec, diameter, T)` = `basePerArea × 지름² × colorWeight` (표면적 기반 → 크기로 폭주 안 함). 지름은 `hp.minDiameter`~`hp.maxDiameter` 클램프.
@@ -145,4 +146,33 @@
 - `aliveMarkers` — 월드 위치 + 시각 반경(`group.scale.x`; 코너 브래킷 등 화면 표식용).
 - `aliveSnapshot` — `{x,z}` 위치 스냅샷(미니맵용).
 
-`update(dt)` — 건물 연출(`world.buildings.update`) → 점진 스폰(`tickSpawns`, 일괄 모드면 무동작) → 표적/`boids`/`load` 갱신 → 각 적 `update`(표적 좌표 + 조향 전달) + 공통 `attack`(건물 기본/인식 범위 안이면 플레이어, 흡수=성장) → 드레인 빔 갱신 → 사망 적 정리 → 웨이브 종료 판정(일괄 모드는 자동 재시작 없음).
+`update(dt)` — 건물 연출(`world.buildings.update`) → 점진 스폰(`tickSpawns`, 미션 모드면 무동작) → 균열 증원(`tickReinforce` — 미션 점진 투입: 동시 상한 미만일 때 피라미드 큐에서 1기, [08](08-game-instance-mission.md) 참조) → 표적/`boids`/`load` 갱신 → 각 적 `update`(표적 좌표 + 조향 전달) + 공통 `attack`(건물 기본/인식 범위 안이면 플레이어, 흡수=성장; **마커는 `markerFire`로 분기** — 시야·사거리·쿨다운 통과 시 낙인탄 발사) → 드레인 빔 갱신 → **낙인/파문 갱신**(`brand.update` — 탐방 모드 제외) → 사망 적 정리 → 웨이브 종료 판정(일괄 모드는 자동 재시작 없음).
+
+## deploy 모델 — 미션 투입기 3종 (훅 ① — [06-missions](../spec/06-missions.md))
+
+- **`startBurst`(pyramid)** — 피라미드 배분 점진 증원(아래 스폰 절). `startHorde` — 균일 저체력 `unitHp`×`count`,
+  같은 균열 증원 인프라(상한+간격), 강도 곡선/보스 없음(핵앤슬래시 전용). `startRoster` — **고정 조합 전량
+  즉시·증원 없음**: `DeployUnit{role, count, hp}` 배열, 유닛 그룹마다 전장 링 위 클러스터 배치(반경
+  `ROSTER_CLUSTER_R` 70m — 편대가 한 덩어리로 읽힘; 진형 필드는 조합 정립 단계). role `elite` = 고체력
+  러셔(색·크기는 HP 가 결정 — 청백), `boss` = 다중 투영 그룹 ×count(`bossProjections` 인자로 투영 수 지정).
+- 공통 준비는 `beginMissionDeploy`(리셋·구성 스냅샷·균열 앵커 이격). MP 스케일: 비보스 물량·상한 ×인원,
+  보스 그룹은 팀 공유. 테스트: [tests/reinforce.test.ts](../../tests/reinforce.test.ts).
+
+## 다중 투영 보스 (§2.6 — HP 공유 구체)
+
+미션 보스 예산(`bossHp`) 1기는 단일 구가 아니라 **HP 를 공유하는 투영 3기**(`BOSS_PROJECTIONS`)로 균열 주변에 등장한다
+(`spawnBossProjections`) — 하나의 손이 드리우는 여러 그림자. 어느 구를 때려도 같은 풀(`CoreEnemy.sharedPool`)이 줄므로
+**가장 느리고 가까운 구를 때리는 게 정답**(투영별 속도 차 `BOSS_SPEED_MULS`). 풀 소진 시 전 투영 동반 소산(`forceDissolve`),
+처치 크레딧·환수(`BOSS_KILL_REFUND 15`)는 **그룹당 1회**(풀의 `killCredited` 래치 — 미션 격멸 수 계약 유지). 피격 순간
+형제 투영으로 빛 필라멘트가 스치는 연출(`DrainBeams` 재활용, `BOSS_FILAMENT_CD` 스로틀)은 §1.10 계시 복선("이어져 있다")의
+상시 리마인더다. 테스트: [tests/reinforce.test.ts](../../tests/reinforce.test.ts).
+
+## BrandSystem — 낙인 유도탄 + 심판 파문 (서사편 §6.1 ① MARK)
+
+[`BrandSystem.ts`](../../src/enemies/BrandSystem.ts) — 전투의 새 박자 "**낙인 회피 → 파문 전 대응 → 파문 통과**". EnemyManager 가 소유.
+
+- **낙인 유도탄** — 마커가 발사(`launch`). 느린 호밍(순수 `homingStep` — `turnToward` 재사용, 선회 캡이라 회피 가능). 명중 시 표적 드론에 **낙인 부착(무피해)**, 붉은 팔면체 글리프 결정(§6.1 "붉은 글리프 결정화" — 캔버스 텍스처 없는 헤드리스 안전 메시)이 맥동·자전하며 날아온다.
+- **심판 파문**(내부 id `sweep`) — 개체가 아닌 **전장 이벤트**. `SweepSpec{period 30, speed 250, warnSec 5, maxRadius 1600}` 주기로 균열 앵커(`riftAnchor` — 일괄 스폰 중심 또는 전투 개시 지점)에서 붉은 원통 파면이 확장. **낙인 붙은 표적만** 파면 교차([prevR, curR) 반개구간 — 진앙 포함, 균열 중심 면제 없음) 시 낙인 1개당 `sweepDamage` 피해(순수 `sweepCrossed`/`brandDamage`), 통과와 함께 낙인 소모(머시 무적이어도 소모). 낙인 없으면 무해한 전장 박자.
+- **카운터 연동** — `notifyDead(enemy)`(`registerKill` 에서 호출): 격파된 마커의 유도탄·낙인 일괄 소산("마커 우선 격파"). 관측 고정(W1) 동결은 `tryAttack` 게이트로 장전 자체를 인터럽트. 빔 조사로 낙인 소각(W4 복구 사격)·건물 낙인(커터)은 후속 단계 🔭.
+- **HUD** — `warnLeft`(예고 잔여 s / 파면 중 0 / 그 외 null)·`brandCount(idx)` 를 `EnemyManager.sweepWarnLeft`/`brandCount()` 로 노출, `Game` 이 매 프레임 폴링해 `HUD.setReckoning` 표시("낙인 ×n — 근원을 격파하라" / "심판 파문 도래 Ns"). 표면 어휘는 §8.2 준수(sweep/tomb/marker 는 코드 전용).
+- 테스트: [tests/reckoning.test.ts](../../tests/reckoning.test.ts) (호밍 선회 캡·파면 교차·낙인 무피해/소모·근원 소산·예고), [tests/zeno.test.ts](../../tests/zeno.test.ts) (관측 고정).

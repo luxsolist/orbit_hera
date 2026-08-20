@@ -262,6 +262,20 @@ export class BuildingCombat {
     return best ? { id: best.id, x: best.cx, y: best.aimY, z: best.cz } : null;
   }
 
+  /**
+   * 최근접 랜드마크(intact) — 어그로 변조(`aggro: "landmark"`, 06-missions 훅 ④)용.
+   * 랜드마크는 소수라 반경 제한 없이 전수 탐색(전장 반대편이라도 직행 표적이 된다).
+   */
+  nearestLandmark(x: number, z: number): { id: string; x: number; y: number; z: number } | null {
+    let best: BEntry | null = null, bestD = Infinity;
+    for (const e of this.byId.values()) {
+      if (!e.isLandmark || e.state !== "intact") continue;
+      const d = (e.cx - x) ** 2 + (e.cz - z) ** 2;
+      if (d < bestD) { bestD = d; best = e; }
+    }
+    return best ? { id: best.id, x: best.cx, y: best.aimY, z: best.cz } : null;
+  }
+
   /** 표적 좌표를 out 에 채움 — 살아있는(intact) 건물이면 true. */
   targetPos(id: string, out: THREE.Vector3): boolean {
     const e = this.byId.get(id);

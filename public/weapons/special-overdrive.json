@@ -13,5 +13,6 @@
   "beamLifetime": 0.08,
   "colorBeam": "0x90ffff",
   "colorGlow": "0xbfffff",
-  "falloff": { "refDist": 40, "maxMult": 1.8, "minMult": 0.75 }
+  "falloff": { "refDist": 40, "maxMult": 1.8, "minMult": 0.75 },
+  "zeno": { "slowPerSec": 0.6, "freezeAfter": 0.7 }
 }

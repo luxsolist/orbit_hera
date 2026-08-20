@@ -5,6 +5,11 @@ import type { DroneSpec, DroneMove, JumpSpec, FlyMove } from "./DroneSpec";
 import type { CoreEnemy } from "../enemies/CoreEnemy";
 
 const PITCH_LIMIT = Math.PI / 2 - 0.05;
+// 손맛 — 발사 반동 킥/피격 셰이크(시각 전용 카메라 오프셋, 실제 조준각 pitch/yaw 는 불변)
+const RECOIL_DECAY = 14; // 반동 복귀 응답속도(클수록 빨리 제자리)
+const SHAKE_DECAY = 9; // 셰이크 감쇠 응답속도
+const RECOIL_MAX = 0.045; // 반동 상한(rad) — 연사 누적 폭주 방지
+const SHAKE_MAX = 0.035; // 셰이크 상한(rad)
 const MOVE_MAX_STEP = 0.8; // 수평 이동 1스텝 최대 거리 — 고속(대시) 터널링 방지 서브스테핑
 const ROLL_RATE = 6; // 비행 롤(뱅킹) 보간 응답속도
 const CEIL_FALL_RATE = 2.5; // 지표면 상대 천장이 낮아질 때(고지대→저지대) 부드럽게 하강하는 응답속도
@@ -192,8 +197,12 @@ export class PlayerController {
   freq: number;
   /** 특수 무기 등에서 자연 회복을 잠시 막아야 할 때 true */
   freqRegenSuppressed = false;
+  /** 게이지 회복 배수(미션 변조 freqRegenMul — "옅은 장", 06-missions 훅 ⑥). Game 이 출격마다 지정. */
+  freqRegenMul = 1;
 
   private invuln = 0;
+  private recoil = 0; // 발사 반동(시각 피치 오프셋, rad) — kick() 충전, 지수 복귀
+  private shakeAmp = 0; // 피격/파문 셰이크 진폭(rad) — shake() 충전, 지수 감쇠
 
   // 교전 구역 — 미션 인스턴스가 설정. 이 원(중심 zoneCx/zoneCz, 반경 zoneRadius) 밖으로 못 나간다.
   private zoneCx = 0;
@@ -269,6 +278,16 @@ export class PlayerController {
     this.hp = applyHeal(this.hp, this.maxHp, amount);
   }
 
+  /** 발사 반동 킥 — 카메라가 위로 살짝 튕겼다 복귀(시각 전용). 수동 사격·특수 발동감. */
+  kick(rad: number): void {
+    this.recoil = Math.min(RECOIL_MAX, this.recoil + rad);
+  }
+
+  /** 카메라 셰이크 — 피격·파문 통과 등 임팩트 순간의 미세 흔들림(시각 전용). */
+  shake(amp: number): void {
+    this.shakeAmp = Math.min(SHAKE_MAX, this.shakeAmp + amp);
+  }
+
   /** 빔 발사 시 주파수 소모. 충분치 않으면 false */
   spendFrequency(amount: number): boolean {
     if (this.freq < amount) return false;
@@ -278,6 +297,11 @@ export class PlayerController {
 
   update(dt: number) {
     if (this.invuln > 0) this.invuln -= dt;
+    // 반동/셰이크 지수 감쇠 — dt 0(히트스톱)이면 유지(정지 프레임 동안 시각도 정지)
+    if (this.recoil > 1e-5) this.recoil *= Math.exp(-RECOIL_DECAY * dt);
+    else this.recoil = 0;
+    if (this.shakeAmp > 1e-5) this.shakeAmp *= Math.exp(-SHAKE_DECAY * dt);
+    else this.shakeAmp = 0;
     const move = this.spec.move;
 
     // --- 시점 회전 ---
@@ -364,9 +388,9 @@ export class PlayerController {
     // 하드리밋 — 발밑 지면 +5km(지면 상대, 고지대 지형 대응). 비행 천장(maxRiseAltitude)보다 위의 백스톱.
     this.position.y = Math.min(this.position.y, this.world.heightAt(this.position.x, this.position.z) + HARD_CEILING + this.eye);
 
-    // --- 주파수 재충전 --- (특수 무기 발동 중에는 외부에서 억제)
+    // --- 주파수 재충전 --- (특수 무기 발동 중에는 외부에서 억제, 옅은 장 변조는 배수)
     if (!this.freqRegenSuppressed) {
-      this.freq = Math.min(this.maxFreq, this.freq + this.spec.vitals.freqRegen * dt);
+      this.freq = Math.min(this.maxFreq, this.freq + this.spec.vitals.freqRegen * this.freqRegenMul * dt);
     }
 
     this.syncCamera();
@@ -494,10 +518,14 @@ export class PlayerController {
 
   private syncCamera() {
     this.camera.position.copy(this.position);
+    // 시각 전용 오프셋 — 반동(위로 킥) + 셰이크(무작위 지터). 조준 상태(yaw/pitch)는 불변.
+    const vp = THREE.MathUtils.clamp(
+      this.pitch + this.recoil + (Math.random() - 0.5) * this.shakeAmp, -PITCH_LIMIT, PITCH_LIMIT);
+    const vy = this.yaw + (Math.random() - 0.5) * this.shakeAmp;
     this._look.set(
-      this.position.x - Math.sin(this.yaw) * Math.cos(this.pitch),
-      this.position.y + Math.sin(this.pitch),
-      this.position.z - Math.cos(this.yaw) * Math.cos(this.pitch)
+      this.position.x - Math.sin(vy) * Math.cos(vp),
+      this.position.y + Math.sin(vp),
+      this.position.z - Math.cos(vy) * Math.cos(vp)
     );
     this.camera.lookAt(this._look);
     if (this.roll) this.camera.rotateZ(this.roll); // 비행 뱅킹(보행은 roll=0 → 무효과)

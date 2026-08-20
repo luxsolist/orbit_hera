@@ -2,61 +2,569 @@
  {
   "id": "purge",
   "name": "정화 작전 / PURGE",
-  "kind": "eradicate",
-  "duration": 300,
-  "killTarget": 100,
-  "maxBuildingLoss": 0,
-  "maxLandmarkLoss": 0,
-  "respawns": 3,
-  "zoneRadius": 5000,
-  "spawnCount": 100,
-  "spawnRadius": 1500,
-  "totalHp": 70000,
-  "bossHp": 10000
+  "goal": {
+   "type": "purge",
+   "count": 45
+  },
+  "fail": {
+   "respawns": 3,
+   "timeLimit": 300,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "pyramid",
+   "count": 45,
+   "totalHp": 70000,
+   "bossHp": 10000,
+   "concurrentCap": 26,
+   "reinforceInterval": 1.5,
+   "spawnRadius": 1500
+  },
+  "zoneRadius": 5000
  },
  {
   "id": "hold-city",
   "name": "도시 방어 / HOLD THE CITY",
-  "kind": "defend-buildings",
-  "duration": 300,
-  "killTarget": 0,
-  "maxBuildingLoss": 10,
-  "maxLandmarkLoss": 0,
-  "respawns": 3,
-  "zoneRadius": 5000,
-  "spawnCount": 100,
-  "spawnRadius": 1500,
-  "totalHp": 70000,
-  "bossHp": 10000
+  "goal": {
+   "type": "guard",
+   "target": "buildings",
+   "hold": 300
+  },
+  "fail": {
+   "respawns": 3,
+   "timeLimit": 0,
+   "maxBuildingLoss": 10,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "pyramid",
+   "count": 45,
+   "totalHp": 70000,
+   "bossHp": 10000,
+   "concurrentCap": 26,
+   "reinforceInterval": 1.5,
+   "spawnRadius": 1500
+  },
+  "zoneRadius": 5000
  },
  {
   "id": "guard-landmark",
   "name": "랜드마크 사수 / GUARD",
-  "kind": "defend-landmark",
-  "duration": 300,
-  "killTarget": 0,
-  "maxBuildingLoss": 0,
-  "maxLandmarkLoss": 1,
-  "respawns": 3,
-  "zoneRadius": 5000,
-  "spawnCount": 100,
-  "spawnRadius": 1500,
-  "totalHp": 70000,
-  "bossHp": 10000
+  "goal": {
+   "type": "guard",
+   "target": "landmarks",
+   "hold": 300
+  },
+  "fail": {
+   "respawns": 3,
+   "timeLimit": 0,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 1
+  },
+  "deploy": {
+   "model": "pyramid",
+   "count": 45,
+   "totalHp": 70000,
+   "bossHp": 10000,
+   "concurrentCap": 26,
+   "reinforceInterval": 1.5,
+   "spawnRadius": 1500
+  },
+  "zoneRadius": 5000
  },
  {
   "id": "survive",
   "name": "지역 사수 / SURVIVE",
-  "kind": "survival",
-  "duration": 300,
-  "killTarget": 0,
-  "maxBuildingLoss": 0,
-  "maxLandmarkLoss": 0,
-  "respawns": 2,
+  "goal": {
+   "type": "survive",
+   "seconds": 300
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 0,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "pyramid",
+   "count": 45,
+   "totalHp": 70000,
+   "bossHp": 10000,
+   "concurrentCap": 26,
+   "reinforceInterval": 1.5,
+   "spawnRadius": 1500
+  },
+  "zoneRadius": 5000
+ },
+ {
+  "id": "surgical",
+  "name": "정밀 정화 / SURGICAL",
+  "brief": "얽힘이 짙은 구역이다. 무너뜨리지 말고 걷어내라.",
+  "goal": {
+   "type": "purge",
+   "count": 40
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 300,
+   "maxBuildingLoss": 15,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "pyramid",
+   "count": 40,
+   "totalHp": 60000,
+   "bossHp": 10000,
+   "concurrentCap": 22,
+   "reinforceInterval": 1.5,
+   "spawnRadius": 1200
+  },
+  "zoneRadius": 4000,
+  "modifiers": {
+   "aggro": "building"
+  }
+ },
+ {
+  "id": "deep-roots",
+  "name": "오래 선 자리 / DEEP ROOTS",
+  "brief": "오래 머문 자리일수록 얽힘이 짙다 — 그들이 먼저 노린다.",
+  "goal": {
+   "type": "guard",
+   "target": "landmarks",
+   "hold": 300
+  },
+  "fail": {
+   "respawns": 3,
+   "timeLimit": 0,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 1
+  },
+  "deploy": {
+   "model": "pyramid",
+   "count": 45,
+   "totalHp": 70000,
+   "bossHp": 10000,
+   "concurrentCap": 26,
+   "reinforceInterval": 1.5,
+   "spawnRadius": 1500
+  },
   "zoneRadius": 5000,
-  "spawnCount": 100,
-  "spawnRadius": 1500,
-  "totalHp": 70000,
-  "bossHp": 10000
+  "modifiers": {
+   "aggro": "landmark"
+  }
+ },
+ {
+  "id": "grand-purge",
+  "name": "대정화 / GRAND PURGE",
+  "brief": "오늘은 세는 날이 아니다 — 쓸어내는 날이다.",
+  "goal": {
+   "type": "purge-all"
+  },
+  "fail": {
+   "respawns": 3,
+   "timeLimit": 360,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "horde",
+   "count": 150,
+   "unitHp": 350,
+   "concurrentCap": 55,
+   "reinforceInterval": 0.4,
+   "spawnRadius": 1500
+  },
+  "zoneRadius": 5000,
+  "modifiers": {
+   "sweepPeriodMul": 0.7
+  }
+ },
+ {
+  "id": "disband",
+  "name": "편대 해체 / DISBAND",
+  "brief": "저들은 편대를 이뤘다 — 축 하나를 고르면, 나머지가 무너진다.",
+  "goal": {
+   "type": "purge-all"
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 300,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "roster",
+   "units": [
+    {
+     "role": "marker",
+     "count": 4,
+     "hp": 1500
+    },
+    {
+     "role": "elite",
+     "count": 6,
+     "hp": 3500
+    },
+    {
+     "role": "kiter",
+     "count": 8,
+     "hp": 900
+    }
+   ],
+   "spawnRadius": 1000
+  },
+  "zoneRadius": 3500
+ },
+ {
+  "id": "brand-hunt",
+  "name": "근원 사냥 / BRAND HUNT",
+  "brief": "손가락질하는 자들을 찾아라 — 심판은 그들이 없으면 오지 않는다.",
+  "goal": {
+   "type": "purge-role",
+   "role": "marker"
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 300,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "roster",
+   "units": [
+    {
+     "role": "marker",
+     "count": 6,
+     "hp": 1200
+    },
+    {
+     "role": "rusher",
+     "count": 10,
+     "hp": 400
+    },
+    {
+     "role": "kiter",
+     "count": 6,
+     "hp": 500
+    }
+   ],
+   "spawnRadius": 1000
+  },
+  "zoneRadius": 3500,
+  "modifiers": {
+   "sweepPeriodMul": 0.6
+  }
+ },
+ {
+  "id": "triple-projection",
+  "name": "삼중 투영 / TRIPLE PROJECTION",
+  "brief": "셋으로 보이는 것은 하나다 — 어느 그림자를 붙들어도 같은 손이 아파한다.",
+  "goal": {
+   "type": "purge-all"
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 300,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "boss",
+   "bossHp": 30000,
+   "projections": 3,
+   "escort": [
+    {
+     "role": "kiter",
+     "count": 4,
+     "hp": 800
+    }
+   ],
+   "spawnRadius": 800
+  },
+  "zoneRadius": 3000
+ },
+ {
+  "id": "bodyguard",
+  "name": "호위 붕괴 / BODYGUARD",
+  "brief": "저 하나를 지키려 전부가 모였다 — 호위를 걷어내면 벽은 유리가 된다.",
+  "goal": {
+   "type": "purge-role",
+   "role": "elite"
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 300,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "roster",
+   "units": [
+    {
+     "role": "elite",
+     "count": 1,
+     "hp": 12000,
+     "shield": 0.3
+    },
+    {
+     "role": "rusher",
+     "count": 12,
+     "hp": 400
+    },
+    {
+     "role": "kiter",
+     "count": 6,
+     "hp": 500
+    }
+   ],
+   "spawnRadius": 900
+  },
+  "zoneRadius": 3500
+ },
+ {
+  "id": "matured",
+  "name": "성숙체 / THE MATURED",
+  "brief": "너무 오래 두었다 — 이제 저것이 파문의 중심이다.",
+  "goal": {
+   "type": "purge-role",
+   "role": "boss"
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 300,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "boss",
+   "bossHp": 25000,
+   "projections": 1,
+   "spawnRadius": 700,
+   "emit": {
+    "role": "rusher",
+    "hp": 300,
+    "count": 3,
+    "interval": 8
+   },
+   "ownSweep": true
+  },
+  "zoneRadius": 3000
+ },
+ {
+  "id": "geminate",
+  "name": "쌍생 / GEMINATE PAIR",
+  "brief": "둘은 서로를 되살린다 — 떼어놓거나, 함께 태워라.",
+  "goal": {
+   "type": "purge-all"
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 300,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "boss",
+   "bossHp": 16000,
+   "projections": 1,
+   "groups": 2,
+   "spawnRadius": 900,
+   "healLink": {
+    "range": 500,
+    "rate": 400
+   }
+  },
+  "zoneRadius": 3500
+ },
+ {
+  "id": "cull",
+  "name": "정예 소탕 / CULL",
+  "brief": "떼는 없다 — 하나하나가 폭풍이다. 붙들고, 끊어라.",
+  "goal": {
+   "type": "purge-all"
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 300,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "roster",
+   "units": [
+    {
+     "role": "elite",
+     "count": 7,
+     "hp": 4000
+    }
+   ],
+   "spawnRadius": 900
+  },
+  "zoneRadius": 3000
+ },
+ {
+  "id": "two-fronts",
+  "name": "이중 전선 / TWO FRONTS",
+  "brief": "하늘과 땅, 두 전선이 열렸다 — 순서를 정하는 쪽이 이긴다.",
+  "goal": {
+   "type": "purge-all"
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 300,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "roster",
+   "units": [
+    {
+     "role": "marker",
+     "count": 4,
+     "hp": 1200
+    },
+    {
+     "role": "kiter",
+     "count": 8,
+     "hp": 900
+    },
+    {
+     "role": "elite",
+     "count": 4,
+     "hp": 3000
+    },
+    {
+     "role": "rusher",
+     "count": 8,
+     "hp": 400
+    }
+   ],
+   "spawnRadius": 1400
+  },
+  "zoneRadius": 4000
+ },
+ {
+  "id": "last-stand",
+  "name": "최후 저지선 / LAST STAND",
+  "brief": "물러설 자리가 줄어든다 — 경계가 닫히기 전에 버텨라.",
+  "goal": {
+   "type": "survive",
+   "seconds": 240
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 0,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "horde",
+   "count": 130,
+   "unitHp": 300,
+   "concurrentCap": 45,
+   "reinforceInterval": 0.5,
+   "spawnRadius": 1400
+  },
+  "zoneRadius": 4000,
+  "modifiers": {
+   "zoneShrink": {
+    "everySec": 45,
+    "step": 800,
+    "minRadius": 1200
+   }
+  }
+ },
+ {
+  "id": "tide",
+  "name": "해일 / TIDE",
+  "brief": "파도는 세 번 온다 — 썰물에 숨을 고르라.",
+  "goal": {
+   "type": "survive",
+   "seconds": 270
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 0,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "phased",
+   "phases": [
+    {
+     "deploy": {
+      "model": "horde",
+      "count": 45,
+      "unitHp": 300,
+      "concurrentCap": 40,
+      "reinforceInterval": 0.4,
+      "spawnRadius": 1400
+     }
+    },
+    {
+     "deploy": {
+      "model": "horde",
+      "count": 55,
+      "unitHp": 320,
+      "concurrentCap": 45,
+      "reinforceInterval": 0.4,
+      "spawnRadius": 1400
+     },
+     "afterSec": 90
+    },
+    {
+     "deploy": {
+      "model": "horde",
+      "count": 65,
+      "unitHp": 350,
+      "concurrentCap": 50,
+      "reinforceInterval": 0.35,
+      "spawnRadius": 1400
+     },
+     "afterSec": 180
+    }
+   ]
+  },
+  "zoneRadius": 4500
+ },
+ {
+  "id": "thin-field",
+  "name": "옅은 장 / THIN FIELD",
+  "brief": "이곳의 장은 옅다 — 한 발 한 발이 값이다.",
+  "goal": {
+   "type": "purge-all"
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 300,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "roster",
+   "units": [
+    {
+     "role": "elite",
+     "count": 5,
+     "hp": 3000
+    },
+    {
+     "role": "marker",
+     "count": 4,
+     "hp": 1200
+    },
+    {
+     "role": "kiter",
+     "count": 6,
+     "hp": 700
+    }
+   ],
+   "spawnRadius": 900
+  },
+  "zoneRadius": 3000,
+  "modifiers": {
+   "freqRegenMul": 0.5
+  }
  }
 ]

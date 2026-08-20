@@ -35,19 +35,61 @@ end      → 결과 패널 → 재시작(reload 재출격)
 
 - **명세(`MissionSpec`)**: `id`·`name`("국문 / ENGLISH")·`kind`·`duration`(초; 0=무제한)·`killTarget`·
   `maxBuildingLoss`·`maxLandmarkLoss`·`respawns`(<0=무한)·**`zoneRadius`**(교전 구역 반경 m, 0=무제한)·
-  **`spawnCount`**(일괄 스폰 수, 0=웨이브)·**`spawnRadius`**(스폰 분산 반경 m)·**`totalHp`**(스폰 체력 총합 예산)·
-  **`bossHp`**(중간보스 1기 체력). 데이터 = [public/missions/index.json](../../public/missions/index.json).
+  **`spawnCount`**(총 투입 수, 0=웨이브)·**`spawnRadius`**(초기 투입 분산 반경 m)·**`totalHp`**(투입 체력 총합 예산)·
+  **`bossHp`**(중간보스 1기 체력)·**`concurrentCap`**(동시 개체 상한 — >0 = 점진 투입)·**`reinforceInterval`**(증원 간격 s).
+  데이터 = [public/missions/index.json](../../public/missions/index.json).
   - **작전구역(`zoneRadius`, 기본 5km)** — 시작 위치 중심 원. **플레이어·플라즈모이드 모두** 이 밖으로 못 나간다
     (`PlayerController.setZone`은 경계에서 바깥 속도 제거; `EnemyManager.setZone`은 매 프레임 적 위치를 원 안으로
     클램프 — 공통 순수 `clampToDisk`). 미션마다 다른 크기 가능. 탐방은 0(무제한). **중심은 건물 밀집 도심**
     (`pickSpawnChunk` 밀집도 상위, [03-world](03-world.md#streamingworld--전지구-타일-월드청크-스트리밍)). 경계는
     **반투명 에너지 벽**([EnergyWall](06-ui-menu-intro.md#fx)) + 미니맵 호박색 호로 표시된다.
-  - **일괄 스폰(`spawnCount`/`spawnRadius`, 기본 100/1.5km)** — 시작 위치 반경 `spawnRadius` 안에 `spawnCount`마리를
-    **한 번에** 투입(`EnemyManager.startBurst`, 웨이브 대체). `spawnRadius ≤ zoneRadius`.
-  - **체력 총합(`totalHp`/`bossHp`, 기본 7만/1만)** — 스폰 전체 HP 합 = `totalHp`. 그 중 **1기는 중간보스(`bossHp`)**,
-    나머지가 `totalHp−bossHp`를 무작위로 나눠 갖는다(`distributeHp`). HP가 클수록 크고 푸른 개체(보스가 최대) —
-    상세는 [05-enemies](05-enemies.md#스폰-spawnone--tickspawns--startburst).
+  - **점진 투입(`spawnCount`/`spawnRadius`/`concurrentCap`/`reinforceInterval`, 기본 45/1.5km/26/1.5s)** —
+    초기에 상한×0.6 기만 반경 `spawnRadius` 원판에 투입하고, 나머지는 **균열 앵커**(전장 중심에서
+    `spawnRadius`×0.5 이격 — 위협 방향, 소산 표류·심판 파문과 동일 지점) 주변 링(40–200m)에서
+    `reinforceInterval` 간격으로 **동시 상한 미만일 때만** 1기씩 증원(`EnemyManager.startBurst`+`tickReinforce`).
+    처치가 곧 증원 유입 = 압력 항상성. `concurrentCap 0` 이면 레거시 일괄(전량 즉시). `spawnRadius ≤ zoneRadius`.
+  - **체력 총합(`totalHp`/`bossHp`, 기본 7만/1만)** — 투입 전체 HP 합 = `totalHp`. **피라미드 배분**(`pyramidHp`):
+    잡몹 60%(가중 1) → 중견 30%(가중 5) → 정예 10%(가중 13) 순으로 증원 큐가 소비되어 **뒤로 갈수록 강해지고**,
+    **중간보스(`bossHp`)가 마지막**에 등장(클라이맥스). HP가 클수록 크고 푸른 개체(보스가 최대) —
+    상세는 [05-enemies](05-enemies.md#스폰-spawnone--tickspawns--startburst). *(일괄 100기 모델은 도시 붕괴
+    속도·역삼각 압력 곡선 문제로 폐기 — 플레이테스트 근거, [tests/reinforce.test.ts](../../tests/reinforce.test.ts).)*
 - **평가 입력(`MissionRuntime`)**: `elapsed`·`kills`·`buildingsDestroyed`·`landmarksDestroyed`·`deaths`.
+- **v2 런타임(훅 ② 복합 실패 조건)** — `GameInstance` 는 `MissionSpecV2`([missionV2.ts](../../src/game/missionV2.ts))를
+  구동한다: 승리(goal)와 무관하게 **fail 4종(리스폰·시간·건물 한도·랜드마크 한도)을 동시 평가**
+  (`evaluateMissionV2` — v1 의 마감 프레임 의미론 유지: 격멸형은 성공 우선, 생존/사수형은 실패 우선;
+  실패 우선순위 랜드마크→건물→리스폰→시간). `missions/index.json` 은 v2 형식이며 v1 항목도
+  `normalizeMissionPool`(fromLegacy)로 수용, 미지원 goal/deploy 는 `runnableV2` 가 거른다.
+  첫 소비처: "정밀 정화 / SURGICAL"(격멸+건물 한도 — [06-missions §3-F](../spec/06-missions.md)).
+- **deploy 모델 분기(훅 ①)** — `Game.beginPlay` 가 v2 `deploy` 유니온으로 투입기를 고른다:
+  `pyramid`→`startBurst` · `horde`→`startHorde` · `roster`→`startRoster` · `boss`→`startRoster`(boss 유닛
+  + escort, `projections` 지정). `purge-all` 목표치는 `deployKillCredits(deploy)` 로 스펙에서 도출(보스
+  그룹 = 1크레딧 — 다중 투영의 처치 크레딧 계약과 일치). 신규 미션: 대정화(horde)·편대 해체(roster)·
+  삼중 투영(boss).
+- **직무별 격멸(훅 ③)** — `purge-role` goal: 개체의 **투입 직무**(`CoreEnemy.deployRole` — elite/boss 는
+  행동(role)과 별개로 태깅)를 `EnemyManager.roleKills` 가 집계(보스 = 그룹당 1)하고, 목표치는
+  `deployRoleCredits(deploy, role)` 로 스펙에서 도출(roster/boss 투입 한정). 잡몹 처치는 목표에 안 잡혀
+  "표적 식별"이 곧 플레이가 된다. 표면 문구는 `DEPLOY_ROLE_NAMES`(소인체·정예·거대 투영 — §8.2 허용
+  어휘). 신규 미션: 근원 사냥 / BRAND HUNT(소인체 6기 전멸).
+- **어그로 변조(훅 ④)** — `modifiers.aggro`: `EnemyManager.setAggro`(투입 후 지정 — clear 가 "player" 리셋).
+  building/landmark 성향은 **인식 반경 0**(피격 provoked 시에만 플레이어 교전), landmark 는
+  `BuildingCombat.nearestLandmark`(거리 무제한 — 소수 전수 탐색)로 직행 후 일반 건물 폴백.
+  변조 게이트: `SUPPORTED_MODIFIERS`(현재 aggro) 외 변조 지정 미션은 `runnableV2` 가 풀에서 제외.
+  신규 미션: 오래 선 자리 / DEEP ROOTS(aggro: landmark — 얽힘 택소노미 §8 의 첫 체감) + 정밀 정화에
+  aggro: building 적용.
+- **보스 행동 확장(훅 ⑤)** — deploy `boss` 의 `emit`(살아있는 보스 주변 링에서 주기 분출, 전장 생존
+  상한 게이트) · `ownSweep`(심판 파문 원점 = 살아있는 보스, 소산 시 균열 폴백) · `groups`+`healLink`
+  (그룹 간 range 내 상호 회복 — 필라멘트로 가시화: "떼어놓거나 함께 태워라") · `RosterUnit.shield`
+  (호위 생존 중 받는 피해 배수 — `CoreEnemy.damageMul`, 표시 데미지도 감쇄 반영, 호위 전멸 시 해제).
+- **페이즈·구역·변조(훅 ⑥)** — `runDeploy`(GameInstance)가 deploy 모델 공용 매핑을 담당하고,
+  phased 는 첫 페이즈만 즉시 투입 후 GameInstance 가 트리거(전멸 `fieldCleared` / `afterSec`)마다
+  `fresh=false` 로 이어 투입(킬·채점 카운터 관통 누적, HUD 웨이브 = 페이즈 번호). `zoneShrink` 는
+  Game 이 주기마다 반경 축소 + 플레이어/적 존 갱신 + 에너지 벽 재생성 + 저음 신호. `freqRegenMul`
+  은 PlayerController 게이지 회복 배수, `sweepPeriodMul` 은 BrandSystem 파문 주기 배수.
+  신규 미션 8종: 호위 붕괴·성숙체·쌍생·정예 소탕·이중 전선·최후 저지선·해일·옅은 장(총 18미션).
+  체계 정본·패턴 카탈로그는 [06-missions](../spec/06-missions.md), 테스트는 [tests/missionV2.test.ts](../../tests/missionV2.test.ts).
+- **결과 채점(공명 점수)** — 종료 패널이 `EnemyManager.stats`(근원 격파·파문 무상 통과·관측 고정)를 집계해
+  `정화×10 + 근원 격파×25 + 무상 통과×40 + 관측 고정×5 + 성공 보너스 500` 을 표시(`Game.endMission`).
+  "어떻게 싸웠는가"의 가시화 — 서사편 §7 W5(공명 각인)의 선행 형태이며 표면 어휘 규칙(§8.2)을 따른다.
   인스턴스가 매 프레임 시스템에서 집계해 만든다(부수효과 없음).
 - **`evaluateMission(spec, rt) → {status, progress, reason}`** — `status`는 `active|success|failed`.
   **실패 조건을 시간초과-성공보다 먼저** 검사해 마감 프레임 동시 충족을 실패로 우선한다(방어 미션). 단
@@ -115,7 +157,7 @@ reload" 모델([01-architecture](01-architecture.md#상태-머신))과 일치하
   원격 플레이어는 이 배열에 아바타로 합류한다(아래 시임).
 - **구성 비례 스폰(자기정렬)** — `pickBurstType(walkers, flyers)`/`archetypeCount(..., matchingPlayers)`가
   팀의 워커:플라이어 비율대로 러셔:카이터를 뽑는다 → **고아 적이 없음**(플라이어 0명이면 카이터 0).
-- **1인당 스케일** — `startBurst`가 `count`·`totalHp`를 살아있는 인원 N배로(보스 1기 공유) → 1인당 체감 일정.
+- **1인당 스케일** — `startBurst`가 `count`·`totalHp`·`concurrentCap`을 살아있는 인원 N배로(보스 1기 공유) → 1인당 체감 일정.
 - **상성 타깃팅** — 적은 자기 상성 드론을 우선 표적(카이터→플라이어/러셔→워커, `matchupMul`+`MISMATCH_PENALTY`).
   혼합팀에서 각자 자기 레인을 맡고, **미스매치 폴백**(`engageKeepDist`)으로 어쩔 수 없는 매칭도 처치 가능.
   상세: [05-enemies](05-enemies.md#멀티타깃-표적-선택-어그로-분산--상성-가중--mp).

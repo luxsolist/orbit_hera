@@ -193,6 +193,63 @@ export class Sfx {
   }
 
   /**
+   * 심판 파문 통과음 — 초저역 "쿠웅"(피치 드롭) + 저역 럼블 스웰. 30초 주기 전장 이벤트가
+   * 몸에 닿게 하는 임팩트. hit=true(낙인 피해 발생)면 더 크고 길게 + 소각 링 한 점.
+   */
+  reckoning(hit: boolean): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.master || ctx.state !== "running") return;
+    const now = ctx.currentTime;
+    const master = this.master;
+    const peak = hit ? 0.5 : 0.3;
+
+    // (1) 초저역 "쿠웅" — 64→30Hz 피치 드롭 사인(파면이 지나가는 몸통 진동)
+    const body = ctx.createOscillator();
+    body.type = "sine";
+    body.frequency.setValueAtTime(64, now);
+    body.frequency.exponentialRampToValueAtTime(30, now + 0.25);
+    const bg = ctx.createGain();
+    bg.gain.setValueAtTime(0.0001, now);
+    bg.gain.exponentialRampToValueAtTime(peak, now + 0.02);
+    bg.gain.exponentialRampToValueAtTime(0.0004, now + (hit ? 0.9 : 0.6));
+    body.connect(bg).connect(master);
+    body.start(now);
+    body.stop(now + 1.0);
+
+    // (2) 저역 럼블 — 로우패스 노이즈 스웰(파면의 부피감)
+    if (this.noiseBufLong) {
+      const n = ctx.createBufferSource();
+      n.buffer = this.noiseBufLong;
+      n.loop = true;
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.setValueAtTime(340, now);
+      lp.frequency.exponentialRampToValueAtTime(120, now + 0.6);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(peak * 0.55, now + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.0004, now + 0.7);
+      n.connect(lp).connect(g).connect(master);
+      n.start(now);
+      n.stop(now + 0.75);
+    }
+
+    // (3) hit 시 낙인 소각 링 — 높은 삼각파 한 점이 빠르게 감쇠(대가를 치렀다는 종)
+    if (hit) {
+      const r = ctx.createOscillator();
+      r.type = "triangle";
+      r.frequency.value = 560;
+      const re = ctx.createGain();
+      re.gain.setValueAtTime(0.0001, now + 0.03);
+      re.gain.exponentialRampToValueAtTime(peak * 0.28, now + 0.05);
+      re.gain.exponentialRampToValueAtTime(0.0003, now + 0.4);
+      r.connect(re).connect(master);
+      r.start(now + 0.03);
+      r.stop(now + 0.45);
+    }
+  }
+
+  /**
    * 공통 포격 합성 코어(시즈탱크 탱크모드 느낌):
    *  (1) 하강 스윕 톱니 + 추종 로우패스 → "뚜움" 머즐 톤
    *  (2) 저역 thump(피치-드롭 사인) + 서브 옥타브 → 묵직한 바닥

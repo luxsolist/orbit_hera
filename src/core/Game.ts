@@ -31,9 +31,10 @@ import { MenuBackground } from "../intro/MenuBackground";
 import { introScenes } from "../intro/scenes";
 import { fetchMap, fetchCatalog, loadTerrainHeights } from "../world/maps";
 import type { MapCatalogEntry, NormalizedMap } from "../world/MapData";
-import { GameInstance } from "../game/GameInstance";
+import { GameInstance, runDeploy } from "../game/GameInstance";
 import { fetchMissions } from "../game/missions";
-import { pickMission, FREE_ROAM, DEFAULT_MISSIONS, type MissionOutcome } from "../game/mission";
+import type { MissionOutcome } from "../game/mission";
+import { pickMissionV2, FREE_ROAM_V2, DEFAULT_MISSIONS_V2 } from "../game/missionV2";
 
 type GameState = "intro" | "menu" | "loading" | "playing" | "paused" | "dead";
 
@@ -82,6 +83,10 @@ export class Game {
 
   private state: GameState = "menu";
   private peaceful = false; // 탐방 모드(적 미스폰) — selectMap 에서 설정, 재시작에도 유지
+  private hitstopLeft = 0; // 히트스톱 잔여(s) — 수동 명중/처치 순간 시뮬레이션을 1~3프레임 정지(타격감)
+  // 구역 축소(미션 변조 zoneShrink — 훅 ⑥): 주기마다 반경 축소, 에너지 벽 재생성. null = 비활성
+  private zoneShrink: { everySec: number; step: number; minRadius: number; timer: number; radius: number } | null = null;
+  private wallParams: { sx: number; sz: number; y0: number; y1: number } | null = null; // 벽 재생성 파라미터
   private tornDown = false; // pagehide 정리 1회 가드
   private intro?: CinematicPlayer;
   private menuBg?: MenuBackground; // 메뉴 배경: 랜덤 인트로 장면
@@ -287,8 +292,8 @@ export class Game {
     const minimap = new Minimap(player, enemies, world);
     const brackets = new TargetBrackets(this.scene);
     // 이 플레이타임의 미션을 정하고 인스턴스 생성 — 평화(탐방)는 목표 없는 FREE_ROAM, 전투는 풀에서 랜덤.
-    const pool = peaceful ? [] : await fetchMissions().catch(() => DEFAULT_MISSIONS);
-    const mission = peaceful ? FREE_ROAM : pickMission(pool, Math.random());
+    const pool = peaceful ? [] : await fetchMissions().catch(() => DEFAULT_MISSIONS_V2);
+    const mission = peaceful ? FREE_ROAM_V2 : pickMissionV2(pool, Math.random());
     const instance = new GameInstance({ mission, players: [player], enemies, buildings: world.buildings ?? undefined });
     // 작전구역 에너지 벽 — 스폰(=존 중심) 주위 반경 zoneRadius. 지면 기준 수직 범위로 세움(고지대 맵 대응).
     let wall: EnergyWall | undefined;
@@ -296,7 +301,8 @@ export class Game {
       const sx = world.spawn.x, sz = world.spawn.z;
       const gy = world.heightAt(sx, sz);
       wall = new EnergyWall(this.scene, sx, sz, mission.zoneRadius, gy - 200, gy + 1600);
-    }
+      this.wallParams = { sx, sz, y0: gy - 200, y1: gy + 1600 }; // 구역 축소 시 벽 재생성용
+    } else this.wallParams = null;
     this.session = { world, player, enemies, beam, special, composer, rearView, minimap, brackets, instance, wall };
     this.applyHudLayout(); // 새 미니맵을 현재 화면 비례로 동기화
     this.diag.snapshot(this.renderer, "battle-built"); // 세션(컴포저 등) 생성 직후 — 누수 추적 핵심 지점
@@ -318,16 +324,24 @@ export class Game {
       s.player.clearZone();
       s.enemies.setZone(0, 0, 0);
     }
-    // 적 스폰 — 미션 spawnCount>0 이면 시작 위치 반경 spawnRadius 안에 체력 총합 totalHp 예산으로 일괄 스폰
-    // (중간보스 bossHp 1기 + 나머지), 아니면 웨이브(탐방은 미스폰)
-    if (!this.peaceful && m.spawnCount > 0) s.enemies.startBurst(m.spawnCount, m.spawnRadius, m.totalHp, m.bossHp);
-    else s.enemies.start(!this.peaceful);
+    // 적 투입 — deploy 모델 매핑은 runDeploy(훅 ①⑤⑥ 공용). phased 후속 페이즈는 GameInstance 가 구동.
+    if (this.peaceful) s.enemies.start(false);
+    else runDeploy(s.enemies, m.deploy, true);
+    // 변조 레이어(훅 ④⑥) — 투입 후 지정(start*/clear 가 기본값으로 리셋하므로 반드시 이후에)
+    s.enemies.setAggro(m.modifiers?.aggro ?? "player");
+    if (m.modifiers?.sweepPeriodMul) s.enemies.setSweepPeriodMul(m.modifiers.sweepPeriodMul);
+    s.player.freqRegenMul = m.modifiers?.freqRegenMul ?? 1; // 옅은 장
+    // 구역 축소(zoneShrink) — 주기마다 작전구역 반경을 줄인다(에너지 벽 재생성 포함)
+    const shrink = m.modifiers?.zoneShrink;
+    this.zoneShrink = !this.peaceful && shrink && m.zoneRadius > 0
+      ? { ...shrink, timer: shrink.everySec, radius: m.zoneRadius }
+      : null;
     s.special.reset();
     s.instance.start(); // 미션 타이머/리스폰 예산 초기화
     this.hud.setKills(0);
     this.hud.setDestroyed(s.world.buildings?.destroyedBuildings ?? 0, s.world.buildings?.destroyedLandmarks ?? 0);
     const snap = s.instance.snapshot();
-    this.hud.setMission(snap.objective, s.instance.mission.kind !== "free-roam");
+    this.hud.setMission(snap.objective, s.instance.mission.goal.type !== "free-roam");
     this.hud.updateMission(snap.timeLeft, snap.detail, snap.respawnsLeft);
     this.state = "playing";
     this.hideOverlay();
@@ -340,14 +354,36 @@ export class Game {
     }
   }
 
+  /** 히트스톱 충전(최댓값 유지 — 연타 누적 없음). 다음 프레임들의 시뮬레이션 dt 가 0 이 된다. */
+  private hitstop(sec: number) {
+    this.hitstopLeft = Math.max(this.hitstopLeft, sec);
+  }
+
   private wireEvents(s: Session) {
     s.beam.onFired = () => this.hud.flashFire();
-    s.special.onFired = () => this.hud.flashFire();
-    s.enemies.onKill = () => this.hud.setKills(s.enemies.killCount);
+    s.special.onFired = () => {
+      this.hud.flashFire();
+      s.player.kick(0.0035); // 특수 볼리 반동(연사라 작게)
+    };
+    // 손맛 — 수동 사격 반동 킥 + 명중/처치 히트스톱(오토는 상시라 제외, 처치는 공통)
+    s.beam.onManualFired = () => s.player.kick(0.006);
+    s.beam.onManualHit = (killed) => this.hitstop(killed ? 0.06 : 0.025);
+    s.enemies.onKill = () => {
+      this.hud.setKills(s.enemies.killCount);
+      this.hitstop(0.045); // 처치 확정 정지 프레임(오토/특수 포함)
+    };
     s.enemies.onWaveChange = (w) => this.hud.setWave(w);
-    s.enemies.onPlayerHit = () => {
+    s.enemies.onPlayerHit = (_dmg, source) => {
       this.hud.flashDamage();
       this.sfx.sizzle(); // 접촉 피해 — 달군 철판에 물 닿는 "치익" 기화음
+      s.player.shake(0.012); // 피격 셰이크
+      if (source) this.hud.flashDamageFrom(s.player.camera, source); // 피해 방향 인디케이터
+    };
+    // 심판 파문이 내 위치를 통과 — 화면 펄스 + 저음 + 셰이크(낙인 피해면 강하게)
+    s.enemies.onSweepPass = (branded) => {
+      this.hud.pulseSweep(branded);
+      this.sfx.reckoning(branded);
+      s.player.shake(branded ? 0.024 : 0.012);
     };
     // 건물/랜드마크 파괴 → HUD 카운터 갱신(번쩍 + 슬로우 붕괴 연출은 BuildingCombat 가 진행)
     const bc = s.world.buildings;
@@ -424,7 +460,13 @@ export class Game {
   }
 
   private frame() {
-    const dt = Math.min(this.clock.getDelta(), 0.05);
+    const rawDt = Math.min(this.clock.getDelta(), 0.05);
+    let dt = rawDt;
+    // 히트스톱 — 시뮬레이션만 정지(dt=0). 시점 회전(마우스 델타)은 dt 무관이라 조작감 유지.
+    if (this.hitstopLeft > 0) {
+      this.hitstopLeft -= rawDt;
+      dt = 0;
+    }
 
     if (this.state === "intro") {
       if (this.intro && !this.intro.done) this.intro.update(dt);
@@ -450,6 +492,7 @@ export class Game {
       const pp = s.player.worldPosition;
       s.world.update(pp.x, pp.z, pp.y); // 그림자 추종 + (스트리밍) 청크 로드/언로드
       s.wall?.update(dt); // 작전구역 에너지 벽 애니메이션
+      this.tickZoneShrink(s, dt); // 구역 축소 변조(훅 ⑥) — 주기 도래 시 반경 축소 + 벽 재생성
       s.beam.update(dt, this.input.fireHeld);
       s.special.update(dt, this.input.specialPressed);
       s.enemies.update(dt);
@@ -478,7 +521,8 @@ export class Game {
       const lockedPos = s.player.lockOnTarget ? s.player.lockOnTarget.group.position : null;
       s.brackets.update(s.player.camera, s.enemies.aliveMarkers, lockedPos); // 코너 브래킷(락온=빨강·그 외 노랑)
       this.hud.setEnemyDirections(s.player.camera, s.enemies.aliveWorldPositions); // 조준선 둘레 방향 화살표
-      this.hud.update(dt);
+      this.hud.setReckoning(s.enemies.sweepWarnLeft, s.enemies.brandCount(0)); // 낙인/심판 파문 경고
+      this.hud.update(rawDt); // HUD 페이드는 히트스톱 무관(실시간)
 
       this.hud.setHp(s.player.hp, s.player.maxHp);
       this.hud.setFrequency(s.player.freq, s.player.maxFreq);
@@ -489,7 +533,7 @@ export class Game {
 
       // 인스턴스: 미션 평가(타이머/목표/종료). 종료 전이 시 onEnd→endMission 으로 state 가 바뀐다.
       s.instance.update(dt);
-      if (s.instance.mission.kind !== "free-roam") {
+      if (s.instance.mission.goal.type !== "free-roam") {
         const snap = s.instance.snapshot();
         this.hud.updateMission(snap.timeLeft, snap.detail, snap.respawnsLeft);
       }
@@ -503,6 +547,27 @@ export class Game {
       s.rearView.render();
       s.minimap.render();
     }
+  }
+
+  /** 구역 축소(zoneShrink) — 주기 도래 시 반경을 줄이고 플레이어/적 존·에너지 벽을 갱신한다. */
+  private tickZoneShrink(s: Session, dt: number) {
+    const z = this.zoneShrink;
+    if (!z || dt <= 0) return;
+    z.timer -= dt;
+    if (z.timer > 0) return;
+    z.timer = z.everySec;
+    z.radius = Math.max(z.minRadius, z.radius - z.step);
+    const zone = s.player.zone;
+    const cx = zone?.cx ?? s.world.spawn.x;
+    const cz = zone?.cz ?? s.world.spawn.z;
+    s.player.setZone(z.radius, cx, cz);
+    s.enemies.setZone(cx, cz, z.radius);
+    if (this.wallParams) {
+      s.wall?.dispose();
+      s.wall = new EnergyWall(this.scene, this.wallParams.sx, this.wallParams.sz, z.radius, this.wallParams.y0, this.wallParams.y1);
+    }
+    this.sfx.reckoning(false); // 경계가 조여드는 저음 — 이벤트 가독
+    if (z.radius <= z.minRadius) this.zoneShrink = null; // 최소 반경 도달 — 종료
   }
 
   /**
@@ -537,13 +602,25 @@ export class Game {
     const success = outcome.status === "success";
     const kills = s ? s.enemies.killCount : 0;
     const title = success ? "작전 완수 / MISSION COMPLETE" : "작전 실패 / MISSION FAILED";
-    this.showPanel(title, `${outcome.reason} · 정화 ${kills}체`, "다시 / RETRY");
+    // 결과 채점 — 어떻게 싸웠는가(근원 격파·파문 무상 통과·관측 고정)를 공명 점수로 집계.
+    // 서사편 §7 W5(공명 각인)의 선행 형태 — "실패 유형이 다양할수록" 문법의 UI 기반. 표면 어휘만 사용(§8.2).
+    let sub = `${outcome.reason} · 정화 ${kills}체`;
+    if (s) {
+      const st = s.enemies.stats;
+      const sweepTotal = st.sweepHits + st.sweepCleanPasses;
+      const score =
+        kills * 10 + st.markerKills * 25 + st.sweepCleanPasses * 40 + st.zenoFreezes * 5 + (success ? 500 : 0);
+      sub += `\n근원 격파 ${st.markerKills} · 파문 무상 통과 ${st.sweepCleanPasses}/${sweepTotal} · 관측 고정 ${st.zenoFreezes}`;
+      sub += `\n공명 점수 ${score}`;
+    }
+    this.showPanel(title, sub, "다시 / RETRY");
   }
 
   /** 일시정지/사망 패널(맵 목록 숨김, 재접속 + 전장 선택 버튼) */
   private showPanel(title: string, subtitle: string, startLabel: string) {
     this.overlayTitle.textContent = title;
     this.overlayTitle.setAttribute("data-text", title);
+    this.overlaySubtitle.style.whiteSpace = "pre-line"; // 결과 채점 다행 표시
     this.overlaySubtitle.textContent = subtitle;
     this.menu.hide();
     this.startBtn.hidden = false;

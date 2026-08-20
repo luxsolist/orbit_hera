@@ -1,5 +1,7 @@
-// 미션 시스템 (순수) — 게임 인스턴스의 목표/종료 조건을 데이터로 정의하고 평가한다.
-// THREE/DOM 비의존 → 단위 테스트 가능([tests/mission.test.ts]). 런타임 집계/부수효과는 GameInstance 가 담당.
+// 미션 시스템 v1 (순수) — 목표/종료 조건 데이터 계약의 구버전. **런타임은 v2 로 이관됨**
+// (missionV2.ts — 훅 ② 복합 실패 조건, GameInstance 가 evaluateMissionV2 사용). 이 모듈은
+// v1 타입/평가기(구 JSON 하위호환 어댑터 fromLegacy 의 입력 계약)와 공용 타입(MissionRuntime/
+// MissionOutcome)의 출처로 유지된다. THREE/DOM 비의존([tests/mission.test.ts]).
 
 export type MissionKind =
   | "eradicate" //        제한시간 내 플라즈모이드 N기 격멸
@@ -21,10 +23,12 @@ export interface MissionSpec {
   maxLandmarkLoss: number; // defend-landmark — 허용 랜드마크 손실(이상이면 실패)
   respawns: number; //        리스폰 허용 횟수. <0 = 무한
   zoneRadius: number; //      교전 구역 반경(m). 0 = 무제한(구역 없음). 플레이어는 이 밖으로 못 나간다.
-  spawnCount: number; //      일괄 스폰 수(랜덤 크기·색). 0 = 레거시 웨이브 모드
-  spawnRadius: number; //     일괄 스폰 분산 반경(m, 시작 위치 기준). 보통 zoneRadius 보다 작게.
-  totalHp: number; //         일괄 스폰 플라즈모이드 체력 총합(예산). 0 = 미사용(온도 롤 HP)
-  bossHp: number; //          그 중 중간보스 1기의 체력(나머지 count−1 기가 totalHp−bossHp 를 나눠 가짐). 0 = 보스 없음
+  spawnCount: number; //      총 투입 수(초기 투입 + 증원). 0 = 레거시 웨이브 모드
+  spawnRadius: number; //     초기 투입 분산 반경(m, 시작 위치 기준). 보통 zoneRadius 보다 작게.
+  totalHp: number; //         투입 플라즈모이드 체력 총합(예산). 0 = 미사용(온도 롤 HP)
+  bossHp: number; //          그 중 중간보스 1기의 체력(피라미드 배분의 최상층 — 증원 큐 마지막에 등장). 0 = 보스 없음
+  concurrentCap: number; //   동시 개체 수 상한(1인 기준, MP ×인원). 0 = 일괄 스폰(전량 즉시 투입 — 레거시)
+  reinforceInterval: number; // 증원 간격(s) — 상한 미만일 때 균열에서 1기씩 보충. concurrentCap 0 이면 미사용
 }
 
 /** 인스턴스가 집계한 현재 플레이타임 상태(평가 입력). */
@@ -34,6 +38,8 @@ export interface MissionRuntime {
   buildingsDestroyed: number; // 파괴된 일반 건물 수
   landmarksDestroyed: number; // 파괴된 랜드마크 수
   deaths: number; //             누적 기체(플레이어) 파괴 수
+  /** 투입 직무별 처치 수(훅 ③ purge-role — v2 전용, EnemyManager.roleKills). 미지정 = 0 취급. */
+  roleKills?: Partial<Record<string, number>>;
 }
 
 export interface MissionOutcome {
@@ -117,14 +123,16 @@ export function pickMission(pool: readonly MissionSpec[], u: number): MissionSpe
 export const FREE_ROAM: MissionSpec = {
   id: "free-roam", name: "탐방 / EXPLORE", kind: "free-roam",
   duration: 0, killTarget: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: -1,
-  zoneRadius: 0, spawnCount: 0, spawnRadius: 0, totalHp: 0, bossHp: 0,
+  zoneRadius: 0, spawnCount: 0, spawnRadius: 0, totalHp: 0, bossHp: 0, concurrentCap: 0, reinforceInterval: 0,
 };
 
 /** 내장 미션 풀(폴백/테스트 기준 — `public/missions/index.json` 과 동치). */
-// 전 미션 공통: 반경 5km 교전 구역 + 시작 위치 반경 1.5km 안에 일괄 100 스폰. 체력 총합 7만(중간보스 1만 + 99기 6만). 수치는 플레이테스트로 조정.
+// 전 미션 공통: 반경 5km 교전 구역 + 시작 위치 반경 1.5km 초기 투입 후 균열에서 점진 증원(동시 26 상한).
+// 총 45기·체력 총합 7만(피라미드: 잡몹→중견→정예 순 증원, 중간보스 1만은 마지막). 일괄 100 스폰은
+// 도시 붕괴 속도·압력 곡선 문제로 폐기(플레이테스트 근거) — 수치는 계속 플레이테스트로 조정.
 export const DEFAULT_MISSIONS: MissionSpec[] = [
-  { id: "purge", name: "정화 작전 / PURGE", kind: "eradicate", duration: 300, killTarget: 100, maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: 3, zoneRadius: 5000, spawnCount: 100, spawnRadius: 1500, totalHp: 70000, bossHp: 10000 },
-  { id: "hold-city", name: "도시 방어 / HOLD THE CITY", kind: "defend-buildings", duration: 300, killTarget: 0, maxBuildingLoss: 10, maxLandmarkLoss: 0, respawns: 3, zoneRadius: 5000, spawnCount: 100, spawnRadius: 1500, totalHp: 70000, bossHp: 10000 },
-  { id: "guard-landmark", name: "랜드마크 사수 / GUARD", kind: "defend-landmark", duration: 300, killTarget: 0, maxBuildingLoss: 0, maxLandmarkLoss: 1, respawns: 3, zoneRadius: 5000, spawnCount: 100, spawnRadius: 1500, totalHp: 70000, bossHp: 10000 },
-  { id: "survive", name: "지역 사수 / SURVIVE", kind: "survival", duration: 300, killTarget: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: 2, zoneRadius: 5000, spawnCount: 100, spawnRadius: 1500, totalHp: 70000, bossHp: 10000 },
+  { id: "purge", name: "정화 작전 / PURGE", kind: "eradicate", duration: 300, killTarget: 45, maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: 3, zoneRadius: 5000, spawnCount: 45, spawnRadius: 1500, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5 },
+  { id: "hold-city", name: "도시 방어 / HOLD THE CITY", kind: "defend-buildings", duration: 300, killTarget: 0, maxBuildingLoss: 10, maxLandmarkLoss: 0, respawns: 3, zoneRadius: 5000, spawnCount: 45, spawnRadius: 1500, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5 },
+  { id: "guard-landmark", name: "랜드마크 사수 / GUARD", kind: "defend-landmark", duration: 300, killTarget: 0, maxBuildingLoss: 0, maxLandmarkLoss: 1, respawns: 3, zoneRadius: 5000, spawnCount: 45, spawnRadius: 1500, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5 },
+  { id: "survive", name: "지역 사수 / SURVIVE", kind: "survival", duration: 300, killTarget: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: 2, zoneRadius: 5000, spawnCount: 45, spawnRadius: 1500, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5 },
 ];

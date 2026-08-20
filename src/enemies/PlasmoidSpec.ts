@@ -83,10 +83,46 @@ export interface PlasmoidKiterArchetype extends PlasmoidArchetypeBase {
 /** 러셔(지상 돌격형) 아키타입 — 적극 접근 + 접촉 흡수(spec.contact). 주로 워커와 교전. */
 export type PlasmoidRusherArchetype = PlasmoidArchetypeBase;
 
+/**
+ * 낙인탄(내부 id: tomb — 서사편 §6.1 ① MARK) 파라미터. 낙인 자체는 무피해 —
+ * 주기 스윕 파문(SweepSpec)이 지나갈 때 낙인 수만큼 sweepDamage 가 적용된다.
+ */
+export interface TombSpec {
+  projSpeed: number; // 유도탄 속도(m/s) — 느려서 회피 가능해야 함
+  projTurnRateDeg: number; // 유도탄 선회 상한(°/s) — 낮을수록 스트레이프로 흘리기 쉬움
+  projTtl: number; // 유도탄 수명(s) — 소진 시 소산
+  fireRange: number; // 발사 사거리(m)
+  fireInterval: number; // 발사 간격(s)
+  sweepDamage: number; // 파문 통과 시 낙인 1개당 피해
+}
+
+/**
+ * 마커(내부 id: marker, 표시명 소인체 — 서사편 §6.7) — 중거리 유영 + 낙인 유도탄.
+ * 이동은 카이터 유영(keepDist 유지)을 재사용하고, 공격은 접촉/드레인 대신 낙인탄.
+ */
+export interface PlasmoidMarkerArchetype extends PlasmoidArchetypeBase {
+  turnRateDeg: number; // 유영 선회 상한(°/s)
+  keepDist: number; // 유지 거리(m)
+  keepBand: number; // 히스테리시스 반폭(m)
+  tomb: TombSpec;
+}
+
+/**
+ * 심판 파문(내부 id: sweep — 서사편 §6.1·§6.7) — 개체가 아닌 **전장 이벤트**. 균열(리프트 앵커)
+ * 에서 주기적으로 파면이 확장되고, 낙인 붙은 대상만 통과 시 피해. 예고(warnSec)는 HUD 가 표시.
+ */
+export interface SweepSpec {
+  period: number; // 파문 주기(s) — 종료 후 다음 파문까지
+  speed: number; // 파면 확장 속도(m/s)
+  warnSec: number; // 도래 전 HUD 예고 시간(s)
+  maxRadius: number; // 파면 소멸 반경(m)
+}
+
 /** 개체 고유 아키타입 묶음 — 어느 드론이 플레이하든 무관(MP 혼합 전장 대응). */
 export interface PlasmoidArchetypesSpec {
   rusher: PlasmoidRusherArchetype;
   kiter: PlasmoidKiterArchetype;
+  marker: PlasmoidMarkerArchetype;
 }
 
 /** 플라즈모이드 1종 스펙. */
@@ -99,10 +135,11 @@ export interface PlasmoidSpec {
   spawn: PlasmoidSpawnSpec;
   contact: PlasmoidContactSpec;
   archetypes: PlasmoidArchetypesSpec;
+  sweep: SweepSpec; // 심판 파문(전장 이벤트) — 마커 낙인과 한 세트
 }
 
 /** 플라즈모이드 아키타입 식별자. */
-export type PlasmoidArchetype = "rusher" | "kiter";
+export type PlasmoidArchetype = "rusher" | "kiter" | "marker";
 
 // ─────────────────────────── 순수 산출 유틸(테스트 분리) ───────────────────────────
 
@@ -229,14 +266,18 @@ export function archetypeCount(arche: PlasmoidArchetypeBase, wave: number, match
 }
 
 /**
- * 잔여 예산에서 이번에 스폰할 아키타입 — 남은 수에 비례한 가중 추첨(한 종이 0이면 다른 종, 둘 다 0이면 null).
- * 두 예산이 웨이브 내내 잔여 비율대로 섞여 투입되게 한다. rand: ()=>[0,1). 순수.
+ * 잔여 예산에서 이번에 스폰할 아키타입 — 남은 수에 비례한 가중 추첨(예산 0 인 종은 자연 배제,
+ * 전부 0 이면 null). 세 예산이 웨이브 내내 잔여 비율대로 섞여 투입되게 한다. rand: ()=>[0,1). 순수.
  */
-export function pickSpawnType(pendingRusher: number, pendingKiter: number, rand: () => number): PlasmoidArchetype | null {
-  const total = pendingRusher + pendingKiter;
+export function pickSpawnType(
+  pendingRusher: number, pendingKiter: number, pendingMarker: number, rand: () => number
+): PlasmoidArchetype | null {
+  const total = pendingRusher + pendingKiter + pendingMarker;
   if (total <= 0) return null;
-  if (pendingRusher > 0 && (pendingKiter <= 0 || rand() * total < pendingRusher)) return "rusher";
-  return "kiter";
+  const u = rand() * total;
+  if (u < pendingRusher) return "rusher";
+  if (u < pendingRusher + pendingKiter) return "kiter";
+  return "marker";
 }
 
 /**
@@ -279,6 +320,51 @@ export function distributeHp(total: number, bossHp: number, count: number, rand:
   return out;
 }
 
+// 강도 피라미드 — 잡몹(적색)·중견·정예(청백)의 개체수 비율과 체력 가중치. 개체수는 아래로 넓고
+// 체력은 위로 무겁다. 증원 큐가 이 순서(잡몹→중견→정예→보스)로 소비되어 압력 상승 곡선을 만든다.
+const PYRAMID_TIERS = [
+  { frac: 0.6, weight: 1 }, // 잡몹 — 떼(핵앤슬래시 텍스처)
+  { frac: 0.3, weight: 5 }, // 중견
+  { frac: 0.1, weight: 13 }, // 정예 — 느리고 크고 밝음(청백)
+] as const;
+const PYRAMID_JITTER = 0.5; // 개체별 체력 ±변주(가중치 ×(1−j/2 .. 1+j/2)) — 같은 티어도 균일하지 않게
+
+/**
+ * 점진 투입의 **피라미드 체력 배분**(순수) — 합계 = total. 배열 순서가 곧 증원 순서:
+ * 잡몹(60%) → 중견(30%) → 정예(10%) → **보스(마지막 1기, bossHp)** — 뒤로 갈수록 강해지는
+ * 압력 상승 곡선 + 보스 등장이 클라이맥스가 된다. rand: ()=>[0,1). count≤0 → 빈 배열,
+ * count==1 → [total]. bossHp≤0 이면 보스 없이 전량 티어 배분.
+ */
+export function pyramidHp(total: number, bossHp: number, count: number, rand: () => number): number[] {
+  if (count <= 0) return [];
+  if (count === 1) return [Math.max(1, Math.round(total))];
+  const boss = bossHp > 0 ? Math.max(1, Math.min(Math.round(bossHp), Math.round(total))) : 0;
+  const n = boss > 0 ? count - 1 : count;
+  const rest = Math.max(0, Math.round(total) - boss);
+  // 티어별 개체수 — 마지막(정예)이 잔여를 흡수해 합 = n. 각 티어 최소 0.
+  const counts = PYRAMID_TIERS.map((t) => Math.floor(n * t.frac));
+  counts[counts.length - 1] += n - counts.reduce((a, b) => a + b, 0);
+  // 개체별 가중치(티어 가중 × 지터) → rest 를 비례 배분(마지막이 잔여 흡수 — 합 정확).
+  const w: number[] = [];
+  let sum = 0;
+  for (let ti = 0; ti < counts.length; ti++) {
+    for (let i = 0; i < counts[ti]; i++) {
+      const v = PYRAMID_TIERS[ti].weight * (1 - PYRAMID_JITTER / 2 + rand() * PYRAMID_JITTER);
+      w.push(v);
+      sum += v;
+    }
+  }
+  const out: number[] = [];
+  let acc = 0;
+  for (let i = 0; i < w.length; i++) {
+    const h = i < w.length - 1 ? Math.max(1, Math.round((rest * w[i]) / sum)) : Math.max(1, rest - acc);
+    out.push(h);
+    acc += h;
+  }
+  if (boss > 0) out.push(boss); // 클라이맥스 — 증원 큐의 마지막
+  return out;
+}
+
 /**
  * 예산 지정 HP → 외형(온도·색·렌더 지름). HP가 클수록 고온(청백)·대형 — 색=강함 메타포 유지.
  * `temp = lowT + strength(hp)·(highT−lowT)`, color/지름은 기존 시스템 재사용. 순수.
@@ -313,13 +399,20 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
   archetypes: {
     rusher: {
       name: "거머리 플라즈모이드 / LEECH",
-      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 12, killRefund: 0, speed: 17, speedMin: 12,
+      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 12, killRefund: 5, speed: 17, speedMin: 12,
     },
     kiter: {
       name: "모기 플라즈모이드 / SKEETER",
-      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, killRefund: 0, speed: 89, speedMin: 67,
+      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, killRefund: 8, speed: 89, speedMin: 67,
       turnRateDeg: 100, keepDist: 35, keepBand: 12, strafeMix: 0, orbitRef: 35, evadeGain: 0.85,
       attackRange: 95, drainDamage: 1.4, drainInterval: 1.5,
     },
+    marker: {
+      name: "소인체 플라즈모이드 / BRANDER",
+      spawnAltMin: 40, spawnAltMax: 160, countBase: 2, countCap: 4, killRefund: 8, speed: 30, speedMin: 22,
+      turnRateDeg: 90, keepDist: 70, keepBand: 18,
+      tomb: { projSpeed: 22, projTurnRateDeg: 70, projTtl: 14, fireRange: 220, fireInterval: 7, sweepDamage: 18 },
+    },
   },
+  sweep: { period: 30, speed: 250, warnSec: 5, maxRadius: 1600 },
 };
