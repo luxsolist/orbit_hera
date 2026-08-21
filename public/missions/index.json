@@ -199,17 +199,22 @@
     {
      "role": "marker",
      "count": 4,
-     "hp": 1500
+     "hp": 1500,
+     "behavior": "hold"
     },
     {
      "role": "elite",
      "count": 6,
-     "hp": 3500
+     "hp": 3500,
+     "formation": "ring",
+     "behavior": "patrol"
     },
     {
      "role": "kiter",
      "count": 8,
-     "hp": 900
+     "hp": 900,
+     "behavior": "escort",
+     "anchor": 1
     }
    ],
    "spawnRadius": 1000
@@ -236,17 +241,22 @@
     {
      "role": "marker",
      "count": 6,
-     "hp": 1200
+     "hp": 1200,
+     "behavior": "hold"
     },
     {
      "role": "rusher",
      "count": 10,
-     "hp": 400
+     "hp": 400,
+     "behavior": "escort",
+     "anchor": 0
     },
     {
      "role": "kiter",
      "count": 6,
-     "hp": 500
+     "hp": 500,
+     "behavior": "escort",
+     "anchor": 0
     }
    ],
    "spawnRadius": 1000
@@ -305,17 +315,22 @@
      "role": "elite",
      "count": 1,
      "hp": 12000,
-     "shield": 0.3
+     "shield": 0.3,
+     "behavior": "hold"
     },
     {
      "role": "rusher",
      "count": 12,
-     "hp": 400
+     "hp": 400,
+     "behavior": "escort",
+     "anchor": 0
     },
     {
      "role": "kiter",
      "count": 6,
-     "hp": 500
+     "hp": 500,
+     "behavior": "escort",
+     "anchor": 0
     }
    ],
    "spawnRadius": 900
@@ -396,7 +411,9 @@
     {
      "role": "elite",
      "count": 7,
-     "hp": 4000
+     "hp": 4000,
+     "formation": "ring",
+     "behavior": "patrol"
     }
    ],
    "spawnRadius": 900
@@ -422,22 +439,30 @@
     {
      "role": "marker",
      "count": 4,
-     "hp": 1200
+     "hp": 1200,
+     "formation": "line",
+     "behavior": "hold"
     },
     {
      "role": "kiter",
      "count": 8,
-     "hp": 900
+     "hp": 900,
+     "behavior": "escort",
+     "anchor": 0
     },
     {
      "role": "elite",
      "count": 4,
-     "hp": 3000
+     "hp": 3000,
+     "formation": "line",
+     "behavior": "hold"
     },
     {
      "role": "rusher",
      "count": 8,
-     "hp": 400
+     "hp": 400,
+     "behavior": "escort",
+     "anchor": 2
     }
    ],
    "spawnRadius": 1400
@@ -566,5 +591,119 @@
   "modifiers": {
    "freqRegenMul": 0.5
   }
+ },
+ {
+  "id": "severance",
+  "name": "절단 공성 / SEVERANCE",
+  "brief": "그들이 건물을 뿌리째 들어올린다 — 떨어뜨려라. 떨어지면 다시 붙는다.",
+  "goal": {
+   "type": "guard",
+   "target": "landmarks",
+   "hold": 240
+  },
+  "fail": {
+   "respawns": 3,
+   "timeLimit": 0,
+   "maxBuildingLoss": 25,
+   "maxLandmarkLoss": 1
+  },
+  "deploy": {
+   "model": "roster",
+   "units": [
+    {
+     "role": "cutter",
+     "count": 6,
+     "hp": 2200
+    },
+    {
+     "role": "marker",
+     "count": 3,
+     "hp": 1200
+    },
+    {
+     "role": "rusher",
+     "count": 6,
+     "hp": 900
+    }
+   ],
+   "spawnRadius": 1200
+  },
+  "zoneRadius": 3500,
+  "modifiers": {
+   "aggro": "landmark"
+  }
+ },
+ {
+  "id": "retro-hunt",
+  "name": "역행 사냥 / RETROGRADE HUNT",
+  "brief": "잡은 것이 되돌아온다 — 세지 말고, 시전자를 끊어라.",
+  "goal": {
+   "type": "purge-role",
+   "role": "rewinder"
+  },
+  "fail": {
+   "respawns": 2,
+   "timeLimit": 420,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "roster",
+   "units": [
+    {
+     "role": "rewinder",
+     "count": 2,
+     "hp": 7000
+    },
+    {
+     "role": "rusher",
+     "count": 8,
+     "hp": 1000
+    },
+    {
+     "role": "marker",
+     "count": 2,
+     "hp": 1200
+    }
+   ],
+   "spawnRadius": 900
+  },
+  "zoneRadius": 3000
+ },
+ {
+  "id": "experiment-strike",
+  "name": "동시 조사 실험 / THE EXPERIMENT",
+  "brief": "넷을 한 번에 붙들어라 — 그들이 정말 여럿인지 확인한다.",
+  "goal": {
+   "type": "experiment",
+   "targets": 4,
+   "hold": 5
+  },
+  "fail": {
+   "respawns": 3,
+   "timeLimit": 420,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 0
+  },
+  "deploy": {
+   "model": "roster",
+   "units": [
+    {
+     "role": "rusher",
+     "count": 8,
+     "hp": 1400,
+     "formation": "ring",
+     "behavior": "patrol"
+    },
+    {
+     "role": "kiter",
+     "count": 6,
+     "hp": 1000,
+     "behavior": "hold"
+    }
+   ],
+   "spawnRadius": 700
+  },
+  "zoneRadius": 2500
  }
 ]

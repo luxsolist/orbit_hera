@@ -910,3 +910,42 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   box-shadow: 0 0 18px rgba(52, 245, 255, 0.45);
   opacity: 1;
 }
+
+/* ── 캠페인(수사판) — 사건 파일 패널 + 도시 상태 점 + 표류 벡터 오버레이 (§9) ── */
+.casefile {
+  /* bottom 52px — 코너 버튼(스토리/도움말, bottom:14px + 높이)과 겹치지 않게 그 위에 배치 */
+  position: absolute; left: 10px; bottom: 52px; z-index: 2;
+  width: min(240px, 40%); padding: 10px 12px;
+  background: rgba(4, 14, 22, 0.82); border: 1px solid rgba(52, 245, 255, 0.35);
+  font-size: 11px; line-height: 1.45; color: rgba(210, 250, 255, 0.9);
+  pointer-events: none;
+}
+.casefile__title { font-size: 12px; letter-spacing: 0.08em; color: #7df3ff; margin-bottom: 2px; }
+.casefile__q { color: rgba(255, 255, 255, 0.85); margin-bottom: 4px; }
+.casefile__brief { color: rgba(180, 230, 245, 0.65); font-size: 10px; margin-bottom: 8px; }
+.casefile__row { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+.casefile__evlabel { width: 42px; color: rgba(160, 220, 240, 0.8); font-size: 10px; }
+.casefile__evval { width: 24px; text-align: right; font-size: 10px; color: rgba(160, 220, 240, 0.8); }
+.casefile__bar { flex: 1; height: 4px; background: rgba(52, 245, 255, 0.12); overflow: hidden; }
+.casefile__bar > i { display: block; height: 100%; background: rgba(52, 245, 255, 0.55); }
+.casefile__bar--hot > i { background: #ffd166; box-shadow: 0 0 6px rgba(255, 209, 102, 0.7); }
+
+.zone-dot--fallen > i {
+  background: #5a6a72; box-shadow: 0 0 4px rgba(120, 140, 150, 0.5);
+  outline: 1px dashed rgba(150, 170, 180, 0.5); outline-offset: 2px; border-radius: 50%;
+}
+.zone-dot--fallen .zone-dot__n { background: #5a6a72; color: #dfe8ec; }
+
+.drift-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.drift-origin { animation: drift-origin-pulse 2.2s ease-in-out infinite; transform-origin: center; }
+@keyframes drift-origin-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+/* ── HUD 통신 라인(브리핑/감독 brief 방송) — 미션바 아래 타자기식 한 줄 ── */
+.hud__cast {
+  position: absolute; top: 96px; left: 50%; transform: translateX(-50%);
+  max-width: min(620px, 80vw); padding: 4px 14px; text-align: center;
+  font-size: 12.5px; letter-spacing: 0.04em; color: rgba(190, 245, 255, 0.95);
+  background: rgba(4, 14, 22, 0.55); border: 1px solid rgba(52, 245, 255, 0.25);
+  opacity: 0; transition: opacity 0.4s; pointer-events: none; white-space: pre-line;
+}
+.hud__cast--show { opacity: 1; }

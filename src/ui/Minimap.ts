@@ -209,6 +209,15 @@ export class Minimap implements MinimapSink {
       }
       const ex = cx + lp.x;
       const ey = cy + lp.y;
+      if (e.phased) {
+        // 위상 이탈(§2.1) — 빈 원(확률 구름): 위치는 알지만 붙잡을 수 없다
+        ctx.strokeStyle = "rgba(255, 59, 78, 0.5)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(ex, ey, 3.5, 0, Math.PI * 2);
+        ctx.stroke();
+        continue;
+      }
       const grad = ctx.createRadialGradient(ex, ey, 0, ex, ey, 8);
       grad.addColorStop(0, "rgba(255, 59, 78, 0.95)");
       grad.addColorStop(1, "rgba(255, 59, 78, 0)");

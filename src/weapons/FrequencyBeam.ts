@@ -231,6 +231,10 @@ export class FrequencyBeam {
         range: this.spec.range,
         style: this.style,
         zeno: this.spec.zeno, // 관측 고정(W1) — 수동·오토 공통(오토 = 백그라운드 관측 스레드)
+        // 관측 펄스(§2.2)·관측 계류(W2)는 **수동 조준 사격만** — 오토는 위상 이탈을 못 붙잡는다
+        observe: manual ? { decohere: this.spec.manual.decohere, pinSec: this.spec.manual.pinSec } : undefined,
+        mend: manual ? this.spec.manual.mend : undefined, // W4 — 수동 조준 사격만 복구 도구
+
         onHit: (endPoint, hit, d) => this.spawnImpact(endPoint, hit.face?.normal, d), // 임팩트/스파크는 기본빔만
         onEnemyHit: manual ? (killed) => this.onManualHit?.(killed) : undefined, // 히트스톱은 수동만
       }

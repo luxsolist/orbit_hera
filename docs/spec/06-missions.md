@@ -45,7 +45,7 @@ v1 은 `kind` 하나에 승리·실패·투입이 뭉쳐 있어 패턴 확장이
 | `fail.respawns` | 리스폰 예산(<0 무한). 초과 시 실패 |
 | `fail.timeLimit` | 격멸형 시간 초과 실패(초). 0 = 무제한. `survive`/`guard` 는 goal 의 `seconds`/`hold` 가 승리 타이머 |
 | `fail.maxBuildingLoss` / `maxLandmarkLoss` | 손실 한도(도달 시 실패). 0 = 미사용 — **모든 goal 과 조합 가능**(복합 제약) |
-| `deploy` | 투입 모델(§1 표). `roster.units[] = { role, count, hp }` — 진형/행동 필드는 조합 정립 단계에서 확장 예약 |
+| `deploy` | 투입 모델(§1 표). `roster.units[] = { role, count, hp, shield?, formation?, behavior?, anchor? }` — **진형** cluster(밀집)/ring(중심 포위)/line(전선) · **행동** hunt/hold(거점 고수)/patrol(배치점 순회)/escort(anchor 유닛 추종). hunt 외 행동도 사거리 내 기회 공격은 수행하며 **피격 시 진형을 버리고 hunt 전환** |
 | `zoneRadius` | 작전구역(m). 0 = 무제한 |
 | `modifiers` | `sweepPeriodMul` · `zoneShrink{everySec, step, minRadius}` · `freqRegenMul` · `aggro` · `buildingBrands` — 전부 선택 |
 
@@ -142,7 +142,11 @@ v1 과 동치임을 테스트가 고정한다([tests/missionV2.test.ts](../../te
 7. ✅ **구역·페이즈**(훅 ⑥ 부분): phased·zoneShrink·freqRegenMul·sweepPeriodMul — 패턴 2(해일)·
    3(최후 저지선)·8(이중 전선)·20(옅은 장) 풀 편입(**총 18미션 / 패턴 15/20 가동**).
    잔여: score(4)·suture(13)·부유 요새(14)·순례길/공성 낙인/마지막 등불(16~18) — 각인·봉합·커터 콘텐츠 단계.
-8. 🔭 진형(formation)/행동 필드 — `RosterUnit` 확장(조합/진형/공격 패턴 정립 작업의 본체).
+8. ✅ **진형/행동 정립**: `RosterUnit.formation/behavior/anchor` — 배치 3종(cluster/ring/line) ×
+   행동 4종(hunt/hold/patrol/escort, 피격 시 hunt 전환·기회 공격 유지). 적용: 편대 해체(정예 포위
+   순찰 + 모기 호위), 근원 사냥·호위 붕괴(호위가 실제로 곁을 지킴), 정예 소탕(포위 순찰),
+   이중 전선(두 전선 hold + 각 축 호위). 공격 패턴 자체는 직무(§6.7 로스터)가 담당 —
+   유닛별 수치 튜닝(tune)은 후속 🔭.
 
 ## 7. 세계관·어휘 가드
 
@@ -190,3 +194,11 @@ v1 과 동치임을 테스트가 고정한다([tests/missionV2.test.ts](../../te
    (파이프라인 통합 🔭 — bake 통과 배선은 완료).
 3. **런타임**: `Landmark.cls`([MapData](../../src/world/MapData.ts)) → 미션 표적 선정(훅 ④)·저항
    보정·브리핑 템플릿(`ENTANGLEMENT_CLASSES[cls].brief`)의 단일 출처.
+
+## 9. Director — 미션 체계를 조작하는 감독 (포인터)
+
+미션 선택·변조·증원·이벤트는 **Director 인터페이스**([`src/game/director.ts`](../../src/game/director.ts))를
+통해 조작된다 — 규칙 기반 구현(캠페인 챕터 선택기)이 기본이고, 라이브 환경에서는 AI 감독(LLM)이 같은
+인터페이스로 교체된다. 감독 출력은 스키마·밸런스 봉투(`DIRECTOR_LIMITS`)·표면 어휘 필터
+([`surfaceVocab.ts`](../../src/game/surfaceVocab.ts) — §7 규칙의 런타임 강제)를 통과한 것만 적용.
+아키텍처·로드맵은 [TODO §10](../TODO.md), 심층 근거는 [서사편 §1.10](../private/05x-narrative-truth.md) ⚠️.

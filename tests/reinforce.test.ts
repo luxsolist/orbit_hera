@@ -1,7 +1,10 @@
 import { describe, it, expect } from "vitest";
 import * as THREE from "three";
 import { pyramidHp, DEFAULT_PLASMOID } from "../src/enemies/PlasmoidSpec";
-import { EnemyManager } from "../src/enemies/EnemyManager";
+
+// 위상 이탈(§2.1)은 확률 거동이라 투입/개체수 검증을 흔든다 — 본 스위트는 비활성 스펙 사용.
+const NO_PHASE = { ...DEFAULT_PLASMOID, phase: undefined };
+import { EnemyManager, formationPos } from "../src/enemies/EnemyManager";
 
 // 미션 점진 투입 — 피라미드 체력 배분(잡몹→중견→정예→보스 순 증원 큐) + 균열 증원(동시 상한).
 // "일괄 100기" 모델 폐기의 근거였던 도시 붕괴 속도·압력 곡선 문제를 시스템으로 고정한다.
@@ -55,7 +58,7 @@ describe("EnemyManager — 균열 증원(동시 상한) 통합", () => {
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
       spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
     } as any;
-    return new EnemyManager(scene, world, [player], DEFAULT_PLASMOID);
+    return new EnemyManager(scene, world, [player], NO_PHASE);
   };
   const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };
   // 실제 무기 경로와 동일 — applyFrequencyHit 가 true(처치 크레딧)일 때만 registerKill(공유 풀은 1회만)
@@ -118,7 +121,7 @@ describe("deploy 모델(훅 ①) — roster/horde 투입기", () => {
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
       spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
     } as any;
-    return new EnemyManager(scene, world, [player], DEFAULT_PLASMOID);
+    return new EnemyManager(scene, world, [player], NO_PHASE);
   };
   const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };
 
@@ -162,19 +165,19 @@ describe("엣지 가드 — 낙인탄 시야·분출 상한·랜드마크 폴백
   const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };
 
   it("마커 낙인탄은 건물에 시야가 막히면 발사하지 않는다(LOS 게이트)", () => {
-    const blocked = new EnemyManager(new THREE.Scene(), makeWorld(0.5), [makePlayer()], DEFAULT_PLASMOID);
+    const blocked = new EnemyManager(new THREE.Scene(), makeWorld(0.5), [makePlayer()], NO_PHASE);
     blocked.startRoster([{ role: "marker", count: 2, hp: 1000 }], 100);
     tick(blocked, 60 * 12); // 12s — 발사 간격(7s)을 넘겨도
     expect(blocked.brandCount(0)).toBe(0); // 차폐 — 낙인 없음
 
-    const clear = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), [makePlayer()], DEFAULT_PLASMOID);
+    const clear = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), [makePlayer()], NO_PHASE);
     clear.startRoster([{ role: "marker", count: 2, hp: 1000 }], 100);
     tick(clear, 60 * 12); // 유도탄 비행(22m/s·≤220m) 포함
     expect(clear.brandCount(0)).toBeGreaterThan(0); // 시야 확보 — 낙인 부착
   });
 
   it("잡몹 분출은 전장 생존 상한(40)에서 멈춘다(무한 팽창 방지)", () => {
-    const em = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), [makePlayer()], DEFAULT_PLASMOID);
+    const em = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), [makePlayer()], NO_PHASE);
     em.startBossDeploy({ bossHp: 1e9, projections: 1, emit: { role: "rusher", hp: 100, count: 5, interval: 0.05 } }, 300);
     tick(em, 60 * 10); // 10s — 상한 없으면 ~1000기
     const alive = em.aliveEnemies.length;
@@ -191,7 +194,7 @@ describe("엣지 가드 — 낙인탄 시야·분출 상한·랜드마크 폴백
       targetPos: (_id: string, out: THREE.Vector3) => { out.set(300, 5, 0); return true; },
       damage: () => "none",
     };
-    const em = new EnemyManager(new THREE.Scene(), makeWorld(Infinity, bc), [makePlayer()], DEFAULT_PLASMOID);
+    const em = new EnemyManager(new THREE.Scene(), makeWorld(Infinity, bc), [makePlayer()], NO_PHASE);
     em.startRoster([{ role: "rusher", count: 1, hp: 1000 }], 100);
     em.setAggro("landmark");
     tick(em, 30);
@@ -199,7 +202,7 @@ describe("엣지 가드 — 낙인탄 시야·분출 상한·랜드마크 폴백
   });
 
   it("소유 파문(ownSweep) — 파문 앵커가 살아있는 보스 위치, 소산 후 균열로 폴백", () => {
-    const em = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), [makePlayer()], DEFAULT_PLASMOID);
+    const em = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), [makePlayer()], NO_PHASE);
     em.startBossDeploy({ bossHp: 5000, projections: 1, ownSweep: true }, 300);
     const boss = em.aliveEnemies.find((e) => e.sharedPool)!;
     const a1 = (em as any).sweepAnchor();
@@ -213,13 +216,13 @@ describe("엣지 가드 — 낙인탄 시야·분출 상한·랜드마크 폴백
 
   it("MP 스케일(2인) — horde 물량·상한 ×2, roster 비보스 ×2·보스 그룹은 팀 공유 1", () => {
     const players = [makePlayer("walk"), makePlayer("fly")];
-    const h = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), players, DEFAULT_PLASMOID);
+    const h = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), players, NO_PHASE);
     h.startHorde(10, 200, 500, { concurrentCap: 4, reinforceInterval: 0.1 });
     expect(h.aliveMarkers.length).toBe(5); // 초기 = ceil(4×2×0.6)
     tick(h, 60 * 5);
     expect(h.aliveMarkers.length).toBe(8); // 상한 4×2
 
-    const r = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), players, DEFAULT_PLASMOID);
+    const r = new EnemyManager(new THREE.Scene(), makeWorld(Infinity), players, NO_PHASE);
     r.startRoster([{ role: "rusher", count: 3, hp: 500 }, { role: "boss", count: 1, hp: 3000 }], 500);
     expect(r.aliveEnemies.filter((e) => !e.sharedPool).length).toBe(6); // 3×2
     expect(r.aliveEnemies.filter((e) => e.sharedPool).length).toBe(3); // 투영 3 — 그룹 1 유지
@@ -245,7 +248,7 @@ describe("어그로 성향(훅 ④) — building/landmark 직행, provoked 만 �
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
       spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
     } as any;
-    return new EnemyManager(scene, world, [player], DEFAULT_PLASMOID);
+    return new EnemyManager(scene, world, [player], NO_PHASE);
   };
   const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };
 
@@ -276,6 +279,100 @@ describe("어그로 성향(훅 ④) — building/landmark 직행, provoked 만 �
   });
 });
 
+describe("진형/행동(조합 정립) — formationPos·hold/patrol/escort", () => {
+  const rnd = () => 0.5;
+  const fieldC = { x: 0, z: 0 };
+
+  it("formationPos — ring: 전장 중심 반경 lim×0.45 위 균등각, line: 중심을 바라보는 가로 전선, cluster: 산개 반경 내", () => {
+    const lim = 1000;
+    for (let i = 0; i < 6; i++) {
+      const p = formationPos("ring", i, 6, fieldC, { x: 999, z: 999 }, lim, rnd);
+      expect(Math.hypot(p.x, p.z)).toBeCloseTo(450, 6); // unitC 무관 — 중심 포위
+    }
+    const a = formationPos("ring", 0, 6, fieldC, fieldC, lim, rnd);
+    const b = formationPos("ring", 3, 6, fieldC, fieldC, lim, rnd); // 반대편(180°)
+    expect(Math.hypot(a.x + b.x, a.z + b.z)).toBeLessThan(1); // 대칭
+
+    // line — unitC(500,0): 축은 중심→unitC 의 수직(z축) → x 고정·z 로 전개, 간격 28m
+    const l0 = formationPos("line", 0, 4, fieldC, { x: 500, z: 0 }, lim, rnd);
+    const l3 = formationPos("line", 3, 4, fieldC, { x: 500, z: 0 }, lim, rnd);
+    expect(l0.x).toBeCloseTo(500, 6);
+    expect(l3.x).toBeCloseTo(500, 6);
+    expect(Math.abs(l3.z - l0.z)).toBeCloseTo(28 * 3, 6);
+
+    const c = formationPos("cluster", 0, 10, fieldC, { x: 100, z: 100 }, lim, rnd);
+    expect(Math.hypot(c.x - 100, c.z - 100)).toBeLessThanOrEqual(70);
+  });
+
+  const makeManager = () => {
+    const scene = new THREE.Scene();
+    const world = {
+      heightAt: () => 0, bounds: 5000, topAt: () => -Infinity,
+      resolveCollision: (x: number, z: number) => ({ x, z }), segmentHitsBuilding: () => Infinity,
+    } as any;
+    const player = {
+      worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
+      spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
+    } as any;
+    return new EnemyManager(scene, world, [player], NO_PHASE);
+  };
+  const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };
+
+  it("hold — 인식 반경 안 플레이어를 무시하고 배치 지점을 지키다, 피격(provoked) 시 hunt 전환", () => {
+    const em = makeManager();
+    em.startRoster([{ role: "rusher", count: 1, hp: 5000, behavior: "hold" }], 400);
+    const e = em.aliveEnemies[0];
+    const home = e.group.position.clone();
+    tick(em, 120); // 2s — 플레이어(원점)는 인식 반경(500) 안이지만
+    expect(e.targetIndex).toBe(-1); // 미교전
+    expect(e.group.position.distanceTo(home)).toBeLessThan(15); // 지점 고수(분리·부유 미세 이동만)
+    em.provokeNear(e); // 피격 — 진형 해제
+    tick(em, 30);
+    expect(e.targetIndex).toBe(0); // hunt 전환
+  });
+
+  it("patrol — 유닛 중심 반경을 순회한다(시간에 따라 위치 변화, 반경 유지)", () => {
+    const em = makeManager();
+    em.startRoster([{ role: "rusher", count: 1, hp: 5000, formation: "ring", behavior: "patrol" }], 800);
+    const e = em.aliveEnemies[0];
+    tick(em, 60 * 8); // 순회 안착
+    const p1 = e.group.position.clone();
+    const st = e.station!;
+    tick(em, 60 * 6); // 각속도 0.25rad/s × 6s = 86° 이동
+    const p2 = e.group.position.clone();
+    expect(p1.distanceTo(p2)).toBeGreaterThan(20); // 움직인다
+    const r2d = Math.hypot(p2.x - st.x, p2.z - st.z);
+    expect(r2d).toBeGreaterThan(30); // 중심 주위 궤도(반경 60 부근)
+    expect(r2d).toBeLessThan(90);
+  });
+
+  it("escort — 앵커 개체를 추종하고, 앵커 유닛 전멸 시 hunt 폴백", () => {
+    const em = makeManager();
+    em.startRoster([
+      { role: "elite", count: 2, hp: 3000, behavior: "hold" },
+      { role: "kiter", count: 2, hp: 500, behavior: "escort", anchor: 0 },
+    ], 900);
+    const anchors = em.aliveEnemies.filter((e) => e.deployRole === "elite");
+    const guards = em.aliveEnemies.filter((e) => e.deployRole === "kiter");
+    tick(em, 60 * 4);
+    for (const g of guards) {
+      const nearest = Math.min(...anchors.map((a) => g.group.position.distanceTo(a.group.position)));
+      expect(nearest).toBeLessThan(120); // 앵커 곁 유지(keepDist 35 + 분리 여유)
+    }
+    // 앵커 전멸 → hunt 폴백
+    for (const a of anchors) { if (a.applyFrequencyHit(1e9)) em.registerKill(a); }
+    tick(em, 90);
+    for (const g of guards) expect(g.behavior).toBe("hunt");
+  });
+
+  it("진형 중에도 기회 공격 — hold 마커가 사거리 내 플레이어에게 낙인탄을 쏜다", () => {
+    const em = makeManager();
+    em.startRoster([{ role: "marker", count: 2, hp: 1000, behavior: "hold" }], 150);
+    tick(em, 60 * 12); // 발사(7s 간격) + 유도탄 비행
+    expect(em.brandCount(0)).toBeGreaterThan(0);
+  });
+});
+
 describe("보스 행동(훅 ⑤) — 호위 방패·잡몹 분출·회복 링크", () => {
   const makeManager = () => {
     const scene = new THREE.Scene();
@@ -287,7 +384,7 @@ describe("보스 행동(훅 ⑤) — 호위 방패·잡몹 분출·회복 링크
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
       spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
     } as any;
-    return new EnemyManager(scene, world, [player], DEFAULT_PLASMOID);
+    return new EnemyManager(scene, world, [player], NO_PHASE);
   };
   const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };
 
@@ -370,7 +467,7 @@ describe("다중 투영 보스(§2.6) — HP 공유·동반 소산·처치 크�
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
       spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
     } as any;
-    return new EnemyManager(scene, world, [player], DEFAULT_PLASMOID);
+    return new EnemyManager(scene, world, [player], NO_PHASE);
   };
   const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };
 

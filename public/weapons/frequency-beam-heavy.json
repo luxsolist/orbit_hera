@@ -6,8 +6,28 @@
   "range": 2000,
   "color": "0x60ffff",
   "beamLifetime": 0.1,
-  "manual": { "damage": 150, "freqCost": 14, "fireInterval": 0.15, "assistConeDeg": 13 },
-  "auto": { "damage": 45, "freqCost": 4, "fireInterval": 0.2, "range": 1000 },
-  "falloff": { "refDist": 1000, "maxMult": 1.5, "minMult": 0.3 },
-  "zeno": { "slowPerSec": 0.4, "freezeAfter": 1.2 }
+  "manual": {
+    "damage": 150,
+    "freqCost": 14,
+    "fireInterval": 0.15,
+    "assistConeDeg": 13,
+    "decohere": true,
+    "pinSec": 4.0,
+    "mend": 24
+  },
+  "auto": {
+    "damage": 45,
+    "freqCost": 4,
+    "fireInterval": 0.2,
+    "range": 1000
+  },
+  "falloff": {
+    "refDist": 1000,
+    "maxMult": 1.5,
+    "minMult": 0.3
+  },
+  "zeno": {
+    "slowPerSec": 0.4,
+    "freezeAfter": 1.2
+  }
 }

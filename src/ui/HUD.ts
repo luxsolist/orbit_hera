@@ -29,6 +29,9 @@ export class HUD {
   private arrowLayer: HTMLDivElement; // 조준선 중심에 위치한 화살표 컨테이너(0 크기 원점)
   private arrows: HTMLDivElement[] = [];
   private reckoning!: HTMLDivElement; // 낙인/심판 파문 경고(동적 생성)
+  private cast!: HTMLDivElement; //      통신 라인(브리핑/감독 방송, 동적 생성)
+  private castTimer: ReturnType<typeof setTimeout> | null = null;
+  private foresight!: HTMLDivElement; // 예지 — 역행 시전 카운트다운(동적 생성)
   private sweepPulse!: HTMLDivElement; // 파문 통과 전면 펄스(동적 생성)
   private sweepPulseTimer = 0;
   private sweepPulsePeak = 0;
@@ -90,6 +93,20 @@ export class HUD {
       "position:fixed;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:4";
     this.root.appendChild(this.arrowLayer);
 
+    // 예지(2.8.1 — 역행체 시전 감지) — 크로스헤어 위 붉은 카운트다운. 시전을 끊으라는 최우선 지시.
+    this.foresight = document.createElement("div");
+    this.foresight.className = "hud__foresight";
+    this.foresight.style.cssText =
+      "position:fixed;left:50%;top:38%;transform:translateX(-50%);display:none;" +
+      "font:700 15px/1.4 monospace;letter-spacing:0.1em;color:#ff5a6a;text-align:center;" +
+      "pointer-events:none;z-index:5;text-shadow:0 0 10px currentColor";
+    this.root.appendChild(this.foresight);
+
+    // 통신 라인(캠페인 브리핑·감독 brief 방송) — 미션바 아래 한 줄, 표면 어휘만(§8.2·director 검증 통과분)
+    this.cast = document.createElement("div");
+    this.cast.className = "hud__cast";
+    this.root.appendChild(this.cast);
+
     // 파문 통과 전면 펄스 — 가장자리에서 차오르는 붉은 워시(피해 비네팅과 별개의 이벤트 임팩트)
     this.sweepPulse = document.createElement("div");
     this.sweepPulse.className = "hud__sweeppulse";
@@ -127,6 +144,24 @@ export class HUD {
 
   setUnitName(name: string) {
     this.unitName.textContent = name;
+  }
+
+  /** 예지(역행 시전 감지) — 잔여 초 표시, null 이면 숨김. 표면 어휘만("역행" — §8.2). */
+  setRewindWarn(secLeft: number | null) {
+    if (secLeft === null) {
+      this.foresight.style.display = "none";
+      return;
+    }
+    this.foresight.style.display = "block";
+    this.foresight.textContent = `⟲ 역행 시전 감지 — ${secLeft.toFixed(1)}s · 시전자를 끊어라`;
+  }
+
+  /** 통신 라인 방송 — 브리핑/감독(brief) 문구를 잠시 띄운다(연속 호출 시 갱신·연장). */
+  showBroadcast(text: string, sec = 7) {
+    this.cast.textContent = text;
+    this.cast.classList.add("hud__cast--show");
+    if (this.castTimer) clearTimeout(this.castTimer);
+    this.castTimer = setTimeout(() => this.cast.classList.remove("hud__cast--show"), sec * 1000);
   }
 
   /** 미션 목표 배너 설정. visible=false(탐방)면 배너 숨김. */

@@ -4,8 +4,22 @@ import type { Vec3 } from "../core/math";
 import type { ZenoSpec } from "../weapons/WeaponSpec";
 import type { PlasmoidArchetype } from "./PlasmoidSpec";
 
-export const SHELL_GEO = new THREE.IcosahedronGeometry(1, 2); // 셸(본체·레이캐스트) — 살아있는 적은 InstancedMesh 로 일괄 렌더
+export const SHELL_GEO = new THREE.IcosahedronGeometry(1, 2); // 기본 셸(구) — 실루엣 미지정 폴백
 export const CORE_GEO = new THREE.IcosahedronGeometry(0.42, 1); // 발광 코어 — EnemyManager 가 InstancedMesh 로 일괄 렌더
+
+// 역할 실루엣(P3 — §6.7 형태 언어): 색=강함 · **형태=직무** 채널 분리. 직무마다 다른 지오메트리로
+// 인스턴싱(EnemyManager 가 역할별 InstancedMesh 운용). 디졸브 개별 메시도 같은 형태(applySilhouette).
+const _kiterGeo = new THREE.TetrahedronGeometry(1.15, 0);
+_kiterGeo.scale(0.75, 1.65, 0.75); // 길쭉한 사면체 — 빠른 원거리 흡혈의 바늘 인상
+const _cutterGeo = new THREE.ConeGeometry(0.95, 2.1, 4);
+_cutterGeo.rotateX(Math.PI); // 날끝이 아래로 — 건물에 꽂히는 절단 쐐기
+export const SHELL_GEOS: Record<PlasmoidArchetype, THREE.BufferGeometry> = {
+  rusher: new THREE.IcosahedronGeometry(1, 0), // 각진 가시 구 — 접촉 압박
+  kiter: _kiterGeo,
+  marker: new THREE.OctahedronGeometry(1, 0), // 글리프 결정 — 낙인탄(BrandSystem 글리프)과 같은 형태 언어
+  cutter: _cutterGeo,
+  rewinder: new THREE.TorusGeometry(0.85, 0.3, 6, 10), // 시간 고리 — 역행 시전자(미니보스 슬롯)
+};
 
 const PULSE_RATE = 4; // 박동 위상 속도(rad/s)
 export const KILL_STAGGER_SEC = 0.35; // 동시 경직 — 한 기 처치 시 전 개체가 같은 순간 움찔(처치 직후 안전창)
@@ -51,6 +65,14 @@ export type EnemyState = "alive" | "dissolving" | "dead";
 // 같은 대상 지속 조사 시 행동 감속→동결. "노출" = 연속 피관측 시간(히트 간격이 grace 이내면 연속).
 // 관측이 끊기면 노출이 빠르게 감쇠한다. 표면 어휘는 "관측 고정"(§8.2) — zeno 는 코드 전용.
 export const ZENO_GRACE = 0.5; // 히트 간 이 간격(s) 이내 = 지속 조사(무기 graceSec 미지정 시)
+// 피격 후 이 시간(s)은 "조사 중" — 동시 조사 실험(§9 5장) 판정 창.
+// 0.6 → 1.2 상향(2026-08 e2e): 평균 조작 속도(오토 단발 교차 + 특수 볼리)로는 0.6s 창에서
+// "동시 N기"가 성립하지 않음 — 축소판(2기/2s)조차 유지 0.3s 상한. 창을 넓혀 무기 교차를 흡수.
+export const OBSERVE_WINDOW = 1.2;
+export const DASH_SEC = 0.45; //  러셔 돌진 지속(P3 §6.7 안티카이팅)
+export const DASH_CD = 4.5; //    돌진 쿨다운
+export const DASH_MUL = 2.6; //   돌진 중 속도 배수
+export const MARKER_TELEGRAPH_SEC = 0.7; // 낙인탄 장전 조준선(발사 전 텔레그래프)
 const ZENO_DECAY = 2.0; // 관측 끊김 시 노출 감쇠 배속(1초 노출이 0.5초 만에 풀림)
 const ZENO_MIN_MUL = 0.3; // 동결 전 감속 하한(완전 정지는 동결에서만)
 
@@ -366,7 +388,7 @@ export class CoreEnemy {
   state: EnemyState = "alive";
   maxHp: number;
   hp: number;
-  readonly color: number; // 발광/표면 색(드레인 빔 연출 등에서 참조)
+  color: number; // 발광/표면 색(드레인 빔 연출 등에서 참조) — 준위 강등(P3)이 적색 쪽으로 갱신
   killRefund = 0; // 처치 시 플레이어 HP 환수(아키타입에서 주입)
   provoked = false; // 피격 유발 인식 래치 — 플레이어 공격에 노출되면 거리 무관 계속 추격
   archetypeName = ""; // 아키타입 표시명(모기/거머리/소인체 …) — HUD/로그용
@@ -376,6 +398,15 @@ export class CoreEnemy {
   deployRole: PlasmoidArchetype | "elite" | "boss" = "rusher";
   targetIndex = -1; // 현재 추적 대상 플레이어 인덱스(MP 멀티타깃 — 매니저가 관리, 히스테리시스)
   buildingId: string | null = null; // 플레이어가 사거리 밖일 때 공격 중인 건물(2순위 표적)
+  cutterSever = 0; //                커터 절단 채널 누적(s) — severSec 도달 시 납치 개시(매니저 구동)
+  cutterRide: string | null = null; // 커터가 납치 동반 중인 건물 id(부양 상단에 얹힘)
+  kkColors: number[] | null = null; // 준위 강등 색 계단(index=level-1) — 정예·보스급만(매니저 주입)
+  kkCur = 4; //                      현재 준위(KK_LEVELS 시작) — 하향 통과 시 강등 연출(매니저 구동)
+  markerAimLeft = 0; //              낙인탄 텔레그래프 잔여(s) — 장전 조준선(P3 §6.7, 매니저 구동)
+  rewCastLeft = 0; //                역행체 시전 잔여(s) — 예지 HUD 카운트다운(매니저 구동)
+  rewCd = 6; //                      역행 시전 쿨다운(s) — 스폰 직후 즉시 시전 방지 초기값
+  private dashLeft = 0; //           러셔 돌진 잔여(s) — 카이팅 파훼(안티카이팅)
+  private dashCd = 0;
   driftAnchor: Vec3 | null = null; // 소산 표류 앵커(균열 위치) — 매니저가 주입(공유 참조)
   zenoLatch = false; // 관측 고정 집계 래치(매니저 — 동결 진입 1회만 카운트)
   // 다중 투영(§2.6 — 보스): 여러 투영이 하나의 체력을 공유. 어느 구를 때려도 같은 풀이 줄고,
@@ -383,6 +414,11 @@ export class CoreEnemy {
   sharedPool: { hp: number; maxHp: number; killCredited: boolean } | null = null;
   // 받는 피해 배수(훅 ⑤ 호위 방패 — 호위 생존 중 <1, 전멸 시 매니저가 1 복원). 표시 데미지도 이 값 반영.
   damageMul = 1;
+  // 진형 행동(조합 정립 — 로스터 유닛에서 주입). hunt 외 행동은 피격(provoked) 시 hunt 로 전환.
+  behavior: "hunt" | "hold" | "patrol" | "escort" = "hunt";
+  station: Vec3 | null = null; // hold(배치 지점)/patrol(유닛 중심) 기준점
+  patrolPhase = 0; // patrol 궤도 위상(개체별 분산)
+  escortGroup: CoreEnemy[] | null = null; // escort — 호위 대상 유닛의 개체 목록(공유 참조, 재앵커용)
 
   private dissolveProgress = 0;
   private hitFlash = 0; // 피격 순간 1 → 빠르게 감쇠하며 흰색 번쩍임
@@ -399,6 +435,12 @@ export class CoreEnemy {
   private zeno?: ZenoSpec;
   private zenoExposure = 0;
   private zenoSince = Infinity; // 마지막 피관측 히트 후 경과(s)
+  private observedLeft = 0; //   "지금 조사받는 중" 창(s) — 모든 피격이 갱신. 동시 조사 실험(§9 5장) 집계용
+  // 위상 이탈(§2.1) — 실체 cooldown ↔ 이탈 duration 주기. 이탈 중 일반 무기 무효·공격 불가·표적 제외.
+  private phaseCfg: { cooldown: number; duration: number } | null = null;
+  private phaseTimer = 0;
+  private phasedOut = false;
+  private pinLeft = 0; // W2 관측 계류 — 수동 명중의 참조 핀. 남아있는 동안 위상 이탈 불가
 
   constructor(position: THREE.Vector3, appearance: CoreAppearance, speed = 4.5) {
     this.baseScale = appearance.diameter / 2; // 지오메트리 지름 2(반지름 1) → 실제 지름 = scale·2
@@ -422,10 +464,55 @@ export class CoreEnemy {
     this.group.position.copy(position);
   }
 
-  /** 주파수 빔 적중 처리. 반환값: 이번 타격으로 처치되었는가(공유 풀은 그룹 전체에서 1회만 true) */
-  applyFrequencyHit(damage: number): boolean {
+  /** 러셔 짧은 돌진(P3 §6.7 안티카이팅) — 쿨다운 도는 동안 무시. 동결/경직 중엔 이동 자체가 정지. */
+  startDash(): void {
+    if (this.dashCd > 0 || this.state !== "alive") return;
+    this.dashLeft = DASH_SEC;
+    this.dashCd = DASH_CD;
+    this.coreBright = 5; // 도약 직전 발광 — 텔레그래프
+  }
+
+  get isDashing(): boolean {
+    return this.dashLeft > 0;
+  }
+
+  /** 역할 실루엣 적용(P3 §6.7) — 디졸브 개별 메시의 형태를 직무 지오메트리로 교체(스폰 시 1회). */
+  applySilhouette(geo: THREE.BufferGeometry): void {
+    this.hitMesh.geometry = geo;
+  }
+
+  /** 위상 이탈 활성화 — 스폰 롤이 보유 판정 후 호출(u 로 최초 이탈 시점 분산). */
+  enablePhase(cfg: { cooldown: number; duration: number }, u: number): void {
+    this.phaseCfg = cfg;
+    this.phaseTimer = cfg.cooldown * (0.3 + 0.7 * u); // 전장 전체가 동시에 꺼지지 않게 위상 분산
+  }
+
+  /** 위상 이탈 중인가 — 일반 무기 무효·공격 불가·자동발사/어시스트/브래킷 제외(§2.1). */
+  get isPhased(): boolean {
+    return this.phasedOut && this.state === "alive";
+  }
+
+  /** 강제 결어긋남(§2.2 관측 펄스) — 실체화 + 실체 쿨다운 재시작. */
+  materialize(): void {
+    if (!this.phaseCfg) return;
+    this.phasedOut = false;
+    this.phaseTimer = this.phaseCfg.cooldown;
+  }
+
+  /**
+   * 주파수 빔 적중 처리. 반환값: 이번 타격으로 처치되었는가(공유 풀은 그룹 전체에서 1회만 true).
+   * obs — 수동 관측 사격의 부가효과(W2): decohere=위상 이탈 강제 실체화, pinSec=관측 계류(재이탈 봉쇄).
+   * 위상 이탈 중 + decohere 없음 = 무효(호출부 fireEmitters 가 걸러 여기 오지 않는 게 정상 경로).
+   */
+  applyFrequencyHit(damage: number, obs?: { decohere?: boolean; pinSec?: number }): boolean {
     if (this.state !== "alive") return false;
+    if (this.phasedOut) {
+      if (!obs?.decohere) return false; // 일반 무기 무효 — 벌크 밖(§2.1)
+      this.materialize(); //               관측 펄스 — 관측된 것은 숨지 못한다(§2.2)
+    }
+    if (obs?.pinSec && obs.pinSec > this.pinLeft) this.pinLeft = obs.pinSec; // W2 참조 핀
     damage *= this.damageMul; // 호위 방패 감쇄(훅 ⑤) — 모든 무기 경로 공통
+    this.observedLeft = OBSERVE_WINDOW; // 모든 무기 경로가 지나는 단일 지점 — 동시 조사 판정 갱신
 
     // 박동 발광 강화 + 피격 순간 표면 전체가 흰색으로 번쩍(타격감)
     this.coreBright = 6.5;
@@ -478,6 +565,16 @@ export class CoreEnemy {
   /** 동결 여부 — 이동·공격(낙인 장전 포함) 전면 정지. "붙들고 있는 것만으로 인터럽트"(W1). */
   get isZenoFrozen(): boolean {
     return !!this.zeno && this.zenoExposure >= this.zeno.freezeAfter;
+  }
+
+  /** 지금 조사받는 중인가 — 마지막 피격 후 짧은 창 이내(동시 조사 실험의 "동시" 판정). */
+  get isObserved(): boolean {
+    return this.state === "alive" && this.observedLeft > 0;
+  }
+
+  /** 관측 계류(W2) 중인가 — 계류로 잠근 대상에서 일어난 사건은 되감기지 않는다(§9.2). */
+  get isPinned(): boolean {
+    return this.pinLeft > 0;
   }
 
   /** 접촉으로 흡수한 에너지만큼 자가 회복(체력 ↑, 최대치 한도). 살아있을 때만. 공유 풀은 풀에 가산. */
@@ -551,6 +648,20 @@ export class CoreEnemy {
     this.bobPhase += dt * BOB_RATE;
     const staggered = this.staggerLeft > 0;
     if (staggered) this.staggerLeft = Math.max(0, this.staggerLeft - dt);
+    if (this.observedLeft > 0) this.observedLeft -= dt; // 동시 조사 창 감쇠
+    if (this.pinLeft > 0) this.pinLeft -= dt; //           관측 계류(W2) 감쇠
+    if (this.dashCd > 0) this.dashCd -= dt; //             러셔 돌진 쿨다운
+    if (this.dashLeft > 0) { this.dashLeft -= dt; speedScale *= DASH_MUL; } // 돌진 가속
+    // 위상 이탈 주기(§2.1) — 계류(pin)·동결(zeno) 중엔 이탈 진입 불가(관측된 것은 숨지 못한다)
+    if (this.phaseCfg && this.state === "alive") {
+      this.phaseTimer -= dt;
+      if (this.phasedOut) {
+        if (this.phaseTimer <= 0) this.materialize();
+      } else if (this.phaseTimer <= 0 && this.pinLeft <= 0 && !this.isZenoFrozen) {
+        this.phasedOut = true;
+        this.phaseTimer = this.phaseCfg.duration;
+      }
+    }
     // 관측 고정(zeno) 노출 누적/감쇠 — 노출 소진 + 관측 끊김이면 상태 해제
     if (this.zeno) {
       this.zenoSince += dt;
@@ -643,7 +754,7 @@ export class CoreEnemy {
 
   /** 공격 가능 여부 (사거리 + 쿨다운 + 경직/동결 게이트). cooldown 으로 접촉/드레인/낙인탄 간격을 분기. */
   tryAttack(playerPos: THREE.Vector3, range: number, cooldown = 1.0): boolean {
-    if (this.state !== "alive" || this.attackCooldown > 0 || this.staggerLeft > 0 || this.isZenoFrozen) return false;
+    if (this.state !== "alive" || this.attackCooldown > 0 || this.staggerLeft > 0 || this.isZenoFrozen || this.phasedOut) return false;
     const d = this.group.position.distanceTo(playerPos);
     if (d <= range) {
       this.attackCooldown = cooldown;

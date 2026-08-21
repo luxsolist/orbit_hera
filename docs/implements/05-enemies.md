@@ -148,6 +148,19 @@
 
 `update(dt)` — 건물 연출(`world.buildings.update`) → 점진 스폰(`tickSpawns`, 미션 모드면 무동작) → 균열 증원(`tickReinforce` — 미션 점진 투입: 동시 상한 미만일 때 피라미드 큐에서 1기, [08](08-game-instance-mission.md) 참조) → 표적/`boids`/`load` 갱신 → 각 적 `update`(표적 좌표 + 조향 전달) + 공통 `attack`(건물 기본/인식 범위 안이면 플레이어, 흡수=성장; **마커는 `markerFire`로 분기** — 시야·사거리·쿨다운 통과 시 낙인탄 발사) → 드레인 빔 갱신 → **낙인/파문 갱신**(`brand.update` — 탐방 모드 제외) → 사망 적 정리 → 웨이브 종료 판정(일괄 모드는 자동 재시작 없음).
 
+## 진형/행동 — 로스터 유닛의 배치와 상태 (조합 정립)
+
+`DeployUnit.formation/behavior/anchor`([EnemyManager](../../src/enemies/EnemyManager.ts)):
+
+- **배치(formationPos, 순수)** — `cluster`: 링 위 한 점 밀집(기본, 산개 70m) · `ring`: 전장 중심 포위
+  (반경 lim×0.45, 균등각) · `line`: 중심을 바라보는 가로 전선(간격 28m). escort 유닛은 앵커 유닛
+  중심 곁(+80m)에 배치. [tests/reinforce.test.ts](../../tests/reinforce.test.ts) 가 기하를 가드.
+- **행동(formationStep)** — `hold`: 배치 지점 고수 · `patrol`: 배치 지점 주위 순회(반경 60m ·
+  0.25rad/s, 개체별 위상 분산) · `escort`: 앵커 유닛 개체 추종(전멸 시 재앵커 → hunt 폴백).
+  진형 유지 중에도 **사거리 내 기회 공격은 수행**(낙인탄/드레인/접촉 — attack/markerFire 의 사거리·
+  쿨다운·시야 게이트 재사용)하고, **피격(provoked) 시 진형을 버리고 hunt 로 전환** — "축 하나를
+  건드리면 그 축이 응답한다". 어그로 변조(aggro)·건물 공격 로직은 hunt 전환 후부터 적용.
+
 ## deploy 모델 — 미션 투입기 3종 (훅 ① — [06-missions](../spec/06-missions.md))
 
 - **`startBurst`(pyramid)** — 피라미드 배분 점진 증원(아래 스폰 절). `startHorde` — 균일 저체력 `unitHp`×`count`,
@@ -176,3 +189,20 @@
 - **카운터 연동** — `notifyDead(enemy)`(`registerKill` 에서 호출): 격파된 마커의 유도탄·낙인 일괄 소산("마커 우선 격파"). 관측 고정(W1) 동결은 `tryAttack` 게이트로 장전 자체를 인터럽트. 빔 조사로 낙인 소각(W4 복구 사격)·건물 낙인(커터)은 후속 단계 🔭.
 - **HUD** — `warnLeft`(예고 잔여 s / 파면 중 0 / 그 외 null)·`brandCount(idx)` 를 `EnemyManager.sweepWarnLeft`/`brandCount()` 로 노출, `Game` 이 매 프레임 폴링해 `HUD.setReckoning` 표시("낙인 ×n — 근원을 격파하라" / "심판 파문 도래 Ns"). 표면 어휘는 §8.2 준수(sweep/tomb/marker 는 코드 전용).
 - 테스트: [tests/reckoning.test.ts](../../tests/reckoning.test.ts) (호밍 선회 캡·파면 교차·낙인 무피해/소모·근원 소산·예고), [tests/zeno.test.ts](../../tests/zeno.test.ts) (관측 고정).
+
+## 재정립 2단계 + 대위상 세트 (P2~P3, 2026-08)
+
+- **위상 이탈**(물리편 §2.1) — [PlasmoidSpec.phase](../../src/enemies/PlasmoidSpec.ts)(phaseRoll/
+  phaseTimings — 강함 보간) + CoreEnemy 상태기계. 이탈 중 발광 감쇠(PHASE_DIM)·일반 무기 무효·공격
+  불가·오토/어시스트/브래킷 제외·미니맵 빈 원. 카운터: `manual.decohere`(관측 펄스 — 강제 실체화) ·
+  `manual.pinSec`(W2 관측 계류 — 재이탈 봉쇄). [tests/phase.test.ts](../../tests/phase.test.ts)
+- **커터(절단체)** — cutterStep: 건물 상단 부착 → 절단 채널(W1 동결·경직 인터럽트) → 납치
+  (BuildingCombat `abducting`: 부양·창백 틴트·고도 200 소거(잔해 없음)·격추/W4 `manual.mend` 재안착).
+  [tests/abduct.test.ts](../../tests/abduct.test.ts)
+- **역행체(리와인더)** — rewinderCast(시전 4s → performRewind: killLog 반경 내 부활(계류 확정 제외,
+  상한 8, 스폰은 다음 프레임 서두 — 순회 정합)·killCount 되감김·플레이어 위치 역행(posHistory)).
+  예지 HUD = onRewindCast 카운트다운. [tests/rewinder.test.ts](../../tests/rewinder.test.ts)
+- **준위 강등** — kkLevelOf(75/50/25% 계단)·kkLevelColors, KK_MIN_HP 이상만. 색 강등+경직+방출 펄스.
+- **역할 실루엣** — 직무별 셸 InstancedMesh 5종(가시 구/사면체/글리프 결정/절단 쐐기/시간 고리) +
+  디졸브 동형(applySilhouette) + 낙인탄 장전 조준선(0.7s) + 러셔 돌진(15~60m, 4.5s 쿨).
+- **동시 조사 판정** — 모든 피격이 `observedLeft`(0.6s 창)를 갱신 → `observedCount`(experiment 골 입력).

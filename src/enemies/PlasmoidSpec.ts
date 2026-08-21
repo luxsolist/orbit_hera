@@ -84,6 +84,16 @@ export interface PlasmoidKiterArchetype extends PlasmoidArchetypeBase {
 export type PlasmoidRusherArchetype = PlasmoidArchetypeBase;
 
 /**
+ * 커터(내부 id: cutter, 표시명 절단체 — 서사편 §6.3/§6.7) — 건물 상단 부착 → 절단 채널 →
+ * 부양 납치. 방어 미션의 주적. 채널은 관측 고정(W1)·경직이 인터럽트, 격추 시 건물 재안착.
+ */
+export interface PlasmoidCutterArchetype extends PlasmoidArchetypeBase {
+  attachRange: number; // 부착 판정 거리(m — 건물 상단 기준)
+  severSec: number; //   절단 채널 시간(s) — 완료 시 납치 개시
+  seekRange: number; //  표적 건물 탐색 반경(m)
+}
+
+/**
  * 낙인탄(내부 id: tomb — 서사편 §6.1 ① MARK) 파라미터. 낙인 자체는 무피해 —
  * 주기 스윕 파문(SweepSpec)이 지나갈 때 낙인 수만큼 sweepDamage 가 적용된다.
  */
@@ -118,11 +128,60 @@ export interface SweepSpec {
   maxRadius: number; // 파면 소멸 반경(m)
 }
 
+/**
+ * 위상 이탈(물리편 §2.1) — 강한 개체가 주기적으로 막에서 벌크로 회전해 나갔다 돌아온다.
+ * 보유 여부는 스폰 롤에서 결정(phaseRoll), 주기는 강함 s 로 보간(phaseTimings — 강할수록 자주·오래).
+ * 이탈 중: 반투명·발광 감소, 일반 무기 무효, 공격 불가, 자동발사/에임 어시스트 제외. 이동은 계속.
+ * 카운터: 수동 관측 펄스(§2.2 decohere — 강제 실체화) + W2 관측 계류(pin — 재이탈 봉쇄).
+ */
+export interface PhaseSpec {
+  minStrength: number; // 보유 자격 강함 하한(s)
+  chance: number; //      자격 개체 중 보유 확률(0..1)
+  cooldownMax: number; // 실체 유지(s) — s=minStrength 일 때(약할수록 드물게)
+  cooldownMin: number; // 실체 유지(s) — s=1 일 때(강할수록 자주)
+  durationMin: number; // 이탈 지속(s) — s=minStrength
+  durationMax: number; // 이탈 지속(s) — s=1(강할수록 오래)
+}
+
+/** 스폰 롤 — 이 개체가 위상 이탈을 보유하는가. u∈[0,1). 순수. */
+export function phaseRoll(phase: PhaseSpec, s: number, u: number): boolean {
+  return s >= phase.minStrength && u < phase.chance;
+}
+
+/** 강함 s → 실체 유지/이탈 지속 보간(선형). 순수. */
+export function phaseTimings(phase: PhaseSpec, s: number): { cooldown: number; duration: number } {
+  const t = clamp((s - phase.minStrength) / Math.max(1e-6, 1 - phase.minStrength), 0, 1);
+  return {
+    cooldown: phase.cooldownMax + (phase.cooldownMin - phase.cooldownMax) * t,
+    duration: phase.durationMin + (phase.durationMax - phase.durationMin) * t,
+  };
+}
+
+/**
+ * 리와인더(내부 id: rewinder, 표시명 역행체 — 서사편 §6.6/§6.7) — 후방에서 역행 시전(미니보스 슬롯).
+ * 시전 완료 시 반경 내 최근 격파가 되살아나고 플레이어 위치가 되감긴다. 카운터: 시전 중 격파,
+ * W1 동결(시전 인터럽트), W2 관측 계류(계류로 잠근 대상에서 일어난 사건은 되감기지 않는다 — §9.2).
+ */
+export interface PlasmoidRewinderArchetype extends PlasmoidArchetypeBase {
+  turnRateDeg: number; // 유영 선회 상한(°/s) — 후방 유지
+  keepDist: number; //   유지 거리(m)
+  keepBand: number;
+  rollback: {
+    castSec: number; //   시전 시간(s) — 예지 HUD 카운트다운
+    castCd: number; //    시전 쿨다운(s)
+    castRange: number; // 시전 개시 거리(m)
+    radius: number; //    역행 반경(m) — 이 안의 격파·플레이어만 되감김
+    rewindSec: number; // 몇 초 전으로 되감는가
+  };
+}
+
 /** 개체 고유 아키타입 묶음 — 어느 드론이 플레이하든 무관(MP 혼합 전장 대응). */
 export interface PlasmoidArchetypesSpec {
   rusher: PlasmoidRusherArchetype;
   kiter: PlasmoidKiterArchetype;
   marker: PlasmoidMarkerArchetype;
+  cutter?: PlasmoidCutterArchetype; //     P3 — 미지정 시 커터 미출현(구 JSON 하위호환)
+  rewinder?: PlasmoidRewinderArchetype; // P3 — 미지정 시 역행체 미출현
 }
 
 /** 플라즈모이드 1종 스펙. */
@@ -136,10 +195,11 @@ export interface PlasmoidSpec {
   contact: PlasmoidContactSpec;
   archetypes: PlasmoidArchetypesSpec;
   sweep: SweepSpec; // 심판 파문(전장 이벤트) — 마커 낙인과 한 세트
+  phase?: PhaseSpec; // 위상 이탈(§2.1) — 미지정 시 비활성(구 JSON 하위호환)
 }
 
 /** 플라즈모이드 아키타입 식별자. */
-export type PlasmoidArchetype = "rusher" | "kiter" | "marker";
+export type PlasmoidArchetype = "rusher" | "kiter" | "marker" | "cutter" | "rewinder";
 
 // ─────────────────────────── 순수 산출 유틸(테스트 분리) ───────────────────────────
 
@@ -212,6 +272,28 @@ export function sampleTemp(tMin: number, tCap: number, alpha: number, u: number)
   const a = 1 - alpha;
   const lo = Math.pow(tMin, a), hi = Math.pow(tCap, a);
   return Math.pow(lo + u * (hi - lo), 1 / a);
+}
+
+// ─────────────────────────── 준위 강등(P3 — 물리편 §2.3 · overview §7) ───────────────────────────
+// 정예·보스급의 연속 strength 를 이산 준위 n=1..4 로 계단화 — HP 가 경계(75/50/25%)를 하향
+// 통과할 때 색이 적색 쪽으로 강등 + 짧은 경직(준위 붕괴의 방출). 고체력화의 스폰지 방지 짝:
+// "깎이는 게 색으로 보인다". 잡몹(저체력)은 단일 준위(강등 없음).
+
+export const KK_LEVELS = 4;
+export const KK_DEMOTE_STAGGER = 0.35; // 강등 경직(s) — 처치 동시 경직(KILL_STAGGER)과 같은 문법
+export const KK_MIN_HP = 3000; //         이 체력 이상만 계단화(정예·보스급)
+
+/** 현재 준위(1..KK_LEVELS) — HP 비율 계단. 순수. */
+export function kkLevelOf(hp: number, maxHp: number): number {
+  const f = maxHp > 0 ? hp / maxHp : 0;
+  return f > 0.75 ? 4 : f > 0.5 ? 3 : f > 0.25 ? 2 : 1;
+}
+
+/** 준위별 표시색(index = level-1) — 최저온(적색)→스폰 온도(본색)를 준위 수로 내림보간. 순수. */
+export function kkLevelColors(spec: PlasmoidSpec, spawnTemp: number): number[] {
+  const lowT = spec.color.stops[0].temp;
+  return Array.from({ length: KK_LEVELS }, (_, i) =>
+    colorAt(spec.color.stops, lowT + (spawnTemp - lowT) * (i / (KK_LEVELS - 1))));
 }
 
 // 스폰 롤 튜닝 상수(밸런스) — 외형/속도 산출에만 쓰임. 변형별 데이터가 아니라 모듈 상수로 둠.
@@ -413,6 +495,20 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
       turnRateDeg: 90, keepDist: 70, keepBand: 18,
       tomb: { projSpeed: 22, projTurnRateDeg: 70, projTtl: 14, fireRange: 220, fireInterval: 7, sweepDamage: 18 },
     },
+    cutter: {
+      // 절단체(§6.3) — 웨이브 물량 0(로스터/미션 전용). 방어 미션의 주적 — 격추 시 건물 재안착.
+      name: "절단체 플라즈모이드 / SEVERER",
+      spawnAltMin: 30, spawnAltMax: 120, countBase: 0, countCap: 0, killRefund: 8, speed: 26, speedMin: 18,
+      attachRange: 22, severSec: 5, seekRange: 900,
+    },
+    rewinder: {
+      // 역행체(§6.6) — 웨이브 물량 0(미니보스 슬롯). 최우선 표적 — 시전을 끊지 못하면 전과가 되감긴다.
+      name: "역행체 플라즈모이드 / RETROGRADE",
+      spawnAltMin: 60, spawnAltMax: 200, countBase: 0, countCap: 0, killRefund: 12, speed: 24, speedMin: 16,
+      turnRateDeg: 70, keepDist: 160, keepBand: 30,
+      rollback: { castSec: 4, castCd: 14, castRange: 360, radius: 300, rewindSec: 5 },
+    },
   },
   sweep: { period: 30, speed: 250, warnSec: 5, maxRadius: 1600 },
+  phase: { minStrength: 0.35, chance: 0.7, cooldownMax: 16, cooldownMin: 9, durationMin: 2.5, durationMax: 5 },
 };

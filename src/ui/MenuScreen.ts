@@ -2,7 +2,9 @@ import { fetchDrone, fetchDroneCatalog } from "../player/drones";
 import type { DroneCatalogEntry, DroneSpec } from "../player/DroneSpec";
 import { fetchCatalog } from "../world/maps";
 import type { MapCatalogEntry } from "../world/MapData";
-import { buildWorldSvg, projectLatLon, clusterDots, zoomMapBox, projectInBox } from "./worldMapSvg";
+import { buildWorldSvg, projectLatLon, clusterDots, zoomMapBox, projectInBox, driftOverlaySvg } from "./worldMapSvg";
+import type { CampaignData } from "../core/progress";
+import { chapterMeta, driftConvergence, pairedCity } from "../game/campaign";
 
 const WORLD_SVG = buildWorldSvg();
 
@@ -12,7 +14,18 @@ interface MenuCallbacks {
   onDeploy: (mapId: string, droneId: string, peaceful: boolean) => void;
   /** 스토리 목록의 인트로 항목 → 인트로 컷씬 재생 */
   onPlayIntro: () => void;
+  /** 캠페인 상태(수사판) — 세계지도 오버레이·사건 파일 패널·팝업 도시 상태의 데이터 원천. */
+  campaign: () => CampaignData;
+  /** 드론 현재 레벨(§7.4 진행) — 출격 팝업 기체 카드에 표시. */
+  droneLevel: (droneId: string) => number;
 }
+
+const EVIDENCE_LABELS: readonly { key: keyof CampaignData["evidence"]; label: string }[] = [
+  { key: "heatmap", label: "열지도" },
+  { key: "pulse", label: "박자" },
+  { key: "drift", label: "방향" },
+  { key: "immortal", label: "불멸성" },
+];
 
 /**
  * 전장 선택 메뉴 UI — 세계지도(침공 점) + 점 클릭 팝업(지역 정보·기체 선택·출격) +
@@ -125,15 +138,29 @@ export class MenuScreen {
     this.invadedIds = new Set(pool.slice(0, Math.min(N, pool.length)).map((m) => m.id));
   }
 
+  /**
+   * 도시 상태(캠페인) → 점 상태 클래스 — 함락=회색 잔상, 침공=붉음. 캠페인 기록이 오늘의 랜덤
+   * 로테이션보다 우선: 방어해 둔 도시가 로테이션 때문에 "침공 중"으로 표기되지 않게(수사판 신뢰).
+   */
+  private dotStateClass(id: string, camp: CampaignData): string {
+    const st = camp.cities[id]?.state;
+    if (st === "fallen") return "zone-dot--fallen";
+    if (st === "defended") return "zone-dot--reg";
+    if (st === "contested" || this.invadedIds.has(id)) return "zone-dot--invaded";
+    return "zone-dot--reg";
+  }
+
   /** 세계지도에 등록 지역을 점으로. 가까운 점은 **대표 점(클러스터)** 으로 묶고(하나라도 침공이면 붉음), 단일은 그대로. */
   private renderWorldMap(): void {
+    const camp = this.cb.campaign();
+    const rank = (cls: string) => (cls === "zone-dot--fallen" ? 2 : cls === "zone-dot--invaded" ? 1 : 0);
     const pts = this.catalog
       .filter((r) => r.lat != null && r.lon != null)
-      .map((r) => ({ id: r.id, ...projectLatLon(r.lat!, r.lon!), invaded: this.invadedIds.has(r.id) }));
+      .map((r) => ({ id: r.id, ...projectLatLon(r.lat!, r.lon!), cls: this.dotStateClass(r.id, camp) }));
     const dots = clusterDots(pts, 2.6)
       .map((c) => {
-        const invaded = c.members.some((m) => m.invaded);
-        const cls = invaded ? "zone-dot--invaded" : "zone-dot--reg";
+        // 대표 점 상태 = 멤버 중 최악(함락 > 침공 > 방어)
+        const cls = c.members.reduce((a, m) => (rank(m.cls) > rank(a) ? m.cls : a), "zone-dot--reg");
         const pos = `left:${c.x.toFixed(2)}%;top:${c.y.toFixed(2)}%`;
         if (c.members.length === 1) {
           return `<button type="button" class="zone-dot ${cls}" data-map="${c.members[0].id}" style="${pos}"><i></i></button>`;
@@ -143,7 +170,30 @@ export class MenuScreen {
         return `<button type="button" class="zone-dot zone-dot--cluster ${cls}" data-cluster="${ids}" style="${pos}"><i></i><b class="zone-dot__n">${c.members.length}</b></button>`;
       })
       .join("");
-    this.worldMap.innerHTML = WORLD_SVG + dots;
+    // 표류 벡터 오버레이(§9.2-5) — 점 아래 깔리도록 세계지도 바로 뒤에 삽입.
+    this.worldMap.innerHTML = WORLD_SVG + driftOverlaySvg(camp.driftVectors, driftConvergence(camp)) + dots;
+    this.renderCaseFile(camp);
+  }
+
+  /** 사건 파일 패널(전조 콘솔) — 현재 장·질문·수사 방향 + 증거 게이지 4종. */
+  private renderCaseFile(camp: CampaignData): void {
+    const panel = document.getElementById("caseFile");
+    if (!panel) return;
+    const ch = chapterMeta(camp);
+    const gauges = EVIDENCE_LABELS.map(({ key, label }) => {
+      const v = Math.round(camp.evidence[key]);
+      const hot = ch.track === key ? " casefile__bar--hot" : "";
+      return (
+        `<div class="casefile__row"><span class="casefile__evlabel">${label}</span>` +
+        `<span class="casefile__bar${hot}"><i style="width:${v}%"></i></span>` +
+        `<span class="casefile__evval">${v}</span></div>`
+      );
+    }).join("");
+    panel.innerHTML =
+      `<div class="casefile__title">${ch.title}</div>` +
+      `<div class="casefile__q">Q. ${ch.question}</div>` +
+      `<div class="casefile__brief">${ch.brief}</div>` + gauges;
+    panel.hidden = false;
   }
 
   /**
@@ -162,10 +212,11 @@ export class MenuScreen {
     // 해안선 두께 = 기본 세계지도 해안선 픽셀의 2배(렌더 크기·확대율 보정). 그리드는 생략(step 0).
     const baseStrokePx = 0.3 * ((this.worldMap.clientWidth || 860) / 360);
     const svg = buildWorldSvg(box, 0, (2 * baseStrokePx * box.w) / zw);
+    const camp = this.cb.campaign();
     const dots = members
       .map((m) => {
         const { x, y } = projectInBox(m.lat!, m.lon!, box); // 지도상 정확한 위치
-        const cls = this.invadedIds.has(m.id) ? "zone-dot--invaded" : "zone-dot--reg";
+        const cls = this.dotStateClass(m.id, camp);
         const lblCls = x > 55 ? "zone-dot__lbl zone-dot__lbl--l" : "zone-dot__lbl"; // 오른쪽 점은 라벨 왼쪽(창 밖 넘침 방지)
         return `<button type="button" class="zone-dot ${cls}" data-map="${m.id}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"><i></i><span class="${lblCls}">${m.name}</span></button>`;
       })
@@ -181,14 +232,25 @@ export class MenuScreen {
     const mb = m.bytes ? (m.bytes / 1024 / 1024).toFixed(1) + "MB" : "";
     this.zonePopName.textContent = m.name;
     this.zonePopSub.textContent = m.subtitle;
-    this.zonePopMeta.textContent = `${m.buildings ?? "?"} buildings · ${mb}` + (this.invadedIds.has(m.id) ? " · ⚠ 침공 중" : "");
+    // 도시 상태(캠페인) + 자매쌍 — 수사판 정보를 출격 팝업에도.
+    const camp = this.cb.campaign();
+    const st = camp.cities[m.id]?.state;
+    // 캠페인 기록 우선(점 상태와 동일 규칙) — 방어됨이 랜덤 로테이션에 덮이지 않게
+    const stLabel = st === "fallen" ? " · ✖ 함락"
+      : st === "defended" ? " · ✓ 방어됨"
+      : st === "contested" || this.invadedIds.has(m.id) ? " · ⚠ 침공 중" : "";
+    const pair = pairedCity(m.id);
+    const pairName = pair ? this.catalog.find((c) => c.id === pair)?.name : null;
+    const pairLabel = pairName ? ` · 얽힘쌍 ${pairName.split(" ·")[0]}` : "";
+    this.zonePopMeta.textContent = `${m.buildings ?? "?"} buildings · ${mb}` + stLabel + pairLabel;
     this.zonePopDrones.innerHTML = "";
     for (const d of this.droneCatalog) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "zonepop__drone";
+      const lv = this.cb.droneLevel(d.id);
       btn.innerHTML =
-        `<span class="zonepop__drone-name">${d.displayName}</span>` +
+        `<span class="zonepop__drone-name">${d.displayName}${lv > 1 ? ` · Lv ${lv}` : ""}</span>` +
         `<span class="zonepop__drone-mode">${d.mode === "fly" ? "비행 / FLY" : "보행 / WALK"}</span>`;
       btn.addEventListener("click", () => {
         this.selectedDroneId = d.id;

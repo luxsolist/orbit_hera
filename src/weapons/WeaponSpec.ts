@@ -32,7 +32,12 @@ export interface BeamSpec {
   color: string; // 빔 색("0xRRGGBB")
   beamLifetime: number; // 빔 잔상 지속(초)
   muzzleOffsets?: number[]; // 발사관 측면 오프셋(m) — 없으면 단일[0], [-x,x]면 듀얼 발사관. damage 는 발사관당 적용.
-  manual: { damage: number; freqCost: number; fireInterval: number; assistConeDeg: number };
+  manual: {
+    damage: number; freqCost: number; fireInterval: number; assistConeDeg: number;
+    decohere?: boolean; // 관측 펄스(§2.2) — 수동 명중이 위상 이탈 개체를 강제 실체화(중주파=대위상 앵커)
+    pinSec?: number; //    W2 관측 계류 — 수동 명중 후 이 시간 동안 재이탈 봉쇄(중주파=하드 핀/경주파=소프트 핀)
+    mend?: number; //      W4 복구 사격 — 납치 중 건물 명중 시 부양 고도 감쇄(m). 무기가 공격이자 복구 도구
+  };
   auto: { damage: number; freqCost: number; fireInterval: number; range: number }; // coneDeg 제거(360° 오토 전환으로 미사용)
   falloff: DamageFalloff;
   zeno?: ZenoSpec; // 관측 고정(W1) — 지속 조사 감속→동결. 없으면 순수 피해 무기
@@ -88,6 +93,19 @@ export interface StreamSpec {
 }
 
 export type WeaponSpec = BeamSpec | BarrageSpec | StreamSpec;
+
+/** 진행 성장(§7.4) — 데미지 필드에 배수를 적용한 사본(원본·캐시 불변). 타입별 필드만 정확히 스케일. */
+export function scaleWeaponDamage<T extends WeaponSpec>(spec: T, mul: number): T {
+  if (mul === 1) return spec;
+  switch (spec.type) {
+    case "beam":
+      return { ...spec, manual: { ...spec.manual, damage: spec.manual.damage * mul }, auto: { ...spec.auto, damage: spec.auto.damage * mul } };
+    case "barrage":
+      return { ...spec, salvoDamage: spec.salvoDamage * mul };
+    case "stream":
+      return { ...spec, damage: spec.damage * mul };
+  }
+}
 
 /** 특수무기 공통 인터페이스 — Game 이 타입에 무관하게 구동(barrage/stream). */
 export interface SpecialWeapon {

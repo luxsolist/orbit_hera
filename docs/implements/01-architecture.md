@@ -146,3 +146,17 @@ playing: rearView.render(); minimap.render()
 **손맛 배선**(wireEvents): 수동 발사 → `player.kick`(반동), 수동 명중/처치 → `hitstop`, 피격 →
 `player.shake` + `hud.flashDamageFrom`(피해 방향), 파문 통과 → `hud.pulseSweep` + `sfx.reckoning` + 셰이크.
 미션 변조는 투입 직후 지정: `setAggro` · `setSweepPeriodMul` · `player.freqRegenMul` · `zoneShrink`.
+
+## 저장 계층 (core/progress — P0-1)
+
+[progress.ts](../../src/core/progress.ts) — 버전·검증·마이그레이션·손상 복구를 갖춘 영속 슬롯 팩토리.
+
+- **백엔드 교체 가능**(`StorageBackend`) — 현재 localStorage(+가용 검사, 사생활 모드/노드는 Memory
+  폴백), P6 서버 시대엔 ServerBackend(계정 저장)로 교체하고 스키마·검증·마이그레이션 층은 그대로
+  (Director 와 같은 "구현 교체" 패턴 — [TODO §10](../TODO.md)).
+- `defineStore({key, version, defaults, validate, migrate})` — 봉투 `{v, updatedAt, data}` · 버전
+  불일치 migrate · 구조 손상 시 `<key>.corrupt` 1회 백업 후 기본값 리셋(슬롯 독립 — 다른 도메인
+  무영향) · `update()` 는 1s 스로틀 기록(+타이머 자동 마감), `Game.teardown`(pagehide)이
+  `flushStores()` 로 마감.
+- 슬롯: `core.progress`(§7.4 진행 — xp만 저장·레벨 파생) · `core.campaign`(캠페인 — 챕터·증거
+  4트랙·도시 상태·표류 벡터·자매쌍; 전이 로직은 CampaignState/P0-2). 새 도메인은 슬롯 추가로.

@@ -3,6 +3,9 @@ import * as THREE from "three";
 import { EnemyManager } from "../src/enemies/EnemyManager";
 import { DEFAULT_PLASMOID } from "../src/enemies/PlasmoidSpec";
 
+// 위상 이탈(§2.1)은 확률 거동이라 투입/개체수 검증을 흔든다 — 본 스위트는 비활성 스펙 사용.
+const NO_PHASE = { ...DEFAULT_PLASMOID, phase: undefined };
+
 // 탐방 모드(start(false)) = 적 미스폰 / 전투 모드(start(true)) = 점진 스폰. EnemyManager.start 게이트 가드.
 
 const makeManager = () => {
@@ -15,7 +18,7 @@ const makeManager = () => {
     takeDamage: () => false, // 머시 무적처럼 무피해 — 스폰 게이트만 검증
     heal: () => {},
   } as any;
-  return new EnemyManager(scene, world, [player], DEFAULT_PLASMOID);
+  return new EnemyManager(scene, world, [player], NO_PHASE);
 };
 
 const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };

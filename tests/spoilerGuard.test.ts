@@ -5,12 +5,9 @@ import { join } from "node:path";
 // 스포일러 가드(서사편 §8.1) — 인게임 표면(표시명·라벨·설명 등 플레이어에게 보이는 문자열)에
 // L4 어휘(계산/작업 어휘)가 실리면 서사 반전이 조기 누설된다. 런타임 데이터(JSON)의 표시
 // 문자열을 스캔해 금지 어휘를 차단한다. 내부 id(영문 키)는 검사 대상이 아니다.
+// 금지 목록은 런타임 필터(Director 출력 게이트)와 단일 출처를 공유한다(src/game/surfaceVocab.ts).
 
-const FORBIDDEN = [
-  "삭제", "프로세스", "시뮬레이션", "데이터", "컴팩션", "롤백", "리와인드", "재시도",
-  "스냅샷", "아카이브", "백업", "직렬화", "버퍼", "tombstone", "sweep", "rollback",
-  "marker", "compactor", "rewinder", "fork",
-];
+import { FORBIDDEN_SURFACE_TERMS as FORBIDDEN } from "../src/game/surfaceVocab";
 
 // 표시(플레이어 노출) 필드 — 이 키의 문자열 값만 검사한다. brief = 미션 브리핑(세계관 계시 통로 — 06-missions §7).
 const DISPLAY_KEYS = new Set(["name", "displayName", "abbr", "label", "desc", "subtitle", "brief"]);
@@ -64,6 +61,15 @@ describe("스포일러 가드 — 코드 내 표시 문자열 상수", () => {
     for (const meta of Object.values(ENTANGLEMENT_CLASSES)) {
       assertClean(meta.name, `entanglement ${meta.cls}`);
       assertClean(meta.brief, `entanglement ${meta.cls} brief`);
+    }
+  });
+
+  it("캠페인 장 제목·질문·브리핑(CHAPTERS — §9.6)", async () => {
+    const { CHAPTERS } = await import("../src/game/campaign");
+    for (const ch of CHAPTERS) {
+      assertClean(ch.title, `chapter ${ch.id} title`);
+      assertClean(ch.question, `chapter ${ch.id} question`);
+      assertClean(ch.brief, `chapter ${ch.id} brief`);
     }
   });
 });

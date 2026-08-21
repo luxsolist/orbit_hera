@@ -85,6 +85,7 @@ export class GameInstance {
   private deaths = 0; //        누적 기체 파괴 수
   private respawnsUsed = 0; //  사용한 리스폰 수
   private phaseIdx = 0; //      phased 투입의 현재 페이즈(훅 ⑥)
+  private observeHold = 0; //   동시 조사(experiment) 조건 유지 누적(s) — 끊기면 2배속 감쇠
   private _outcome: MissionOutcome = { status: "active", progress: 0, reason: "" };
 
   /** 미션 종료(성공/실패)로 전이하는 프레임에 1회 호출. */
@@ -103,6 +104,7 @@ export class GameInstance {
     this.deaths = 0;
     this.respawnsUsed = 0;
     this.phaseIdx = 0;
+    this.observeHold = 0;
     this._outcome = { status: "active", progress: 0, reason: "" };
   }
 
@@ -111,6 +113,8 @@ export class GameInstance {
   get elapsedSec(): number { return this.elapsed; }
   get deathCount(): number { return this.deaths; }
   get playerCount(): number { return this.players.length; } // MP — 팀 인원
+  /** 감독 스냅샷용 런타임 집계(§10) — 내부 runtime() 의 읽기 전용 노출. */
+  get runtimeView(): MissionRuntime { return this.runtime(); }
 
   get timeLeft(): number {
     const dur = missionDurationV2(this.mission);
@@ -132,6 +136,8 @@ export class GameInstance {
       landmarksDestroyed: this.buildings?.destroyedLandmarks ?? 0,
       deaths: this.deaths,
       roleKills: this.enemies.roleKills, // 직무별 처치(훅 ③ purge-role)
+      observeCount: this.enemies.observedCount, // 동시 조사(experiment)
+      observeHold: this.observeHold,
     };
   }
 
@@ -139,6 +145,14 @@ export class GameInstance {
   update(dt: number): void {
     if (this._outcome.status !== "active") return;
     if (this.mission.goal.type !== "free-roam") this.elapsed += dt;
+    // 동시 조사 실험 — targets기 이상을 동시에 붙드는 동안만 유지 시간이 차오르고, 끊기면 같은
+    // 속도로 샌다(2배속 감쇠는 평균 조작에서 진행 자체를 지워버림 — 2026-08 e2e 하향).
+    const g = this.mission.goal;
+    if (g.type === "experiment") {
+      this.observeHold = this.enemies.observedCount >= g.targets
+        ? this.observeHold + dt
+        : Math.max(0, this.observeHold - dt);
+    }
     this.advancePhase(); // phased 투입 — 다음 페이즈 트리거 감시(훅 ⑥)
     const out = evaluateMissionV2(this.mission, this.runtime());
     this._outcome = out;

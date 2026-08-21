@@ -122,6 +122,8 @@ export interface EmitterShot {
   range: number;
   style: BeamStyle;
   zeno?: ZenoSpec; // 관측 고정(W1) — 적중마다 대상 노출 갱신(지속 조사 감속→동결)
+  observe?: { decohere?: boolean; pinSec?: number }; // 수동 관측 사격(W2/§2.2) — 실체화 강제·관측 계류
+  mend?: number; // W4 복구 사격 — 납치 중 건물에 명중 시 부양 고도를 이만큼 깎는다(재안착 가속)
   onHit?: (endPoint: THREE.Vector3, hit: THREE.Intersection, dir: THREE.Vector3) => void;
   onEnemyHit?: (killed: boolean) => void; // 적 명중 확정 후(처치 여부 포함) — 히트스톱 등 손맛 훅
 }
@@ -145,16 +147,19 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
   if (buildDist < enemyDist) {
     // 건물에 막힘 — 빔은 건물 표면에서 멈추고 뒤 적은 피해 없음
     endPoint = o.clone().addScaledVector(d, buildDist);
+    // W4 복구 사격 — 납치(부양) 중 건물이면 관측이 존재를 막 위에 다시 고정한다(재안착 가속)
+    if (shot.mend) ctx.world.buildings?.mendAt(endPoint.x, endPoint.z, shot.mend);
   } else {
     endPoint = beamEnd(hit, o, d, R);
     const enemy = hit && ctx.enemies.enemyFromHit(hit); // 셸 InstancedMesh → instanceId → 적
-    if (enemy) {
+    // 위상 이탈(§2.1) — 이탈 중 개체는 관측 펄스(observe.decohere)만 붙잡는다. 그 외엔 무효(피해·FX 없음).
+    if (enemy && !(enemy.isPhased && !shot.observe?.decohere)) {
       const dmg = emitterDamage(hit!.distance, shot.baseDamage, n, shot.falloff); // 발사관 수만큼 합산
       ctx.damageNumbers.spawn(endPoint, dmg * (enemy.damageMul ?? 1)); // 표시 = 실제 적용치(호위 방패 감쇄 반영)
       shot.onHit?.(endPoint, hit!, shot.dir);
       ctx.enemies.provokeNear(enemy); // 피격 유발 인식 — 반경 내 개체(피격 개체 포함)도 플레이어 추격
       if (shot.zeno) enemy.applyZeno(shot.zeno); // 관측 고정(W1) — 붙들고 있으면 감속→동결
-      const killed = enemy.applyFrequencyHit(dmg);
+      const killed = enemy.applyFrequencyHit(dmg, shot.observe);
       if (killed) ctx.enemies.registerKill(enemy);
       shot.onEnemyHit?.(killed);
     }

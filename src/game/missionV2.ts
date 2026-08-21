@@ -19,6 +19,7 @@ export type MissionGoal =
   | { type: "guard"; target: "landmarks" | "buildings"; hold: number } // 대상 사수 + 유지 시간(s)
   | { type: "suture"; gauge: number } //                      봉합 게이지(다단계 — 물리편 §2.4)
   | { type: "score"; target: number } //                      공명 점수 목표
+  | { type: "experiment"; targets: number; hold: number } //  동시 조사 실험(§9 5장 앵커) — targets기 동시 관측을 hold초 유지
   | { type: "free-roam" }; //                                 탐방 — 목표/종료 없음
 
 // ─────────────────────────── 실패(fail) — 복수 조합 ───────────────────────────
@@ -32,15 +33,29 @@ export interface MissionFail {
 
 // ─────────────────────────── 투입(deploy) ───────────────────────────
 
+/** 유닛 배치 진형 — cluster: 링 위 한 점 밀집(기본) · ring: 전장 중심 포위 · line: 전선(중심을 바라보는 가로열). */
+export type UnitFormation = "cluster" | "ring" | "line";
+
 /**
- * 조합 단위 — 진형(formation)·행동(behavior) 필드는 조합 정립 단계에서 확장 예약.
+ * 유닛 행동 — hunt: 현행 어그로(기본) · hold: 배치 지점 고수 · patrol: 유닛 중심 주위 순찰 ·
+ * escort: `anchor` 유닛 추종(호위). hunt 외 행동도 **사거리 내 기회 공격은 수행**하며(낙인탄·드레인·접촉),
+ * **피격(provoked) 시 진형을 버리고 hunt 로 전환** — 축을 건드리면 그 축이 응답한다.
+ */
+export type UnitBehavior = "hunt" | "hold" | "patrol" | "escort";
+
+/**
+ * 조합 단위(조합/진형/행동 정립 — 06-missions §6-8단계).
  * shield(훅 ⑤): 같은 투입의 다른 유닛(호위)이 살아있는 동안 받는 피해 배수(0..1) — "호위 붕괴".
+ * anchor: escort 행동의 호위 대상 유닛 인덱스(units 배열 기준 — **escort 유닛보다 앞에 선언**되어야 함).
  */
 export interface RosterUnit {
   role: PlasmoidArchetype | "elite" | "boss";
   count: number;
   hp: number; // 개체당 체력
   shield?: number;
+  formation?: UnitFormation; // 기본 cluster
+  behavior?: UnitBehavior; //  기본 hunt
+  anchor?: number; //          escort 대상 유닛 인덱스
 }
 
 /** 보스 투입 확장(훅 ⑤) — 분출(성숙체)·소유 파문·그룹 수(쌍생)·회복 링크. */
@@ -191,7 +206,7 @@ export function deployHasEmit(d: MissionDeploy): boolean {
 
 /** purge-role 대상 직무의 표면 표시명(§8.2 허용 어휘) — 목표/진행 문구용. */
 export const DEPLOY_ROLE_NAMES: Record<RosterUnit["role"], string> = {
-  rusher: "거머리", kiter: "모기", marker: "소인체", elite: "정예", boss: "거대 투영",
+  rusher: "거머리", kiter: "모기", marker: "소인체", cutter: "절단체", rewinder: "역행체", elite: "정예", boss: "거대 투영",
 };
 
 /**
@@ -265,6 +280,15 @@ export function evaluateMissionV2(spec: MissionSpecV2, rt: MissionRuntime): Miss
       if (rt.elapsed >= g.hold) return { status: "success", progress: 1, reason: "방어 성공 / DEFENDED" };
       return { status: "active", progress, reason: "" };
     }
+    case "experiment": {
+      // 동시 조사 유지 — 성공 우선(격멸형과 동일 정책). 유지 시간 집계는 런타임(GameInstance) 몫.
+      const hold = rt.observeHold ?? 0;
+      const progress = g.hold > 0 ? clamp01(hold / g.hold) : 1;
+      if (hold >= g.hold) return { status: "success", progress: 1, reason: "동시 조사 성립 / COHERENT" };
+      if (failReason) return { status: "failed", progress, reason: failReason };
+      if (f.timeLimit > 0 && rt.elapsed >= f.timeLimit) return { status: "failed", progress, reason: "시간 초과 / TIME OUT" };
+      return { status: "active", progress, reason: "" };
+    }
     default:
       return { status: "active", progress: 0, reason: "" }; // 훅 ③⑤⑥ 대기 — runnableV2 게이트가 선별
   }
@@ -286,6 +310,7 @@ export function missionObjectiveTextV2(spec: MissionSpecV2): string {
     case "purge-all": return `전량 격멸 — ${deployKillCredits(spec.deploy)}기 / CLEAR`;
     case "suture": return `균열 봉합 / SUTURE`;
     case "score": return `공명 ${g.target} 달성 / RESONATE`;
+    case "experiment": return `동시 조사 — ${g.targets}기를 ${g.hold}초 붙들어라 / OBSERVE`;
   }
 }
 
@@ -312,6 +337,8 @@ export function missionProgressTextV2(spec: MissionSpecV2, rt: MissionRuntime): 
     case "guard":
       if (spec.goal.target === "buildings") return `손실 ${rt.buildingsDestroyed} / ${f.maxBuildingLoss}`;
       return rt.landmarksDestroyed > 0 ? `상실 ${rt.landmarksDestroyed}` : "사수 중";
+    case "experiment":
+      return withLimits(`동시 ${rt.observeCount ?? 0} / ${spec.goal.targets} · 유지 ${(rt.observeHold ?? 0).toFixed(1)} / ${spec.goal.hold}s`);
     case "free-roam": return "";
     default: return withLimits(`처치 ${rt.kills}`);
   }
@@ -331,6 +358,7 @@ export function runnableV2(spec: MissionSpecV2): boolean {
   const g = spec.goal;
   const goalOk =
     g.type === "purge" || g.type === "survive" || g.type === "guard" || g.type === "free-roam" ||
+    (g.type === "experiment" && g.targets > 0 && g.hold > 0) ||
     (g.type === "purge-all" && !deployHasEmit(spec.deploy)) ||
     (g.type === "purge-role" && deployRoleCredits(spec.deploy, g.role) > 0);
   const deployOk = spec.deploy.model !== "phased" || spec.deploy.phases.length > 0;
@@ -462,9 +490,9 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     deploy: {
       model: "roster",
       units: [
-        { role: "marker", count: 4, hp: 1500 },
-        { role: "elite", count: 6, hp: 3500 },
-        { role: "kiter", count: 8, hp: 900 },
+        { role: "marker", count: 4, hp: 1500, behavior: "hold" },
+        { role: "elite", count: 6, hp: 3500, formation: "ring", behavior: "patrol" },
+        { role: "kiter", count: 8, hp: 900, behavior: "escort", anchor: 1 },
       ],
       spawnRadius: 1000,
     },
@@ -480,9 +508,9 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     deploy: {
       model: "roster",
       units: [
-        { role: "marker", count: 6, hp: 1200 },
-        { role: "rusher", count: 10, hp: 400 },
-        { role: "kiter", count: 6, hp: 500 },
+        { role: "marker", count: 6, hp: 1200, behavior: "hold" },
+        { role: "rusher", count: 10, hp: 400, behavior: "escort", anchor: 0 },
+        { role: "kiter", count: 6, hp: 500, behavior: "escort", anchor: 0 },
       ],
       spawnRadius: 1000,
     },
@@ -511,9 +539,9 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     deploy: {
       model: "roster",
       units: [
-        { role: "elite", count: 1, hp: 12000, shield: 0.3 },
-        { role: "rusher", count: 12, hp: 400 },
-        { role: "kiter", count: 6, hp: 500 },
+        { role: "elite", count: 1, hp: 12000, shield: 0.3, behavior: "hold" },
+        { role: "rusher", count: 12, hp: 400, behavior: "escort", anchor: 0 },
+        { role: "kiter", count: 6, hp: 500, behavior: "escort", anchor: 0 },
       ],
       spawnRadius: 900,
     },
@@ -552,7 +580,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     fail: { respawns: 2, timeLimit: 300, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
     deploy: {
       model: "roster",
-      units: [{ role: "elite", count: 7, hp: 4000 }],
+      units: [{ role: "elite", count: 7, hp: 4000, formation: "ring", behavior: "patrol" }],
       spawnRadius: 900,
     },
     zoneRadius: 3000,
@@ -567,10 +595,10 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     deploy: {
       model: "roster",
       units: [
-        { role: "marker", count: 4, hp: 1200 },
-        { role: "kiter", count: 8, hp: 900 },
-        { role: "elite", count: 4, hp: 3000 },
-        { role: "rusher", count: 8, hp: 400 },
+        { role: "marker", count: 4, hp: 1200, formation: "line", behavior: "hold" },
+        { role: "kiter", count: 8, hp: 900, behavior: "escort", anchor: 0 },
+        { role: "elite", count: 4, hp: 3000, formation: "line", behavior: "hold" },
+        { role: "rusher", count: 8, hp: 400, behavior: "escort", anchor: 2 },
       ],
       spawnRadius: 1400,
     },
@@ -619,5 +647,60 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     },
     zoneRadius: 3000,
     modifiers: { freqRegenMul: 0.5 },
+  },
+  {
+    // 패턴 17 공성 낙인의 커터 편입(P3 — §6.3 의존성 절단). 절단체가 건물을 뿌리째 들어올린다:
+    // 격추하면 재안착(W4 복구 사격으로 가속) — "쏘는 것"과 "되돌리는 것"이 같은 무기.
+    id: "severance", name: "절단 공성 / SEVERANCE",
+    brief: "그들이 건물을 뿌리째 들어올린다 — 떨어뜨려라. 떨어지면 다시 붙는다.",
+    goal: { type: "guard", target: "landmarks", hold: 240 },
+    fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 25, maxLandmarkLoss: 1 },
+    deploy: {
+      model: "roster",
+      units: [
+        { role: "cutter", count: 6, hp: 2200 },
+        { role: "marker", count: 3, hp: 1200 },
+        { role: "rusher", count: 6, hp: 900 },
+      ],
+      spawnRadius: 1200,
+    },
+    zoneRadius: 3500,
+    modifiers: { aggro: "landmark" },
+  },
+  {
+    // 역행체 사냥(P3 §6.6) — 미니보스 슬롯 우선순위 표적 플레이. 시전을 못 끊으면 전과가 되감긴다:
+    // 잡몹을 아무리 잡아도 역행체가 살아있는 한 처치 수가 줄어드는 미션(purge-role 이 정답 구조).
+    id: "retro-hunt", name: "역행 사냥 / RETROGRADE HUNT",
+    brief: "잡은 것이 되돌아온다 — 세지 말고, 시전자를 끊어라.",
+    goal: { type: "purge-role", role: "rewinder" },
+    fail: { respawns: 2, timeLimit: 420, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    deploy: {
+      model: "roster",
+      units: [
+        // hunt(접근 유영) — hold 배치는 시전 사거리(360m) 밖에 정박해 역행이 발동하지 않는다(e2e 검증)
+        { role: "rewinder", count: 2, hp: 7000 },
+        { role: "rusher", count: 8, hp: 1000 },
+        { role: "marker", count: 2, hp: 1200 },
+      ],
+      spawnRadius: 900,
+    },
+    zoneRadius: 3000,
+  },
+  {
+    // 캠페인 5장 앵커(§9.1) — 동시 조사 실험. 격멸이 아니라 "동시에 붙들기"가 목표(관측이 무기).
+    // 성공 = 인식 Ⅱ 계시(Game.endMission 이 applyRevelation — 6장 진입). 선택기는 5장에서만 노출.
+    id: "experiment-strike", name: "동시 조사 실험 / THE EXPERIMENT",
+    brief: "넷을 한 번에 붙들어라 — 그들이 정말 여럿인지 확인한다.",
+    goal: { type: "experiment", targets: 4, hold: 5 },
+    fail: { respawns: 3, timeLimit: 420, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    deploy: {
+      model: "roster",
+      units: [
+        { role: "rusher", count: 8, hp: 1400, formation: "ring", behavior: "patrol" },
+        { role: "kiter", count: 6, hp: 1000, behavior: "hold" },
+      ],
+      spawnRadius: 700,
+    },
+    zoneRadius: 2500,
   },
 ];

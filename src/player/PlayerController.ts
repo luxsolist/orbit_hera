@@ -3,6 +3,7 @@ import type { Input } from "../core/Input";
 import type { GameWorld } from "../world/GameWorld";
 import type { DroneSpec, DroneMove, JumpSpec, FlyMove } from "./DroneSpec";
 import type { CoreEnemy } from "../enemies/CoreEnemy";
+import { regenStep } from "./progression";
 
 const PITCH_LIMIT = Math.PI / 2 - 0.05;
 // 손맛 — 발사 반동 킥/피격 셰이크(시각 전용 카메라 오프셋, 실제 조준각 pitch/yaw 는 불변)
@@ -199,6 +200,13 @@ export class PlayerController {
   freqRegenSuppressed = false;
   /** 게이지 회복 배수(미션 변조 freqRegenMul — "옅은 장", 06-missions 훅 ⑥). Game 이 출격마다 지정. */
   freqRegenMul = 1;
+  /** HP 재생(§7.4 진행 성장 — 출격 시점 스냅샷). 피격 후 REGEN_DELAY 지나야 회복. */
+  hpRegen = 0;
+  private sinceHit = Infinity;
+  // 위치 이력 링(P3 역행체 — 서사편 §6.6) — 시전 완료 시 수 초 전 위치로 되돌려진다.
+  private posHistory: { t: number; x: number; y: number; z: number }[] = [];
+  private posClock = 0;
+  private posSampleCd = 0;
 
   private invuln = 0;
   private recoil = 0; // 발사 반동(시각 피치 오프셋, rad) — kick() 충전, 지수 복귀
@@ -261,11 +269,19 @@ export class PlayerController {
     return this.camera.getWorldDirection(target);
   }
 
+  /** 성장 적용(§7.4) — 출격 시작 시 1회(Game). 최대 HP 가산(만충 유지) + 재생률 지정. */
+  applyGrowth(g: { hpBonus: number; hpRegen: number }): void {
+    this.maxHp += g.hpBonus;
+    this.hp = this.maxHp;
+    this.hpRegen = g.hpRegen;
+  }
+
   /** 피해 적용. 머시 무적/사망 중엔 무시. 반환: 실제 적용 여부(접촉 시 적 회복·HUD 연출 게이트). */
   takeDamage(amount: number): boolean {
     const r = applyDamage(this.hp, this.invuln, amount);
     this.hp = r.hp;
     this.invuln = r.invuln;
+    if (r.applied) this.sinceHit = 0; // 재생 정지 리셋 — 교전 중엔 회복 안 됨(§7.4)
     return r.applied;
   }
 
@@ -391,6 +407,17 @@ export class PlayerController {
     // --- 주파수 재충전 --- (특수 무기 발동 중에는 외부에서 억제, 옅은 장 변조는 배수)
     if (!this.freqRegenSuppressed) {
       this.freq = Math.min(this.maxFreq, this.freq + this.spec.vitals.freqRegen * this.freqRegenMul * dt);
+      // HP 재생(§7.4) — 피격 후 REGEN_DELAY 경과 시에만(지속 교전 중엔 회복 불가)
+      this.sinceHit += dt;
+      this.hp = regenStep(this.hp, this.maxHp, this.hpRegen, this.sinceHit, dt);
+      // 위치 이력(역행체 대응) — 0.1s 간격 샘플, 8s 보존
+      this.posClock += dt;
+      this.posSampleCd -= dt;
+      if (this.posSampleCd <= 0) {
+        this.posSampleCd = 0.1;
+        this.posHistory.push({ t: this.posClock, x: this.position.x, y: this.position.y, z: this.position.z });
+        while (this.posHistory.length && this.posHistory[0].t < this.posClock - 8) this.posHistory.shift();
+      }
     }
 
     this.syncCamera();
@@ -551,6 +578,18 @@ export class PlayerController {
   respawn(protectSec = 1.5) {
     this.reset();
     this.invuln = protectSec;
+  }
+
+  /** 역행(P3 역행체) — sec 초 전 위치로 되돌려진다(이력 없으면 무시). 피해는 없고 위치만. */
+  rewindPosition(sec: number): void {
+    const target = this.posClock - sec;
+    let best: { x: number; y: number; z: number } | null = null;
+    for (const s of this.posHistory) {
+      if (s.t <= target) best = s;
+      else break;
+    }
+    if (!best && this.posHistory.length) best = this.posHistory[0]; // 이력이 짧으면 가장 오래된 지점
+    if (best) this.position.set(best.x, best.y, best.z);
   }
 
   /** 교전 구역 설정(미션 인스턴스). radius≤0 이면 제한 해제. 중심 미지정 시 현재 위치(=스폰) 기준. */

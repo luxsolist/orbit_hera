@@ -11,7 +11,7 @@ import { PlayerController } from "../player/PlayerController";
 import { fetchDrone } from "../player/drones";
 import type { DroneSpec } from "../player/DroneSpec";
 import { fetchWeapon } from "../weapons/weapons";
-import { withAutoBoost, type BeamSpec, type SpecialWeapon } from "../weapons/WeaponSpec";
+import { withAutoBoost, scaleWeaponDamage, type BeamSpec, type SpecialWeapon } from "../weapons/WeaponSpec";
 import { EnemyManager } from "../enemies/EnemyManager";
 import { fetchPlasmoid } from "../enemies/plasmoids";
 import { DEFAULT_PLASMOID } from "../enemies/PlasmoidSpec";
@@ -35,6 +35,14 @@ import { GameInstance, runDeploy } from "../game/GameInstance";
 import { fetchMissions } from "../game/missions";
 import type { MissionOutcome } from "../game/mission";
 import { pickMissionV2, FREE_ROAM_V2, DEFAULT_MISSIONS_V2, resonanceScore } from "../game/missionV2";
+import { flushStores, campaignStore, progressStore } from "./progress";
+import {
+  applyMissionResult, applyRevelation, pickCampaignMission, pairAggravation, chapterMeta,
+  driftConvergence, revealed, sutureReadout, sortieLinkReport, REVELATION_LINES, type MissionReport,
+} from "../game/campaign";
+import { droneGrowth, levelFromXp, xpForKill, CLEAR_XP } from "../player/progression";
+import { validateDirectorActions, type Director, type DirectorAction, type DirectorSnapshot } from "../game/director";
+import { RemoteDirector, resolveDirectorEndpoint, DIRECTOR_INTERVAL_SEC } from "../game/directorClient";
 
 type GameState = "intro" | "menu" | "loading" | "playing" | "paused" | "dead";
 
@@ -83,6 +91,12 @@ export class Game {
 
   private state: GameState = "menu";
   private peaceful = false; // 탐방 모드(적 미스폰) — selectMap 에서 설정, 재시작에도 유지
+  private currentCity: { id: string; lat: number; lon: number } | null = null; // 캠페인 적립(endMission)용
+  private currentDroneId = "walker"; // XP 적립 대상(§7.4 — 드론별 독립)
+  // LLM 감독 파일럿(§10 단계 1) — 엔드포인트 설정 시에만 활성. 부재/오류 = 개입 없음(우아한 강등).
+  private director: Director | null = null;
+  private directorTimer = 0;
+  private directorBusy = false;
   private hitstopLeft = 0; // 히트스톱 잔여(s) — 수동 명중/처치 순간 시뮬레이션을 1~3프레임 정지(타격감)
   // 구역 축소(미션 변조 zoneShrink — 훅 ⑥): 주기마다 반경 축소, 에너지 벽 재생성. null = 비활성
   private zoneShrink: { everySec: number; step: number; minRadius: number; timer: number; radius: number } | null = null;
@@ -128,6 +142,8 @@ export class Game {
     this.menu = new MenuScreen({
       onDeploy: (mapId, droneId, peaceful) => void this.selectMap(mapId, droneId, peaceful),
       onPlayIntro: () => this.playIntro(),
+      campaign: () => campaignStore.load(), // 수사판(지도 오버레이·사건 파일)의 데이터 원천
+      droneLevel: (id) => levelFromXp(progressStore.load().drones[id]?.xp ?? 0), // §7.4 진행
     });
 
     this.applyHudLayout(); // 화면 비례 HUD 위젯 크기/위치 초기 적용
@@ -268,7 +284,14 @@ export class Game {
     }
     const aspect = window.innerWidth / window.innerHeight;
     const player = new PlayerController(this.input, world, aspect, drone);
-    this.hud.setUnitName(drone.name);
+    // 진행 성장(§7.4) — 출격 시점 스냅샷: 저장 XP → 레벨 → HP/재생(플레이어)·데미지 배수(무기)
+    const level = levelFromXp(progressStore.load().drones[droneId]?.xp ?? 0);
+    const growth = droneGrowth(droneId, level);
+    player.applyGrowth(growth);
+    this.currentDroneId = droneId;
+    primaryWeapon = scaleWeaponDamage(primaryWeapon, growth.dmgMult);
+    specialWeapon = scaleWeaponDamage(specialWeapon, growth.dmgMult);
+    this.hud.setUnitName(level > 1 ? `${drone.name} · Lv ${level}` : drone.name);
     // 모바일 버튼 구성 — 동작(드론) + 전투 라벨(무기 스펙 abbr)
     this.mobile.configure({
       actions: drone.actions,
@@ -291,9 +314,21 @@ export class Game {
     const rearView = new RearView(this.renderer, this.scene, player);
     const minimap = new Minimap(player, enemies, world);
     const brackets = new TargetBrackets(this.scene);
-    // 이 플레이타임의 미션을 정하고 인스턴스 생성 — 평화(탐방)는 목표 없는 FREE_ROAM, 전투는 풀에서 랜덤.
+    // 이 플레이타임의 미션 — 탐방은 FREE_ROAM, 전투는 **챕터 가중 선택**(캠페인 §9 — 규칙 기반 감독).
     const pool = peaceful ? [] : await fetchMissions().catch(() => DEFAULT_MISSIONS_V2);
-    const mission = peaceful ? FREE_ROAM_V2 : pickMissionV2(pool, Math.random());
+    const mission = peaceful
+      ? FREE_ROAM_V2
+      : pickCampaignMission(pool, campaignStore.load(), Math.random()) ?? pickMissionV2(pool, Math.random());
+    this.currentCity = { id, lat: entry?.lat ?? 0, lon: entry?.lon ?? 0 }; // 미션 결과 → 캠페인 적립용
+    // LLM 감독 파일럿(§10 단계 1) — ?director=<url>(저장) 또는 저장값. 탐방/미설정이면 감독 없음.
+    const endpoint = resolveDirectorEndpoint(
+      window.location.search,
+      (k) => { try { return localStorage.getItem(k); } catch { return null; } },
+      (k, v) => { try { localStorage.setItem(k, v); } catch { /* 무시 */ } },
+      (k) => { try { localStorage.removeItem(k); } catch { /* 무시 */ } },
+    );
+    this.director = endpoint && !peaceful ? new RemoteDirector(endpoint) : null;
+    this.directorTimer = DIRECTOR_INTERVAL_SEC;
     const instance = new GameInstance({ mission, players: [player], enemies, buildings: world.buildings ?? undefined });
     // 작전구역 에너지 벽 — 스폰(=존 중심) 주위 반경 zoneRadius. 지면 기준 수직 범위로 세움(고지대 맵 대응).
     let wall: EnergyWall | undefined;
@@ -329,7 +364,10 @@ export class Game {
     else runDeploy(s.enemies, m.deploy, true);
     // 변조 레이어(훅 ④⑥) — 투입 후 지정(start*/clear 가 기본값으로 리셋하므로 반드시 이후에)
     s.enemies.setAggro(m.modifiers?.aggro ?? "player");
-    if (m.modifiers?.sweepPeriodMul) s.enemies.setSweepPeriodMul(m.modifiers.sweepPeriodMul);
+    // 자매쌍 난이도 전이(§9.2-3) — 짝 도시가 무너져 있으면 파문 주기 단축(가중과 미션 변조 곱)
+    const pairMul = this.peaceful || !this.currentCity ? 1 : pairAggravation(campaignStore.load(), this.currentCity.id);
+    const sweepMul = (m.modifiers?.sweepPeriodMul ?? 1) * pairMul;
+    if (sweepMul !== 1) s.enemies.setSweepPeriodMul(sweepMul);
     s.player.freqRegenMul = m.modifiers?.freqRegenMul ?? 1; // 옅은 장
     // 구역 축소(zoneShrink) — 주기마다 작전구역 반경을 줄인다(에너지 벽 재생성 포함)
     const shrink = m.modifiers?.zoneShrink;
@@ -343,6 +381,13 @@ export class Game {
     const snap = s.instance.snapshot();
     this.hud.setMission(snap.objective, s.instance.mission.goal.type !== "free-roam");
     this.hud.updateMission(snap.timeLeft, snap.detail, snap.respawnsLeft);
+    // 브리핑 방송 — 2연전 관측 보고(2장 앵커) > 미션 brief > 현재 장의 수사 방향(§9.3 P0-5)
+    if (!this.peaceful) {
+      const camp = campaignStore.load();
+      const brief = (this.currentCity && sortieLinkReport(camp, this.currentCity.id))
+        ?? s.instance.mission.brief ?? chapterMeta(camp).brief;
+      if (brief) this.hud.showBroadcast(brief, 8);
+    }
     this.state = "playing";
     this.hideOverlay();
     this.setPlayActive(true);
@@ -368,9 +413,18 @@ export class Game {
     // 손맛 — 수동 사격 반동 킥 + 명중/처치 히트스톱(오토는 상시라 제외, 처치는 공통)
     s.beam.onManualFired = () => s.player.kick(0.006);
     s.beam.onManualHit = (killed) => this.hitstop(killed ? 0.06 : 0.025);
-    s.enemies.onKill = () => {
+    s.enemies.onKill = (enemy) => {
       this.hud.setKills(s.enemies.killCount);
       this.hitstop(0.045); // 처치 확정 정지 프레임(오토/특수 포함)
+      // 처치 XP(§7.4) — 강함 비례 10~50. update 는 스로틀 기록이라 프레임 부담 없음.
+      if (!this.peaceful && enemy) {
+        const gain = xpForKill(s.enemies.strengthOf(enemy));
+        const id = this.currentDroneId;
+        progressStore.update((p) => ({
+          ...p,
+          drones: { ...p.drones, [id]: { xp: (p.drones[id]?.xp ?? 0) + gain } },
+        }));
+      }
     };
     s.enemies.onWaveChange = (w) => this.hud.setWave(w);
     s.enemies.onPlayerHit = (_dmg, source) => {
@@ -388,6 +442,17 @@ export class Game {
     // 건물/랜드마크 파괴 → HUD 카운터 갱신(번쩍 + 슬로우 붕괴 연출은 BuildingCombat 가 진행)
     const bc = s.world.buildings;
     if (bc) bc.onDestroyed = () => this.hud.setDestroyed(bc.destroyedBuildings, bc.destroyedLandmarks);
+    // 역행체(P3 §6.6) — 시전 예지 카운트다운 + 발동 시 처치 수 되감김·연출
+    s.enemies.onRewindCast = (left) => this.hud.setRewindWarn(left);
+    s.enemies.onRewound = (revived) => {
+      this.hud.setKills(s.enemies.killCount); // 전과가 되감겼다 — 즉시 반영
+      this.hud.showBroadcast(
+        revived > 0 ? `역행 파동 — 소산 ${revived}체가 되돌아왔다. 시전자를 끊어라.` : "역행 파동 통과 — 위치가 되감겼다.",
+        5,
+      );
+      s.player.shake(0.02);
+      this.sfx.reckoning(true);
+    };
     // 미션 종료(성공/실패) → 결과 패널(재시작은 reload)
     s.instance.onEnd = (outcome) => this.endMission(outcome);
   }
@@ -411,6 +476,7 @@ export class Game {
   private teardown() {
     if (this.tornDown) return;
     this.tornDown = true;
+    flushStores(); // 스로틀로 보류된 영속 기록 마감(진행/캠페인 — core/progress)
     this.renderer.setAnimationLoop(null);
     this.intro?.dispose();
     this.menuBg?.dispose();
@@ -533,6 +599,7 @@ export class Game {
 
       // 인스턴스: 미션 평가(타이머/목표/종료). 종료 전이 시 onEnd→endMission 으로 state 가 바뀐다.
       s.instance.update(dt);
+      this.tickDirector(s, dt); // LLM 감독 파일럿(§10 단계 1) — 주기 경계에서 스냅샷 → 행동 적용
       if (s.instance.mission.goal.type !== "free-roam") {
         const snap = s.instance.snapshot();
         this.hud.updateMission(snap.timeLeft, snap.detail, snap.respawnsLeft);
@@ -550,6 +617,55 @@ export class Game {
   }
 
   /** 구역 축소(zoneShrink) — 주기 도래 시 반경을 줄이고 플레이어/적 존·에너지 벽을 갱신한다. */
+  /**
+   * 감독 주기 틱(§10 단계 1) — DIRECTOR_INTERVAL 마다 집계 스냅샷을 POST, 응답 행동을 검증
+   * 게이트(validateDirectorActions — 봉투·runnable·표면 어휘) 통과분만 적용. 스테일 응답(세션 교체·
+   * 미션 종료 후 도착)은 폐기. 거부 사유는 감사 로그(콘솔 — 단계 2에서 파편 파이프라인으로 승격).
+   */
+  private tickDirector(s: Session, dt: number) {
+    if (!this.director || this.directorBusy || !s.instance.isActive) return;
+    this.directorTimer -= dt;
+    if (this.directorTimer > 0) return;
+    this.directorTimer = DIRECTOR_INTERVAL_SEC;
+    this.directorBusy = true;
+    const snap: DirectorSnapshot = {
+      missionId: s.instance.mission.id,
+      goalType: s.instance.mission.goal.type,
+      runtime: s.instance.runtimeView,
+      respawnsLeft: s.instance.respawnsLeft === Infinity ? -1 : s.instance.respawnsLeft, // JSON 안전(-1=무한)
+      aliveEnemies: s.enemies.aliveSnapshot.length,
+      reinforceQueued: s.enemies.reinforceQueuedCount,
+      brandCount: s.enemies.brandCount(0),
+      score: resonanceScore(s.enemies.killCount, s.enemies.stats, false),
+      players: { count: 1, avgHpFrac: Math.max(0, s.player.hp) / s.player.maxHp },
+    };
+    void this.director.decide(snap).then((actions) => {
+      this.directorBusy = false;
+      if (this.session !== s || this.state !== "playing" || !s.instance.isActive) return; // 스테일 폐기
+      const { accepted, rejected } = validateDirectorActions(actions);
+      for (const r of rejected) console.info("[director] 행동 거부:", r.reason);
+      for (const a of accepted) this.applyDirectorAction(s, a);
+    });
+  }
+
+  /** 검증 통과 감독 행동 → 기존 엔진 노브 적용(신규 치트 경로 없음 — director.ts 계약). */
+  private applyDirectorAction(s: Session, a: DirectorAction) {
+    switch (a.type) {
+      case "none": return;
+      case "set-modifiers":
+        if (a.modifiers.aggro) s.enemies.setAggro(a.modifiers.aggro);
+        if (a.modifiers.sweepPeriodMul) s.enemies.setSweepPeriodMul(a.modifiers.sweepPeriodMul);
+        if (a.modifiers.freqRegenMul) s.player.freqRegenMul = a.modifiers.freqRegenMul;
+        return;
+      case "reinforce":
+        runDeploy(s.enemies, a.deploy, false); // 카운터 유지 증원 — 파문/증원 경계 문법과 동일
+        return;
+      case "brief":
+        this.hud.showBroadcast(a.text, 8); // 표면 어휘 게이트 통과분만 여기 도달
+        return;
+    }
+  }
+
   private tickZoneShrink(s: Session, dt: number) {
     const z = this.zoneShrink;
     if (!z || dt <= 0) return;
@@ -602,6 +718,35 @@ export class Game {
     const success = outcome.status === "success";
     const kills = s ? s.enemies.killCount : 0;
     const title = success ? "작전 완수 / MISSION COMPLETE" : "작전 실패 / MISSION FAILED";
+    // 캠페인·진행 적립(P0) — 탐방 제외. 기록은 스로틀 + pagehide flush 가 마감(core/progress).
+    // 실험(5장 앵커) 성공은 계시(§9.0-4) — 6장 진입 + 결과 패널 문법이 바뀐다(아래 sub 조립).
+    let revelationNow = false; //  이번 종료가 계시 순간인가
+    let convergenceNow = false; // 이번 종료로 표류 교점이 처음 수렴했는가(3장 삼각측량)
+    if (!this.peaceful && this.currentCity && s) {
+      const before = campaignStore.load();
+      const report: MissionReport = {
+        cityId: this.currentCity.id, missionId: s.instance.mission.id,
+        goalType: s.instance.mission.goal.type, success,
+        kills, zenoFreezes: s.enemies.stats.zenoFreezes,
+        cityLat: this.currentCity.lat, cityLon: this.currentCity.lon,
+      };
+      let after = applyMissionResult(before, report, Math.random());
+      revelationNow = success && s.instance.mission.goal.type === "experiment" && after.chapter === 5;
+      if (revelationNow) after = applyRevelation(after);
+      convergenceNow = !driftConvergence(before).show && driftConvergence(after).show;
+      campaignStore.update(() => after);
+      const id = this.currentDroneId;
+      progressStore.update((p) => ({
+        ...p,
+        // 클리어 정액 XP(§7.4) — 성공 시 +200(현재 드론)
+        drones: success ? { ...p.drones, [id]: { xp: (p.drones[id]?.xp ?? 0) + CLEAR_XP } } : p.drones,
+        stats: {
+          ...p.stats,
+          kills: p.stats.kills + kills,
+          battlefieldsCleared: p.stats.battlefieldsCleared + (success ? 1 : 0),
+        },
+      }));
+    }
     // 결과 채점 — 어떻게 싸웠는가(근원 격파·파문 무상 통과·관측 고정)를 공명 점수로 집계.
     // 서사편 §7 W5(공명 각인)의 선행 형태 — "실패 유형이 다양할수록" 문법의 UI 기반. 표면 어휘만 사용(§8.2).
     let sub = `${outcome.reason} · 정화 ${kills}체`;
@@ -609,10 +754,17 @@ export class Game {
       const st = s.enemies.stats;
       const sweepTotal = st.sweepHits + st.sweepCleanPasses;
       const score = resonanceScore(kills, st, success); // 순수 공식(missionV2) — 테스트 가드
+      // 재독 문법(6장 이후, §9.4) — "정화 n체"가 아니라 "절단된 투영 / 본체 1 / 봉합도"로 읽는다.
+      if (revealed(campaignStore.load())) sub = `${outcome.reason} · ${sutureReadout(kills, score)}`;
       sub += `\n근원 격파 ${st.markerKills} · 파문 무상 통과 ${st.sweepCleanPasses}/${sweepTotal} · 관측 고정 ${st.zenoFreezes}`;
       sub += `\n공명 점수 ${score}`;
     }
-    this.showPanel(title, sub, "다시 / RETRY");
+    if (convergenceNow) sub += "\n표류 벡터 교점 수렴 — 서태평양 해구. 모든 소산이 한 곳으로 흐른다.";
+    if (revelationNow) {
+      s?.enemies.recallAll(); // 전 투영 동시 회수 — 결과 패널 뒤로 일제 소산(한 몸의 신호)
+      sub = `${REVELATION_LINES}\n\n${sub}`;
+    }
+    this.showPanel(revelationNow ? "계시 / REVELATION" : title, sub, "다시 / RETRY");
   }
 
   /** 일시정지/사망 패널(맵 목록 숨김, 재접속 + 전장 선택 버튼) */

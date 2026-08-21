@@ -172,3 +172,17 @@ reload" 모델([01-architecture](01-architecture.md#상태-머신))과 일치하
   만 카메라/입력/HUD로 렌더). 입력은 플레이어별로 라우팅.
 - `onEnd`/`snapshot()`가 네트워크 경계의 자연스러운 직렬화 지점. 교전 구역(`zoneRadius`)은 현재 플레이어별
   (각자 스폰 중심) — 공유 전장 구역으로 바꿀지는 네트워킹 설계 시 결정.
+
+## 캠페인·진행·감독 배선 (P0~P2, 2026-08)
+
+- **캠페인**([campaign.ts](../../src/game/campaign.ts) — 순수): CHAPTERS 7장·evidenceGains(트랙 4종)·
+  applyMissionResult(도시 상태/벡터/자매쌍/챕터 전진)·applyRevelation(5→6장)·sortieLinkReport(2연전)·
+  sutureReadout(재독 점수판)·pickCampaignMission(챕터 가중 = 규칙 기반 감독). Game.endMission 이
+  MissionReport 를 만들어 campaignStore/progressStore 에 적립. 메뉴: 사건 파일·표류 오버레이·도시 상태 점.
+- **experiment 골**(v2) — GameInstance 가 observedCount≥targets 프레임만 observeHold 누적(이탈 시
+  2배속 감쇠), 성공 시 계시(recallAll + 계시 패널 + 6장 문법 전환).
+- **진행 MVP**([progression.ts](../../src/player/progression.ts) — §7.4): xpForKill(강함 비례)/
+  levelFromXp/droneGrowth. 출격 시점 스냅샷: applyGrowth(HP/재생) + scaleWeaponDamage(무기 배수).
+- **LLM 감독 파일럿**([directorClient.ts](../../src/game/directorClient.ts) — §10 단계 1):
+  RemoteDirector(45s 주기 스냅샷 POST, 8s 타임아웃, 실패=개입 없음) → validateDirectorActions 통과분만
+  Game.applyDirectorAction(변조/증원/brief→HUD 통신 라인). 엔드포인트: `?director=<url>`/localStorage.

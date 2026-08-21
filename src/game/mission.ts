@@ -40,6 +40,9 @@ export interface MissionRuntime {
   deaths: number; //             누적 기체(플레이어) 파괴 수
   /** 투입 직무별 처치 수(훅 ③ purge-role — v2 전용, EnemyManager.roleKills). 미지정 = 0 취급. */
   roleKills?: Partial<Record<string, number>>;
+  /** 동시 조사 실험(v2 experiment) — 지금 조사 중 개체 수 / 조건 유지 누적(s). 미지정 = 0 취급. */
+  observeCount?: number;
+  observeHold?: number;
 }
 
 export interface MissionOutcome {

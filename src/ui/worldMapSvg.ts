@@ -72,6 +72,34 @@ export function projectInBox(lat: number, lon: number, box: { x: number; y: numb
   return { x: ((lon + 180 - box.x) / box.w) * 100, y: ((90 - lat - box.y) / box.h) * 100 };
 }
 
+/**
+ * 표류 벡터 오버레이(캠페인 §9.2-5) — 격멸 미션마다 쌓인 소산 표류 방향을 지도 위 화살표로.
+ * 3장 전에는 "조용한 이상 데이터"(짧고 옅은 선), 교점(convergence)이 열리면 진원 마커가 맥동한다.
+ * 세계지도와 같은 viewBox(0 0 360 180) 전면 SVG 문자열 반환 — worldMap innerHTML 에 겹쳐 넣는다. 순수.
+ */
+export function driftOverlaySvg(
+  vectors: readonly { x: number; z: number; dx: number; dz: number }[],
+  convergence: { show: boolean; lat: number; lon: number },
+): string {
+  if (vectors.length === 0 && !convergence.show) return "";
+  const LEN = 7; // 화살표 길이(°) — 대륙 스케일에서 읽히되 지도를 덮지 않게
+  let g = "";
+  for (const v of vectors) {
+    const x0 = v.x + 180, y0 = 90 - v.z;
+    const x1 = x0 + v.dx * LEN, y1 = y0 + v.dz * LEN;
+    // 짧은 꼬리 + 끝점 강조(화살촉 대신 점 — 소산 입자의 잔광)
+    g += `<line x1="${x0.toFixed(2)}" y1="${y0.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y1.toFixed(2)}"` +
+      ` stroke="rgba(255,120,90,0.4)" stroke-width="0.45"/>` +
+      `<circle cx="${x1.toFixed(2)}" cy="${y1.toFixed(2)}" r="0.7" fill="rgba(255,140,100,0.55)"/>`;
+  }
+  if (convergence.show) {
+    const cx = convergence.lon + 180, cy = 90 - convergence.lat;
+    g += `<g class="drift-origin"><circle cx="${cx}" cy="${cy}" r="2.2" fill="none" stroke="rgba(255,80,60,0.9)" stroke-width="0.5"/>` +
+      `<circle cx="${cx}" cy="${cy}" r="0.9" fill="rgba(255,80,60,0.95)"/></g>`;
+  }
+  return `<svg class="drift-overlay" viewBox="0 0 360 180" preserveAspectRatio="none">${g}</svg>`;
+}
+
 /** 확대 박스 폭(°)에 어울리는 그리드 간격(약 4분할, 1·2·5·10 계열). 순수. */
 export function niceGridStep(span: number): number {
   const raw = span / 4, pow = Math.pow(10, Math.floor(Math.log10(raw)));

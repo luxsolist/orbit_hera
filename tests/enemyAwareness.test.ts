@@ -3,6 +3,9 @@ import * as THREE from "three";
 import { EnemyManager, engagesPlayer } from "../src/enemies/EnemyManager";
 import { DEFAULT_PLASMOID } from "../src/enemies/PlasmoidSpec";
 
+// 위상 이탈(§2.1)은 확률 거동이라 투입/개체수 검증을 흔든다 — 본 스위트는 비활성 스펙 사용.
+const NO_PHASE = { ...DEFAULT_PLASMOID, phase: undefined };
+
 // 인식(awareness) 히스테리시스 + 피격 유발(provoke) 게이트 검증.
 // 실제 상수: 인식 500m(=250000), 해제 900m(=810000), 피격 전파 100m.
 const ACQUIRE = 500 * 500;
@@ -48,7 +51,7 @@ const makeManager = () => {
     takeDamage: () => false,
     heal: () => {},
   } as any;
-  return new EnemyManager(scene, world, [player], DEFAULT_PLASMOID);
+  return new EnemyManager(scene, world, [player], NO_PHASE);
 };
 
 const spawnAtLeast = (em: EnemyManager, n: number, maxFrames = 3000) => {
