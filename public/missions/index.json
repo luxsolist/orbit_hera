@@ -634,6 +634,43 @@
   }
  },
  {
+  "id": "siege-brand",
+  "name": "공성 낙인 / SIEGE BRAND",
+  "brief": "저들이 벽에 낙인을 새긴다 — 파문이 오기 전에 마커를 끊어라.",
+  "goal": {
+   "type": "guard",
+   "target": "landmarks",
+   "hold": 260
+  },
+  "fail": {
+   "respawns": 3,
+   "timeLimit": 0,
+   "maxBuildingLoss": 0,
+   "maxLandmarkLoss": 1
+  },
+  "deploy": {
+   "model": "roster",
+   "units": [
+    {
+     "role": "marker",
+     "count": 10,
+     "hp": 1100
+    },
+    {
+     "role": "rusher",
+     "count": 5,
+     "hp": 900
+    }
+   ],
+   "spawnRadius": 1300
+  },
+  "zoneRadius": 4200,
+  "modifiers": {
+   "aggro": "landmark",
+   "buildingBrands": true
+  }
+ },
+ {
   "id": "retro-hunt",
   "name": "역행 사냥 / RETROGRADE HUNT",
   "brief": "잡은 것이 되돌아온다 — 세지 말고, 시전자를 끊어라.",

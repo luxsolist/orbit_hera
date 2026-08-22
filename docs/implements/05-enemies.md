@@ -206,3 +206,32 @@
 - **역할 실루엣** — 직무별 셸 InstancedMesh 5종(가시 구/사면체/글리프 결정/절단 쐐기/시간 고리) +
   디졸브 동형(applySilhouette) + 낙인탄 장전 조준선(0.7s) + 러셔 돌진(15~60m, 4.5s 쿨).
 - **동시 조사 판정** — 모든 피격이 `observedLeft`(0.6s 창)를 갱신 → `observedCount`(experiment 골 입력).
+
+## P1~P3 잔여 4종 (2026-08 e2e 검증 후속)
+
+- **공성 낙인**(modifiers.buildingBrands, 미션 "공성 낙인" 패턴 17) — [BrandSystem](../../src/enemies/BrandSystem.ts)
+  에 건물 전용 병렬 트랙 추가(`buildingShots`/`buildingBrands: Map<string,Brand[]>`, `launchBuilding`/
+  `buildingBrandCount`) — 플레이어 index 기반 기존 경로는 무변경. `BrandBuildingTarget`(targetPos/
+  damage — BuildingCombat 이 구조적으로 만족) 을 생성자 4번째 인자로 주입. `EnemyManager.markerFireBuilding`
+  이 `buildingStep` 에서 marker 역할·`buildingBrandsEnabled`(setBuildingBrands, clear 가 리셋) 일 때
+  호출. [tests/buildingBrands.test.ts](../../tests/buildingBrands.test.ts).
+- **링크 리와인드**(§2.8.3, 자가 시전) — PlayerController 가 `posHistory`(위치+HP, 0.1s/8s 링버퍼)를
+  적측 역행체(`rewindPosition`)와 공유. `historyLookup`/`canCastLinkRewind` 순수 함수 + KeyR 트리거.
+  `BuildingCombat.undoDestructionNear`(recentlyDestroyed 15s 보존창 — beginDestroy 의 완전한 역, 붕괴
+  애니메이션 중이어도 즉시 스냅 복원) + `CollisionWorld.closeBuildingAt`(openBuildingAt 의 역 —
+  savedTop 1회 보존). 표면 명칭 "위상 소급"(§8.1 — "리와인드/롤백" 금지어 회피).
+  [tests/PlayerController.test.ts](../../tests/PlayerController.test.ts)·
+  [tests/abduct.test.ts](../../tests/abduct.test.ts).
+- **중력 렌즈 왜곡**(§2.7.1) — [lensDistort.ts](../../src/fx/lensDistort.ts)(`projectLensPoints` 순수
+  — 카메라 프로젝션 행렬곱만이라 노드 테스트 가능) + [LensDistortPass.ts](../../src/fx/LensDistortPass.ts)
+  (ShaderPass, 최대 6점 고정 유니폼 배열). `EnemyManager.phasedMarkers`(카메라 근접순) → `Game.frame()`
+  매 프레임 갱신. `postprocessing.addLensDistortPass`(블룸 앞 삽입, 게임플레이 컴포저 전용 — 인트로/
+  메뉴 배경은 미부착). [tests/lensDistort.test.ts](../../tests/lensDistort.test.ts).
+- **명칭 갱신 + 도감 병합**(§8.3) — `missionV2.deployRoleName(role, revealed)`: 계시 전 습성별 명칭
+  (DEPLOY_ROLE_NAMES) → 계시 후 "투영체"(근원=boss 만 구분 유지), `missionObjectiveTextV2`/
+  `missionProgressTextV2` 에 `revealed` 파라미터 추가(기본 false — 하위호환). GameInstance 가
+  `InstanceOpts.revealed`(Game.ts 가 출격 시점에 `revealed(campaignStore.load())` 주입)로 보관.
+  [bestiary.ts](../../src/game/bestiary.ts): `bestiaryCards(spec, revealed)` — 계시 전 아키타입 5카드
+  (스펙에서 이름 파생), 계시 후 "그것(투영체)" 단일 카드. MenuScreen 스토리 팝업 내 "도감/CODEX"
+  항목이 같은 패널에서 카드 목록으로 교체 렌더(CSS `bestiary-merge` 접힘 애니메이션).
+  [tests/bestiary.test.ts](../../tests/bestiary.test.ts)·spoilerGuard 스캔 포함.

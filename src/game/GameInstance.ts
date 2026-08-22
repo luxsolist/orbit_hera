@@ -63,6 +63,8 @@ export interface InstanceOpts {
   players: PlayerController[]; // 멀티플레이 대응 — 팀 전체(현재 1인)
   enemies: EnemyManager;
   buildings?: BuildingCombat;
+  /** 명칭 갱신(§8.3) — 캠페인이 계시(6장) 이후면 true. 출격 시점 스냅샷(런 중 전환 없음). */
+  revealed?: boolean;
 }
 
 /**
@@ -80,6 +82,7 @@ export class GameInstance {
   private players: PlayerController[];
   private enemies: EnemyManager;
   private buildings?: BuildingCombat;
+  private revealed: boolean;
 
   private elapsed = 0; //       경과 시간(초)
   private deaths = 0; //        누적 기체 파괴 수
@@ -96,6 +99,7 @@ export class GameInstance {
     this.players = opts.players;
     this.enemies = opts.enemies;
     this.buildings = opts.buildings;
+    this.revealed = opts.revealed ?? false;
   }
 
   /** 새 플레이타임 시작 — 카운터/상태 리셋. */
@@ -192,8 +196,8 @@ export class GameInstance {
   snapshot(): InstanceSnapshot {
     const rt = this.runtime();
     return {
-      objective: missionObjectiveTextV2(this.mission),
-      detail: missionProgressTextV2(this.mission, rt),
+      objective: missionObjectiveTextV2(this.mission, this.revealed),
+      detail: missionProgressTextV2(this.mission, rt, this.revealed),
       timeLeft: this.timeLeft,
       respawnsLeft: this.respawnsLeft,
       progress: this._outcome.progress,

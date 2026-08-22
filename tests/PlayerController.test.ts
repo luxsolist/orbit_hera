@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { stepVerticalVelocity, dirSpeedMult, maxRiseAltitude, HARD_CEILING, applyDamage, applyHeal, MERCY_INVULN } from "../src/player/PlayerController";
+import {
+  stepVerticalVelocity, dirSpeedMult, maxRiseAltitude, HARD_CEILING, applyDamage, applyHeal, MERCY_INVULN,
+  historyLookup, canCastLinkRewind, type PosHpSample,
+} from "../src/player/PlayerController";
 import type { JumpSpec } from "../src/player/DroneSpec";
 
 // walker.json 의 jump 스펙(다이나믹 튜닝)을 기준으로 적분기 가드.
@@ -123,5 +126,38 @@ describe("applyHeal — 회복 전이(최대치 한도·사망 게이트)", () =
   it("비양수 회복은 무시 — 불변", () => {
     expect(applyHeal(50, 120, 0)).toBe(50);
     expect(applyHeal(50, 120, -10)).toBe(50);
+  });
+});
+
+// 위치·HP 이력(적측 §6.6 역행체 + 자가 §2.8.3 링크 리와인드가 공유하는 링버퍼) — 0.1s 간격 표본 가정.
+const HIST: PosHpSample[] = [
+  { t: 0, x: 0, y: 0, z: 0, hp: 100 },
+  { t: 1, x: 10, y: 0, z: 0, hp: 90 },
+  { t: 2, x: 20, y: 0, z: 0, hp: 70 },
+  { t: 3, x: 30, y: 0, z: 0, hp: 60 },
+];
+
+describe("historyLookup — 이력 조회(순수, 링크 리와인드/역행체 공유)", () => {
+  it("posClock 기준 sec 초 전 이하의 가장 최근 표본을 반환", () => {
+    expect(historyLookup(HIST, 3, 1)).toEqual({ t: 2, x: 20, y: 0, z: 0, hp: 70 }); // 3-1=2 → t=2
+    expect(historyLookup(HIST, 3, 0.5)).toEqual({ t: 2, x: 20, y: 0, z: 0, hp: 70 }); // 2.5 이하 최근 = t=2
+    expect(historyLookup(HIST, 3, 3)).toEqual({ t: 0, x: 0, y: 0, z: 0, hp: 100 });
+  });
+
+  it("이력이 짧으면(요청이 이력 전체보다 오래됨) 가장 오래된 표본으로 클램프", () => {
+    expect(historyLookup(HIST, 3, 100)).toEqual({ t: 0, x: 0, y: 0, z: 0, hp: 100 });
+  });
+
+  it("이력이 비어있으면 null", () => {
+    expect(historyLookup([], 5, 2)).toBeNull();
+  });
+});
+
+describe("canCastLinkRewind — 시전 게이트(순수)", () => {
+  it("사망·쿨다운 중·게이지 부족이면 거부, 조건 충족 시 허용", () => {
+    expect(canCastLinkRewind(0, 100, 0, 50)).toBe(false); // 사망
+    expect(canCastLinkRewind(50, 100, 5, 50)).toBe(false); // 쿨다운 중
+    expect(canCastLinkRewind(50, 30, 0, 50)).toBe(false); // 게이지 부족
+    expect(canCastLinkRewind(50, 55, 0, 50)).toBe(true);
   });
 });

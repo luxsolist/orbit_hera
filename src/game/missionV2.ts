@@ -204,10 +204,20 @@ export function deployHasEmit(d: MissionDeploy): boolean {
   return false;
 }
 
-/** purge-role 대상 직무의 표면 표시명(§8.2 허용 어휘) — 목표/진행 문구용. */
+/** purge-role 대상 직무의 표면 표시명(§8.2 허용 어휘) — 단계 Ⅰ(계시 전) 명칭. 목표/진행 문구용. */
 export const DEPLOY_ROLE_NAMES: Record<RosterUnit["role"], string> = {
   rusher: "거머리", kiter: "모기", marker: "소인체", cutter: "절단체", rewinder: "역행체", elite: "정예", boss: "거대 투영",
 };
+
+/**
+ * 직무 표시명 — **명칭 갱신(§8.3)**: 인식 Ⅰ 동안은 습성별 명칭(DEPLOY_ROLE_NAMES) 그대로, 인식 Ⅱ
+ * 확립(6장 재독) 후엔 개별 습성 구분이 "그것(투영체)" 하나로 합쳐진다(도감 병합과 같은 규칙 —
+ * 명칭이 바뀌는 것 자체가 계시의 연출). 근원(boss)만 단일 표적 특수성으로 구분을 유지.
+ */
+export function deployRoleName(role: RosterUnit["role"], revealed: boolean): string {
+  if (!revealed) return DEPLOY_ROLE_NAMES[role];
+  return role === "boss" ? "근원 투영체" : "투영체";
+}
 
 /**
  * 특정 직무의 투입 크레딧(순수) — `purge-role` 목표치. 직무 구성이 결정적인 투입(roster/boss)만
@@ -294,8 +304,8 @@ export function evaluateMissionV2(spec: MissionSpecV2, rt: MissionRuntime): Miss
   }
 }
 
-/** 정적 목표 문구(HUD 상단 배너). */
-export function missionObjectiveTextV2(spec: MissionSpecV2): string {
+/** 정적 목표 문구(HUD 상단 배너). revealed(§8.3 명칭 갱신) 미지정 시 인식 Ⅰ 명칭(기존 계약 유지). */
+export function missionObjectiveTextV2(spec: MissionSpecV2, revealed = false): string {
   const g = spec.goal;
   switch (g.type) {
     case "purge": return `플라즈모이드 ${g.count}기 격멸 / PURGE`;
@@ -306,7 +316,7 @@ export function missionObjectiveTextV2(spec: MissionSpecV2): string {
       return allowed === 0 ? `랜드마크 사수 — 파괴 0 / GUARD` : `랜드마크 사수 — 파괴 ≤${allowed} / GUARD`;
     }
     case "free-roam": return "탐방 / EXPLORE";
-    case "purge-role": return `${DEPLOY_ROLE_NAMES[g.role]} 전멸 — ${deployRoleCredits(spec.deploy, g.role)}기 / HUNT`;
+    case "purge-role": return `${deployRoleName(g.role, revealed)} 전멸 — ${deployRoleCredits(spec.deploy, g.role)}기 / HUNT`;
     case "purge-all": return `전량 격멸 — ${deployKillCredits(spec.deploy)}기 / CLEAR`;
     case "suture": return `균열 봉합 / SUTURE`;
     case "score": return `공명 ${g.target} 달성 / RESONATE`;
@@ -315,7 +325,7 @@ export function missionObjectiveTextV2(spec: MissionSpecV2): string {
 }
 
 /** 실시간 진행 상세(HUD 보조) — 복합 제약(건물/랜드마크 한도)은 어느 goal 이든 병기한다. */
-export function missionProgressTextV2(spec: MissionSpecV2, rt: MissionRuntime): string {
+export function missionProgressTextV2(spec: MissionSpecV2, rt: MissionRuntime, revealed = false): string {
   const f = spec.fail;
   const limits: string[] = [];
   if (f.maxBuildingLoss > 0) limits.push(`손실 ${rt.buildingsDestroyed} / ${f.maxBuildingLoss}`);
@@ -331,7 +341,7 @@ export function missionProgressTextV2(spec: MissionSpecV2, rt: MissionRuntime): 
       const g = spec.goal;
       const total = deployRoleCredits(spec.deploy, g.role);
       const roleKills = Math.min(rt.roleKills?.[g.role] ?? 0, total);
-      return withLimits(`${DEPLOY_ROLE_NAMES[g.role]} ${roleKills} / ${total}`);
+      return withLimits(`${deployRoleName(g.role, revealed)} ${roleKills} / ${total}`);
     }
     case "survive": return withLimits(`처치 ${rt.kills}`);
     case "guard":
@@ -345,7 +355,7 @@ export function missionProgressTextV2(spec: MissionSpecV2, rt: MissionRuntime): 
 }
 
 // 엔진이 지원하는 변조 키(훅 ④⑥에서 해금) — 그 외 변조가 지정된 미션은 풀에서 제외.
-const SUPPORTED_MODIFIERS = new Set<keyof MissionModifiers>(["aggro", "zoneShrink", "freqRegenMul", "sweepPeriodMul"]);
+const SUPPORTED_MODIFIERS = new Set<keyof MissionModifiers>(["aggro", "zoneShrink", "freqRegenMul", "sweepPeriodMul", "buildingBrands"]);
 
 /**
  * 현 엔진이 구동 가능한가 — goal(purge/purge-all/purge-role/survive/guard/free-roam) ×
@@ -649,8 +659,9 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     modifiers: { freqRegenMul: 0.5 },
   },
   {
-    // 패턴 17 공성 낙인의 커터 편입(P3 — §6.3 의존성 절단). 절단체가 건물을 뿌리째 들어올린다:
-    // 격추하면 재안착(W4 복구 사격으로 가속) — "쏘는 것"과 "되돌리는 것"이 같은 무기.
+    // 커터 콘텐츠(P3 — §6.3 의존성 절단, 20종 카탈로그 밖 신규). 절단체가 건물을 뿌리째 들어올린다:
+    // 격추하면 재안착(W4 복구 사격으로 가속) — "쏘는 것"과 "되돌리는 것"이 같은 무기. (패턴 17 공성
+    // 낙인/SIEGE BRAND — buildingBrands 변조 — 는 별도 미션 siege-brand.)
     id: "severance", name: "절단 공성 / SEVERANCE",
     brief: "그들이 건물을 뿌리째 들어올린다 — 떨어뜨려라. 떨어지면 다시 붙는다.",
     goal: { type: "guard", target: "landmarks", hold: 240 },
@@ -666,6 +677,24 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     },
     zoneRadius: 3500,
     modifiers: { aggro: "landmark" },
+  },
+  {
+    // 패턴 17 공성 낙인 / SIEGE BRAND(06-missions §7 — P3 buildingBrands 편입). 소인체가 랜드마크에
+    // 낙인탄을 발사 — 심판 파문이 오기 전에 마커를 끊거나(마커 우선 격파) 랜드마크에서 떼어놔야 한다.
+    id: "siege-brand", name: "공성 낙인 / SIEGE BRAND",
+    brief: "저들이 벽에 낙인을 새긴다 — 파문이 오기 전에 마커를 끊어라.",
+    goal: { type: "guard", target: "landmarks", hold: 260 },
+    fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 1 },
+    deploy: {
+      model: "roster",
+      units: [
+        { role: "marker", count: 10, hp: 1100 },
+        { role: "rusher", count: 5, hp: 900 },
+      ],
+      spawnRadius: 1300,
+    },
+    zoneRadius: 4200,
+    modifiers: { aggro: "landmark", buildingBrands: true },
   },
   {
     // 역행체 사냥(P3 §6.6) — 미니보스 슬롯 우선순위 표적 플레이. 시전을 못 끊으면 전과가 되감긴다:

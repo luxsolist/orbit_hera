@@ -152,6 +152,29 @@ export function applyHeal(hp: number, maxHp: number, amount: number): number {
   return Math.min(maxHp, hp + amount);
 }
 
+/** 위치·HP 이력 1표본 — rewindPosition(적측 §6.6)·linkRewind(자가 §2.8.3)가 공유하는 링버퍼 표본. */
+export interface PosHpSample { t: number; x: number; y: number; z: number; hp: number }
+
+/**
+ * 이력 조회 — posClock 기준 sec 초 전 이하의 가장 최근 표본(없으면 가장 오래된 표본, 이력이 아예
+ * 없으면 null). 시간 역순 탐색 없이 오름차순 이력을 앞에서부터 훑다 넘어가는 지점에서 멈춘다. 순수.
+ */
+export function historyLookup(history: readonly PosHpSample[], posClock: number, sec: number): PosHpSample | null {
+  const target = posClock - sec;
+  let best: PosHpSample | null = null;
+  for (const s of history) {
+    if (s.t <= target) best = s;
+    else break;
+  }
+  if (!best && history.length) best = history[0];
+  return best;
+}
+
+/** 링크 리와인드(§2.8.3) 시전 가능 여부 — 사망/쿨다운/게이지 부족이면 false. 순수 게이트. */
+export function canCastLinkRewind(hp: number, freq: number, cooldownLeft: number, freqCost: number): boolean {
+  return hp > 0 && cooldownLeft <= 0 && freq >= freqCost;
+}
+
 /**
  * 최고 상승 고도(눈높이 기준) — 보행 점프·비행 천장 공통. 발밑 지표면(standY) + 기체별 상승
  * 한도(rise) + 눈높이(eye)를 더하고 절대 하드리밋(HARD_CEILING 5km)으로 클램프. standY 가
@@ -203,10 +226,13 @@ export class PlayerController {
   /** HP 재생(§7.4 진행 성장 — 출격 시점 스냅샷). 피격 후 REGEN_DELAY 지나야 회복. */
   hpRegen = 0;
   private sinceHit = Infinity;
-  // 위치 이력 링(P3 역행체 — 서사편 §6.6) — 시전 완료 시 수 초 전 위치로 되돌려진다.
-  private posHistory: { t: number; x: number; y: number; z: number }[] = [];
+  // 위치·HP 이력 링(적측 §6.6 역행체 + 자가 §2.8.3 링크 리와인드가 공유) — 시전 시 수 초 전으로 되돌린다.
+  private posHistory: PosHpSample[] = [];
   private posClock = 0;
   private posSampleCd = 0;
+  private linkRewindCd = 0; // 링크 리와인드 쿨다운 잔여(s)
+  /** 링크 리와인드 시전 통지 — revivedBuildings = 함께 되돌아온 건물/랜드마크 수(HUD 연출 게이트). */
+  onLinkRewind?: (revivedBuildings: number) => void;
 
   private invuln = 0;
   private recoil = 0; // 발사 반동(시각 피치 오프셋, rad) — kick() 충전, 지수 복귀
@@ -410,14 +436,29 @@ export class PlayerController {
       // HP 재생(§7.4) — 피격 후 REGEN_DELAY 경과 시에만(지속 교전 중엔 회복 불가)
       this.sinceHit += dt;
       this.hp = regenStep(this.hp, this.maxHp, this.hpRegen, this.sinceHit, dt);
-      // 위치 이력(역행체 대응) — 0.1s 간격 샘플, 8s 보존
+      // 위치·HP 이력(역행체 대응 + 링크 리와인드) — 0.1s 간격 샘플, 8s 보존
       this.posClock += dt;
       this.posSampleCd -= dt;
       if (this.posSampleCd <= 0) {
         this.posSampleCd = 0.1;
-        this.posHistory.push({ t: this.posClock, x: this.position.x, y: this.position.y, z: this.position.z });
+        this.posHistory.push({ t: this.posClock, x: this.position.x, y: this.position.y, z: this.position.z, hp: this.hp });
         while (this.posHistory.length && this.posHistory[0].t < this.posClock - 8) this.posHistory.shift();
       }
+    }
+
+    // 링크 리와인드(§2.8.3) — 자가 시전. 드론 미보유/사망/쿨다운/게이지 부족이면 무시.
+    if (this.linkRewindCd > 0) this.linkRewindCd -= dt;
+    const lr = this.spec.linkRewind;
+    if (lr && this.input.wasPressed("KeyR") && canCastLinkRewind(this.hp, this.freq, this.linkRewindCd, lr.freqCost)) {
+      this.freq -= lr.freqCost;
+      this.linkRewindCd = lr.cooldown;
+      const at = historyLookup(this.posHistory, this.posClock, lr.rewindSec);
+      if (at) {
+        this.position.set(at.x, at.y, at.z);
+        this.hp = Math.min(this.maxHp, at.hp);
+      }
+      const revived = this.world.buildings?.undoDestructionNear(this.position.x, this.position.z, lr.radius, lr.rewindSec) ?? 0;
+      this.onLinkRewind?.(revived);
     }
 
     this.syncCamera();
@@ -580,16 +621,10 @@ export class PlayerController {
     this.invuln = protectSec;
   }
 
-  /** 역행(P3 역행체) — sec 초 전 위치로 되돌려진다(이력 없으면 무시). 피해는 없고 위치만. */
+  /** 역행(적측 §6.6 역행체) — sec 초 전 위치로 되돌려진다(이력 없으면 무시). 위치만(HP 불변 — §6.6 정본). */
   rewindPosition(sec: number): void {
-    const target = this.posClock - sec;
-    let best: { x: number; y: number; z: number } | null = null;
-    for (const s of this.posHistory) {
-      if (s.t <= target) best = s;
-      else break;
-    }
-    if (!best && this.posHistory.length) best = this.posHistory[0]; // 이력이 짧으면 가장 오래된 지점
-    if (best) this.position.set(best.x, best.y, best.z);
+    const at = historyLookup(this.posHistory, this.posClock, sec);
+    if (at) this.position.set(at.x, at.y, at.z);
   }
 
   /** 교전 구역 설정(미션 인스턴스). radius≤0 이면 제한 해제. 중심 미지정 시 현재 위치(=스폰) 기준. */

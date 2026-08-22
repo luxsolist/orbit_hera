@@ -31,6 +31,13 @@ function bakeLandmarks(landmarks) {
   });
 }
 
+// 순서 = 시도 우선순위. ⚠ 2026-08-22 진단: 이 개발 샌드박스에서 overpass-api.de/kumi.systems 는
+// TCP 단에서 막혀있고(방화벽 REFUSED/DROP), overpass.osm.ch 는 더 나쁘게도 **요청 bbox 와 무관하게
+// 항상 같은 스위스 지역 고정 응답을 돌려줌**(예: way 42230983, 47.49°N 6.88°E — 로마·경복궁 쿼리
+// 양쪽 다 이 값 반환). fetchOverpass() 는 elements.length>0 이면 "데이터 있음"으로 채택하므로, osm.ch
+// 를 앞순위에 두면 클린 실패보다 위험한 무음 오염(엉뚱한 지역 데이터 혼입)이 난다 — 절대 앞에 두지
+// 말 것. 이 4개 미러 모두 현재 샌드박스에서 신뢰 불가(전체는 scripts/data/geocode-* 류 네트워크
+// 진단 참고). 실사용 환경(방화벽 제약 없는 머신)에서는 정상 동작할 가능성이 높음 — 원래 순서 유지.
 const ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
   "https://overpass.osm.ch/api/interpreter",

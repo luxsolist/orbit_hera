@@ -33,6 +33,8 @@ export class HUD {
   private castTimer: ReturnType<typeof setTimeout> | null = null;
   private foresight!: HTMLDivElement; // 예지 — 역행 시전 카운트다운(동적 생성)
   private sweepPulse!: HTMLDivElement; // 파문 통과 전면 펄스(동적 생성)
+  private observePulse!: HTMLDivElement; // 위상 소급 시전 펄스(동적 생성)
+  private observePulseTimer = 0;
   private sweepPulseTimer = 0;
   private sweepPulsePeak = 0;
   private dmgWedges: { el: HTMLDivElement; life: number }[] = []; // 피해 방향 인디케이터 풀
@@ -114,6 +116,15 @@ export class HUD {
       "position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;" +
       "background:radial-gradient(ellipse at center, rgba(255,60,40,0) 35%, rgba(255,36,24,0.55) 100%)";
     this.root.appendChild(this.sweepPulse);
+
+    // 위상 소급(§2.8.3) 시전 펄스 — 청록 워시. 파문(붉은색)과 색으로 구분해, "당했다"가 아니라
+    // "관측이 다시 고정됐다"는 다른 종류의 이벤트임을 즉시 읽히게 한다(문구만으론 놓치기 쉬웠음).
+    this.observePulse = document.createElement("div");
+    this.observePulse.className = "hud__observepulse";
+    this.observePulse.style.cssText =
+      "position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;" +
+      "background:radial-gradient(ellipse at center, rgba(52,245,255,0) 30%, rgba(52,245,255,0.4) 100%)";
+    this.root.appendChild(this.observePulse);
   }
 
   setActive(active: boolean) {
@@ -266,15 +277,21 @@ export class HUD {
     this.sweepPulseTimer = SWEEP_PULSE_LIFE;
   }
 
+  /** 위상 소급 시전 펄스 — 청록 워시. 건물 복원이 있었으면(revived) 더 뚜렷하게. */
+  pulseObserve(revived: boolean) {
+    this.observePulseTimer = SWEEP_PULSE_LIFE * (revived ? 1 : 0.6);
+  }
+
   /**
-   * 피해 방향 인디케이터 — 피해 발원 월드 좌표를 화면 각도로 투영해 조준선 둘레(적 화살표보다
-   * 바깥)에 큰 붉은 쐐기를 잠깐 표시. "어디서 맞았는지"의 즉답.
+   * 방향 쐐기 인디케이터 공용 구현 — 월드 좌표를 화면 각도로 투영해 조준선 둘레(적 화살표보다
+   * 바깥)에 색이 지정된 쐐기를 잠깐 표시. "어디서 무슨 일이 있었는지"의 즉답. 풀(DMG_WEDGE_MAX)은
+   * 피해/건물 파괴 등 모든 방향 이벤트가 공유(오래된 것부터 재사용).
    */
-  flashDamageFrom(camera: THREE.Camera, source: Vec3) {
+  private flashWedge(camera: THREE.Camera, source: Vec3, color: string) {
     camera.updateMatrixWorld();
     this._v.set(source.x, source.y, source.z);
     camera.worldToLocal(this._v);
-    const { angle } = aimArrow(this._v.x, this._v.y, this._v.z, 0); // 데드콘 0 — 정면 피해도 표시
+    const { angle } = aimArrow(this._v.x, this._v.y, this._v.z, 0); // 데드콘 0 — 정면 이벤트도 표시
     const { x, y } = arrowOffset(angle, DMG_RING_RADIUS);
     // 풀 획득 — 여유 슬롯 또는 가장 오래된 쐐기 재사용
     let slot = this.dmgWedges.find((w) => w.life <= 0);
@@ -282,8 +299,7 @@ export class HUD {
       const el = document.createElement("div");
       el.style.cssText =
         "position:absolute;left:0;top:0;width:0;height:0;transform-origin:center;display:none;" +
-        "border-left:11px solid transparent;border-right:11px solid transparent;" +
-        "border-bottom:20px solid #ff2d20;filter:drop-shadow(0 0 6px #ff2d20);will-change:transform,opacity";
+        "border-left:11px solid transparent;border-right:11px solid transparent;will-change:transform,opacity";
       this.arrowLayer.appendChild(el);
       slot = { el, life: 0 };
       this.dmgWedges.push(slot);
@@ -292,8 +308,23 @@ export class HUD {
     slot.life = DMG_WEDGE_LIFE;
     slot.el.style.display = "block";
     slot.el.style.opacity = "1";
+    slot.el.style.borderBottom = `20px solid ${color}`;
+    slot.el.style.filter = `drop-shadow(0 0 6px ${color})`;
     slot.el.style.transform =
       `translate(-50%,-50%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${angle.toFixed(3)}rad)`;
+  }
+
+  /** 피해 방향 인디케이터(붉은 쐐기) — 피해 발원 월드 좌표. "어디서 맞았는지"의 즉답. */
+  flashDamageFrom(camera: THREE.Camera, source: Vec3) {
+    this.flashWedge(camera, source, "#ff2d20");
+  }
+
+  /**
+   * 건물/랜드마크 파괴 방향 인디케이터(호박색 쐐기) — 파괴 발생 월드 좌표. 피격(붉은색)과 색으로
+   * 구분해, 플레이어가 직접 맞은 게 아니라 "저쪽에서 뭔가 무너졌다"는 걸 즉시 인지하게 한다.
+   */
+  flashLossFrom(camera: THREE.Camera, source: Vec3) {
+    this.flashWedge(camera, source, "#ffb648");
   }
 
   /** 락온 상태를 크로스헤어에 반영. locked=true면 락온 링 표시, false면 해제. */
@@ -325,6 +356,11 @@ export class HUD {
       this.sweepPulseTimer -= dt;
       const t = Math.max(0, this.sweepPulseTimer / SWEEP_PULSE_LIFE);
       this.sweepPulse.style.opacity = String(this.sweepPulsePeak * t);
+    }
+    // 위상 소급 펄스 — 동일 페이드 곡선(파문과 별개 색 채널)
+    if (this.observePulseTimer > 0) {
+      this.observePulseTimer -= dt;
+      this.observePulse.style.opacity = String(Math.max(0, this.observePulseTimer / SWEEP_PULSE_LIFE));
     }
     // 피해 방향 쐐기 페이드
     for (const w of this.dmgWedges) {

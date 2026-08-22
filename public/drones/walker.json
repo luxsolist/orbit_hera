@@ -2,10 +2,24 @@
   "id": "walker",
   "name": "ANDROID-01",
   "displayName": "보행 드론 / WALKER",
-  "body": { "eyeHeight": 2.2, "radius": 1.2 },
-  "vitals": { "maxHp": 120, "maxFreq": 120, "freqRegen": 28 },
-  "view": { "fov": 80, "mouseSensitivity": 0.0022 },
-  "dash": { "speed": 192, "duration": 0.16, "cooldown": 2.0 },
+  "body": {
+    "eyeHeight": 2.2,
+    "radius": 1.2
+  },
+  "vitals": {
+    "maxHp": 120,
+    "maxFreq": 120,
+    "freqRegen": 28
+  },
+  "view": {
+    "fov": 80,
+    "mouseSensitivity": 0.0022
+  },
+  "dash": {
+    "speed": 192,
+    "duration": 0.16,
+    "cooldown": 2.0
+  },
   "move": {
     "mode": "walk",
     "speed": 19.44,
@@ -21,9 +35,29 @@
     }
   },
   "actions": [
-    { "label": "JUMP", "key": "Space", "desc": "점프" },
-    { "label": "DASH", "key": "ShiftLeft", "desc": "대시" }
+    {
+      "label": "JUMP",
+      "key": "Space",
+      "desc": "점프"
+    },
+    {
+      "label": "DASH",
+      "key": "ShiftLeft",
+      "desc": "대시"
+    }
   ],
-  "weapons": { "primary": "frequency-beam-heavy", "special": "special-barrage" },
-  "lockOn": { "followDist": 60, "band": 12 }
+  "weapons": {
+    "primary": "frequency-beam-heavy",
+    "special": "special-barrage"
+  },
+  "lockOn": {
+    "followDist": 60,
+    "band": 12
+  },
+  "linkRewind": {
+    "freqCost": 55,
+    "cooldown": 40,
+    "rewindSec": 4,
+    "radius": 130
+  }
 }

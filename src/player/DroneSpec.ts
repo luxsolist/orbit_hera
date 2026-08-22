@@ -60,6 +60,11 @@ export interface DroneSpec {
   weapons: { primary: string; special: string }; // 무기 스펙 id 참조(public/weapons/<id>.json)
   /** 락온 자동 추적 파라미터. 없으면 코드 기본값(followDist 50, band 8) 사용. */
   lockOn?: { followDist: number; band: number };
+  /**
+   * 링크 리와인드(물리편 §2.8.3) — 자기 위치·HP + 반경 내 최근 파괴 건물/랜드마크를 rewindSec 전으로
+   * 되돌린다(주파수 대량 소모 + 긴 쿨다운). 없으면 이 드론은 미보유. 키: KeyR(데스크탑 전용, 2026-08).
+   */
+  linkRewind?: { freqCost: number; cooldown: number; rewindSec: number; radius: number };
 }
 
 /** 드론 카탈로그(선택 UI/관리용) 항목. */

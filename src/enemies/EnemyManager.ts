@@ -216,7 +216,7 @@ export class EnemyManager {
   onSweepPass?: (branded: boolean) => void; // 심판 파문이 플레이어 위치를 통과(화면 펄스·저음)
 
   // 전투 채점 집계(결과 화면) — 표면 어휘만(§8.2): 근원 격파·파문 무상 통과·관측 고정
-  readonly stats = { markerKills: 0, zenoFreezes: 0, sweepHits: 0, sweepCleanPasses: 0 };
+  readonly stats = { markerKills: 0, zenoFreezes: 0, sweepHits: 0, sweepCleanPasses: 0, buildingBrandHits: 0 };
   // 역행체(P3 §6.6) — 최근 격파 기록(역행 시 부활 후보). W2 계류 중 격파는 확정 — 역행 불능(§9.2).
   private killLog: { t: number; x: number; z: number; maxHp: number; role: PlasmoidArchetype; deployRole: CoreEnemy["deployRole"]; pinned: boolean }[] = [];
   // 역행 부활 대기열 — 시전 완료가 update 순회 중 일어나므로 스폰은 다음 프레임 서두로 지연
@@ -233,6 +233,7 @@ export class EnemyManager {
   // 어그로 성향(훅 ④ — 미션 변조 `modifiers.aggro`): player = 현행(인식 반경 내 플레이어 전환),
   // building/landmark = 표적 직행 — 플레이어는 **때려야만**(provoked) 어그로가 끌린다.
   private aggro: "player" | "landmark" | "building" = "player";
+  private buildingBrandsEnabled = false; // 공성 낙인(modifiers.buildingBrands) — 미션 변조, clear 가 리셋
   private bossGroups: CoreEnemy[][] = []; // 다중 투영 보스 그룹들(필라멘트·동반 소산 — roster 는 복수 가능)
   private bossFilamentCd = 0;
   // 보스 행동(훅 ⑤ — startBossDeploy 가 설정, clear 가 해제)
@@ -254,11 +255,13 @@ export class EnemyManager {
     this.kiterArche = spec.archetypes.kiter;
     this.drain = new DrainBeams(scene);
     // 낙인/파문 — 파문이 낙인 붙은 플레이어를 통과하면 피해(머시 무적은 takeDamage 가 거름, 낙인은 소모됨)
-    this.brand = new BrandSystem(scene, players, spec.sweep);
+    this.brand = new BrandSystem(scene, players, spec.sweep, world.buildings ?? undefined);
     this.brand.onSweepHit = (idx, dmg) => {
       const pl = this.players[idx];
       if (pl && pl.takeDamage(dmg)) this.onPlayerHit?.(dmg, this.riftAnchor); // 발원 = 균열(파문 원점)
     };
+    // 공성 낙인(modifiers.buildingBrands) — 파문이 낙인 붙은 건물/랜드마크를 통과하면 피해
+    this.brand.onBuildingBrandHit = () => { this.stats.buildingBrandHits++; };
     this.brand.onSweepPass = (_idx, branded) => {
       // 통과 임팩트(펄스·저음) + 채점 집계 — 낙인 없이 넘기면 "무상 통과"(잘한 판의 지표)
       if (branded) this.stats.sweepHits++;
@@ -378,6 +381,21 @@ export class EnemyManager {
     return out;
   }
 
+  /**
+   * 위상 이탈 중인 개체 목록(중력 렌즈 왜곡 §2.7.1 — 배경 일렁임 소스). 질량-에너지는 그대로라
+   * 시각적으로만 숨을 뿐, 그 자리는 렌즈처럼 배경을 왜곡한다. 카메라 근접순 정렬(LENS_MAX_POINTS 컷).
+   */
+  phasedMarkers(cameraPos: THREE.Vector3): { x: number; y: number; z: number; radiusWorld: number; strength: number }[] {
+    const out: { x: number; y: number; z: number; radiusWorld: number; strength: number; d: number }[] = [];
+    for (const e of this.enemies) {
+      if (e.state !== "alive" || !e.isPhased) continue;
+      const p = e.group.position;
+      out.push({ x: p.x, y: p.y, z: p.z, radiusWorld: e.group.scale.x, strength: 1, d: p.distanceToSquared(cameraPos) });
+    }
+    out.sort((a, b) => a.d - b.d);
+    return out;
+  }
+
   /** 미니맵용 살아있는 적 위치 스냅샷(읽기 전용). 위상 이탈 개체는 phased 플래그 — 빈 원(확률 구름)으로 그림. */
   get aliveSnapshot(): readonly { x: number; z: number; phased?: boolean }[] {
     const out: { x: number; z: number; phased?: boolean }[] = [];
@@ -392,6 +410,11 @@ export class EnemyManager {
   /** 어그로 성향 설정(훅 ④) — 미션 변조. 투입(start*) 후 호출(clear 가 "player" 로 리셋). */
   setAggro(mode: "player" | "landmark" | "building"): void {
     this.aggro = mode;
+  }
+
+  /** 공성 낙인 허용(modifiers.buildingBrands, 훅 ④) — 미션 변조. 투입 후 호출(clear 가 false 로 리셋). */
+  setBuildingBrands(enabled: boolean): void {
+    this.buildingBrandsEnabled = enabled;
   }
 
   /** 작전구역(존) 설정 — 플라즈모이드를 이 원 안으로 제한. radius≤0 이면 해제. */
@@ -933,7 +956,10 @@ export class EnemyManager {
     const steer = { vel: ZERO_VEL, boids, index: myIdx, grid, recompute };
     enemy.update(dt, _btarget, 1, steer);
     if (enemy.isKiter) this.clampKiterAltitude(p); // 도주형은 지면 아래로 가라앉지 않게
-    if (this.attack(enemy, _btarget, p, null, enemy.buildingId)) enemy.buildingId = null; // 파괴 시 표적 해제
+    // 공성 낙인(modifiers.buildingBrands) — 마커는 접촉 없이 낙인탄으로. 비활성 시 마커는 건물에 무동작(기존).
+    if (enemy.role === "marker" && this.buildingBrandsEnabled) {
+      this.markerFireBuilding(enemy, p, _btarget, enemy.buildingId!, dt);
+    } else if (this.attack(enemy, _btarget, p, null, enemy.buildingId)) enemy.buildingId = null; // 파괴 시 표적 해제
   }
 
   /**
@@ -957,6 +983,24 @@ export class EnemyManager {
     if (this.world.segmentHitsBuilding(from.x, from.y, from.z, targetPos.x, targetPos.y, targetPos.z) <= 1) return; // 차폐
     if (!enemy.tryAttack(targetPos, tomb.fireRange, tomb.fireInterval)) return;
     enemy.markerAimLeft = MARKER_TELEGRAPH_SEC; // 장전 개시 — 조준선 텔레그래프
+  }
+
+  /** 마커(소인체) 건물 낙인(공성 낙인 — modifiers.buildingBrands, 06-missions 패턴 17). markerFire 와 동일 리듬, 표적만 건물 id. */
+  private markerFireBuilding(enemy: CoreEnemy, from: THREE.Vector3, targetPos: THREE.Vector3, buildingId: string, dt: number): void {
+    const tomb = this.spec.archetypes.marker.tomb;
+    if (enemy.markerAimLeft > 0) {
+      if (enemy.isZenoFrozen || enemy.isStaggered || enemy.isPhased) { enemy.markerAimLeft = 0; return; }
+      enemy.markerAimLeft -= dt;
+      if ((this.frame & 3) === 0) this.drain.spawn(from, targetPos, enemy.color);
+      if (enemy.markerAimLeft <= 0 &&
+        this.world.segmentHitsBuilding(from.x, from.y, from.z, targetPos.x, targetPos.y, targetPos.z) > 1) {
+        this.brand.launchBuilding(from, buildingId, enemy, tomb);
+      }
+      return;
+    }
+    if (this.world.segmentHitsBuilding(from.x, from.y, from.z, targetPos.x, targetPos.y, targetPos.z) <= 1) return;
+    if (!enemy.tryAttack(targetPos, tomb.fireRange, tomb.fireInterval)) return;
+    enemy.markerAimLeft = MARKER_TELEGRAPH_SEC;
   }
 
   /**
@@ -1482,6 +1526,7 @@ export class EnemyManager {
     this.stats.sweepCleanPasses = 0;
     for (const k of Object.keys(this.roleKills) as (keyof typeof this.roleKills)[]) this.roleKills[k] = 0;
     this.aggro = "player"; // 어그로 변조 리셋 — 미션이 투입 후 setAggro 로 재지정
+    this.buildingBrandsEnabled = false; // 공성 낙인 변조 리셋 — 미션이 투입 후 setBuildingBrands 로 재지정
     this.burstMode = false;
     this.hasPrev = false; // 재입장 시 순간이동 변위로 인한 가짜 속도 스파이크 방지
     for (const v of this.vels) { v.x = v.y = v.z = 0; }

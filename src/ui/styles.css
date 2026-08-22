@@ -949,3 +949,24 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
   opacity: 0; transition: opacity 0.4s; pointer-events: none; white-space: pre-line;
 }
 .hud__cast--show { opacity: 1; }
+
+/* ── 도감(§8.3 명칭 갱신) — 아키타입 카드 / 계시 후 병합 카드(접힘 연출) ── */
+.bestiary__back { margin-bottom: 4px; }
+.bestiary__card {
+  padding: 9px 12px; margin-top: 6px;
+  background: rgba(20, 40, 52, 0.5); border: 1px solid rgba(52, 245, 255, 0.24); border-radius: 7px;
+}
+.bestiary__name { font-size: 12px; font-weight: 700; color: #cdeef5; letter-spacing: 0.03em; }
+.bestiary__brief { font-size: 11px; color: rgba(180, 230, 245, 0.7); margin-top: 3px; line-height: 1.4; }
+.bestiary__card--merged {
+  border-color: var(--core-cyan);
+  background: rgba(52, 245, 255, 0.1);
+  box-shadow: 0 0 14px rgba(52, 245, 255, 0.25);
+  animation: bestiary-merge 0.5s ease-out;
+}
+.bestiary__card--merged .bestiary__name { color: var(--core-cyan); }
+@keyframes bestiary-merge {
+  0% { transform: scaleX(0.4); opacity: 0; }
+  60% { transform: scaleX(1.04); opacity: 1; }
+  100% { transform: scaleX(1); }
+}

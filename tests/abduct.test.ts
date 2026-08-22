@@ -92,6 +92,45 @@ describe("소거·재안착·W4 mend", () => {
     expect(bc.destroyedBuildings).toBe(0); // 소거 아님 — 재안착 성공
   });
 
+  it("링크 리와인드(§2.8.3) — 최근 파괴를 완전 복원(체력·형상·충돌·집계)", () => {
+    const { bc, id } = setup();
+    let destroyed = 0;
+    bc.onDestroyed = () => destroyed++;
+    bc.damage(id, 999999); // 즉시 파괴(체력 40 미만 소형 건물)
+    expect(bc.destroyedBuildings).toBe(1);
+    expect(bc.nearestTarget(5, 5, 50)).toBeNull(); // 파괴됨 — 표적 제외
+    bc.update(0.5); // 붕괴 애니메이션 진행 중(collapsing)
+    expect(bc.undoDestructionNear(5, 5, 50, 5)).toBe(1); // 5초 창 내 — 복원
+    expect(bc.destroyedBuildings).toBe(0);
+    const t = bc.nearestTarget(5, 5, 50);
+    expect(t?.id).toBe(id); // 표적 복귀
+    expect(bc.damage(id, 10)).toBe("hit"); // 피해 가능 = intact 복원
+  });
+
+  it("링크 리와인드 — 랜드마크도 동일 원복(가시성·집계)", () => {
+    const bc = new BuildingCombat();
+    const group = new THREE.Group();
+    bc.registerLandmark(group, 100, 100, 30, 10, 10, 500);
+    const id = bc.nearestLandmark(100, 100)!.id;
+    bc.damage(id, 999999);
+    expect(bc.destroyedLandmarks).toBe(1);
+    bc.update(0.1); // 붕괴 연출 진행 중(flash/collapsing)
+    expect(bc.undoDestructionNear(100, 100, 20, 5)).toBe(1);
+    expect(bc.destroyedLandmarks).toBe(0);
+    expect(group.visible).toBe(true);
+    expect(bc.nearestLandmark(100, 100)?.id).toBe(id);
+  });
+
+  it("링크 리와인드 — 반경 밖·시간창 밖은 무시, 소모 후 재요청은 재복원 안 됨", () => {
+    const { bc, id } = setup();
+    bc.damage(id, 999999);
+    bc.update(0.1);
+    expect(bc.undoDestructionNear(9999, 9999, 50, 5)).toBe(0); // 반경 밖
+    expect(bc.undoDestructionNear(5, 5, 50, 0.01)).toBe(0); //   시간창 밖(경과 0.1s > 0.01s)
+    expect(bc.undoDestructionNear(5, 5, 50, 5)).toBe(1); //      정상 복원
+    expect(bc.undoDestructionNear(5, 5, 50, 5)).toBe(0); //      이미 소모 — 재복원 없음
+  });
+
   it("mendAt(복구 사격) — footprint 명중 시 부양 고도를 깎고, 바닥까지 깎이면 재안착", () => {
     const { bc, id } = setup();
     bc.beginAbduct(id);

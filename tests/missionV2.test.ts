@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   toLegacy, fromLegacy, evaluateMissionV2, runnableV2, missionDurationV2, deployKillCredits,
-  deployRoleCredits, missionObjectiveTextV2, missionProgressTextV2, resonanceScore,
+  deployRoleCredits, deployRoleName, missionObjectiveTextV2, missionProgressTextV2, resonanceScore,
   DEFAULT_MISSIONS_V2, FREE_ROAM_V2, type MissionSpecV2,
 } from "../src/game/missionV2";
 import { DEFAULT_MISSIONS, type MissionRuntime } from "../src/game/mission";
@@ -186,10 +186,19 @@ describe("v2 런타임 부속 — duration/runnable/로더 정규화", () => {
     expect(evaluateMissionV2(hunt, rt({ roleKills: { marker: 5 }, deaths: 3 })).status).toBe("failed");
   });
 
-  it("purge-role 표면 문구 — 직무 표시명(§8.2 허용 어휘)", () => {
+  it("purge-role 표면 문구 — 직무 표시명(§8.2 허용 어휘), 인식 Ⅰ 기본값(revealed 생략)", () => {
     const hunt = DEFAULT_MISSIONS_V2.find((m) => m.id === "brand-hunt")!;
     expect(missionObjectiveTextV2(hunt)).toBe("소인체 전멸 — 6기 / HUNT");
     expect(missionProgressTextV2(hunt, rt({ roleKills: { marker: 2 } }))).toBe("소인체 2 / 6");
+  });
+
+  it("명칭 갱신(§8.3) — revealed=true 면 직무명이 '투영체'로 합쳐진다(근원=boss 만 구분 유지)", () => {
+    const hunt = DEFAULT_MISSIONS_V2.find((m) => m.id === "brand-hunt")!;
+    expect(missionObjectiveTextV2(hunt, true)).toBe("투영체 전멸 — 6기 / HUNT");
+    expect(missionProgressTextV2(hunt, rt({ roleKills: { marker: 2 } }), true)).toBe("투영체 2 / 6");
+    expect(deployRoleName("rewinder", true)).toBe("투영체");
+    expect(deployRoleName("cutter", false)).toBe("절단체");
+    expect(deployRoleName("boss", true)).toBe("근원 투영체"); // 근원은 계시 후에도 구분 유지
   });
 
   it("runnableV2 — purge-role 은 대상 직무가 결정적으로 존재할 때만", () => {
@@ -219,12 +228,12 @@ describe("v2 런타임 부속 — duration/runnable/로더 정규화", () => {
     expect(deployRoleCredits(matured.deploy, "boss")).toBe(1);
   });
 
-  it("runnableV2 — 훅 ⑤⑥ 해금: phased·zoneShrink·freqRegenMul·sweepPeriodMul 허용, emit×purge-all 불가", () => {
-    expect(DEFAULT_MISSIONS_V2.every(runnableV2)).toBe(true); // 18미션 전체(변조·phased 포함) 구동 가능
+  it("runnableV2 — 훅 ⑤⑥ 해금: phased·zoneShrink·freqRegenMul·sweepPeriodMul·buildingBrands 허용, emit×purge-all 불가", () => {
+    expect(DEFAULT_MISSIONS_V2.every(runnableV2)).toBe(true); // 전 미션(변조·phased 포함) 구동 가능
     const matured = DEFAULT_MISSIONS_V2.find((m) => m.id === "matured")!;
     expect(runnableV2({ ...matured, goal: { type: "purge-all" } })).toBe(false); // 분출은 전량 격멸을 깨뜨림
     expect(runnableV2({ ...matured, goal: { type: "purge-role", role: "boss" } })).toBe(true);
-    expect(runnableV2({ ...DEFAULT_MISSIONS_V2[0], modifiers: { buildingBrands: true } })).toBe(false); // 커터 단계 대기
+    expect(runnableV2({ ...DEFAULT_MISSIONS_V2[0], modifiers: { buildingBrands: true } })).toBe(true); // P3 편입 완료(공성 낙인)
   });
 
   it("public/missions/index.json(v2) 은 내장 DEFAULT_MISSIONS_V2 와 동치", () => {

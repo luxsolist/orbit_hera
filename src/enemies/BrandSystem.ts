@@ -12,6 +12,7 @@ import type { TombSpec, SweepSpec } from "./PlasmoidSpec";
 
 export const DEFAULT_SWEEP: SweepSpec = { period: 30, speed: 250, warnSec: 5, maxRadius: 1600 };
 const SHOT_HIT_RADIUS = 2.4; // 유도탄 명중 판정 반경(m) — 드론 몸통 + 여유
+const BUILDING_HIT_RADIUS = 10; // 공성 낙인 유도탄 명중 판정 반경(m) — 건물 실루엣 크기 고려
 const BRAND_CAP = 5; // 표적당 낙인 상한 — 마커 다수 전장에서 파문 피해 폭주 방지(5×30=150, 방치 시 치명은 유지)
 const GLYPH_BASE_SCALE = 1.0; // 유도탄 글리프 기본 크기(팔면체 결정)
 const GLYPH_PULSE = 0.25; // 글리프 맥동 진폭
@@ -56,6 +57,15 @@ export interface BrandTarget {
   isDead: boolean;
 }
 
+/**
+ * 건물/랜드마크 낙인(공성 낙인 — 미션 modifiers.buildingBrands, 06-missions 패턴 17) 대상 계약.
+ * BuildingCombat 이 구조적으로 만족(targetPos/damage 시그니처 동일 — 어댑터 불필요).
+ */
+export interface BrandBuildingTarget {
+  targetPos(id: string, out: THREE.Vector3): boolean; // 살아있으면 좌표 채우고 true
+  damage(id: string, amount: number): "none" | "hit" | "destroyed";
+}
+
 interface Shot {
   mesh: THREE.Mesh;
   pos: Vec3;
@@ -63,6 +73,18 @@ interface Shot {
   ttl: number;
   age: number;
   targetIdx: number;
+  source: CoreEnemy;
+  tomb: TombSpec;
+}
+
+/** 건물 표적 유도탄 — 플레이어 유도탄(Shot)과 동일 구조, targetId(string)로 참조만 다름. */
+interface BuildingShot {
+  mesh: THREE.Mesh;
+  pos: Vec3;
+  vel: Vec3;
+  ttl: number;
+  age: number;
+  targetId: string;
   source: CoreEnemy;
   tomb: TombSpec;
 }
@@ -83,9 +105,13 @@ export class BrandSystem {
   onSweepPass?: (targetIdx: number, branded: boolean) => void;
   /** 낙인 수 변화(부착/소산/소모) — HUD 갱신 게이트. */
   onBrandsChanged?: (targetIdx: number, count: number) => void;
+  /** 공성 낙인 파문 적중(건물/랜드마크) — destroyed = 이 타격으로 파괴됐는가. */
+  onBuildingBrandHit?: (id: string, damage: number, destroyed: boolean) => void;
 
   private shots: Shot[] = [];
   private brands: Brand[][] = [];
+  private buildingShots: BuildingShot[] = []; // 공성 낙인(buildingBrands) — 건물/랜드마크 표적 유도탄
+  private buildingBrands = new Map<string, Brand[]>();
   private countdown: number;
   private radius = -1; // 파면 반경(m). <0 = 비활성(대기)
   private periodMul = 1; // 파문 주기 배수(미션 변조 sweepPeriodMul — <1 = 잦게)
@@ -96,7 +122,8 @@ export class BrandSystem {
   constructor(
     private scene: THREE.Scene,
     private targets: readonly BrandTarget[],
-    private sweep: SweepSpec = DEFAULT_SWEEP
+    private sweep: SweepSpec = DEFAULT_SWEEP,
+    private buildingsRef?: BrandBuildingTarget, // 공성 낙인(buildingBrands) — 미지정 시 건물 낙인 비활성
   ) {
     this.countdown = sweep.period;
     this.glyphMat = new THREE.MeshBasicMaterial({
@@ -135,9 +162,37 @@ export class BrandSystem {
     });
   }
 
+  /**
+   * 건물 낙인 유도탄 발사(공성 낙인 — 미션 modifiers.buildingBrands). buildingsRef 미지정 시 무동작.
+   * 건물은 정지 표적이라 homing 은 초기 방향 그대로 등속 직진해도 사실상 명중(호밍 인프라 재사용은
+   * 유지 — 이동 랜드마크·미래 확장 대비).
+   */
+  launchBuilding(from: THREE.Vector3, targetId: string, source: CoreEnemy, tomb: TombSpec): void {
+    if (!this.buildingsRef) return;
+    const mesh = new THREE.Mesh(GLYPH_GEO, this.glyphMat);
+    mesh.position.copy(from);
+    mesh.scale.setScalar(GLYPH_BASE_SCALE);
+    this.scene.add(mesh);
+    const tp = new THREE.Vector3();
+    const hit = this.buildingsRef.targetPos(targetId, tp);
+    const dx = (hit ? tp.x : from.x) - from.x, dy = (hit ? tp.y : from.y) - from.y, dz = (hit ? tp.z : from.z) - from.z;
+    const d = Math.hypot(dx, dy, dz) || 1e-6;
+    this.buildingShots.push({
+      mesh,
+      pos: { x: from.x, y: from.y, z: from.z },
+      vel: { x: (dx / d) * tomb.projSpeed, y: (dy / d) * tomb.projSpeed, z: (dz / d) * tomb.projSpeed },
+      ttl: tomb.projTtl, age: 0, targetId, source, tomb,
+    });
+  }
+
   /** 표적의 현재 낙인 수(HUD). */
   brandCount(targetIdx = 0): number {
     return this.brands[targetIdx]?.length ?? 0;
+  }
+
+  /** 건물/랜드마크의 현재 낙인 수(테스트·HUD 확장용). */
+  buildingBrandCount(id: string): number {
+    return this.buildingBrands.get(id)?.length ?? 0;
   }
 
   /** 파문 주기 배수(미션 변조) — 대기 중이면 현재 카운트다운도 새 주기로 클램프. clear 가 1 로 복원. */
@@ -163,6 +218,13 @@ export class BrandSystem {
       const before = list.length;
       this.brands[ti] = list.filter((b) => b.source !== enemy);
       if (this.brands[ti].length !== before) this.onBrandsChanged?.(ti, this.brands[ti].length);
+    }
+    // 공성 낙인(건물) — 같은 계약(마커 격파 시 그 낙인·유도탄 소산)
+    for (let i = this.buildingShots.length - 1; i >= 0; i--) {
+      if (this.buildingShots[i].source === enemy) this.removeBuildingShot(i);
+    }
+    for (const [id, list] of this.buildingBrands) {
+      if (list.length) this.buildingBrands.set(id, list.filter((b) => b.source !== enemy));
     }
   }
 
@@ -198,6 +260,34 @@ export class BrandSystem {
       }
     }
 
+    // ── 공성 낙인 유도탄(건물/랜드마크 표적) ──
+    if (this.buildingsRef) {
+      const tp = new THREE.Vector3();
+      for (let i = this.buildingShots.length - 1; i >= 0; i--) {
+        const s = this.buildingShots[i];
+        s.ttl -= dt;
+        s.age += dt;
+        const alive = this.buildingsRef.targetPos(s.targetId, tp);
+        if (s.ttl <= 0 || !alive) { this.removeBuildingShot(i); continue; }
+        const step = homingStep(s.pos, s.vel, { x: tp.x, y: tp.y, z: tp.z }, s.tomb.projSpeed,
+          THREE.MathUtils.degToRad(s.tomb.projTurnRateDeg), dt);
+        s.pos = step.pos;
+        s.vel = step.vel;
+        s.mesh.position.set(s.pos.x, s.pos.y, s.pos.z);
+        s.mesh.scale.setScalar(GLYPH_BASE_SCALE + Math.sin(s.age * GLYPH_PULSE_RATE) * GLYPH_PULSE);
+        s.mesh.rotation.y = s.age * GLYPH_SPIN;
+        const dd = Math.hypot(tp.x - s.pos.x, tp.y - s.pos.y, tp.z - s.pos.z);
+        if (dd <= BUILDING_HIT_RADIUS) {
+          const list = this.buildingBrands.get(s.targetId) ?? [];
+          if (list.length < BRAND_CAP) {
+            list.push({ source: s.source, damage: s.tomb.sweepDamage });
+            this.buildingBrands.set(s.targetId, list);
+          }
+          this.removeBuildingShot(i);
+        }
+      }
+    }
+
     // ── 심판 파문 ──
     if (this.radius < 0) {
       this.countdown -= dt;
@@ -224,6 +314,21 @@ export class BrandSystem {
         }
         if (!this.targets[ti].isDead) this.onSweepPass?.(ti, branded);
       }
+      // 공성 낙인 — 파문이 건물/랜드마크 위치를 통과하면 낙인 소모 + 피해(건물은 정지 표적이라
+      // isDead 개념 없음 — targetPos 반환값으로 생존 확인). 소거/언로드된 건물의 잔여 낙인은 조용히 폐기.
+      if (this.buildingsRef && this.buildingBrands.size) {
+        const tp = new THREE.Vector3();
+        for (const [id, list] of [...this.buildingBrands]) {
+          if (!list.length) continue;
+          if (!this.buildingsRef.targetPos(id, tp)) { this.buildingBrands.delete(id); continue; }
+          const dist = Math.hypot(tp.x - anchor.x, tp.z - anchor.z);
+          if (!sweepCrossed(prevR, this.radius, dist)) continue;
+          const dmg = brandDamage(list);
+          this.buildingBrands.delete(id);
+          const res = this.buildingsRef.damage(id, dmg);
+          if (res !== "none") this.onBuildingBrandHit?.(id, dmg, res === "destroyed");
+        }
+      }
       if (this.radius >= this.sweep.maxRadius) {
         this.radius = -1; // 파면 소멸 → 다음 주기(변조 배수 적용)
         this.countdown = this.sweep.period * this.periodMul;
@@ -242,6 +347,8 @@ export class BrandSystem {
     for (let ti = 0; ti < this.brands.length; ti++) {
       if (this.brands[ti]?.length) { this.brands[ti].length = 0; this.onBrandsChanged?.(ti, 0); }
     }
+    for (let i = this.buildingShots.length - 1; i >= 0; i--) this.removeBuildingShot(i);
+    this.buildingBrands.clear();
     this.radius = -1;
     this.periodMul = 1; // 변조 복원 — 미션이 투입 후 setPeriodMul 로 재지정
     this.countdown = this.sweep.period;
@@ -251,5 +358,10 @@ export class BrandSystem {
   private removeShot(i: number): void {
     this.scene.remove(this.shots[i].mesh); // 지오메트리·재질은 공유 — 개별 dispose 없음
     this.shots.splice(i, 1);
+  }
+
+  private removeBuildingShot(i: number): void {
+    this.scene.remove(this.buildingShots[i].mesh);
+    this.buildingShots.splice(i, 1);
   }
 }

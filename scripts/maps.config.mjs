@@ -5,6 +5,19 @@
 // lat0/lon0: 로컬 미터 좌표 원점(보통 명소 중심)
 export const MAPS = [
   {
+    id: "rome",
+    name: "Rome · 로마",
+    subtitle: "로마 도심 반경 20km — 콜로세움·포로 로마노·바티칸",
+    lat0: 41.9028,
+    lon0: 12.4964,
+    // 로마 역사지구(콜로세움/포로 로마노 인근) 중심 반경 20km — 바티칸(2.4km)·트레비 분수(1.2km) 포함.
+    bbox: [41.7231, 12.255, 42.0825, 12.7378],
+    catalogHidden: true, // 카탈로그는 rome-stream 항목으로 노출
+    // 구릉 도시(팔라티노·카피톨리노 등 7언덕) — DEM raw, 건물 footprint 평탄화는 build-world(언덕 보존).
+    bareEarth: false,
+    heightmap: { src: "rome.terrain.bin", size: 2048, meters: 40000 },
+  },
+  {
     id: "busan",
     name: "Busan · 부산",
     subtitle: "부산 도심 반경 20km — 해운대·광안리·태종대",

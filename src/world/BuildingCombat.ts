@@ -36,6 +36,11 @@ const ABDUCT_RELEASE_MUL = 2.5; // 재안착(하강)은 부양보다 빠르게 �
 const ABDUCT_HEIGHT = 200; //      이 고도 도달 시 소거
 const ABDUCT_TINT = new THREE.Color(0x9fd8ff); // 막 결합이 끊긴 창백한 청백(와이어프레임화의 톤 근사)
 
+// 링크 리와인드(물리편 §2.8.3): 발동 시 반경 내 "최근 파괴"를 되돌린다. 파괴된 항목의 전체 참조를
+// 짧은 시간창 동안만 보존(무한 성장 방지) — 그보다 오래된 파괴는 잊혀 되돌릴 수 없다(정본 "수 초 전"의
+// 기계적 근거). 실제 요청 창(rewindSec)은 호출부가 이보다 짧게 넘겨야 유효.
+const LINK_REWIND_RETAIN = 15; // 되돌림 후보 보존 상한(s)
+
 const _m4 = new THREE.Matrix4();
 const _pos = new THREE.Vector3();
 const _quat = new THREE.Quaternion();
@@ -138,6 +143,8 @@ export class BuildingCombat {
   private abducting = new Map<string, BEntry>(); // 납치(부양) 진행 중 — 표적/피해 대상에서 제외
   private destroyed = new Map<string, { cx: number; cz: number; isLandmark: boolean }>(); // 파괴 이력(재로드 복원)
   private collision: CollisionWorld | null = null;
+  private clock = 0; // 링크 리와인드(§2.8.3) 기준 시계 — update(dt) 가 누적
+  private recentlyDestroyed: { entry: BEntry; at: number }[] = []; // 되돌림 후보(LINK_REWIND_RETAIN 창)
 
   // 잔해 더미 — 단일 InstancedMesh(순수 검정). slot 은 건물 id 당 1회 할당(재로드 시 재사용).
   private rubble: THREE.InstancedMesh | null = null;
@@ -146,7 +153,8 @@ export class BuildingCombat {
 
   destroyedBuildings = 0;
   destroyedLandmarks = 0;
-  onDestroyed?: (isLandmark: boolean) => void;
+  /** 파괴 통지 — x/z/aimY 는 방향 피드백(HUD 웨지 등)이 참조할 파괴 위치(월드 좌표). */
+  onDestroyed?: (isLandmark: boolean, x: number, y: number, z: number) => void;
 
   /** parent(월드 group/scene)를 주면 잔해 InstancedMesh 를 거기에 추가. 미지정 시 잔해 비주얼 생략(테스트). */
   constructor(parent?: THREE.Object3D) {
@@ -250,6 +258,8 @@ export class BuildingCombat {
       if (ai >= 0) this.active.splice(ai, 1);
       this.abducting.delete(e.id); // 언로드된 청크의 납치 진행분 정리(커터는 anchor null 로 해제 인지)
     }
+    // 언로드된 청크 소속 파괴 이력은 되돌림 후보에서 제외(지오메트리 참조가 더 이상 유효하지 않음)
+    this.recentlyDestroyed = this.recentlyDestroyed.filter((r) => r.entry.mesh !== mesh);
     this.byMesh.delete(mesh);
   }
 
@@ -415,7 +425,7 @@ export class BuildingCombat {
       this.destroyedBuildings++;
     }
     this.collision?.openBuildingAt(e.cx, e.cz);
-    this.onDestroyed?.(e.isLandmark);
+    this.onDestroyed?.(e.isLandmark, e.cx, e.aimY, e.cz);
   }
 
   // ─────────────────────────── 피해/파괴 ───────────────────────────
@@ -436,6 +446,55 @@ export class BuildingCombat {
     return "hit";
   }
 
+  /**
+   * 링크 리와인드(물리편 §2.8.3) — (x,z) 반경 안에서 maxAgeSec 이내(≤LINK_REWIND_RETAIN)에 파괴된
+   * 건물/랜드마크를 원상 복구한다(체력·형상·틴트·충돌·파괴 집계 전부 원복). 되돌린 개수를 반환.
+   * "얽힘 업링크는 벌크 경유라 막의 시간 순서에 엄격히 안 묶인다" — 무회복 게임의 억울사 완충 장치.
+   */
+  undoDestructionNear(x: number, z: number, radius: number, maxAgeSec: number): number {
+    const rsq = radius * radius;
+    let n = 0;
+    for (let i = this.recentlyDestroyed.length - 1; i >= 0; i--) {
+      const rec = this.recentlyDestroyed[i];
+      if (this.clock - rec.at > maxAgeSec) continue; // 요청 창보다 오래됨(단, 보존 자체는 계속)
+      const e = rec.entry;
+      if ((e.cx - x) ** 2 + (e.cz - z) ** 2 > rsq) continue;
+      this.restoreIntact(e);
+      this.recentlyDestroyed.splice(i, 1); // 소모 — 중복 복원 방지
+      n++;
+    }
+    return n;
+  }
+
+  /** beginDestroy 의 역 — 형상·틴트·충돌·집계를 전부 원상태로. 붕괴 애니메이션 도중이어도 즉시 복원(스냅). */
+  private restoreIntact(e: BEntry): void {
+    const ai = this.active.indexOf(e);
+    if (ai >= 0) this.active.splice(ai, 1); // 진행 중이던 flash/collapsing 연출 중단
+    if (e.isLandmark) {
+      if (e.group) {
+        e.group.visible = true;
+        e.group.position.y = e.baseGroupY ?? e.group.position.y;
+        if (e.baseScaleY !== undefined) e.group.scale.y = e.baseScaleY;
+      }
+      this.tintLandmark(e, 0); // t=0 → 원색 복원
+      this.destroyedLandmarks = Math.max(0, this.destroyedLandmarks - 1);
+    } else if (e.mesh && e.origPos) {
+      const pos = e.mesh.geometry.getAttribute("position") as THREE.BufferAttribute;
+      const o = e.origPos, v = e.vStart!, n = e.vCount!;
+      for (let k = 0; k < n; k++) pos.setXYZ(v + k, o[k * 3], o[k * 3 + 1], o[k * 3 + 2]);
+      pos.needsUpdate = true;
+      this.tint(e, 0);
+      this.destroyedBuildings = Math.max(0, this.destroyedBuildings - 1);
+    }
+    e.hp = e.maxHp;
+    e.state = "intact";
+    e.anim = 0;
+    this.placeRubble(e, 0); // 잔해 더미 축소(id 슬롯은 유지 — 재파괴 시 재사용)
+    this.destroyed.delete(e.id); // 재로드 시 다시 잔해로 복원되지 않도록
+    this.collision?.closeBuildingAt(e.cx, e.cz);
+    this.addIntact(e);
+  }
+
   private beginDestroy(e: BEntry): void {
     this.removeIntact(e);
     this.destroyed.set(e.id, { cx: e.cx, cz: e.cz, isLandmark: e.isLandmark });
@@ -451,7 +510,8 @@ export class BuildingCombat {
     }
     this.placeRubble(e, 0); // 잔해 더미 슬롯 확보(스케일 0 → 붕괴와 함께 자라남)
     this.collision?.openBuildingAt(e.cx, e.cz); // 잔해 위 통과 가능
-    this.onDestroyed?.(e.isLandmark);
+    this.onDestroyed?.(e.isLandmark, e.cx, e.aimY, e.cz);
+    this.recentlyDestroyed.push({ entry: e, at: this.clock }); // 링크 리와인드(§2.8.3) 되돌림 후보
   }
 
   // ── 잔해 더미(InstancedMesh) ──
@@ -620,6 +680,10 @@ export class BuildingCombat {
   // ─────────────────────────── 매 프레임 연출 ───────────────────────────
 
   update(dt: number): void {
+    this.clock += dt;
+    while (this.recentlyDestroyed.length && this.clock - this.recentlyDestroyed[0].at > LINK_REWIND_RETAIN) {
+      this.recentlyDestroyed.shift();
+    }
     this.tickAbduct(dt); // 납치 부양/재안착(커터·W4)
     for (let i = this.active.length - 1; i >= 0; i--) {
       const e = this.active[i];

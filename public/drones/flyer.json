@@ -2,9 +2,19 @@
   "id": "flyer",
   "name": "DRONE-V1",
   "displayName": "비행 드론 / FLYER",
-  "body": { "eyeHeight": 2.0, "radius": 1.0 },
-  "vitals": { "maxHp": 60, "maxFreq": 90, "freqRegen": 16 },
-  "view": { "fov": 88, "mouseSensitivity": 0.0024 },
+  "body": {
+    "eyeHeight": 2.0,
+    "radius": 1.0
+  },
+  "vitals": {
+    "maxHp": 60,
+    "maxFreq": 90,
+    "freqRegen": 16
+  },
+  "view": {
+    "fov": 88,
+    "mouseSensitivity": 0.0024
+  },
   "move": {
     "mode": "fly",
     "speed": 111.11,
@@ -16,9 +26,29 @@
     "minAltitude": 18
   },
   "actions": [
-    { "label": "▲", "key": "Space", "desc": "상승" },
-    { "label": "▼", "key": "ShiftLeft", "desc": "하강" }
+    {
+      "label": "▲",
+      "key": "Space",
+      "desc": "상승"
+    },
+    {
+      "label": "▼",
+      "key": "ShiftLeft",
+      "desc": "하강"
+    }
   ],
-  "weapons": { "primary": "frequency-beam-light", "special": "special-overdrive" },
-  "lockOn": { "followDist": 24, "band": 12 }
+  "weapons": {
+    "primary": "frequency-beam-light",
+    "special": "special-overdrive"
+  },
+  "lockOn": {
+    "followDist": 24,
+    "band": 12
+  },
+  "linkRewind": {
+    "freqCost": 42,
+    "cooldown": 40,
+    "rewindSec": 4,
+    "radius": 110
+  }
 }

@@ -363,6 +363,72 @@ if (SCENARIO === "menu") {
     castTexts: [...new Set(samples.filter((s) => s.cast).map((s) => s.cast))].slice(0, 5),
     events,
   });
+} else if (SCENARIO === "siege") {
+  // P3 공성 낙인(buildingBrands) — 마커가 랜드마크에 낙인탄 → 파문이 건물 피해로 전환
+  const { browser, ctx, page, errors } = await launch({ campaign: CAMPAIGN_SEEDS.ch3, progress: PROGRESS_SEED });
+  const spec = await forceMission(ctx, "siege-brand");
+  await deploy(page, "WALKER");
+  const { samples, events } = await runPlay(page, SECS, OUT);
+  const last = samples[samples.length - 1];
+  await finish(page, browser, errors, {
+    mission: spec.id, seconds: last?.t, gameSec: gameSecOf(last, 260),
+    kills: last?.kills, hp: last?.hp, landmarks: last?.landmarks,
+    firstCast: events.find((e) => e.ev === "CAST")?.text ?? "",
+    objective: last?.objective, detail: last?.detail, events,
+  });
+} else if (SCENARIO === "linkrewind") {
+  // P3 링크 리와인드(§2.8.3, 자가 시전) — KeyR 로 위치·HP + 반경 내 최근 파괴 건물을 되돌린다.
+  // 반응형: destroyed/landmarks 카운터가 증가한 직후에만 KeyR(무언가 있어야 되돌릴 게 있다).
+  const { browser, ctx, page, errors } = await launch({ campaign: CAMPAIGN_SEEDS.ch3, progress: PROGRESS_SEED });
+  await forceMission(ctx, "grand-purge"); // aggro:building — 마커/거머리가 일반 건물도 공격(파괴 발생이 빠름)
+  await deploy(page, "WALKER");
+  const t0 = Date.now();
+  const events = [];
+  let prev = null;
+  const cdp = await page.context().newCDPSession(page);
+  const input = humanInput(page, cdp); // 이동/사격은 계속 시뮬레이션(평균 조작 유지)
+  let presses = 0;
+  while (Date.now() - t0 < SECS * 1000) {
+    const s = await sampleHud(page).catch(() => null);
+    if (s) {
+      s.t = (Date.now() - t0) / 1000;
+      if (prev) {
+        if (!prev.cast && s.cast) events.push({ t: s.t, ev: "CAST", text: s.cast });
+        if (s.destroyed > prev.destroyed) events.push({ t: s.t, ev: "DESTROYED", n: s.destroyed });
+        if (s.landmarks < prev.landmarks) events.push({ t: s.t, ev: "LANDMARK-RESTORED" });
+        if (s.destroyed < prev.destroyed) events.push({ t: s.t, ev: "BUILDING-RESTORED", from: prev.destroyed, to: s.destroyed });
+      }
+      // 파괴 직후 곧바로 시전(반응형) — 되돌릴 대상이 있을 때만
+      if (prev && s.destroyed > prev.destroyed) {
+        await page.keyboard.press("KeyR").catch(() => {});
+        presses++;
+      }
+      prev = s;
+    }
+    await page.waitForTimeout(250);
+  }
+  await input.stop();
+  const last = prev;
+  await finish(page, browser, errors, {
+    mission: "grand-purge", seconds: last?.t, keyRPresses: presses,
+    landmarks: last?.landmarks, destroyed: last?.destroyed,
+    destroyEvents: events.filter((e) => e.ev === "DESTROYED").length,
+    restoreEvents: events.filter((e) => e.ev.includes("RESTORED")),
+    castTexts: [...new Set(events.filter((e) => e.ev === "CAST").map((e) => e.text))],
+    events,
+  });
+} else if (SCENARIO === "lensvisual") {
+  // P3 중력 렌즈 왜곡(§2.7.1) — 위상 이탈 개체 배경 일렁임 시각 확인(정예 로스터전 — 옅은 장)
+  const { browser, ctx, page, errors } = await launch({ campaign: CAMPAIGN_SEEDS.ch3, progress: PROGRESS_SEED });
+  await forceMission(ctx, "thin-field");
+  await deploy(page, "WALKER");
+  const t0 = Date.now();
+  let shots = 0;
+  while (Date.now() - t0 < SECS * 1000 && shots < 6) {
+    await page.waitForTimeout(5000);
+    try { await page.screenshot({ path: `${OUT}-t${((Date.now() - t0) / 1000).toFixed(0)}s.png` }); shots++; } catch { /* 무시 */ }
+  }
+  await finish(page, browser, errors, { mission: "thin-field", shots });
 } else {
   console.error("unknown scenario", SCENARIO);
   process.exit(1);

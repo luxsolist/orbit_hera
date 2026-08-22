@@ -3,6 +3,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { LensDistortPass } from "./LensDistortPass";
 
 /**
  * Bloom 포스트 프로세싱 컴포저.
@@ -28,6 +29,18 @@ export function createComposer(
   composer.addPass(new OutputPass());
 
   return composer;
+}
+
+/**
+ * 중력 렌즈 왜곡 패스 추가(물리편 §2.7.1 — 위상 이탈 개체 배경 일렁임). 블룸 이전에 삽입해
+ * 왜곡된 원본을 블룸이 읽게 한다(왜곡 후 밝기 재계산 자연스러움). 게임플레이 컴포저에만 붙이면
+ * 되므로 createComposer 기본 파이프라인엔 포함하지 않고 별도 호출(인트로/메뉴 배경은 미사용).
+ */
+export function addLensDistortPass(composer: EffectComposer): LensDistortPass {
+  const pass = new LensDistortPass();
+  const bloomIdx = composer.passes.findIndex((p) => p instanceof UnrealBloomPass);
+  composer.passes.splice(bloomIdx >= 0 ? bloomIdx : 1, 0, pass);
+  return pass;
 }
 
 /**

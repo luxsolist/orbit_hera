@@ -6,6 +6,34 @@
 
 ---
 
+## 🚨 긴급 발견 (2026-08-21 e2e 검증) — 스트리밍 맵에 랜드마크가 전혀 등록되지 않음
+
+**증상**: `aggro:landmark` 미션(오래 선 자리·절단 공성·공성 낙인 등)에서 적이 이따금 일반 건물을
+공격("CITY LOST" 상승)하는 것을 e2e로 관찰. 원인 추적 결과 — **스트리밍 맵(`seoul-stream`/
+`busan-stream`/`everest-stream`, 현재 카탈로그 전부)에는 `BuildingCombat.registerLandmark()`가
+단 한 번도 호출되지 않는다.**
+
+- `src/world/StreamingWorld.ts` 의 청크 빌드 콜백(`makeIO().build`)은 `registerBuilding` 만 호출 —
+  랜드마크 등록 코드 자체가 없음(grep 로 "landmark" 0건).
+- `scripts/build-world.mjs`(스트리밍 청크 빌더)는 `landmarks.json`(전역 인덱스, 주석 "전역 랜드마크
+  → 위치")을 만들지만 청크 페이로드에는 반영하지 않음 — `chunk(cx,cz)`에 buildings/roads/water/
+  walls/areas 만 배분, landmarks 배분 없음.
+- `public/maps/landmarks.json` 은 **`mapId: "gyeongbokgung"`(구 단일맵) 전용**이고, 이를 읽는
+  `src/world/mapLocator.ts`(`fetchLandmarkLocation`)는 어디서도 호출되지 않는 죽은 코드.
+- 구 단일맵 경로(`scripts/landmarks.mjs` RECIPES → `build-maps.mjs` bakeLandmarks → `World.ts`
+  `registerLandmark`)는 정상 동작 — **문제는 신 스트리밍 경로에만 있음**.
+
+**영향**: `guard(landmarks)` 계열 미션이 스트리밍 맵에서 사실상 항상 성공(잃을 랜드마크가 없음),
+`aggro:landmark` 변조는 항상 일반 건물로 폴백(§9.4 "랜드마크로 직행한다"는 설계 의도 무효화).
+현재 등록된 3개 맵이 전부 스트리밍이라 **거의 모든 실제 플레이가 이 문제의 영향권**.
+
+**대응(미착수, 범위가 커서 별도 작업 필요)**: StreamingWorld 청크 빌드 시 `landmarks.json`(경위도)을
+청크 좌표로 변환해 해당 청크 로드 시점에 근접 건물 폴리곤을 랜드마크로 승격·`registerLandmark` 호출
+— OSM 자동 분류(얽힘 택소노미, §9.7)와 함께 정식 파이프라인화가 바람직. 우선순위: **P4 착수 전
+필수 선결**(P4의 균열/봉합 콘텐츠 상당수가 랜드마크 상태에 의존).
+
+---
+
 ## 🎯 우선순위 마스터 플랜 (2026-08-20 기준)
 
 > 원칙: **이야기가 게임을 끌고 간다** — 캠페인 골격(§9)을 먼저 세우고, 그 위 스토리 비트가 요구하는
@@ -15,9 +43,9 @@
 | 순위 | 묶음 | 내용 (섹션) | 규모 |
 | :--- | :--- | :--- | :--- |
 | **P0** ✅ | 캠페인 골격 1차 | **완료(2026-08)** — 저장 인프라(StorageBackend 교체 가능 계층) → CampaignState → 표류 벡터 오버레이+도시 상태 지도 → 챕터 가중 선택기(=Director 단계 0) → 사건 파일/브리핑 UI (§9.3) | — |
-| **P1** ✅ | 계시 세트 (= §9 앵커 미션) | **핵심 완료** — 자매 2연전 관측 보고·삼각측량 교점·**동시 타격 실험**(v2 experiment 골 — 계시·전 투영 회수)·재독 점수판. 잔여: 타임랩스 컷씬·도감 병합·tactical 다단계 풀 배선 (§9.4) | 잔여 소 |
+| **P1** ✅ | 계시 세트 (= §9 앵커 미션) | **완료** — 자매 2연전 관측 보고·삼각측량 교점·**동시 타격 실험**(v2 experiment 골 — 계시·전 투영 회수)·재독 점수판·명칭 갱신·도감 병합. 잔여: 타임랩스 컷씬·tactical 다단계 풀 배선 (§9.4) | 잔여 소 |
 | **P2** ✅ | 대위상 세트 + 진행 MVP | **완료** — 위상 이탈·관측 펄스·W2 계류(§8 Phase 3) ∥ 진행 MVP(§7.4 — XP/레벨/성장/재생) ∥ LLM Director 파일럿 클라 훅(§10 단계 1 — 서버 API 는 별도) | — |
-| **P3** ✅ | 전투 재정립 2단계 | **1차 완료** — 커터 건물 납치+W4 복구 사격 → 준위 강등 → 역할 실루엣(+낙인탄 텔레그래프·러셔 돌진) → 역행체+예지 HUD. 잔여: buildingBrands·씨앗 장·중력 렌즈·링크 리와인드 (§8 Phase 5) | 잔여 중 |
+| **P3** ✅ | 전투 재정립 2단계 | **완료** — 커터 건물 납치+W4 복구 사격 → 준위 강등 → 역할 실루엣(+낙인탄 텔레그래프·러셔 돌진) → 역행체+예지 HUD → buildingBrands(공성 낙인)·중력 렌즈·링크 리와인드(자가 시전). 잔여: 씨앗 장 그리드(구 아키타입 퇴역 병행) (§8 Phase 5) | 잔여 소 |
 | **P4** | 1막 클라이맥스 | 균열 스폰(2.4) → 봉합전(suture 골) → W5 공명 각인(score 골) → 사고 로그 파편 (§8 Phase 2 잔여+Phase 6) | ~3주 |
 | **P5** | 성능·스케일 | sleep/컬링(§1 잔여 — P4 보스전 규모 전 권장) → 멀티셀 스트리밍(§5) → 동적 가시거리(§3) → 도시 대량 배치(§9.7) | 수요 시점 |
 | **P6** | 멀티플레이 + AI 감독 상주 | §6 전체 + **인스턴스/세계 감독 상주**(§10 단계 2 — 사고 로그 파이프라인 개통) — 공명 파티·W4 가 MP 문법이므로 P3 이후 | 장기 |
@@ -602,7 +630,9 @@ Free Roam 샤드 (1,000명): ~$20/월
   워커=대위상 앵커 / 플라이어=실체화 타이밍 타격.
 - [x] **W2 관측 계류** ✅ — `manual.pinSec`(중주파 4s 하드 핀/경주파 1.5s 소프트 핀): 재이탈 봉쇄 +
   **계류 중 격파는 역행 불능**(§9.2 "측정만이 비가역" — 역행체 카운터).
-- [ ] 중력 렌즈 왜곡(이탈 잔상 셰이더) — 후속 폴리시
+- [x] **중력 렌즈 왜곡** ✅ 완료(2026-08, §2.7.1) — [lensDistort.ts](../src/fx/lensDistort.ts)(순수
+  화면공간 투영) + [LensDistortPass.ts](../src/fx/LensDistortPass.ts)(ShaderPass, 최대 6점 동시).
+  위상 이탈 개체 위치가 배경을 렌즈처럼 왜곡 — 미니맵 "빈 원"의 물리적 근거.
 
 ### Phase 4 — 인식 Ⅱ 계시 (중간 반전 — 서사편 §1.10 계시 설계)
 
@@ -610,17 +640,18 @@ Free Roam 샤드 (1,000명): ~$20/월
   구현(§9.4 ✅). `tactical.ts` 다단계(SpawnGroup/게이트) 풀 배선은 다단계 콘텐츠 수요 시(순수 코어는 ✅ 대기).
 - [x] 동시 타격 실험 미션 ✅ (§9.4 와 동일 작업 — experiment-strike + 계시 처리 + 전 투영 회수).
   잔여: 필라멘트 시각(DrainBeams 재활용)·궤적 타임랩스 컷씬
-- [~] 다중 투영 미니보스(HP 공유 N구체) — **전투 메커닉 ✅ 구현**(공유 풀·동반 소산·크레딧 1회·피격
-  필라멘트, 미션 "삼중 투영"). 남은 것: **점수판 문법 전환**("절단된 투영 n / 본체 1 · 봉합도 m%") +
-  명칭 갱신 연출(§8.3) — 계시 이후 게이트로. 2~3일
+- [x] 다중 투영 미니보스(HP 공유 N구체) ✅ — 전투 메커닉(공유 풀·동반 소산·크레딧 1회·피격 필라멘트,
+  미션 "삼중 투영") + 점수판 문법 전환(sutureReadout) + **명칭 갱신 연출(§8.3)** ✅(deployRoleName·
+  bestiary 도감 병합 — 계시 이후 게이트). 잔여: 없음(§9.4 와 동일 완료 상태).
 
 ### Phase 5 — 워커 로스터 완성 + 시간축
 
 - [x] **절단체(`cutter`) 건물 납치 + W4 복구 사격** ✅ 1차 (2026-08) — 부착→절단 채널(severSec,
   W1 동결·경직이 인터럽트)→부양 납치(BuildingCombat abducting 상태: 상승·창백 틴트·고도 200 도달 시
   잔해 없는 소거)→격추 시 재안착(완전 복원). W4 `manual.mend`: 수동 빔이 납치 건물 명중 시 부양
-  고도 감쇄(재안착 가속). 미션 "절단 공성"(패턴 17 편입 — aggro:landmark). 잔여: `buildingBrands`
-  변조(건물 낙인)·아군 mend(MP). [tests/abduct.test.ts](../tests/abduct.test.ts)
+  고도 감쇄(재안착 가속). 미션 "절단 공성"·"공성 낙인"(패턴 17 buildingBrands ✅ — BrandSystem 건물
+  대상 낙인 일반화, EnemyManager.markerFireBuilding). [tests/abduct.test.ts](../tests/abduct.test.ts)·
+  [tests/buildingBrands.test.ts](../tests/buildingBrands.test.ts). 잔여: 아군 mend(MP).
 - [x] **준위 강등 브레이크포인트** ✅ — kkLevelOf(75/50/25% 계단)·kkLevelColors(최저온→본색 보간),
   KK_MIN_HP(3000)+ 이상 정예·보스만. 하향 통과 시 색 강등+0.35s 경직+전이 방출 펄스. 다중 투영은
   공유 풀 미러로 전 투영 동시 강등. [tests/kkDemote.test.ts](../tests/kkDemote.test.ts)
@@ -630,8 +661,11 @@ Free Roam 샤드 (1,000명): ~$20/월
 - [x] **역행체(`rewinder`) + 예지 HUD** ✅ 1차 — 후방 시전(castSec 4)→반경 내 최근 격파 부활(상한 8·
   killLog 링버퍼)+처치 집계 되감김+플레이어 위치 역행(PlayerController posHistory 링). 카운터 3종:
   시전 중 격파/W1 동결·경직/W2 계류(확정 기록 — 되감기지 않음). 예지 HUD(setRewindWarn 카운트다운).
-  미션 "역행 사냥"(purge-role). 잔여: 건물 상태 되감기·링크 리와인드(2.8.3)·시전 링 FX.
-  [tests/rewinder.test.ts](../tests/rewinder.test.ts)
+  미션 "역행 사냥"(purge-role). **링크 리와인드(§2.8.3, 자가 시전)** ✅ — DroneSpec.linkRewind(KeyR):
+  위치·HP 복원 + BuildingCombat.undoDestructionNear(반경 내 최근 파괴 완전 원복 — CollisionWorld
+  closeBuildingAt 포함). 표면 명칭 "위상 소급"(§8.1 — "리와인드/롤백" 누설 회피).
+  [tests/rewinder.test.ts](../tests/rewinder.test.ts) · [tests/PlayerController.test.ts](../tests/PlayerController.test.ts)
+  · [tests/abduct.test.ts](../tests/abduct.test.ts). 잔여: 시전 이펙트(링 FX)·모바일 바인딩.
 - [ ] 씨앗 장 그리드(2.5) + 공허/열화 지대 — 구 아키타입(거머리/모기) 퇴역(서사편 §6.8 승계 완료). 1주
 
 ### Phase 6 — 1막 클라이맥스와 엔딩 경로
@@ -719,8 +753,10 @@ Free Roam 샤드 (1,000명): ~$20/월
 - [x] **⭐⭐⭐ 동시 타격 실험** ✅ — v2 goal `experiment{targets,hold}`(동시 조사 유지 — 끊기면 2배속
   감쇠) + 미션 experiment-strike(5장 전용) + 성공 = 계시(6장 진입·전 투영 동시 회수 recallAll·계시
   패널). [tests/experiment.test.ts](../tests/experiment.test.ts). 잔여: 궤적 타임랩스 컷씬(현재 텍스트 패널 MVP).
-- [~] **⭐⭐ 재독 패키지** — 점수판 문법 전환 ✅("절단된 투영 n · 본체 1 · 봉합도 m%" — sutureReadout,
-  6장 게이트). 잔여: 도감 병합·명칭 갱신 연출·봉합(suture) 문법 해금.
+- [x] **⭐⭐ 재독 패키지** ✅ 완료(2026-08) — 점수판 문법("절단된 투영 n · 본체 1 · 봉합도 m%" —
+  sutureReadout, 6장 게이트) + **명칭 갱신**(deployRoleName — purge-role HUD 문구가 계시 후 "투영체"로
+  통합, 근원만 구분 유지) + **도감 병합**(bestiary.ts + MenuScreen 스토리 팝업 내 CODEX — 계시 전
+  아키타입 5카드 → 계시 후 "그것(투영체)" 단일 카드, CSS 접힘 애니메이션). 잔여: 봉합(suture) 문법 해금.
 
 ### 9.5 개선 항목 — 전역 메타 (P0~P2 사이 분산)
 
@@ -737,8 +773,18 @@ Free Roam 샤드 (1,000명): ~$20/월
 
 ### 9.7 도시 대량 배치 (P5 — 파이프라인)
 
-- [ ] **⭐⭐ 도시 메타 카탈로그** — 100+ 도시(위경도·택소노미 특성·자매쌍·장 소속)를 데이터로. 빌드는
-  수요 순(챕터 도시군 먼저: 고대 벨트 → 자매쌍 → 태평양 연안). 도시당 `npm run build:map` 배치.
+- [x] **⭐⭐ 도시 100선 큐레이션** ✅ (2026-08-21) — [spec/09-city-catalog.md](../spec/09-city-catalog.md):
+  이름·국가·장 소속·택소노미 힌트까지 확정(위경도 등 정밀 메타는 미착수). 서울/부산/오사카 기완료 +
+  신규 97곳(1장 열지도 25·2장 자매쌍 10쌍·3장 태평양 연안 20·4~6장 확장 33).
+- [x] **⭐⭐ 랜드마크 카탈로그 큐레이션 + 실측 좌표** ✅ (2026-08-21 큐레이션, 2026-08-22 좌표) —
+  [scripts/data/landmark-catalog.json](../scripts/data/landmark-catalog.json): 100개 도시 전체
+  도시당 10~25개, 총 1,749개 랜드마크(이름·영문명·택소노미 `cls`·5~15자 설명). Nominatim(OSM)
+  지오코딩으로 1,574개(90.0%)에 실측 위경도 채움, 나머지 175개(10.0%)는 날조 없이
+  `geocodeStatus:"unresolved"`로 남겨 수동 검수 대상으로 표시 — 자세한 방침·재현 절차는
+  09-city-catalog.md "랜드마크 카탈로그" 절 참조. 잔여: **미해결 175개 수동 검수** +
+  **도시 메타 카탈로그 데이터화**(택소노미 특성 태그) + 빌드는 수요 순(챕터 도시군 먼저). 도시당
+  `npm run build:map`(또는 스트리밍 `build-world.mjs`) 배치 — 단, 스트리밍 경로는 위 "🚨 긴급
+  발견" 배선 완성이 선행되어야 실제로 게임에 반영된다.
 - [ ] **⭐ 라이브 이벤트 훅** — 전 지구 동시 관측일(신년 등) 침공 스파이크(06-missions §8 세계 스케일 메타).
 
 ---

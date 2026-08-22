@@ -180,7 +180,8 @@ reload" 모델([01-architecture](01-architecture.md#상태-머신))과 일치하
   sutureReadout(재독 점수판)·pickCampaignMission(챕터 가중 = 규칙 기반 감독). Game.endMission 이
   MissionReport 를 만들어 campaignStore/progressStore 에 적립. 메뉴: 사건 파일·표류 오버레이·도시 상태 점.
 - **experiment 골**(v2) — GameInstance 가 observedCount≥targets 프레임만 observeHold 누적(이탈 시
-  2배속 감쇠), 성공 시 계시(recallAll + 계시 패널 + 6장 문법 전환).
+  동속 감쇠 — 2026-08 e2e 튜닝: 관측 창 0.6→1.2s·감쇠 2배속→1배속·본판 5기/6s→4기/5s, 평균 조작으로
+  진행이 거의 불가능했던 문제 수정), 성공 시 계시(recallAll + 계시 패널 + 6장 문법 전환).
 - **진행 MVP**([progression.ts](../../src/player/progression.ts) — §7.4): xpForKill(강함 비례)/
   levelFromXp/droneGrowth. 출격 시점 스냅샷: applyGrowth(HP/재생) + scaleWeaponDamage(무기 배수).
 - **LLM 감독 파일럿**([directorClient.ts](../../src/game/directorClient.ts) — §10 단계 1):

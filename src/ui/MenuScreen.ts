@@ -4,7 +4,10 @@ import { fetchCatalog } from "../world/maps";
 import type { MapCatalogEntry } from "../world/MapData";
 import { buildWorldSvg, projectLatLon, clusterDots, zoomMapBox, projectInBox, driftOverlaySvg } from "./worldMapSvg";
 import type { CampaignData } from "../core/progress";
-import { chapterMeta, driftConvergence, pairedCity } from "../game/campaign";
+import { chapterMeta, driftConvergence, pairedCity, revealed } from "../game/campaign";
+import { bestiaryCards } from "../game/bestiary";
+import { fetchPlasmoid } from "../enemies/plasmoids";
+import { DEFAULT_PLASMOID } from "../enemies/PlasmoidSpec";
 
 const WORLD_SVG = buildWorldSvg();
 
@@ -41,7 +44,9 @@ export class MenuScreen {
   private zonePopPeace: HTMLInputElement;
   private zonePopDrones: HTMLElement;
   private storyPopup: HTMLElement;
+  private storyHead: HTMLElement;
   private storyList: HTMLElement;
+  private plasmoidSpecCache: import("../enemies/PlasmoidSpec").PlasmoidSpec | null = null; // 도감 로드 캐시
   private helpPopup: HTMLElement;
   private clusterPopup: HTMLElement;
   private clusterMap: HTMLElement;
@@ -64,6 +69,7 @@ export class MenuScreen {
     this.zonePopPeace = byId("zonePopPeace") as HTMLInputElement;
     this.zonePopDrones = byId("zonePopDrones");
     this.storyPopup = byId("storyPopup");
+    this.storyHead = byId("storyHead");
     this.storyList = byId("storyList");
     this.helpPopup = byId("helpPopup");
     this.clusterPopup = byId("clusterPopup");
@@ -91,7 +97,10 @@ export class MenuScreen {
     });
     byId("clusterPopClose").addEventListener("click", () => (this.clusterPopup.hidden = true));
     byId("zonePopClose").addEventListener("click", () => (this.zonePopup.hidden = true));
-    byId("storyBtn").addEventListener("click", () => this.toggleSidePop(this.storyPopup));
+    byId("storyBtn").addEventListener("click", () => {
+      if (this.storyPopup.hidden) this.renderStoryList(); // 재오픈 시 항상 목록부터(도감 잔류 방지)
+      this.toggleSidePop(this.storyPopup);
+    });
     byId("helpBtn").addEventListener("click", () => this.toggleSidePop(this.helpPopup));
     this.renderStoryList();
   }
@@ -272,10 +281,12 @@ export class MenuScreen {
     pop.hidden = !show;
   }
 
-  /** 스토리 목록 렌더(첫 항목 = 인트로 컷씬). 향후 항목 계속 추가 예정. */
+  /** 스토리 목록 렌더(첫 항목 = 인트로 컷씬, 둘째 = 도감). 향후 항목 계속 추가 예정. */
   private renderStoryList(): void {
-    const items: { label: string; action: () => void }[] = [
+    this.storyHead.textContent = "스토리 / STORY";
+    const items: { label: string; action: () => void; close?: boolean }[] = [
       { label: "▶ 인트로 / INTRO", action: () => this.cb.onPlayIntro() },
+      { label: "▤ 도감 / CODEX", action: () => void this.renderBestiary(), close: false },
     ];
     this.storyList.innerHTML = "";
     for (const it of items) {
@@ -284,10 +295,33 @@ export class MenuScreen {
       btn.className = "sidepop__item";
       btn.textContent = it.label;
       btn.addEventListener("click", () => {
-        this.storyPopup.hidden = true;
+        if (it.close ?? true) this.storyPopup.hidden = true;
         it.action();
       });
       this.storyList.appendChild(btn);
+    }
+  }
+
+  /**
+   * 도감(§8.3 명칭 갱신의 시각화) — 인식 Ⅰ 동안 아키타입별 카드, 계시(6장) 이후엔 "그것(투영체)"
+   * 한 장으로 접힌 카드(도감 병합 연출 — bestiary__card--merged 가 살짝 확대·발광하며 등장).
+   * 스토리 팝업 안(같은 패널)에서 목록을 교체해 보여주고, 뒤로가기로 스토리 목록에 복귀.
+   */
+  private async renderBestiary(): Promise<void> {
+    this.storyHead.textContent = "도감 / CODEX";
+    this.storyList.innerHTML = `<button type="button" class="sidepop__item bestiary__back">← 목록으로</button>`;
+    this.storyList.querySelector(".bestiary__back")!.addEventListener("click", () => this.renderStoryList());
+    if (!this.plasmoidSpecCache) {
+      try { this.plasmoidSpecCache = await fetchPlasmoid("plasmoid"); }
+      catch { this.plasmoidSpecCache = DEFAULT_PLASMOID; }
+    }
+    const camp = this.cb.campaign();
+    const cards = bestiaryCards(this.plasmoidSpecCache, revealed(camp));
+    for (const c of cards) {
+      const el = document.createElement("div");
+      el.className = c.merged ? "bestiary__card bestiary__card--merged" : "bestiary__card";
+      el.innerHTML = `<div class="bestiary__name">${c.name}</div><div class="bestiary__brief">${c.brief}</div>`;
+      this.storyList.appendChild(el);
     }
   }
 

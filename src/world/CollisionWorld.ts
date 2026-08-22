@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import { SpatialGrid } from "./SpatialGrid";
 
-type Circle = { x: number; z: number; radius: number; top: number };
+// savedTop — openBuildingAt 이 top 을 -Infinity 로 덮기 직전의 원래 값을 1회 보존(링크 리와인드 §2.8.3
+// closeBuildingAt 이 되돌릴 때 참조). 미정의 = 아직 개방된 적 없음(닫을 것도 없음).
+type Circle = { x: number; z: number; radius: number; top: number; savedTop?: number };
 /** 방향성 바운딩 박스(OBB): center + 단위 u축 + 반폭(hu:u, hv:⊥) + br(외접반경) + top(옥상=디딤면, 그 위면 통과). */
-type OBB = { cx: number; cz: number; ux: number; uz: number; hu: number; hv: number; br: number; top: number };
-type Tri = { ax: number; az: number; bx: number; bz: number; cx: number; cz: number; mx: number; mz: number; br: number; top: number };
+type OBB = { cx: number; cz: number; ux: number; uz: number; hu: number; hv: number; br: number; top: number; savedTop?: number };
+type Tri = { ax: number; az: number; bx: number; bz: number; cx: number; cz: number; mx: number; mz: number; br: number; top: number; savedTop?: number };
 type Wall = { x0: number; x1: number; z0: number; z1: number; top: number };
 
 /**
@@ -406,16 +408,46 @@ export class CollisionWorld {
     this.boxGrid.query(cx, cz, cx, cz, (b) => {
       const dx = cx - b.cx, dz = cz - b.cz;
       const lu = dx * b.ux + dz * b.uz, lv = -dx * b.uz + dz * b.ux;
-      if (Math.abs(lu) <= b.hu && Math.abs(lv) <= b.hv) b.top = -Infinity;
+      if (Math.abs(lu) <= b.hu && Math.abs(lv) <= b.hv) {
+        if (b.top !== -Infinity) b.savedTop = b.top; // 최초 개방 시에만 원래 옥상 보존
+        b.top = -Infinity;
+      }
     });
     this.triGrid.query(cx, cz, cx, cz, (t) => {
       const s1 = (cx - t.bx) * (t.az - t.bz) - (t.ax - t.bx) * (cz - t.bz);
       const s2 = (cx - t.cx) * (t.bz - t.cz) - (t.bx - t.cx) * (cz - t.cz);
       const s3 = (cx - t.ax) * (t.cz - t.az) - (t.cx - t.ax) * (cz - t.az);
-      if (!((s1 < 0 || s2 < 0 || s3 < 0) && (s1 > 0 || s2 > 0 || s3 > 0))) t.top = -Infinity;
+      if (!((s1 < 0 || s2 < 0 || s3 < 0) && (s1 > 0 || s2 > 0 || s3 > 0))) {
+        if (t.top !== -Infinity) t.savedTop = t.top;
+        t.top = -Infinity;
+      }
     });
     for (const c of this.circles) {
-      if ((c.x - cx) ** 2 + (c.z - cz) ** 2 <= c.radius * c.radius) c.top = -Infinity;
+      if ((c.x - cx) ** 2 + (c.z - cz) ** 2 <= c.radius * c.radius) {
+        if (c.top !== -Infinity) c.savedTop = c.top;
+        c.top = -Infinity;
+      }
+    }
+  }
+
+  /**
+   * openBuildingAt 의 역 — (cx,cz) 의 개방된 콜라이더를 원래 옥상 높이로 복원(링크 리와인드 §2.8.3 —
+   * 되돌린 건물이 다시 디딤면/장애물로 기능하게). savedTop 이 없으면(개방 이력 없음) 무시.
+   */
+  closeBuildingAt(cx: number, cz: number): void {
+    this.boxGrid.query(cx, cz, cx, cz, (b) => {
+      const dx = cx - b.cx, dz = cz - b.cz;
+      const lu = dx * b.ux + dz * b.uz, lv = -dx * b.uz + dz * b.ux;
+      if (Math.abs(lu) <= b.hu && Math.abs(lv) <= b.hv && b.savedTop !== undefined) { b.top = b.savedTop; b.savedTop = undefined; }
+    });
+    this.triGrid.query(cx, cz, cx, cz, (t) => {
+      const s1 = (cx - t.bx) * (t.az - t.bz) - (t.ax - t.bx) * (cz - t.bz);
+      const s2 = (cx - t.cx) * (t.bz - t.cz) - (t.bx - t.cx) * (cz - t.cz);
+      const s3 = (cx - t.ax) * (t.cz - t.az) - (t.cx - t.ax) * (cz - t.az);
+      if (!((s1 < 0 || s2 < 0 || s3 < 0) && (s1 > 0 || s2 > 0 || s3 > 0)) && t.savedTop !== undefined) { t.top = t.savedTop; t.savedTop = undefined; }
+    });
+    for (const c of this.circles) {
+      if ((c.x - cx) ** 2 + (c.z - cz) ** 2 <= c.radius * c.radius && c.savedTop !== undefined) { c.top = c.savedTop; c.savedTop = undefined; }
     }
   }
 }

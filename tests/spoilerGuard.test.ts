@@ -64,6 +64,17 @@ describe("스포일러 가드 — 코드 내 표시 문자열 상수", () => {
     }
   });
 
+  it("도감 카드 명칭·브리핑(bestiaryCards — §8.3 명칭 갱신, 양쪽 인식 단계 모두)", async () => {
+    const { bestiaryCards } = await import("../src/game/bestiary");
+    const { DEFAULT_PLASMOID } = await import("../src/enemies/PlasmoidSpec");
+    for (const revealed of [false, true]) {
+      for (const c of bestiaryCards(DEFAULT_PLASMOID, revealed)) {
+        assertClean(c.name, `bestiary ${c.id} name`);
+        assertClean(c.brief, `bestiary ${c.id} brief`);
+      }
+    }
+  });
+
   it("캠페인 장 제목·질문·브리핑(CHAPTERS — §9.6)", async () => {
     const { CHAPTERS } = await import("../src/game/campaign");
     for (const ch of CHAPTERS) {

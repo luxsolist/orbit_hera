@@ -23,7 +23,9 @@ import { RearView } from "../ui/RearView";
 import { Minimap } from "../ui/Minimap";
 import { hudSizesFor, hudComponentsFor } from "../ui/hudLayout";
 import { MenuScreen } from "../ui/MenuScreen";
-import { createComposer, disposeComposer } from "../fx/postprocessing";
+import { createComposer, disposeComposer, addLensDistortPass } from "../fx/postprocessing";
+import { projectLensPoints } from "../fx/lensDistort";
+import type { LensDistortPass } from "../fx/LensDistortPass";
 import { TargetBrackets } from "../fx/TargetBrackets";
 import { EnergyWall } from "../fx/EnergyWall";
 import { CinematicPlayer } from "../intro/CinematicPlayer";
@@ -64,6 +66,7 @@ interface Session {
   beam: FrequencyBeam;
   special: SpecialWeapon;
   composer: EffectComposer;
+  lens: LensDistortPass; // 중력 렌즈 왜곡(§2.7.1) — 매 프레임 위상 이탈 개체 위치로 갱신
   rearView: RearView;
   minimap: Minimap;
   brackets: TargetBrackets;
@@ -311,6 +314,8 @@ export class Game {
     else if (specialWeapon.type === "barrage") special = new SpecialBarrage(this.scene, player, enemies, specialWeapon, this.sfx);
     else return this.failToMenu("특수무기 타입 오류 — " + specialWeapon.type);
     const composer = createComposer(this.renderer, this.scene, player.camera);
+    const lens = addLensDistortPass(composer); // 중력 렌즈 왜곡(§2.7.1) — 위상 이탈 개체 배경 일렁임
+    lens.setAspect(window.innerWidth / Math.max(1, window.innerHeight));
     const rearView = new RearView(this.renderer, this.scene, player);
     const minimap = new Minimap(player, enemies, world);
     const brackets = new TargetBrackets(this.scene);
@@ -329,7 +334,10 @@ export class Game {
     );
     this.director = endpoint && !peaceful ? new RemoteDirector(endpoint) : null;
     this.directorTimer = DIRECTOR_INTERVAL_SEC;
-    const instance = new GameInstance({ mission, players: [player], enemies, buildings: world.buildings ?? undefined });
+    const instance = new GameInstance({
+      mission, players: [player], enemies, buildings: world.buildings ?? undefined,
+      revealed: revealed(campaignStore.load()), // 명칭 갱신(§8.3) — 출격 시점 스냅샷
+    });
     // 작전구역 에너지 벽 — 스폰(=존 중심) 주위 반경 zoneRadius. 지면 기준 수직 범위로 세움(고지대 맵 대응).
     let wall: EnergyWall | undefined;
     if (!peaceful && mission.zoneRadius > 0) {
@@ -338,7 +346,7 @@ export class Game {
       wall = new EnergyWall(this.scene, sx, sz, mission.zoneRadius, gy - 200, gy + 1600);
       this.wallParams = { sx, sz, y0: gy - 200, y1: gy + 1600 }; // 구역 축소 시 벽 재생성용
     } else this.wallParams = null;
-    this.session = { world, player, enemies, beam, special, composer, rearView, minimap, brackets, instance, wall };
+    this.session = { world, player, enemies, beam, special, composer, lens, rearView, minimap, brackets, instance, wall };
     this.applyHudLayout(); // 새 미니맵을 현재 화면 비례로 동기화
     this.diag.snapshot(this.renderer, "battle-built"); // 세션(컴포저 등) 생성 직후 — 누수 추적 핵심 지점
     this.wireEvents(this.session);
@@ -364,6 +372,7 @@ export class Game {
     else runDeploy(s.enemies, m.deploy, true);
     // 변조 레이어(훅 ④⑥) — 투입 후 지정(start*/clear 가 기본값으로 리셋하므로 반드시 이후에)
     s.enemies.setAggro(m.modifiers?.aggro ?? "player");
+    s.enemies.setBuildingBrands(!!m.modifiers?.buildingBrands); // 공성 낙인(패턴 17)
     // 자매쌍 난이도 전이(§9.2-3) — 짝 도시가 무너져 있으면 파문 주기 단축(가중과 미션 변조 곱)
     const pairMul = this.peaceful || !this.currentCity ? 1 : pairAggravation(campaignStore.load(), this.currentCity.id);
     const sweepMul = (m.modifiers?.sweepPeriodMul ?? 1) * pairMul;
@@ -439,9 +448,34 @@ export class Game {
       this.sfx.reckoning(branded);
       s.player.shake(branded ? 0.024 : 0.012);
     };
-    // 건물/랜드마크 파괴 → HUD 카운터 갱신(번쩍 + 슬로우 붕괴 연출은 BuildingCombat 가 진행)
+    // 건물/랜드마크 파괴 → HUD 카운터 갱신(번쩍 + 슬로우 붕괴 연출은 BuildingCombat 가 진행) +
+    // 방향 인디케이터(호박색 쐐기, 피격=붉은색과 색 구분) + 저음 — "저쪽에서 뭔가 무너졌다"는
+    // 신호가 지금까진 카운터 변화뿐이라 놓치기 쉬웠다(e2e 검증에서 발견 — 2026-08).
+    // 랜드마크 파괴는 더 무겁게(셰이크 추가) — 미션 목표 상실이라는 무게를 반영.
     const bc = s.world.buildings;
-    if (bc) bc.onDestroyed = () => this.hud.setDestroyed(bc.destroyedBuildings, bc.destroyedLandmarks);
+    if (bc) bc.onDestroyed = (isLandmark, x, y, z) => {
+      this.hud.setDestroyed(bc.destroyedBuildings, bc.destroyedLandmarks);
+      this.hud.flashLossFrom(s.player.camera, { x, y, z });
+      this.sfx.reckoning(isLandmark);
+      s.player.shake(isLandmark ? 0.022 : 0.01);
+    };
+    // 링크 리와인드(내부 id — 물리편 §2.8.3, 자가 시전). 표면 명칭은 "위상 소급"(§8.1 어휘 가드 —
+    // "리와인드/롤백"은 L4 누설 금지어라 HUD엔 절대 쓰지 않는다). 위치·HP 복원 + 반경 내 최근 파괴 건물 되돌림.
+    s.player.onLinkRewind = (revived) => {
+      this.hud.setDestroyed(s.world.buildings?.destroyedBuildings ?? 0, s.world.buildings?.destroyedLandmarks ?? 0);
+      // 문구를 이원화한다 — "자기 자신만 되돌아왔다"와 "주변 파괴도 함께 되돌렸다"는 다른 결과라,
+      // 둘 다 성공처럼 들리는 문구는 '왜 아무것도 안 바뀐 것 같지?' 하는 혼란을 줄 수 있다(e2e 검증에서
+      // 확인 — 반경 밖이면 실전에서 건물 복원이 잘 발동하지 않는다). 화면 펄스(청록)로도 시전을 못박는다.
+      this.hud.showBroadcast(
+        revived > 0
+          ? `위상 소급 — 내 위치·상태가 돌아왔고, 무너졌던 ${revived}곳도 다시 섰다.`
+          : "위상 소급 — 내 위치·상태만 돌아왔다(근처엔 되돌릴 파괴가 없었다).",
+        5,
+      );
+      this.hud.pulseObserve(revived > 0);
+      s.player.shake(revived > 0 ? 0.03 : 0.015);
+      this.sfx.reckoning(revived > 0);
+    };
     // 역행체(P3 §6.6) — 시전 예지 카운트다운 + 발동 시 처치 수 되감김·연출
     s.enemies.onRewindCast = (left) => this.hud.setRewindWarn(left);
     s.enemies.onRewound = (revived) => {
@@ -607,6 +641,10 @@ export class Game {
       // 사망 처리는 미션 종료(성공 등) 전이 후엔 생략 — 여전히 playing 일 때만.
       if (s.player.isDead && this.state === "playing") this.handlePlayerDeath();
     }
+
+    // 중력 렌즈 왜곡(§2.7.1) — 위상 이탈 개체의 화면상 위치로 왜곡 점 갱신(플레이 중일 때만 무의미하지 않음)
+    const phased = s.enemies.phasedMarkers(s.player.camera.position);
+    s.lens.setPoints(projectLensPoints(phased, s.player.camera));
 
     this.input.endFrame();
     s.composer.render();
@@ -791,6 +829,7 @@ export class Game {
       this.session.player.camera.aspect = w / h;
       this.session.player.camera.updateProjectionMatrix();
       this.session.composer.setSize(w, h);
+      this.session.lens.setAspect(w / h);
     }
     this.intro?.setSize(w, h);
     this.menuBg?.setSize(w, h);
