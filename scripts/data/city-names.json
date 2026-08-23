@@ -1,0 +1,412 @@
+{
+  "note": "도시 100선의 로마자 id(슬러그)·영문 표기. gen-city-config.mjs 가 geocode-city-cache.json(실측 위경도)·docs/spec/09-city-catalog.md(장 배속·국가)와 조인해 scripts/data/city-catalog.json 을 만든다. 키 = 카탈로그 도시명(한글, geocode-city-cache 키와 동일). mapId 가 있으면 그 도시는 이미 maps.config 에 손수 등록된 맵이 담당 → 생성 대상에서 제외.",
+  "cities": {
+    "로마": {
+      "id": "rome",
+      "en": "Rome",
+      "mapId": "rome"
+    },
+    "아테네": {
+      "id": "athens",
+      "en": "Athens"
+    },
+    "이스탄불": {
+      "id": "istanbul",
+      "en": "Istanbul"
+    },
+    "예루살렘": {
+      "id": "jerusalem",
+      "en": "Jerusalem"
+    },
+    "다마스쿠스": {
+      "id": "damascus",
+      "en": "Damascus"
+    },
+    "바그다드": {
+      "id": "baghdad",
+      "en": "Baghdad"
+    },
+    "이스파한": {
+      "id": "isfahan",
+      "en": "Isfahan"
+    },
+    "카이로": {
+      "id": "cairo",
+      "en": "Cairo"
+    },
+    "룩소르": {
+      "id": "luxor",
+      "en": "Luxor"
+    },
+    "마라케시": {
+      "id": "marrakesh",
+      "en": "Marrakesh"
+    },
+    "페스": {
+      "id": "fez",
+      "en": "Fez"
+    },
+    "바라나시": {
+      "id": "varanasi",
+      "en": "Varanasi"
+    },
+    "델리": {
+      "id": "delhi",
+      "en": "Delhi"
+    },
+    "카트만두": {
+      "id": "kathmandu",
+      "en": "Kathmandu"
+    },
+    "시안": {
+      "id": "xian",
+      "en": "Xi'an"
+    },
+    "뤄양": {
+      "id": "luoyang",
+      "en": "Luoyang"
+    },
+    "베이징": {
+      "id": "beijing",
+      "en": "Beijing"
+    },
+    "교토": {
+      "id": "kyoto",
+      "en": "Kyoto"
+    },
+    "나라": {
+      "id": "nara",
+      "en": "Nara"
+    },
+    "방콕": {
+      "id": "bangkok",
+      "en": "Bangkok"
+    },
+    "시엠레아프": {
+      "id": "siem-reap",
+      "en": "Siem Reap"
+    },
+    "루앙프라방": {
+      "id": "luang-prabang",
+      "en": "Luang Prabang"
+    },
+    "멕시코시티": {
+      "id": "mexico-city",
+      "en": "Mexico City"
+    },
+    "쿠스코": {
+      "id": "cusco",
+      "en": "Cusco"
+    },
+    "아디스아바바": {
+      "id": "addis-ababa",
+      "en": "Addis Ababa"
+    },
+    "뉴욕": {
+      "id": "new-york",
+      "en": "New York"
+    },
+    "런던": {
+      "id": "london",
+      "en": "London"
+    },
+    "파리": {
+      "id": "paris",
+      "en": "Paris"
+    },
+    "몬트리올": {
+      "id": "montreal",
+      "en": "Montreal"
+    },
+    "리우데자네이루": {
+      "id": "rio-de-janeiro",
+      "en": "Rio de Janeiro"
+    },
+    "리스본": {
+      "id": "lisbon",
+      "en": "Lisbon"
+    },
+    "뭄바이": {
+      "id": "mumbai",
+      "en": "Mumbai"
+    },
+    "두바이": {
+      "id": "dubai",
+      "en": "Dubai"
+    },
+    "상하이": {
+      "id": "shanghai",
+      "en": "Shanghai"
+    },
+    "부산": {
+      "id": "busan",
+      "en": "Busan",
+      "mapId": "busan",
+      "country": "대한민국"
+    },
+    "시드니": {
+      "id": "sydney",
+      "en": "Sydney"
+    },
+    "오클랜드": {
+      "id": "auckland",
+      "en": "Auckland"
+    },
+    "마드리드": {
+      "id": "madrid",
+      "en": "Madrid"
+    },
+    "부에노스아이레스": {
+      "id": "buenos-aires",
+      "en": "Buenos Aires"
+    },
+    "베를린": {
+      "id": "berlin",
+      "en": "Berlin"
+    },
+    "비엔나": {
+      "id": "vienna",
+      "en": "Vienna"
+    },
+    "홍콩": {
+      "id": "hong-kong",
+      "en": "Hong Kong"
+    },
+    "싱가포르": {
+      "id": "singapore",
+      "en": "Singapore",
+      "country": "싱가포르"
+    },
+    "카사블랑카": {
+      "id": "casablanca",
+      "en": "Casablanca"
+    },
+    "마이애미": {
+      "id": "miami",
+      "en": "Miami"
+    },
+    "도쿄": {
+      "id": "tokyo",
+      "en": "Tokyo"
+    },
+    "나고야": {
+      "id": "nagoya",
+      "en": "Nagoya"
+    },
+    "삿포로": {
+      "id": "sapporo",
+      "en": "Sapporo"
+    },
+    "타이베이": {
+      "id": "taipei",
+      "en": "Taipei"
+    },
+    "가오슝": {
+      "id": "kaohsiung",
+      "en": "Kaohsiung"
+    },
+    "마닐라": {
+      "id": "manila",
+      "en": "Manila"
+    },
+    "세부": {
+      "id": "cebu",
+      "en": "Cebu"
+    },
+    "자카르타": {
+      "id": "jakarta",
+      "en": "Jakarta"
+    },
+    "호치민": {
+      "id": "ho-chi-minh",
+      "en": "Ho Chi Minh City"
+    },
+    "다낭": {
+      "id": "da-nang",
+      "en": "Da Nang"
+    },
+    "하갓냐(괌)": {
+      "id": "hagatna",
+      "en": "Hagatna"
+    },
+    "사이판": {
+      "id": "saipan",
+      "en": "Saipan"
+    },
+    "코로르": {
+      "id": "koror",
+      "en": "Koror"
+    },
+    "포트모르즈비": {
+      "id": "port-moresby",
+      "en": "Port Moresby"
+    },
+    "브리즈번": {
+      "id": "brisbane",
+      "en": "Brisbane"
+    },
+    "호놀룰루": {
+      "id": "honolulu",
+      "en": "Honolulu"
+    },
+    "밴쿠버": {
+      "id": "vancouver",
+      "en": "Vancouver"
+    },
+    "시애틀": {
+      "id": "seattle",
+      "en": "Seattle"
+    },
+    "샌프란시스코": {
+      "id": "san-francisco",
+      "en": "San Francisco"
+    },
+    "리마": {
+      "id": "lima",
+      "en": "Lima"
+    },
+    "로스앤젤레스": {
+      "id": "los-angeles",
+      "en": "Los Angeles"
+    },
+    "시카고": {
+      "id": "chicago",
+      "en": "Chicago"
+    },
+    "워싱턴 D.C.": {
+      "id": "washington-dc",
+      "en": "Washington, D.C."
+    },
+    "토론토": {
+      "id": "toronto",
+      "en": "Toronto"
+    },
+    "산티아고": {
+      "id": "santiago",
+      "en": "Santiago"
+    },
+    "보고타": {
+      "id": "bogota",
+      "en": "Bogota"
+    },
+    "프라하": {
+      "id": "prague",
+      "en": "Prague"
+    },
+    "암스테르담": {
+      "id": "amsterdam",
+      "en": "Amsterdam"
+    },
+    "바르셀로나": {
+      "id": "barcelona",
+      "en": "Barcelona"
+    },
+    "베네치아": {
+      "id": "venice",
+      "en": "Venice"
+    },
+    "코펜하겐": {
+      "id": "copenhagen",
+      "en": "Copenhagen"
+    },
+    "헬싱키": {
+      "id": "helsinki",
+      "en": "Helsinki"
+    },
+    "더블린": {
+      "id": "dublin",
+      "en": "Dublin"
+    },
+    "브뤼셀": {
+      "id": "brussels",
+      "en": "Brussels"
+    },
+    "취리히": {
+      "id": "zurich",
+      "en": "Zurich"
+    },
+    "레이캬비크": {
+      "id": "reykjavik",
+      "en": "Reykjavik"
+    },
+    "도하": {
+      "id": "doha",
+      "en": "Doha"
+    },
+    "리야드": {
+      "id": "riyadh",
+      "en": "Riyadh"
+    },
+    "텔아비브": {
+      "id": "tel-aviv",
+      "en": "Tel Aviv"
+    },
+    "나이로비": {
+      "id": "nairobi",
+      "en": "Nairobi"
+    },
+    "라고스": {
+      "id": "lagos",
+      "en": "Lagos"
+    },
+    "요하네스버그": {
+      "id": "johannesburg",
+      "en": "Johannesburg"
+    },
+    "케이프타운": {
+      "id": "cape-town",
+      "en": "Cape Town"
+    },
+    "다카르": {
+      "id": "dakar",
+      "en": "Dakar"
+    },
+    "콜롬보": {
+      "id": "colombo",
+      "en": "Colombo"
+    },
+    "다카": {
+      "id": "dhaka",
+      "en": "Dhaka"
+    },
+    "라호르": {
+      "id": "lahore",
+      "en": "Lahore"
+    },
+    "청두": {
+      "id": "chengdu",
+      "en": "Chengdu"
+    },
+    "우한": {
+      "id": "wuhan",
+      "en": "Wuhan"
+    },
+    "선전": {
+      "id": "shenzhen",
+      "en": "Shenzhen"
+    },
+    "멜버른": {
+      "id": "melbourne",
+      "en": "Melbourne"
+    },
+    "웰링턴": {
+      "id": "wellington",
+      "en": "Wellington"
+    },
+    "상트페테르부르크": {
+      "id": "saint-petersburg",
+      "en": "Saint Petersburg"
+    },
+    "서울": {
+      "id": "seoul",
+      "en": "Seoul",
+      "mapId": "gyeongbokgung",
+      "country": "대한민국"
+    },
+    "오사카": {
+      "id": "osaka",
+      "en": "Osaka",
+      "country": "일본"
+    }
+  }
+}

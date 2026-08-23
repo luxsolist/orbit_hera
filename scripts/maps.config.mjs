@@ -1,9 +1,19 @@
-// 전지구 주요 명소 전장(맵) 정의. `node scripts/build-maps.mjs` 로 public/maps/ 에 빌드.
-// 새 전장 추가 = 여기에 항목 하나 추가 후 빌드 스크립트 재실행.
+// 전지구 주요 명소 전장(맵) 정의. `npm run build:map -- <id>` 로 public/maps/ 에 빌드.
+//
+// 두 갈래로 구성된다:
+//   ① HAND — 아래 배열. 손으로 다듬은 맵(양식화 랜드마크·성문·산세 등 개별 튜닝이 있는 곳).
+//   ② 생성 — scripts/data/city-catalog.json(도시 100선)에서 자동 생성. 도시당 항목을 손으로 쓰면
+//      100개 규모에서 오탈자·bbox 실수·누락이 그대로 수십 분짜리 빌드 낭비가 되므로 데이터에서 만든다.
+//      소스 수정 → `node scripts/gen-city-config.mjs` 재생성 → 여기 자동 반영.
+//   같은 id 가 양쪽에 있으면 HAND 가 이긴다(손 튜닝 보존). 100선 도시가 이미 다른 id 의 손 맵으로
+//   덮여 있으면(서울=gyeongbokgung 등) city-catalog 의 mapId 로 표시돼 생성에서 빠진다.
 //
 // bbox: [south, west, north, east]  (위경도)
 // lat0/lon0: 로컬 미터 좌표 원점(보통 명소 중심)
-export const MAPS = [
+// stream: 스트리밍 카탈로그(public/maps/index.json) 항목 — build-world 가 청크를 구우며 업서트한다.
+import { readFileSync } from "node:fs";
+
+const HAND = [
   {
     id: "rome",
     name: "Rome · 로마",
@@ -13,6 +23,8 @@ export const MAPS = [
     // 로마 역사지구(콜로세움/포로 로마노 인근) 중심 반경 20km — 바티칸(2.4km)·트레비 분수(1.2km) 포함.
     bbox: [41.7231, 12.255, 42.0825, 12.7378],
     catalogHidden: true, // 카탈로그는 rome-stream 항목으로 노출
+    catalogCity: "로마", // 큐레이션 랜드마크(landmark-catalog.json) 조회 키
+    stream: { id: "rome-stream", name: "로마 · Rome", subtitle: "이탈리아 — 도심 반경 20km 청크 스트리밍 (1장 열지도)" },
     // 구릉 도시(팔라티노·카피톨리노 등 7언덕) — DEM raw, 건물 footprint 평탄화는 build-world(언덕 보존).
     bareEarth: false,
     heightmap: { src: "rome.terrain.bin", size: 2048, meters: 40000 },
@@ -26,6 +38,8 @@ export const MAPS = [
     // 부산 도심(서면/시청) 중심 반경 20km — 해운대(8.2km)·광안리(4.5km)·태종대(12.1km) 포함.
     bbox: [34.9803, 128.8502, 35.3397, 129.2898],
     catalogHidden: true, // 카탈로그는 busan-stream 항목으로 노출
+    catalogCity: "부산",
+    stream: { id: "busan-stream", name: "부산 · Busan", subtitle: "35/129 부산 도심 반경 20km — 해운대·광안리·태종대" },
     // 해안 도시(바다+도심+산) — DEM raw, 건물 footprint 평탄화는 build-world(산 보존). 바다(0m)는 elevationColor 가 파랑.
     bareEarth: false,
     heightmap: { src: "busan.terrain.bin", size: 2048, meters: 40000 },
@@ -39,6 +53,8 @@ export const MAPS = [
     // 에베레스트 정상 중심 반경 20km(±0.18°lat / ±0.203°lon).
     bbox: [27.8084, 86.7215, 28.1678, 87.1285],
     catalogHidden: true, // 스트리밍 카탈로그 항목(everest-stream)으로 노출
+    // 자연 산악이라 큐레이션 도시 랜드마크 없음(catalogCity 없음).
+    stream: { id: "everest-stream", name: "에베레스트 · Everest", subtitle: "27/86 히말라야 — 세계 최고봉 8,849m (반경 20km 스트리밍)" },
     // 자연 산악 — bare-earth 형태학 열림 생략(도시 건물 제거용이라 산에 쓰면 봉우리/능선이 깎임). 실측 DEM 그대로.
     bareEarth: false,
     // 실측 40km×40km DEM(AWS Terrarium). 생성: node scripts/build-terrain.mjs real everest 2048 40000 13.
@@ -56,6 +72,8 @@ export const MAPS = [
     spawn: { x: 0, z: 360, yaw: 0 },
     // 스트리밍 타일 월드(seoul-stream)의 소스 전용 — 메뉴 카탈로그에는 노출 안 함.
     catalogHidden: true,
+    catalogCity: "서울",
+    stream: { id: "seoul-stream", name: "서울 도심 · Seoul", subtitle: "37/126 경복궁 일대 — 청크 스트리밍 타일 월드" },
     // 실측 40km×40km DEM(AWS Terrarium). DEM 은 raw — 평탄화는 build-world 가 **건물 풋프린트 아래만**(산·공원 보존).
     // 생성: node scripts/build-terrain.mjs real gyeongbokgung 2048 40000 13.
     bareEarth: false, // 전역 형태학 열림(봉우리 깎임) 끔 → 산 보존. 건물 스파이크는 build-world footprint 평탄화로 제거.
@@ -88,5 +106,57 @@ export const MAPS = [
     ],
   },
   // 레거시 manhattan/osaka/paris(스트리밍 이전 monolithic)는 카탈로그 비노출·미사용이라 제거됨.
-  // 새 도시는 gyeongbokgung 처럼 스트리밍 파이프라인(build-pipeline)으로 생성한다.
+  // 새 도시는 아래 생성 경로(city-catalog.json)로 편입한다 — 손 항목은 개별 튜닝이 있을 때만.
 ];
+
+// ─────────────────────────── 도시 100선 자동 생성 ───────────────────────────
+
+const CITY_CATALOG = "scripts/data/city-catalog.json";
+const DEM_METERS = 40000; // 반경 20km 전장 = 변 40km. city-catalog.radiusM 과 짝(어긋나면 지형이 맵보다 좁아짐).
+
+/** 장 번호 → 카탈로그 부제에 쓰는 라벨. 0 = 서장(기완료 3도시). */
+const CHAPTER_LABEL = {
+  0: "서장",
+  1: "1장 열지도",
+  2: "2장 같은 박자",
+  3: "3장 죽음의 방향",
+  4: "4~6장 확장",
+};
+
+/**
+ * city-catalog 항목 하나 → maps.config 맵 정의. 순수.
+ *
+ * 전 도시 공통 규격: 중심 반경 20km · 실측 DEM 2048² · bareEarth 끔(전역 형태학 열림은 산세를 깎는다 —
+ * 건물 스파이크는 build-world 의 footprint 평탄화가 처리). catalogHidden = 메뉴에는 스트리밍 항목만 노출.
+ */
+export function cityMapDef(c) {
+  return {
+    id: c.id,
+    name: `${c.en} · ${c.cityKo}`,
+    subtitle: `${c.cityKo} 도심 반경 20km — ${c.country}`,
+    catalogCity: c.cityKo, // 큐레이션 랜드마크 카탈로그(landmark-catalog.json) 조회 키
+    lat0: c.lat,
+    lon0: c.lon,
+    bbox: c.bbox,
+    catalogHidden: true,
+    bareEarth: false,
+    heightmap: { src: `${c.id}.terrain.bin`, size: 2048, meters: DEM_METERS },
+    stream: {
+      id: `${c.id}-stream`,
+      name: `${c.cityKo} · ${c.en}`,
+      subtitle: `${c.country} — 도심 반경 20km 청크 스트리밍 (${CHAPTER_LABEL[c.chapter] ?? `${c.chapter}장`})`,
+    },
+    chapter: c.chapter,
+  };
+}
+
+/** 생성 도시 목록 — mapId(손 맵이 담당) 표시된 항목은 제외. 파일이 없으면 빈 배열(손 맵만으로 동작). */
+function generatedMaps() {
+  let cat;
+  try { cat = JSON.parse(readFileSync(CITY_CATALOG, "utf8")); }
+  catch { return []; } // 아직 생성 안 됨 — build:map 은 손 맵으로 계속 동작
+  return (cat.cities ?? []).filter((c) => !c.mapId).map(cityMapDef);
+}
+
+const handIds = new Set(HAND.map((m) => m.id));
+export const MAPS = [...HAND, ...generatedMaps().filter((m) => !handIds.has(m.id))];
