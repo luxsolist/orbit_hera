@@ -1,0 +1,11494 @@
+{
+ "cell": [
+  37,
+  23
+ ],
+ "originLat": 38,
+ "originLon": 23,
+ "chunkSize": 1024,
+ "terrainSize": 33,
+ "mLon": 88316.0938412203,
+ "block": 16,
+ "chunks": [
+  {
+   "cx": 43,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 57,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 62,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 64,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 65,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 66,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 20
+  },
+  {
+   "cx": 67,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 68,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 69,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 71,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 72,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 57
+  },
+  {
+   "cx": 73,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 41
+  },
+  {
+   "cx": 74,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 75,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 76,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 77,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 21
+  },
+  {
+   "cx": 83,
+   "cz": -17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 43,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 47,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 55,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 56,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 61,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 64,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 296
+  },
+  {
+   "cx": 65,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 220
+  },
+  {
+   "cx": 66,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 67,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 68,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 69,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 71,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 111
+  },
+  {
+   "cx": 72,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 72
+  },
+  {
+   "cx": 73,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 76
+  },
+  {
+   "cx": 74,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16
+  },
+  {
+   "cx": 75,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15
+  },
+  {
+   "cx": 76,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 83,
+   "cz": -16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 45,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15
+  },
+  {
+   "cx": 46,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 57,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 64,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 158
+  },
+  {
+   "cx": 65,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 404
+  },
+  {
+   "cx": 66,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 67,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 68,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 69,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 71,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 46
+  },
+  {
+   "cx": 72,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 41
+  },
+  {
+   "cx": 73,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 43
+  },
+  {
+   "cx": 74,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 77
+  },
+  {
+   "cx": 75,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 76,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 77,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 80,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": -15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 48,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28
+  },
+  {
+   "cx": 49,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 58,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14
+  },
+  {
+   "cx": 64,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 24
+  },
+  {
+   "cx": 65,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28
+  },
+  {
+   "cx": 66,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 67,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 68,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12
+  },
+  {
+   "cx": 69,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 71,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 72,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 192
+  },
+  {
+   "cx": 73,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 64
+  },
+  {
+   "cx": 74,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 61
+  },
+  {
+   "cx": 75,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13
+  },
+  {
+   "cx": 76,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 77,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26
+  },
+  {
+   "cx": 82,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14
+  },
+  {
+   "cx": 83,
+   "cz": -14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 43,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 49,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 57,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 58,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 59,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 60,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 63,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14
+  },
+  {
+   "cx": 64,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19
+  },
+  {
+   "cx": 65,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 66,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 191
+  },
+  {
+   "cx": 67,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19
+  },
+  {
+   "cx": 68,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 31
+  },
+  {
+   "cx": 69,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 70,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 71,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 128
+  },
+  {
+   "cx": 72,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 339
+  },
+  {
+   "cx": 73,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 290
+  },
+  {
+   "cx": 74,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 186
+  },
+  {
+   "cx": 75,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 41
+  },
+  {
+   "cx": 76,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 77,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": -13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 50,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 51,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 52,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 58,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 59,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 60,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 62,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26
+  },
+  {
+   "cx": 63,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 151
+  },
+  {
+   "cx": 64,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16
+  },
+  {
+   "cx": 65,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28
+  },
+  {
+   "cx": 66,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 189
+  },
+  {
+   "cx": 67,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 68,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15
+  },
+  {
+   "cx": 69,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26
+  },
+  {
+   "cx": 70,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 363
+  },
+  {
+   "cx": 71,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 310
+  },
+  {
+   "cx": 72,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 410
+  },
+  {
+   "cx": 73,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 258
+  },
+  {
+   "cx": 74,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 30
+  },
+  {
+   "cx": 75,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 20
+  },
+  {
+   "cx": 76,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 47
+  },
+  {
+   "cx": 77,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": -12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 47,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 49,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 50,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 51,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 52,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15
+  },
+  {
+   "cx": 53,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19
+  },
+  {
+   "cx": 54,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 55,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 58,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 59,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 60,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17
+  },
+  {
+   "cx": 61,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 74
+  },
+  {
+   "cx": 62,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 42
+  },
+  {
+   "cx": 63,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 135
+  },
+  {
+   "cx": 64,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 74
+  },
+  {
+   "cx": 65,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 21
+  },
+  {
+   "cx": 66,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 40
+  },
+  {
+   "cx": 67,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 98
+  },
+  {
+   "cx": 68,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 451
+  },
+  {
+   "cx": 69,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1007
+  },
+  {
+   "cx": 70,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1745
+  },
+  {
+   "cx": 71,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 499
+  },
+  {
+   "cx": 72,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36
+  },
+  {
+   "cx": 73,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 74,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 75,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 76,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10
+  },
+  {
+   "cx": 77,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 78,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 79,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 81,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": -11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 46,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 47,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 48,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13
+  },
+  {
+   "cx": 49,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 50,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 51,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 52,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 53,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 54,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 55,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 56,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10
+  },
+  {
+   "cx": 60,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 135
+  },
+  {
+   "cx": 61,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 100
+  },
+  {
+   "cx": 62,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 116
+  },
+  {
+   "cx": 63,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 86
+  },
+  {
+   "cx": 64,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 66
+  },
+  {
+   "cx": 65,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 42
+  },
+  {
+   "cx": 66,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 67,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 67
+  },
+  {
+   "cx": 68,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 867
+  },
+  {
+   "cx": 69,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1164
+  },
+  {
+   "cx": 70,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1563
+  },
+  {
+   "cx": 71,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 858
+  },
+  {
+   "cx": 72,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 99
+  },
+  {
+   "cx": 73,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 74,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 75,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 76,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 78,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 79,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 81,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 83,
+   "cz": -10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 43,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 44,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 45,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 46,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 22
+  },
+  {
+   "cx": 47,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 30
+  },
+  {
+   "cx": 48,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 72
+  },
+  {
+   "cx": 49,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 95
+  },
+  {
+   "cx": 50,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 51,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 38
+  },
+  {
+   "cx": 52,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13
+  },
+  {
+   "cx": 53,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 54,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 55,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 56,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 57,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 59,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 60,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 191
+  },
+  {
+   "cx": 61,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36
+  },
+  {
+   "cx": 62,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 97
+  },
+  {
+   "cx": 63,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 138
+  },
+  {
+   "cx": 64,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25
+  },
+  {
+   "cx": 65,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36
+  },
+  {
+   "cx": 66,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 63
+  },
+  {
+   "cx": 67,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 312
+  },
+  {
+   "cx": 68,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 813
+  },
+  {
+   "cx": 69,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1182
+  },
+  {
+   "cx": 70,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 953
+  },
+  {
+   "cx": 71,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 735
+  },
+  {
+   "cx": 72,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 119
+  },
+  {
+   "cx": 73,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 74,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 75,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 76,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 77,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 78,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19
+  },
+  {
+   "cx": 83,
+   "cz": -9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 44,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 45,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 46,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 47,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33
+  },
+  {
+   "cx": 48,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 49,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13
+  },
+  {
+   "cx": 50,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32
+  },
+  {
+   "cx": 51,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28
+  },
+  {
+   "cx": 52,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12
+  },
+  {
+   "cx": 53,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13
+  },
+  {
+   "cx": 54,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 55,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14
+  },
+  {
+   "cx": 56,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 38
+  },
+  {
+   "cx": 57,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 58,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 59,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 60,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 45
+  },
+  {
+   "cx": 61,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 255
+  },
+  {
+   "cx": 62,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 123
+  },
+  {
+   "cx": 63,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32
+  },
+  {
+   "cx": 64,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 51
+  },
+  {
+   "cx": 65,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 646
+  },
+  {
+   "cx": 66,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 992
+  },
+  {
+   "cx": 67,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1500
+  },
+  {
+   "cx": 68,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1010
+  },
+  {
+   "cx": 69,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 872
+  },
+  {
+   "cx": 70,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1252
+  },
+  {
+   "cx": 71,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 639
+  },
+  {
+   "cx": 72,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 468
+  },
+  {
+   "cx": 73,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 185
+  },
+  {
+   "cx": 74,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 144
+  },
+  {
+   "cx": 75,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 76,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 77,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 81,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 83,
+   "cz": -8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 44,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16
+  },
+  {
+   "cx": 45,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 46,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 48,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 49,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 50,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 79
+  },
+  {
+   "cx": 51,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19
+  },
+  {
+   "cx": 52,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 18
+  },
+  {
+   "cx": 53,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 55,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 56,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 57,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 59,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 60,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 57
+  },
+  {
+   "cx": 61,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 103
+  },
+  {
+   "cx": 62,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 82
+  },
+  {
+   "cx": 63,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 318
+  },
+  {
+   "cx": 64,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 636
+  },
+  {
+   "cx": 65,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1861
+  },
+  {
+   "cx": 66,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1748
+  },
+  {
+   "cx": 67,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1399
+  },
+  {
+   "cx": 68,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 973
+  },
+  {
+   "cx": 69,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 844
+  },
+  {
+   "cx": 70,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 338
+  },
+  {
+   "cx": 71,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 881
+  },
+  {
+   "cx": 72,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1041
+  },
+  {
+   "cx": 73,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1081
+  },
+  {
+   "cx": 74,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 655
+  },
+  {
+   "cx": 75,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 222
+  },
+  {
+   "cx": 76,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 77,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 78,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 83,
+   "cz": -7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 43,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 44,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19
+  },
+  {
+   "cx": 45,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 46,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 20
+  },
+  {
+   "cx": 47,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 48,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19
+  },
+  {
+   "cx": 49,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 29
+  },
+  {
+   "cx": 50,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 51,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 52,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 57,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 58,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 630
+  },
+  {
+   "cx": 59,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 101
+  },
+  {
+   "cx": 60,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 63
+  },
+  {
+   "cx": 61,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 138
+  },
+  {
+   "cx": 62,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 73
+  },
+  {
+   "cx": 63,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 200
+  },
+  {
+   "cx": 64,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1542
+  },
+  {
+   "cx": 65,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2689
+  },
+  {
+   "cx": 66,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1760
+  },
+  {
+   "cx": 67,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1553
+  },
+  {
+   "cx": 68,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1076
+  },
+  {
+   "cx": 69,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1243
+  },
+  {
+   "cx": 70,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1182
+  },
+  {
+   "cx": 71,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1118
+  },
+  {
+   "cx": 72,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1115
+  },
+  {
+   "cx": 73,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 726
+  },
+  {
+   "cx": 74,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 522
+  },
+  {
+   "cx": 75,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 218
+  },
+  {
+   "cx": 76,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17
+  },
+  {
+   "cx": 79,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 83,
+   "cz": -6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 50
+  },
+  {
+   "cx": 44,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 50
+  },
+  {
+   "cx": 45,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 74
+  },
+  {
+   "cx": 46,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1183
+  },
+  {
+   "cx": 47,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 76
+  },
+  {
+   "cx": 48,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 49,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 50,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16
+  },
+  {
+   "cx": 51,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 23
+  },
+  {
+   "cx": 52,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 57
+  },
+  {
+   "cx": 53,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 54,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 763
+  },
+  {
+   "cx": 58,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2709
+  },
+  {
+   "cx": 59,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2401
+  },
+  {
+   "cx": 60,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 698
+  },
+  {
+   "cx": 61,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 969
+  },
+  {
+   "cx": 62,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 80
+  },
+  {
+   "cx": 63,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1260
+  },
+  {
+   "cx": 64,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2079
+  },
+  {
+   "cx": 65,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2901
+  },
+  {
+   "cx": 66,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2110
+  },
+  {
+   "cx": 67,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 333
+  },
+  {
+   "cx": 68,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 460
+  },
+  {
+   "cx": 69,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 505
+  },
+  {
+   "cx": 70,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 949
+  },
+  {
+   "cx": 71,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1232
+  },
+  {
+   "cx": 72,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1329
+  },
+  {
+   "cx": 73,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 595
+  },
+  {
+   "cx": 74,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 256
+  },
+  {
+   "cx": 75,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 61
+  },
+  {
+   "cx": 76,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32
+  },
+  {
+   "cx": 78,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 22
+  },
+  {
+   "cx": 79,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25
+  },
+  {
+   "cx": 81,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15
+  },
+  {
+   "cx": 82,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": -5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 44,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 45,
+   "cz": -4,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 195
+  },
+  {
+   "cx": 47,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 43
+  },
+  {
+   "cx": 48,
+   "cz": -4,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": -4,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10
+  },
+  {
+   "cx": 51,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 77
+  },
+  {
+   "cx": 52,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 110
+  },
+  {
+   "cx": 53,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 29
+  },
+  {
+   "cx": 54,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 55,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 57,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 358
+  },
+  {
+   "cx": 58,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2589
+  },
+  {
+   "cx": 59,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3580
+  },
+  {
+   "cx": 60,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2623
+  },
+  {
+   "cx": 61,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2084
+  },
+  {
+   "cx": 62,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1302
+  },
+  {
+   "cx": 63,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2082
+  },
+  {
+   "cx": 64,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2323
+  },
+  {
+   "cx": 65,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2082
+  },
+  {
+   "cx": 66,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1263
+  },
+  {
+   "cx": 67,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 979
+  },
+  {
+   "cx": 68,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 686
+  },
+  {
+   "cx": 69,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1040
+  },
+  {
+   "cx": 70,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 925
+  },
+  {
+   "cx": 71,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 980
+  },
+  {
+   "cx": 72,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1366
+  },
+  {
+   "cx": 73,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1228
+  },
+  {
+   "cx": 74,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 354
+  },
+  {
+   "cx": 75,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 248
+  },
+  {
+   "cx": 76,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 77,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 42
+  },
+  {
+   "cx": 78,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 79,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 100
+  },
+  {
+   "cx": 81,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 72
+  },
+  {
+   "cx": 82,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": -4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -3,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -3,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": -3,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": -3,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": -3,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": -3,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": -3,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": -3,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26
+  },
+  {
+   "cx": 53,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 670
+  },
+  {
+   "cx": 56,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 303
+  },
+  {
+   "cx": 57,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 857
+  },
+  {
+   "cx": 58,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4185
+  },
+  {
+   "cx": 59,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3545
+  },
+  {
+   "cx": 60,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3751
+  },
+  {
+   "cx": 61,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2614
+  },
+  {
+   "cx": 62,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2349
+  },
+  {
+   "cx": 63,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1476
+  },
+  {
+   "cx": 64,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2279
+  },
+  {
+   "cx": 65,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 693
+  },
+  {
+   "cx": 66,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 451
+  },
+  {
+   "cx": 67,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 718
+  },
+  {
+   "cx": 68,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1664
+  },
+  {
+   "cx": 69,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1352
+  },
+  {
+   "cx": 70,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1146
+  },
+  {
+   "cx": 71,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1359
+  },
+  {
+   "cx": 72,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1271
+  },
+  {
+   "cx": 73,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1623
+  },
+  {
+   "cx": 74,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 742
+  },
+  {
+   "cx": 75,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 147
+  },
+  {
+   "cx": 76,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 77,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 113
+  },
+  {
+   "cx": 78,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 82
+  },
+  {
+   "cx": 79,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 80,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 160
+  },
+  {
+   "cx": 81,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 82,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 31
+  },
+  {
+   "cx": 83,
+   "cz": -3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -2,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -2,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": -2,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": -2,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": -2,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": -2,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": -2,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": -2,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 477
+  },
+  {
+   "cx": 52,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 105
+  },
+  {
+   "cx": 53,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 60
+  },
+  {
+   "cx": 54,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 276
+  },
+  {
+   "cx": 55,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 890
+  },
+  {
+   "cx": 56,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1060
+  },
+  {
+   "cx": 57,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1619
+  },
+  {
+   "cx": 58,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3834
+  },
+  {
+   "cx": 59,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3043
+  },
+  {
+   "cx": 60,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2784
+  },
+  {
+   "cx": 61,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1816
+  },
+  {
+   "cx": 62,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2098
+  },
+  {
+   "cx": 63,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2093
+  },
+  {
+   "cx": 64,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2172
+  },
+  {
+   "cx": 65,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1732
+  },
+  {
+   "cx": 66,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 787
+  },
+  {
+   "cx": 67,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 755
+  },
+  {
+   "cx": 68,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1672
+  },
+  {
+   "cx": 69,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1192
+  },
+  {
+   "cx": 70,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1066
+  },
+  {
+   "cx": 71,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1155
+  },
+  {
+   "cx": 72,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1488
+  },
+  {
+   "cx": 73,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1858
+  },
+  {
+   "cx": 74,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 941
+  },
+  {
+   "cx": 75,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 66
+  },
+  {
+   "cx": 76,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 77,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 45
+  },
+  {
+   "cx": 78,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 81,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": -2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": -1,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": -1,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": -1,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": -1,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": -1,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": -1,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 138
+  },
+  {
+   "cx": 52,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 53,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 55,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 56,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 23
+  },
+  {
+   "cx": 57,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 94
+  },
+  {
+   "cx": 58,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1983
+  },
+  {
+   "cx": 59,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3274
+  },
+  {
+   "cx": 60,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1830
+  },
+  {
+   "cx": 61,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1619
+  },
+  {
+   "cx": 62,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2592
+  },
+  {
+   "cx": 63,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2484
+  },
+  {
+   "cx": 64,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2443
+  },
+  {
+   "cx": 65,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 974
+  },
+  {
+   "cx": 66,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1048
+  },
+  {
+   "cx": 67,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1613
+  },
+  {
+   "cx": 68,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1336
+  },
+  {
+   "cx": 69,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1420
+  },
+  {
+   "cx": 70,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1286
+  },
+  {
+   "cx": 71,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 614
+  },
+  {
+   "cx": 72,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32
+  },
+  {
+   "cx": 73,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 206
+  },
+  {
+   "cx": 74,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 250
+  },
+  {
+   "cx": 75,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 362
+  },
+  {
+   "cx": 76,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 162
+  },
+  {
+   "cx": 77,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 130
+  },
+  {
+   "cx": 78,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 115
+  },
+  {
+   "cx": 79,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 131
+  },
+  {
+   "cx": 80,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 81,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 35
+  },
+  {
+   "cx": 82,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 83,
+   "cz": -1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 0,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 50,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 51,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 52,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 55,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33
+  },
+  {
+   "cx": 56,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 20
+  },
+  {
+   "cx": 57,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 166
+  },
+  {
+   "cx": 58,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1276
+  },
+  {
+   "cx": 59,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3002
+  },
+  {
+   "cx": 60,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 623
+  },
+  {
+   "cx": 61,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2628
+  },
+  {
+   "cx": 62,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2278
+  },
+  {
+   "cx": 63,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1403
+  },
+  {
+   "cx": 64,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2506
+  },
+  {
+   "cx": 65,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2703
+  },
+  {
+   "cx": 66,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1710
+  },
+  {
+   "cx": 67,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 382
+  },
+  {
+   "cx": 68,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1201
+  },
+  {
+   "cx": 69,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1004
+  },
+  {
+   "cx": 70,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 299
+  },
+  {
+   "cx": 71,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 63
+  },
+  {
+   "cx": 73,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 113
+  },
+  {
+   "cx": 74,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 48
+  },
+  {
+   "cx": 75,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 197
+  },
+  {
+   "cx": 76,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26
+  },
+  {
+   "cx": 77,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 46
+  },
+  {
+   "cx": 78,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 58
+  },
+  {
+   "cx": 79,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 31
+  },
+  {
+   "cx": 80,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 81,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 0,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 1,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 51,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 41
+  },
+  {
+   "cx": 52,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 53,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 54,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 208
+  },
+  {
+   "cx": 55,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 99
+  },
+  {
+   "cx": 56,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 44
+  },
+  {
+   "cx": 57,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 37
+  },
+  {
+   "cx": 58,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 106
+  },
+  {
+   "cx": 59,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 413
+  },
+  {
+   "cx": 60,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 442
+  },
+  {
+   "cx": 61,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2601
+  },
+  {
+   "cx": 62,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1953
+  },
+  {
+   "cx": 63,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2257
+  },
+  {
+   "cx": 64,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1474
+  },
+  {
+   "cx": 65,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1511
+  },
+  {
+   "cx": 66,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1099
+  },
+  {
+   "cx": 67,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 173
+  },
+  {
+   "cx": 68,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1104
+  },
+  {
+   "cx": 69,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 76
+  },
+  {
+   "cx": 70,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 71,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 94
+  },
+  {
+   "cx": 73,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 114
+  },
+  {
+   "cx": 74,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 46
+  },
+  {
+   "cx": 75,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 76,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 78,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 29
+  },
+  {
+   "cx": 79,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 80,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 82,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 1,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 50,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 88
+  },
+  {
+   "cx": 52,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 54,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 61
+  },
+  {
+   "cx": 55,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 18
+  },
+  {
+   "cx": 56,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 43
+  },
+  {
+   "cx": 57,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 85
+  },
+  {
+   "cx": 58,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 238
+  },
+  {
+   "cx": 59,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 457
+  },
+  {
+   "cx": 60,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 686
+  },
+  {
+   "cx": 61,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2151
+  },
+  {
+   "cx": 62,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2484
+  },
+  {
+   "cx": 63,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1406
+  },
+  {
+   "cx": 64,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1213
+  },
+  {
+   "cx": 65,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1686
+  },
+  {
+   "cx": 66,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1977
+  },
+  {
+   "cx": 67,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 295
+  },
+  {
+   "cx": 68,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 631
+  },
+  {
+   "cx": 69,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 70,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 71,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 73,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 48
+  },
+  {
+   "cx": 74,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 29
+  },
+  {
+   "cx": 75,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 76,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 77,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 58
+  },
+  {
+   "cx": 79,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 118
+  },
+  {
+   "cx": 80,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 81,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 83,
+   "cz": 2,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 44,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28
+  },
+  {
+   "cx": 45,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 56
+  },
+  {
+   "cx": 46,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 48,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 42
+  },
+  {
+   "cx": 49,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 56
+  },
+  {
+   "cx": 50,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 55
+  },
+  {
+   "cx": 51,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14
+  },
+  {
+   "cx": 52,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27
+  },
+  {
+   "cx": 53,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 54
+  },
+  {
+   "cx": 54,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 102
+  },
+  {
+   "cx": 55,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 76
+  },
+  {
+   "cx": 56,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 165
+  },
+  {
+   "cx": 57,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 221
+  },
+  {
+   "cx": 58,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 279
+  },
+  {
+   "cx": 59,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 364
+  },
+  {
+   "cx": 60,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1652
+  },
+  {
+   "cx": 61,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2457
+  },
+  {
+   "cx": 62,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1626
+  },
+  {
+   "cx": 63,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1364
+  },
+  {
+   "cx": 64,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2318
+  },
+  {
+   "cx": 65,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1950
+  },
+  {
+   "cx": 66,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1462
+  },
+  {
+   "cx": 67,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 215
+  },
+  {
+   "cx": 68,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 69,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 70,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 71,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 73,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36
+  },
+  {
+   "cx": 74,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 75,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 20
+  },
+  {
+   "cx": 76,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 77,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 78,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 37
+  },
+  {
+   "cx": 79,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 80,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 3,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 46,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 29
+  },
+  {
+   "cx": 47,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 48,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 49,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17
+  },
+  {
+   "cx": 50,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 81
+  },
+  {
+   "cx": 51,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 51
+  },
+  {
+   "cx": 52,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 30
+  },
+  {
+   "cx": 53,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 111
+  },
+  {
+   "cx": 54,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 183
+  },
+  {
+   "cx": 55,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 117
+  },
+  {
+   "cx": 56,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 788
+  },
+  {
+   "cx": 57,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 256
+  },
+  {
+   "cx": 58,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 518
+  },
+  {
+   "cx": 59,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1179
+  },
+  {
+   "cx": 60,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1883
+  },
+  {
+   "cx": 61,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2012
+  },
+  {
+   "cx": 62,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2243
+  },
+  {
+   "cx": 63,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2797
+  },
+  {
+   "cx": 64,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3453
+  },
+  {
+   "cx": 65,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3236
+  },
+  {
+   "cx": 66,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 563
+  },
+  {
+   "cx": 67,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 68,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13
+  },
+  {
+   "cx": 69,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 71,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17
+  },
+  {
+   "cx": 73,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 90
+  },
+  {
+   "cx": 74,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 18
+  },
+  {
+   "cx": 75,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 76,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 31
+  },
+  {
+   "cx": 77,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 78,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 79,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 80,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 81,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 82,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 83,
+   "cz": 4,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12
+  },
+  {
+   "cx": 46,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 47,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 48,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 58
+  },
+  {
+   "cx": 53,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 340
+  },
+  {
+   "cx": 54,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 318
+  },
+  {
+   "cx": 55,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 637
+  },
+  {
+   "cx": 56,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1561
+  },
+  {
+   "cx": 57,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 867
+  },
+  {
+   "cx": 58,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2761
+  },
+  {
+   "cx": 59,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1908
+  },
+  {
+   "cx": 60,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2139
+  },
+  {
+   "cx": 61,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1330
+  },
+  {
+   "cx": 62,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2894
+  },
+  {
+   "cx": 63,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2908
+  },
+  {
+   "cx": 64,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2823
+  },
+  {
+   "cx": 65,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2326
+  },
+  {
+   "cx": 66,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 470
+  },
+  {
+   "cx": 67,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 22
+  },
+  {
+   "cx": 68,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 69,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 30
+  },
+  {
+   "cx": 71,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 72,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13
+  },
+  {
+   "cx": 73,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 21
+  },
+  {
+   "cx": 74,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 75,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 76,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 77,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 78,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 79,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 80,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 82,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27
+  },
+  {
+   "cx": 83,
+   "cz": 5,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 43,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 46,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 47,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 6,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25
+  },
+  {
+   "cx": 51,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 52,
+   "cz": 6,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15
+  },
+  {
+   "cx": 54,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 734
+  },
+  {
+   "cx": 55,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1322
+  },
+  {
+   "cx": 56,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3031
+  },
+  {
+   "cx": 57,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 192
+  },
+  {
+   "cx": 58,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 61
+  },
+  {
+   "cx": 59,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 640
+  },
+  {
+   "cx": 60,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1423
+  },
+  {
+   "cx": 61,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1945
+  },
+  {
+   "cx": 62,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3001
+  },
+  {
+   "cx": 63,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2945
+  },
+  {
+   "cx": 64,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2193
+  },
+  {
+   "cx": 65,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2616
+  },
+  {
+   "cx": 66,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 848
+  },
+  {
+   "cx": 67,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 68,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 69,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 71,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 73,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 74,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 75,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32
+  },
+  {
+   "cx": 76,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 77,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 78,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 79,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 80,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 81,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 35
+  },
+  {
+   "cx": 82,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 83,
+   "cz": 6,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 42
+  },
+  {
+   "cx": 46,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28
+  },
+  {
+   "cx": 47,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 7,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 7,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 7,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 7,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 7,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 54,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2685
+  },
+  {
+   "cx": 55,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2061
+  },
+  {
+   "cx": 56,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27
+  },
+  {
+   "cx": 57,
+   "cz": 7,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 59,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 647
+  },
+  {
+   "cx": 60,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1739
+  },
+  {
+   "cx": 61,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1738
+  },
+  {
+   "cx": 62,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2742
+  },
+  {
+   "cx": 63,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2882
+  },
+  {
+   "cx": 64,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2172
+  },
+  {
+   "cx": 65,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1512
+  },
+  {
+   "cx": 66,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 67,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 68,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 69,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 71,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 73,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 74,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 75,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 76,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 77,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 80,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 81,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 82,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 7,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 46,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 8,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 8,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 8,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 8,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 8,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 8,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 8,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 8,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 8,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 8,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 134
+  },
+  {
+   "cx": 60,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1022
+  },
+  {
+   "cx": 61,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1578
+  },
+  {
+   "cx": 62,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1946
+  },
+  {
+   "cx": 63,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1979
+  },
+  {
+   "cx": 64,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1574
+  },
+  {
+   "cx": 65,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1242
+  },
+  {
+   "cx": 66,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 67,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 68,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 69,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 71,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 73,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 74,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 75,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14
+  },
+  {
+   "cx": 76,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 77,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 78,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 79,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 80,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 69
+  },
+  {
+   "cx": 81,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 82,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 8,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 44,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12
+  },
+  {
+   "cx": 45,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 9,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36
+  },
+  {
+   "cx": 61,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1167
+  },
+  {
+   "cx": 62,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1277
+  },
+  {
+   "cx": 63,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1269
+  },
+  {
+   "cx": 64,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1906
+  },
+  {
+   "cx": 65,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 746
+  },
+  {
+   "cx": 66,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 67,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 68,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 69,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 71,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 73,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 74,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 75,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 58
+  },
+  {
+   "cx": 76,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 78,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 79,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 80,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 21
+  },
+  {
+   "cx": 81,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 83,
+   "cz": 9,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 10,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 62
+  },
+  {
+   "cx": 62,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 356
+  },
+  {
+   "cx": 63,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 500
+  },
+  {
+   "cx": 64,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1714
+  },
+  {
+   "cx": 65,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 921
+  },
+  {
+   "cx": 66,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 858
+  },
+  {
+   "cx": 67,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9
+  },
+  {
+   "cx": 68,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 69,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 71,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 73,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 74,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 69
+  },
+  {
+   "cx": 75,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 221
+  },
+  {
+   "cx": 76,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 42
+  },
+  {
+   "cx": 77,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 64
+  },
+  {
+   "cx": 78,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 79,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 10,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 11,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 62,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 63,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15
+  },
+  {
+   "cx": 64,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1142
+  },
+  {
+   "cx": 65,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1613
+  },
+  {
+   "cx": 66,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1789
+  },
+  {
+   "cx": 67,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 71
+  },
+  {
+   "cx": 68,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 69,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 71,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 73,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25
+  },
+  {
+   "cx": 74,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 121
+  },
+  {
+   "cx": 75,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 155
+  },
+  {
+   "cx": 76,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 90
+  },
+  {
+   "cx": 77,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 78,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16
+  },
+  {
+   "cx": 82,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 11,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 12,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 112
+  },
+  {
+   "cx": 63,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 73
+  },
+  {
+   "cx": 64,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 883
+  },
+  {
+   "cx": 65,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1488
+  },
+  {
+   "cx": 66,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1498
+  },
+  {
+   "cx": 67,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 77
+  },
+  {
+   "cx": 68,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 69,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 70,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 71,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 73,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 74,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 75,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 105
+  },
+  {
+   "cx": 76,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 43
+  },
+  {
+   "cx": 77,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16
+  },
+  {
+   "cx": 78,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27
+  },
+  {
+   "cx": 79,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 80,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 130
+  },
+  {
+   "cx": 81,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 70
+  },
+  {
+   "cx": 82,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 83,
+   "cz": 12,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 43,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 13,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 147
+  },
+  {
+   "cx": 64,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 476
+  },
+  {
+   "cx": 65,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1002
+  },
+  {
+   "cx": 66,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1157
+  },
+  {
+   "cx": 67,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 68,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 69,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12
+  },
+  {
+   "cx": 70,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16
+  },
+  {
+   "cx": 71,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 72,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 73,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 74,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27
+  },
+  {
+   "cx": 75,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 60
+  },
+  {
+   "cx": 76,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 77,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 79,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 42
+  },
+  {
+   "cx": 81,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 82,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5
+  },
+  {
+   "cx": 83,
+   "cz": 13,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 43,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 14,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 96
+  },
+  {
+   "cx": 64,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 608
+  },
+  {
+   "cx": 65,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 811
+  },
+  {
+   "cx": 66,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 669
+  },
+  {
+   "cx": 67,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 68,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 69,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 23
+  },
+  {
+   "cx": 71,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19
+  },
+  {
+   "cx": 72,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 42
+  },
+  {
+   "cx": 73,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27
+  },
+  {
+   "cx": 74,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 75,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 76,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 77,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 79,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 14,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 15,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 64,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 193
+  },
+  {
+   "cx": 65,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 804
+  },
+  {
+   "cx": 66,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 676
+  },
+  {
+   "cx": 67,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 578
+  },
+  {
+   "cx": 68,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 69,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 71,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25
+  },
+  {
+   "cx": 72,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17
+  },
+  {
+   "cx": 73,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 74,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 75,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 76,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 81,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 15,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 16,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 64,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 54
+  },
+  {
+   "cx": 65,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 784
+  },
+  {
+   "cx": 66,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 927
+  },
+  {
+   "cx": 67,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 129
+  },
+  {
+   "cx": 68,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 69,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 70,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 56
+  },
+  {
+   "cx": 71,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 48
+  },
+  {
+   "cx": 72,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 73,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 74,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 75,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 76,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 80,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 81,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 16,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": 17,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 64,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 65,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 142
+  },
+  {
+   "cx": 66,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 590
+  },
+  {
+   "cx": 67,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 40
+  },
+  {
+   "cx": 68,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25
+  },
+  {
+   "cx": 69,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 30
+  },
+  {
+   "cx": 70,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 63
+  },
+  {
+   "cx": 71,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 72,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 73,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 74,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 75,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 76,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 78,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 80,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8
+  },
+  {
+   "cx": 81,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 82,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 17,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 64,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 65,
+   "cz": 18,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 66,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 57
+  },
+  {
+   "cx": 67,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 65
+  },
+  {
+   "cx": 68,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 29
+  },
+  {
+   "cx": 69,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 93
+  },
+  {
+   "cx": 70,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 23
+  },
+  {
+   "cx": 71,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11
+  },
+  {
+   "cx": 72,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 73,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 74,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 44
+  },
+  {
+   "cx": 75,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 76,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 80,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7
+  },
+  {
+   "cx": 83,
+   "cz": 18,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 64,
+   "cz": 19,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 65,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14
+  },
+  {
+   "cx": 66,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 18
+  },
+  {
+   "cx": 67,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13
+  },
+  {
+   "cx": 68,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 271
+  },
+  {
+   "cx": 69,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 157
+  },
+  {
+   "cx": 70,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19
+  },
+  {
+   "cx": 71,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 22
+  },
+  {
+   "cx": 73,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 40
+  },
+  {
+   "cx": 74,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 46
+  },
+  {
+   "cx": 75,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 76,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 78,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 83,
+   "cz": 19,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": 20,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 64,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 65,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6
+  },
+  {
+   "cx": 66,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13
+  },
+  {
+   "cx": 67,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32
+  },
+  {
+   "cx": 68,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 176
+  },
+  {
+   "cx": 69,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28
+  },
+  {
+   "cx": 70,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 71,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10
+  },
+  {
+   "cx": 73,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 52
+  },
+  {
+   "cx": 74,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 75,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 76,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3
+  },
+  {
+   "cx": 81,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 83,
+   "cz": 20,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 64,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 65,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 66,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16
+  },
+  {
+   "cx": 67,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 68,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 24
+  },
+  {
+   "cx": 69,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 70,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 71,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 21,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 73,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33
+  },
+  {
+   "cx": 74,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10
+  },
+  {
+   "cx": 75,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4
+  },
+  {
+   "cx": 76,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1
+  },
+  {
+   "cx": 78,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 21,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 43,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 44,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 45,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 46,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 47,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 48,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 49,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 50,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 51,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 52,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 53,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 54,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 55,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 56,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 57,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 58,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 59,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 60,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 61,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 62,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 63,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 64,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 65,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 66,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 67,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 68,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 69,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 70,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 71,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 72,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 73,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 74,
+   "cz": 22,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 75,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2
+  },
+  {
+   "cx": 76,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 77,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 78,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 79,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 80,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 81,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 82,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  },
+  {
+   "cx": 83,
+   "cz": 22,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0
+  }
+ ]
+}
