@@ -6,6 +6,7 @@ import { Sfx } from "./Sfx";
 import { Diagnostics } from "./Diagnostics";
 import { World } from "../world/World";
 import { StreamingWorld } from "../world/StreamingWorld";
+import { EXPOSURE } from "../world/palette";
 import type { GameWorld } from "../world/GameWorld";
 import { PlayerController } from "../player/PlayerController";
 import { fetchDrone } from "../player/drones";
@@ -123,7 +124,7 @@ export class Game {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = EXPOSURE; // 팔레트와 함께 튜닝되는 값(world/palette.ts)
     this.scene.background = new THREE.Color(0x0a0e12);
 
     // 진단 계측(?diag) — WebGL 컨텍스트 손실/전역 에러/렌더러 자원 추적
@@ -373,6 +374,7 @@ export class Game {
     // 변조 레이어(훅 ④⑥) — 투입 후 지정(start*/clear 가 기본값으로 리셋하므로 반드시 이후에)
     s.enemies.setAggro(m.modifiers?.aggro ?? "player");
     s.enemies.setBuildingBrands(!!m.modifiers?.buildingBrands); // 공성 낙인(패턴 17)
+    s.enemies.setKillHealMul(m.modifiers?.killHealMul ?? 1); // 처치 환수 배수(생존 미션은 0 — 교전 유인 제거)
     // 자매쌍 난이도 전이(§9.2-3) — 짝 도시가 무너져 있으면 파문 주기 단축(가중과 미션 변조 곱)
     const pairMul = this.peaceful || !this.currentCity ? 1 : pairAggravation(campaignStore.load(), this.currentCity.id);
     const sweepMul = (m.modifiers?.sweepPeriodMul ?? 1) * pairMul;

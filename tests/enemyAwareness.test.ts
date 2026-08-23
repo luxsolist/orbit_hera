@@ -104,3 +104,41 @@ describe("EnemyManager.provokeNear — 피격 유발 전파(반경 100m)", () =>
     expect(es[2].provoked).toBe(false); // 전파는 피격 개체 기준 1홉만
   });
 });
+
+// 피격 유발 감쇠 — 영구 래치였을 때의 회귀를 막는다.
+// 360° 자동사격 + 100m 유발 전파 때문에 첫 교전 뒤 전장 전체가 플레이어만 쫓았고,
+// aggro=landmark/building 변조와 진형 행동이 도입부에만 존재하다 사라졌다("전부 사냥으로 느껴진다").
+describe("CoreEnemy 피격 유발 감쇠", () => {
+  const mk = () => { const em = makeManager(); const e = spawnAtLeast(em, 1)[0]; e.group.position.set(0, 0, 0); return { em, e }; };
+
+  it("유발 직후엔 추격, 지속시간이 지나면 해제된다", () => {
+    const { em, e } = mk();
+    expect(e.provoked).toBe(false);
+    em.provokeNear(e);
+    expect(e.provoked).toBe(true);
+    e.decayProvoke(9.9);
+    expect(e.provoked).toBe(true); // 아직 유효
+    e.decayProvoke(0.2);
+    expect(e.provoked).toBe(false); // 감쇠 완료 → 미션 본래 행동 복귀
+  });
+
+  it("재피격은 연장이지 누적이 아니다", () => {
+    const { em, e } = mk();
+    em.provokeNear(e);
+    e.decayProvoke(5);
+    em.provokeNear(e); // 갱신
+    e.decayProvoke(9.9);
+    expect(e.provoked).toBe(true);
+    e.decayProvoke(0.2);
+    expect(e.provoked).toBe(false); // 두 번 맞았다고 20초가 되지 않는다
+  });
+
+  it("감쇠는 0 밑으로 내려가지 않는다(음수 누적 방지)", () => {
+    const { em, e } = mk();
+    em.provokeNear(e);
+    e.decayProvoke(1000);
+    e.decayProvoke(1000);
+    em.provokeNear(e);
+    expect(e.provoked).toBe(true); // 음수가 쌓였다면 여기서 false 가 된다
+  });
+});

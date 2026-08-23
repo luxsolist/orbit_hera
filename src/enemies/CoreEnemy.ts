@@ -390,7 +390,17 @@ export class CoreEnemy {
   hp: number;
   color: number; // 발광/표면 색(드레인 빔 연출 등에서 참조) — 준위 강등(P3)이 적색 쪽으로 갱신
   killRefund = 0; // 처치 시 플레이어 HP 환수(아키타입에서 주입)
-  provoked = false; // 피격 유발 인식 래치 — 플레이어 공격에 노출되면 거리 무관 계속 추격
+  // 피격 유발 인식 — 플레이어 공격에 노출되면 거리 무관 추격. **영구 래치가 아니라 감쇠 타이머**다.
+  // 영구 래치였을 때: 주무기가 360° 자동사격이라 유발을 피할 수 없고, 유발이 반경 100m 로 전파되므로
+  // 첫 교전 몇 초 뒤엔 전장 전체가 플레이어만 쫓았다 → aggro=landmark/building 변조와 진형 행동이
+  // 도입부에만 존재하고 사라졌다("모든 미션이 사냥 하나로 느껴진다"의 직접 원인).
+  // 감쇠하면 "지금 싸우는 적"만 나를 쫓고 나머지는 제 임무로 돌아간다 — 요격이냐 추격이냐의 선택이 생긴다.
+  private provokeT = 0;
+  get provoked(): boolean { return this.provokeT > 0; }
+  /** 피격 유발 — sec 동안 거리 무관 추격. 재피격은 갱신(연장)이지 누적이 아니다. */
+  provoke(sec: number): void { if (sec > this.provokeT) this.provokeT = sec; }
+  /** 유발 감쇠 — 매 프레임 1회(EnemyManager 루프가 상태 분기 전에 호출). */
+  decayProvoke(dt: number): void { if (this.provokeT > 0) this.provokeT = Math.max(0, this.provokeT - dt); }
   archetypeName = ""; // 아키타입 표시명(모기/거머리/소인체 …) — HUD/로그용
   role: PlasmoidArchetype = "rusher"; // 행동 직무(스폰 시 주입) — 공격 경로 분기(marker 는 낙인탄 전용)
   // 투입 직무(훅 ③ purge-role 집계용) — 행동은 role 이 결정하고, 이 태그는 미션 계약을 따른다:

@@ -3,7 +3,7 @@
 // **평균 사용자 조작 시뮬레이션**(조준 스윕·이동 홀드·수동사격 버스트·특수 탭 — 초인적 정밀도 없음).
 //
 // 사용: node tests/e2e/scenarios.mjs <serverBase> <scenario> [outPrefix] [seconds]
-// 시나리오: menu | severance | retro | experiment | phase | director
+// 시나리오: menu | severance | retro | experiment | phase | director | siege | aggro | offtarget
 // 주의: 헤드리스 시간 지연(게임시간 ≈ 실제/3~5) — 절대 수치보다 거동·표출 관찰용.
 import { chromium } from "playwright";
 import { writeFileSync } from "node:fs";
@@ -362,6 +362,44 @@ if (SCENARIO === "menu") {
     snapshotShape: decisions[0] ? Object.keys(decisions[0].snapshot ?? {}) : [],
     castTexts: [...new Set(samples.filter((s) => s.cast).map((s) => s.cast))].slice(0, 5),
     events,
+  });
+} else if (SCENARIO === "aggro") {
+  // 체감 분화 보정(2026-08-23) 검증 — "목표가 달라도 전부 사냥으로 느껴진다"의 원인 ①②.
+  // **같은 빌드에서 변조 유무만 바꿔** 두 판을 돌린다: 변조 없음(구 동작) vs aggro=landmark(신).
+  // 관찰 지표 = 랜드마크/건물 상실. 구 동작은 적이 플레이어만 쫓으므로 표적이 거의 안 깎인다.
+  const runOne = async (label, patch) => {
+    const { browser, ctx, page, errors } = await launch({ campaign: CAMPAIGN_SEEDS.ch3, progress: PROGRESS_SEED });
+    await forceMission(ctx, "guard-landmark", patch);
+    await deploy(page, "WALKER");
+    const { samples } = await runPlay(page, SECS, `${OUT}-${label}`);
+    const last = samples[samples.length - 1];
+    await browser.close();
+    return { label, kills: last?.kills, destroyed: last?.destroyed, landmarks: last?.landmarks,
+             objective: last?.objective, detail: last?.detail, errors: errors.slice(0, 3) };
+  };
+  const before = await runOne("before", { modifiers: undefined });      // 구 데이터 = 어그로 변조 없음
+  const after = await runOne("after", null);                            // 현 데이터 = aggro:landmark
+  console.log("\n=== 어그로 변조 전후 비교(guard-landmark) ===");
+  for (const r of [before, after]) {
+    console.log(`  [${r.label.padEnd(6)}] 처치 ${r.kills} · 건물상실 ${r.destroyed} · 랜드마크상실 ${r.landmarks}`);
+    console.log(`            ${r.objective} | ${r.detail}`);
+    if (r.errors.length) console.log(`            에러: ${r.errors.join(" | ")}`);
+  }
+  writeFileSync(`${OUT}-summary.json`, JSON.stringify({ scenario: "aggro", before, after }, null, 1));
+  process.exit(0);
+} else if (SCENARIO === "offtarget") {
+  // 원인 ③ 검증 — purge-role 비표적 처치 비용이 HUD 에 표출되고 시간을 깎는가.
+  const { browser, ctx, page, errors } = await launch({ campaign: CAMPAIGN_SEEDS.ch3, progress: PROGRESS_SEED });
+  const spec = await forceMission(ctx, "brand-hunt");
+  await deploy(page, "WALKER");
+  const { samples, events } = await runPlay(page, SECS, OUT);
+  const last = samples[samples.length - 1];
+  const withCost = samples.filter((x) => (x.detail ?? "").includes("비표적")).length;
+  await finish(page, browser, errors, {
+    mission: spec.id, offTargetPenalty: spec.modifiers?.offTargetPenalty,
+    seconds: last?.t, gameSec: gameSecOf(last, 300), kills: last?.kills,
+    objective: last?.objective, detail: last?.detail,
+    samplesShowingCost: withCost, totalSamples: samples.length, events,
   });
 } else if (SCENARIO === "siege") {
   // P3 공성 낙인(buildingBrands) — 마커가 랜드마크에 낙인탄 → 파문이 건물 피해로 전환

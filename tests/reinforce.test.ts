@@ -277,6 +277,39 @@ describe("어그로 성향(훅 ④) — building/landmark 직행, provoked 만 �
     tick(em2, 30);
     expect(em2.aliveEnemies[0].targetIndex).toBe(0); // 인식 반경(500) 안 → 플레이어 교전
   });
+
+  // 체감 분화 보정(2026-08-23) — 유발이 영구 래치였을 때 어그로 변조가 도입부에만 살아있다 사라졌다.
+  // 주무기가 360° 자동사격이고 유발이 100m 로 전파돼 첫 교전 뒤 전장 전체가 플레이어만 쫓았고,
+  // 그래서 사수/생존/격멸이 전부 "사냥" 하나로 느껴졌다. 감쇠가 그 수렴을 끊는지 여기서 고정한다.
+  it("유발 감쇠: 피격 시 플레이어 추격 → 지속시간 후 랜드마크로 복귀(어그로 변조가 되살아난다)", () => {
+    const em = makeManager(makeBc());
+    em.startRoster([{ role: "rusher", count: 1, hp: 100000 }], 100); // 죽지 않게 고체력
+    em.setAggro("landmark");
+    tick(em, 30);
+    const e = em.aliveEnemies[0];
+    expect(e.buildingId).toBe("lm1"); // 본래 임무 = 랜드마크 직행
+
+    em.provokeNear(e);
+    tick(em, 5);
+    expect(e.targetIndex).toBe(0);    // 때리면 나를 쫓는다
+    expect(e.provoked).toBe(true);
+
+    tick(em, 60 * 11);                 // 11초 — 유발 지속(10s) 경과
+    expect(e.provoked).toBe(false);
+    expect(e.targetIndex).toBe(-1);   // 플레이어 어그로 해제
+    expect(e.buildingId).toBe("lm1"); // **랜드마크로 복귀** — 이게 사수 미션의 성립 조건
+  });
+
+  it("계속 피격당하는 적은 감쇠하지 않는다(교전 중 어그로가 풀리면 그게 더 이상하다)", () => {
+    const em = makeManager(makeBc());
+    em.startRoster([{ role: "rusher", count: 1, hp: 100000 }], 100);
+    em.setAggro("landmark");
+    tick(em, 30);
+    const e = em.aliveEnemies[0];
+    for (let i = 0; i < 15; i++) { em.provokeNear(e); tick(em, 60); } // 1초마다 재피격 × 15초
+    expect(e.provoked).toBe(true);  // 지속시간(10s)을 넘겨도 갱신되어 유지
+    expect(e.targetIndex).toBe(0);
+  });
 });
 
 describe("진형/행동(조합 정립) — formationPos·hold/patrol/escort", () => {

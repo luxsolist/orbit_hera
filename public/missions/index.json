@@ -46,7 +46,10 @@
    "reinforceInterval": 1.5,
    "spawnRadius": 1500
   },
-  "zoneRadius": 5000
+  "zoneRadius": 5000,
+  "modifiers": {
+   "aggro": "building"
+  }
  },
  {
   "id": "guard-landmark",
@@ -71,7 +74,10 @@
    "reinforceInterval": 1.5,
    "spawnRadius": 1500
   },
-  "zoneRadius": 5000
+  "zoneRadius": 5000,
+  "modifiers": {
+   "aggro": "landmark"
+  }
  },
  {
   "id": "survive",
@@ -95,7 +101,10 @@
    "reinforceInterval": 1.5,
    "spawnRadius": 1500
   },
-  "zoneRadius": 5000
+  "zoneRadius": 5000,
+  "modifiers": {
+   "killHealMul": 0
+  }
  },
  {
   "id": "surgical",
@@ -263,7 +272,8 @@
   },
   "zoneRadius": 3500,
   "modifiers": {
-   "sweepPeriodMul": 0.6
+   "sweepPeriodMul": 0.6,
+   "offTargetPenalty": 6
   }
  },
  {
@@ -335,7 +345,10 @@
    ],
    "spawnRadius": 900
   },
-  "zoneRadius": 3500
+  "zoneRadius": 3500,
+  "modifiers": {
+   "offTargetPenalty": 6
+  }
  },
  {
   "id": "matured",
@@ -497,7 +510,8 @@
     "everySec": 45,
     "step": 800,
     "minRadius": 1200
-   }
+   },
+   "killHealMul": 0
   }
  },
  {
@@ -551,7 +565,10 @@
     }
    ]
   },
-  "zoneRadius": 4500
+  "zoneRadius": 4500,
+  "modifiers": {
+   "killHealMul": 0
+  }
  },
  {
   "id": "thin-field",
@@ -705,7 +722,10 @@
    ],
    "spawnRadius": 900
   },
-  "zoneRadius": 3000
+  "zoneRadius": 3000,
+  "modifiers": {
+   "offTargetPenalty": 8
+  }
  },
  {
   "id": "experiment-strike",

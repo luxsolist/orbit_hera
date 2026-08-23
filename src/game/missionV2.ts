@@ -94,6 +94,21 @@ export interface MissionModifiers {
   freqRegenMul?: number; // 게이지 회복 배수(옅은 장 — 물리편 §2.5)
   aggro?: "player" | "landmark" | "building"; // 어그로 성향(랜드마크 직행 등)
   buildingBrands?: boolean; // 건물/랜드마크 낙인 허용(공성 낙인 — 커터 단계)
+  /**
+   * 비표적 처치 1기당 시간 차감(s) — `purge-role` 전용. 0/미지정 = 비용 없음.
+   *
+   * 왜: 표적만 세는 미션인데 잡몹 처치에 아무 대가가 없으면 최적해가 늘 "전부 죽인다"로 수렴해
+   * "골라 죽이기"라는 미션 문법이 성립하지 않는다. 시간을 깎아 **선택**을 강제한다.
+   */
+  offTargetPenalty?: number;
+  /**
+   * 처치 HP 환수 배수(0 = 환수 없음, 미지정 = 1). 생존 미션에서 낮춘다.
+   *
+   * 왜: 처치가 위협 감소 + 체력 회복까지 겸하면 `survive` 에서도 교전이 항상 이득이라 회피가
+   * 선택지가 되지 않는다. 증원이 처치를 즉시 메우므로(concurrentCap), 환수를 빼면 "굳이 다 잡을
+   * 이유"가 사라진다.
+   */
+  killHealMul?: number;
 }
 
 // ─────────────────────────── 명세 ───────────────────────────
@@ -241,6 +256,18 @@ export function deployRoleCredits(d: MissionDeploy, role: RosterUnit["role"]): n
  * 실패 우선순위: 랜드마크 → 건물 → 리스폰 → 시간(격멸형 한정). 미구동 goal(purge-role/all·suture·
  * score)은 active 고정 — 풀 편입은 runnableV2 가 거른다(훅 ③⑤⑥ 대기).
  */
+/**
+ * 비표적 처치 비용을 반영한 실효 경과(s). `purge-role` + `offTargetPenalty` 에서만 elapsed 보다 크다.
+ * 비표적 수 = 전체 처치 − 표적 직무 처치(런타임에 새 카운터를 두지 않고 기존 집계에서 파생). 순수.
+ */
+export function offTargetElapsed(spec: MissionSpecV2, rt: MissionRuntime): number {
+  const g = spec.goal;
+  const penalty = spec.modifiers?.offTargetPenalty ?? 0;
+  if (g.type !== "purge-role" || penalty <= 0) return rt.elapsed;
+  const off = Math.max(0, rt.kills - (rt.roleKills?.[g.role] ?? 0));
+  return rt.elapsed + off * penalty;
+}
+
 export function evaluateMissionV2(spec: MissionSpecV2, rt: MissionRuntime): MissionOutcome {
   const g = spec.goal;
   if (g.type === "free-roam") return { status: "active", progress: 0, reason: "탐방 / EXPLORE" };
@@ -275,7 +302,10 @@ export function evaluateMissionV2(spec: MissionSpecV2, rt: MissionRuntime): Miss
       const progress = target > 0 ? clamp01(roleKills / target) : 1;
       if (target > 0 && roleKills >= target) return { status: "success", progress: 1, reason: "표적 격멸 완료 / HUNTED" };
       if (failReason) return { status: "failed", progress, reason: failReason };
-      if (f.timeLimit > 0 && rt.elapsed >= f.timeLimit) return { status: "failed", progress, reason: "시간 초과 / TIME OUT" };
+      // 비표적 처치 비용 — 전체 처치에서 표적분을 뺀 수만큼 시간이 앞당겨진다(런타임 추가 입력 불요).
+      if (f.timeLimit > 0 && offTargetElapsed(spec, rt) >= f.timeLimit) {
+        return { status: "failed", progress, reason: "시간 초과 / TIME OUT" };
+      }
       return { status: "active", progress, reason: "" };
     }
     case "survive": {
@@ -341,7 +371,11 @@ export function missionProgressTextV2(spec: MissionSpecV2, rt: MissionRuntime, r
       const g = spec.goal;
       const total = deployRoleCredits(spec.deploy, g.role);
       const roleKills = Math.min(rt.roleKills?.[g.role] ?? 0, total);
-      return withLimits(`${deployRoleName(g.role, revealed)} ${roleKills} / ${total}`);
+      // 비표적 처치 비용이 걸린 미션은 깎인 시간을 병기 — 대가가 보이지 않으면 선택이 성립하지 않는다.
+      const penalty = spec.modifiers?.offTargetPenalty ?? 0;
+      const off = penalty > 0 ? Math.max(0, rt.kills - (rt.roleKills?.[g.role] ?? 0)) : 0;
+      const cost = off > 0 ? ` · 비표적 ${off} (−${Math.round(off * penalty)}s)` : "";
+      return withLimits(`${deployRoleName(g.role, revealed)} ${roleKills} / ${total}${cost}`);
     }
     case "survive": return withLimits(`처치 ${rt.kills}`);
     case "guard":
@@ -355,7 +389,9 @@ export function missionProgressTextV2(spec: MissionSpecV2, rt: MissionRuntime, r
 }
 
 // 엔진이 지원하는 변조 키(훅 ④⑥에서 해금) — 그 외 변조가 지정된 미션은 풀에서 제외.
-const SUPPORTED_MODIFIERS = new Set<keyof MissionModifiers>(["aggro", "zoneShrink", "freqRegenMul", "sweepPeriodMul", "buildingBrands"]);
+const SUPPORTED_MODIFIERS = new Set<keyof MissionModifiers>([
+  "aggro", "zoneShrink", "freqRegenMul", "sweepPeriodMul", "buildingBrands", "offTargetPenalty", "killHealMul",
+]);
 
 /**
  * 현 엔진이 구동 가능한가 — goal(purge/purge-all/purge-role/survive/guard/free-roam) ×
@@ -425,9 +461,13 @@ export function fromLegacy(v1: MissionSpec): MissionSpecV2 {
 }
 
 /**
- * 내장 미션 풀 v2 — `public/missions/index.json`(v2) 과 동치(테스트 고정). 앞 4미션은 v1
- * `DEFAULT_MISSIONS` 와 `toLegacy` 동치. 5번째 "정밀 정화"는 훅 ②(복합 실패)로 열린 패턴 19 —
- * v1 로는 표현 불가(toLegacy = null)라 v2 전용.
+ * 내장 미션 풀 v2 — `public/missions/index.json`(v2) 과 동치(테스트 고정).
+ *
+ * **변조가 미션의 체감을 가른다**: 승리 조건만 다르고 적 행동이 같으면 모든 미션이 "사냥" 하나로
+ * 수렴한다(2026-08-23 실플레이 피드백). 그래서 사수형에는 aggro(표적 직행), 생존형에는
+ * killHealMul: 0(교전 유인 제거), purge-role 에는 offTargetPenalty(골라 죽이기의 대가)를 건다.
+ * 그 결과 1번(정화 작전)만 v1 `DEFAULT_MISSIONS` 와 `toLegacy` 동치이고 — v1 은 변조 축이 없다 —
+ * 나머지는 v2 전용이다.
  */
 export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
   {
@@ -443,6 +483,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 10, maxLandmarkLoss: 0 },
     deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
     zoneRadius: 5000,
+    modifiers: { aggro: "building" }, // 적이 건물로 직행 — 사수 미션이 실제로 '지키러 가는' 미션이 되도록
   },
   {
     id: "guard-landmark", name: "랜드마크 사수 / GUARD",
@@ -450,6 +491,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 1 },
     deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
     zoneRadius: 5000,
+    modifiers: { aggro: "landmark" }, // 적이 랜드마크로 직행 — 없으면 잃을 대상이 없어 사실상 생존전이었다
   },
   {
     id: "survive", name: "지역 사수 / SURVIVE",
@@ -457,6 +499,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     fail: { respawns: 2, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
     deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
     zoneRadius: 5000,
+    modifiers: { killHealMul: 0 }, // 처치 환수 없음 — 교전이 항상 이득이면 회피가 선택지가 안 된다
   },
   {
     // 패턴 19 정밀 정화(06-missions §3-F) — 훅 ② 복합 실패 조건의 첫 소비처: 격멸 + 건물 손실 한도.
@@ -525,7 +568,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
       spawnRadius: 1000,
     },
     zoneRadius: 3500,
-    modifiers: { sweepPeriodMul: 0.6 }, // 낙인 압력 극대 — 근원 격파의 절박함
+    modifiers: { offTargetPenalty: 6, sweepPeriodMul: 0.6 }, // 낙인 압력 극대 — 근원 격파의 절박함
   },
   {
     // 패턴 10 삼중 투영(boss — 훅 ①) — HP 공유 개념 숙달전(§2.6): 가장 느리고 가까운 구가 정답.
@@ -556,6 +599,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
       spawnRadius: 900,
     },
     zoneRadius: 3500,
+    modifiers: { offTargetPenalty: 6 }, // 호위를 무의미하게 몰살하지 않도록
   },
   {
     // 패턴 11 성숙체(emit + ownSweep — 훅 ⑤) — 방치 균열이 키운 거체: 파문을 소유하고 잡몹을 분출한다.
@@ -622,7 +666,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     fail: { respawns: 2, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
     deploy: { model: "horde", count: 130, unitHp: 300, concurrentCap: 45, reinforceInterval: 0.5, spawnRadius: 1400 },
     zoneRadius: 4000,
-    modifiers: { zoneShrink: { everySec: 45, step: 800, minRadius: 1200 } },
+    modifiers: { killHealMul: 0, zoneShrink: { everySec: 45, step: 800, minRadius: 1200 } },
   },
   {
     // 패턴 2 해일(phased — 훅 ⑥) — 밀물·썰물: 90초마다 더 큰 파도가 겹쳐 온다.
@@ -639,6 +683,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
       ],
     },
     zoneRadius: 4500,
+    modifiers: { killHealMul: 0 }, // 처치 환수 없음 — 썰물에 숨 고르기가 유효하도록
   },
   {
     // 패턴 20 옅은 장(freqRegenMul — 훅 ⑥) — 게이지 회복 절반: 볼리 한 발의 가치가 오른다.
@@ -714,6 +759,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
       spawnRadius: 900,
     },
     zoneRadius: 3000,
+    modifiers: { offTargetPenalty: 8 }, // 되살아나는 잡몹을 세지 말고 시전자를 끊도록
   },
   {
     // 캠페인 5장 앵커(§9.1) — 동시 조사 실험. 격멸이 아니라 "동시에 붙들기"가 목표(관측이 무기).

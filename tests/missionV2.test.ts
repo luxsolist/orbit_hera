@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import {
   toLegacy, fromLegacy, evaluateMissionV2, runnableV2, missionDurationV2, deployKillCredits,
   deployRoleCredits, deployRoleName, missionObjectiveTextV2, missionProgressTextV2, resonanceScore,
-  DEFAULT_MISSIONS_V2, FREE_ROAM_V2, type MissionSpecV2,
+  DEFAULT_MISSIONS_V2, FREE_ROAM_V2, offTargetElapsed, type MissionSpecV2,
 } from "../src/game/missionV2";
 import { DEFAULT_MISSIONS, type MissionRuntime } from "../src/game/mission";
 import { normalizeMissionPool } from "../src/game/missions";
@@ -17,10 +17,15 @@ const PYRAMID = {
 } as const;
 
 describe("toLegacy — v2 → v1 동치 변환", () => {
-  it("기본 풀 앞 4미션은 v1 DEFAULT_MISSIONS 와 동치, 5번째(정밀 정화)는 v1 표현 불가(null)", () => {
+  it("변조 없는 기본 미션만 v1 과 동치 — 변조가 붙으면 v1 표현 불가(null)", () => {
     const legacy = DEFAULT_MISSIONS_V2.map(toLegacy);
-    expect(legacy.slice(0, 4)).toEqual(DEFAULT_MISSIONS);
-    expect(legacy[4]).toBeNull(); // 복합 실패 조건(격멸+건물 한도)은 v1 계약 밖 — v2 전용
+    // 1번(정화 작전)만 변조가 없다. 2~4번(도시 방어·랜드마크 사수·지역 사수)은 체감 분화 보정으로
+    // aggro/killHealMul 변조가 붙어 v1 계약 밖이 됐다 — v1 은 변조 축 자체가 없다.
+    expect(legacy[0]).toEqual(DEFAULT_MISSIONS[0]);
+    expect(legacy.slice(1, 5)).toEqual([null, null, null, null]);
+    // 대조군: 변조를 걷어내면 다시 v1 과 동치가 된다(어댑터가 깨진 게 아님을 고정)
+    const bare = DEFAULT_MISSIONS_V2.slice(1, 4).map((m) => toLegacy({ ...m, modifiers: undefined }));
+    expect(bare).toEqual(DEFAULT_MISSIONS.slice(1, 4));
   });
 
   it("fromLegacy ∘ toLegacy = 항등(구동 가능 부분집합) — v1 JSON 하위호환 보장", () => {
@@ -266,5 +271,71 @@ describe("resonanceScore — 결과 화면 공명 점수(순수)", () => {
   });
   it("무전과 실패 = 0", () => {
     expect(resonanceScore(0, { markerKills: 0, zenoFreezes: 0, sweepCleanPasses: 0 }, false)).toBe(0);
+  });
+});
+
+// ─────────── 체감 분화 보정(2026-08-23) ───────────
+// 실플레이에서 목표가 달라도 "전부 사냥"으로 느껴지던 문제 대응. 승리 조건만 다르고 **최적 전략이
+// 같으면** 미션은 분화되지 않는다 — 비표적 처치에 비용을 주고, 생존에서 처치 보상을 뺀다.
+
+describe("offTargetPenalty — 비표적 처치 비용(purge-role)", () => {
+  const spec = (penalty?: number): MissionSpecV2 => ({
+    id: "t", name: "t",
+    goal: { type: "purge-role", role: "marker" },
+    fail: { respawns: -1, timeLimit: 100, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    deploy: { model: "roster", units: [{ role: "marker", count: 3, hp: 100 }, { role: "rusher", count: 10, hp: 50 }], spawnRadius: 100 },
+    zoneRadius: 0,
+    ...(penalty ? { modifiers: { offTargetPenalty: penalty } } : {}),
+  });
+  const rt = (elapsed: number, kills: number, markerKills: number) => ({
+    elapsed, kills, deaths: 0, buildingsDestroyed: 0, landmarksDestroyed: 0, roleKills: { marker: markerKills },
+  }) as never;
+
+  it("비용이 없으면 실경과만으로 판정(기존 계약)", () => {
+    expect(evaluateMissionV2(spec(), rt(50, 20, 1)).status).toBe("active");
+    expect(evaluateMissionV2(spec(), rt(100, 20, 1)).status).toBe("failed");
+  });
+
+  it("비표적 처치가 남은 시간을 깎는다", () => {
+    // 경과 50s + 비표적 9기 × 6s = 104s ≥ 제한 100s → 시간 초과
+    expect(evaluateMissionV2(spec(6), rt(50, 10, 1)).status).toBe("failed");
+    // 같은 시간이라도 표적만 잡았으면 비용 0 → 진행 중
+    expect(evaluateMissionV2(spec(6), rt(50, 1, 1)).status).toBe("active");
+  });
+
+  it("표적 처치는 비용에 포함되지 않는다", () => {
+    expect(offTargetElapsed(spec(6), rt(50, 3, 3))).toBe(50);
+    expect(offTargetElapsed(spec(6), rt(50, 5, 3))).toBe(50 + 2 * 6);
+  });
+
+  it("표적 전멸은 비용을 넘어 성공 — 대가를 치렀어도 끝냈으면 성공", () => {
+    expect(evaluateMissionV2(spec(6), rt(90, 30, 3)).status).toBe("success");
+  });
+
+  it("purge-role 이 아니면 무시(다른 goal 에 새지 않는다)", () => {
+    const purge: MissionSpecV2 = { ...spec(6), goal: { type: "purge", count: 5 } };
+    expect(offTargetElapsed(purge, rt(50, 30, 0))).toBe(50);
+  });
+
+  it("HUD 에 깎인 시간을 병기한다 — 대가가 보이지 않으면 선택이 성립하지 않는다", () => {
+    expect(missionProgressTextV2(spec(6), rt(50, 5, 2))).toContain("비표적 3 (−18s)");
+    expect(missionProgressTextV2(spec(6), rt(50, 2, 2))).not.toContain("비표적"); // 표적만 잡으면 표기 없음
+    expect(missionProgressTextV2(spec(), rt(50, 9, 2))).not.toContain("비표적");  // 비용 미설정 미션엔 미표기
+  });
+});
+
+describe("runnableV2 — 신규 변조 지원", () => {
+  const base: MissionSpecV2 = {
+    id: "t", name: "t", goal: { type: "survive", seconds: 60 },
+    fail: { respawns: -1, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    deploy: { model: "horde", count: 10, unitHp: 50, concurrentCap: 5, reinforceInterval: 1, spawnRadius: 100 },
+    zoneRadius: 0,
+  };
+  it("killHealMul·offTargetPenalty 는 구동 가능", () => {
+    expect(runnableV2({ ...base, modifiers: { killHealMul: 0 } })).toBe(true);
+    expect(runnableV2({ ...base, modifiers: { offTargetPenalty: 6 } })).toBe(true);
+  });
+  it("미지 변조는 여전히 제외", () => {
+    expect(runnableV2({ ...base, modifiers: { bogus: 1 } as never })).toBe(false);
   });
 });

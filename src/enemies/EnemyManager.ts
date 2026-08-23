@@ -29,6 +29,9 @@ const AWARENESS_RADIUS_SQ = AWARENESS_RADIUS * AWARENESS_RADIUS;
 const AWARENESS_LOSE_RADIUS = 900; // 인식 해제 반경(m) — 이보다 멀어지면 건물 공격 복귀(획득의 1.8배 히스테리시스)
 // 피격 유발 인식 — 플레이어가 때린 플라즈모이드 반경 이 거리 안의 개체도 플레이어를 인식(provoked 래치).
 const PROVOKE_RADIUS = 100; // 피격 전파 반경(m)
+// 피격 유발 지속(s) — 이 시간 동안 거리 무관 추격, 이후 미션 본래 행동(랜드마크 직행·진형)으로 복귀.
+// 영구 래치였을 때 어그로 변조가 도입부에만 살아있다 사라지던 문제를 이 감쇠가 막는다.
+const PROVOKE_HOLD = 10;
 const PROVOKE_RADIUS_SQ = PROVOKE_RADIUS * PROVOKE_RADIUS;
 const AWARENESS_LOSE_SQ = AWARENESS_LOSE_RADIUS * AWARENESS_LOSE_RADIUS;
 
@@ -233,6 +236,8 @@ export class EnemyManager {
   // 어그로 성향(훅 ④ — 미션 변조 `modifiers.aggro`): player = 현행(인식 반경 내 플레이어 전환),
   // building/landmark = 표적 직행 — 플레이어는 **때려야만**(provoked) 어그로가 끌린다.
   private aggro: "player" | "landmark" | "building" = "player";
+  // 처치 HP 환수 배수(미션 변조 killHealMul) — 생존 미션에서 0 으로 낮춰 "교전이 항상 이득"을 깬다.
+  private killHealMul = 1;
   private buildingBrandsEnabled = false; // 공성 낙인(modifiers.buildingBrands) — 미션 변조, clear 가 리셋
   private bossGroups: CoreEnemy[][] = []; // 다중 투영 보스 그룹들(필라멘트·동반 소산 — roster 는 복수 가능)
   private bossFilamentCd = 0;
@@ -410,6 +415,11 @@ export class EnemyManager {
   /** 어그로 성향 설정(훅 ④) — 미션 변조. 투입(start*) 후 호출(clear 가 "player" 로 리셋). */
   setAggro(mode: "player" | "landmark" | "building"): void {
     this.aggro = mode;
+  }
+
+  /** 처치 HP 환수 배수(미션 변조 killHealMul). 0 = 환수 없음. */
+  setKillHealMul(mul: number) {
+    this.killHealMul = Math.max(0, mul);
   }
 
   /** 공성 낙인 허용(modifiers.buildingBrands, 훅 ④) — 미션 변조. 투입 후 호출(clear 가 false 로 리셋). */
@@ -1238,6 +1248,7 @@ export class EnemyManager {
         continue;
       }
       const myIdx = bi++;
+      enemy.decayProvoke(dt); // 유발 감쇠 — 분기 전에 1회(모든 행동 경로가 같은 시계를 본다)
       // 커터(절단체 — §6.3) — 플레이어 무시, 건물 부착→절단→납치 전용(방어 미션의 주적)
       if (enemy.role === "cutter") {
         this.cutterStep(enemy, p, dt);
@@ -1253,9 +1264,13 @@ export class EnemyManager {
       // 한번 인식하면 AWARENESS_LOSE_RADIUS 까지 계속 추격(히스테리시스). 벗어나면 다시 건물.
       // provoked(피격 유발)면 거리 게이트를 무시하고 살아있는 플레이어를 계속 추격.
       const distSq = idx >= 0 ? targets[idx].pos.distanceToSquared(p) : Infinity;
-      // 어그로 변조(훅 ④): building/landmark 성향은 인식 반경 0 — 때려서 provoked 될 때만 플레이어 교전
-      const acquireSq = this.aggro === "player" ? AWARENESS_RADIUS_SQ : 0;
-      if (!engagesPlayer(idx >= 0, enemy.targetIndex >= 0, distSq, enemy.provoked, acquireSq, AWARENESS_LOSE_SQ)) {
+      // 어그로 변조(훅 ④): building/landmark 성향은 인식 반경 0 — 때려서 provoked 될 때만 플레이어 교전.
+      // **해제 반경도 0 이어야 한다** — 획득만 막고 히스테리시스를 남기면, 유발로 한 번 붙은 적이
+      // 유발이 풀린 뒤에도 900m 안에 있다는 이유로 계속 플레이어를 쫓는다(= 어그로 변조가 무력화).
+      const player = this.aggro === "player";
+      const acquireSq = player ? AWARENESS_RADIUS_SQ : 0;
+      const loseSq = player ? AWARENESS_LOSE_SQ : 0;
+      if (!engagesPlayer(idx >= 0, enemy.targetIndex >= 0, distSq, enemy.provoked, acquireSq, loseSq)) {
         enemy.targetIndex = -1;
         this.buildingStep(enemy, p, dt, boids, grid, myIdx);
         continue;
@@ -1449,15 +1464,17 @@ export class EnemyManager {
   provokeNear(hit: CoreEnemy) {
     const c = hit.group.position;
     for (const e of this.enemies) {
-      if (e.state !== "alive" || e.provoked) continue;
-      if (e.group.position.distanceToSquared(c) <= PROVOKE_RADIUS_SQ) e.provoked = true;
+      // 이미 유발된 개체도 건너뛰지 않는다 — 감쇠 타이머라 **재피격이 갱신**해야 한다.
+      // (영구 래치 시절의 조기 종료였다. 그대로 두면 계속 쏘는 적이 10초 뒤 어그로를 풀어버린다.)
+      if (e.state !== "alive") continue;
+      if (e.group.position.distanceToSquared(c) <= PROVOKE_RADIUS_SQ) e.provoke(PROVOKE_HOLD);
     }
   }
 
   registerKill(enemy?: CoreEnemy) {
     this.killCount += 1;
     // 처치 = 흡수당한 물질 회수(HP 환수). 사망 지점 최근접 플레이어에게(근사).
-    if (enemy) this.nearestPlayer(enemy.group.position)?.heal(enemy.killRefund);
+    if (enemy && this.killHealMul > 0) this.nearestPlayer(enemy.group.position)?.heal(enemy.killRefund * this.killHealMul);
     // 역행 후보 기록(§6.6) — 계류(W2) 중 격파는 확정으로 표기(되감기지 않는다). 상한 64.
     if (enemy) {
       this.killLog.push({
@@ -1526,6 +1543,7 @@ export class EnemyManager {
     this.stats.sweepCleanPasses = 0;
     for (const k of Object.keys(this.roleKills) as (keyof typeof this.roleKills)[]) this.roleKills[k] = 0;
     this.aggro = "player"; // 어그로 변조 리셋 — 미션이 투입 후 setAggro 로 재지정
+    this.killHealMul = 1; //  처치 환수 배수 리셋 — 미션이 setKillHealMul 로 재지정
     this.buildingBrandsEnabled = false; // 공성 낙인 변조 리셋 — 미션이 투입 후 setBuildingBrands 로 재지정
     this.burstMode = false;
     this.hasPrev = false; // 재입장 시 순간이동 변위로 인한 가짜 속도 스파이크 방지
