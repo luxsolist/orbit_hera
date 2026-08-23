@@ -393,14 +393,14 @@
    "cz": 72,
    "objects": true,
    "terrain": true,
-   "buildings": 263
+   "buildings": 261
   },
   {
    "cx": 1,
    "cz": 72,
    "objects": true,
    "terrain": true,
-   "buildings": 220
+   "buildings": 219
   },
   {
    "cx": 2,
@@ -540,7 +540,7 @@
    "cz": 72,
    "objects": true,
    "terrain": true,
-   "buildings": 0
+   "buildings": 1
   },
   {
    "cx": 22,
@@ -687,7 +687,7 @@
    "cz": 73,
    "objects": true,
    "terrain": true,
-   "buildings": 130
+   "buildings": 133
   },
   {
    "cx": 3,
@@ -834,7 +834,7 @@
    "cz": 73,
    "objects": true,
    "terrain": true,
-   "buildings": 7
+   "buildings": 8
   },
   {
    "cx": 24,
@@ -911,7 +911,7 @@
    "cz": 74,
    "objects": true,
    "terrain": true,
-   "buildings": 0
+   "buildings": 1
   },
   {
    "cx": -5,
@@ -1163,7 +1163,7 @@
    "cz": 75,
    "objects": true,
    "terrain": true,
-   "buildings": 0
+   "buildings": 1
   },
   {
    "cx": -9,
@@ -1240,7 +1240,7 @@
    "cz": 75,
    "objects": true,
    "terrain": true,
-   "buildings": 31
+   "buildings": 32
   },
   {
    "cx": 2,
@@ -1884,7 +1884,7 @@
    "cz": 77,
    "objects": true,
    "terrain": true,
-   "buildings": 0
+   "buildings": 1
   },
   {
    "cx": 14,
@@ -2136,7 +2136,7 @@
    "cz": 78,
    "objects": true,
    "terrain": true,
-   "buildings": 4
+   "buildings": 5
   },
   {
    "cx": 10,
@@ -2360,7 +2360,7 @@
    "cz": 79,
    "objects": true,
    "terrain": true,
-   "buildings": 207
+   "buildings": 206
   },
   {
    "cx": 2,
@@ -2493,7 +2493,7 @@
    "cz": 79,
    "objects": true,
    "terrain": true,
-   "buildings": 57
+   "buildings": 58
   },
   {
    "cx": 21,
@@ -2619,7 +2619,7 @@
    "cz": 80,
    "objects": true,
    "terrain": true,
-   "buildings": 10
+   "buildings": 12
   },
   {
    "cx": -1,
@@ -2780,7 +2780,7 @@
    "cz": 80,
    "objects": true,
    "terrain": true,
-   "buildings": 1
+   "buildings": 0
   },
   {
    "cx": 22,
@@ -2829,7 +2829,7 @@
    "cz": 81,
    "objects": true,
    "terrain": true,
-   "buildings": 182
+   "buildings": 181
   },
   {
    "cx": -11,
@@ -3207,7 +3207,7 @@
    "cz": 82,
    "objects": true,
    "terrain": true,
-   "buildings": 15
+   "buildings": 16
   },
   {
    "cx": 3,
@@ -3319,7 +3319,7 @@
    "cz": 82,
    "objects": true,
    "terrain": true,
-   "buildings": 51
+   "buildings": 47
   },
   {
    "cx": 19,
@@ -3473,7 +3473,7 @@
    "cz": 83,
    "objects": true,
    "terrain": true,
-   "buildings": 77
+   "buildings": 76
   },
   {
    "cx": 1,
@@ -4054,7 +4054,7 @@
    "cz": 85,
    "objects": true,
    "terrain": true,
-   "buildings": 257
+   "buildings": 255
   },
   {
    "cx": 4,
@@ -4075,7 +4075,7 @@
    "cz": 85,
    "objects": true,
    "terrain": true,
-   "buildings": 123
+   "buildings": 121
   },
   {
    "cx": 7,
@@ -4635,14 +4635,14 @@
    "cz": 87,
    "objects": true,
    "terrain": true,
-   "buildings": 109
+   "buildings": 110
   },
   {
    "cx": 7,
    "cz": 87,
    "objects": true,
    "terrain": true,
-   "buildings": 152
+   "buildings": 151
   },
   {
    "cx": 8,
@@ -5069,7 +5069,7 @@
    "cz": 89,
    "objects": true,
    "terrain": true,
-   "buildings": 0
+   "buildings": 1
   },
   {
    "cx": -11,
@@ -5118,7 +5118,7 @@
    "cz": 89,
    "objects": true,
    "terrain": true,
-   "buildings": 25
+   "buildings": 22
   },
   {
    "cx": -4,
@@ -5181,7 +5181,7 @@
    "cz": 89,
    "objects": true,
    "terrain": true,
-   "buildings": 100
+   "buildings": 99
   },
   {
    "cx": 5,
@@ -5230,7 +5230,7 @@
    "cz": 89,
    "objects": true,
    "terrain": true,
-   "buildings": 69
+   "buildings": 68
   },
   {
    "cx": 12,
@@ -5363,7 +5363,7 @@
    "cz": 90,
    "objects": true,
    "terrain": true,
-   "buildings": 1
+   "buildings": 2
   },
   {
    "cx": -9,
@@ -5398,7 +5398,7 @@
    "cz": 90,
    "objects": true,
    "terrain": true,
-   "buildings": 17
+   "buildings": 16
   },
   {
    "cx": -4,
@@ -5503,7 +5503,7 @@
    "cz": 90,
    "objects": true,
    "terrain": true,
-   "buildings": 619
+   "buildings": 618
   },
   {
    "cx": 11,
@@ -5783,7 +5783,7 @@
    "cz": 91,
    "objects": true,
    "terrain": true,
-   "buildings": 1105
+   "buildings": 1103
   },
   {
    "cx": 11,
@@ -5804,7 +5804,7 @@
    "cz": 91,
    "objects": true,
    "terrain": true,
-   "buildings": 210
+   "buildings": 212
   },
   {
    "cx": 14,
@@ -6063,7 +6063,7 @@
    "cz": 92,
    "objects": true,
    "terrain": true,
-   "buildings": 439
+   "buildings": 440
   },
   {
    "cx": 11,
@@ -6301,7 +6301,7 @@
    "cz": 93,
    "objects": true,
    "terrain": true,
-   "buildings": 115
+   "buildings": 114
   },
   {
    "cx": 5,
@@ -6532,7 +6532,7 @@
    "cz": 94,
    "objects": true,
    "terrain": true,
-   "buildings": 47
+   "buildings": 58
   },
   {
    "cx": -2,
@@ -6861,7 +6861,7 @@
    "cz": 95,
    "objects": true,
    "terrain": true,
-   "buildings": 23
+   "buildings": 25
   },
   {
    "cx": 5,
@@ -7155,7 +7155,7 @@
    "cz": 96,
    "objects": true,
    "terrain": true,
-   "buildings": 31
+   "buildings": 32
   },
   {
    "cx": 7,
@@ -7610,7 +7610,7 @@
    "cz": 98,
    "objects": true,
    "terrain": true,
-   "buildings": 67
+   "buildings": 66
   },
   {
    "cx": -8,
@@ -7960,7 +7960,7 @@
    "cz": 99,
    "objects": true,
    "terrain": true,
-   "buildings": 101
+   "buildings": 102
   },
   {
    "cx": 2,
@@ -8240,7 +8240,7 @@
    "cz": 100,
    "objects": true,
    "terrain": true,
-   "buildings": 47
+   "buildings": 49
   },
   {
    "cx": 2,
@@ -8525,7 +8525,7 @@
   {
    "cx": 2,
    "cz": 101,
-   "objects": false,
+   "objects": true,
    "terrain": true,
    "buildings": 0
   },
@@ -8805,7 +8805,7 @@
   {
    "cx": 2,
    "cz": 102,
-   "objects": false,
+   "objects": true,
    "terrain": true,
    "buildings": 0
   },
