@@ -370,6 +370,19 @@ export class BuildingCombat {
       : null;
   }
 
+  /**
+   * 랜드마크 전수 순회(미니맵 마커용) — 승격 건물과 **site 랜드마크를 함께** 준다.
+   * site(해변·가트·교량)는 렌더 바인딩이 없어 footprint 경로(MinimapSink.landmark)로는
+   * 영영 안 보인다 — 바라나시는 큐레이션 11개 중 5개가 site 다.
+   * 파괴분도 넘긴다(사수 미션에서 "무엇이 무너졌나"가 정보다). 할당 없이 콜백.
+   */
+  forEachLandmark(fn: (x: number, z: number, intact: boolean, cls?: EntanglementClass, name?: string) => void): void {
+    for (const e of this.byId.values()) {
+      if (!e.isLandmark) continue;
+      fn(e.cx, e.cz, e.state === "intact", e.cls, e.name);
+    }
+  }
+
   /** 표적 좌표를 out 에 채움 — 살아있는(intact) 건물이면 true. */
   targetPos(id: string, out: THREE.Vector3): boolean {
     const e = this.byId.get(id);

@@ -66,7 +66,8 @@ three.js 는 **렌더타깃에 그릴 때 머티리얼 톤매핑을 끈다**(`to
 | 층위 | 방법 | 파일 |
 |---|---|---|
 | 3D | 정점색을 **따뜻한 금색**(linear `1.5, 1.1, 0.42`)으로 고정 | [chunkMesh.ts](../../src/world/chunkMesh.ts) `LANDMARK_GLOW` |
-| 미니맵 | 호박색 footprint 를 일반 건물 **위에** 덧그림 | [Minimap.ts](../../src/ui/Minimap.ts) `C_LANDMARK` · `MinimapSink.landmark` |
+| 미니맵(근경) | 호박색 footprint 를 일반 건물 **위에** 덧그림 | [Minimap.ts](../../src/ui/Minimap.ts) `C_LANDMARK` · `MinimapSink.landmark` |
+| 미니맵(마커) | 반경 안은 **호박색 점**, 밖은 **테두리 화살표**(방향) | [Minimap.ts](../../src/ui/Minimap.ts) `drawLandmarks` · [minimapView.ts](../../src/ui/minimapView.ts) `pickEdgeMarkers` |
 
 **밝기만으로는 안 된다(측정)**: `cityMat` 은 `MeshStandardMaterial` 이라 정점색이 **알베도**이고 조명에
 곱해진 뒤 ACES 톤매핑(노출 1.05)이 하이라이트를 압축한다. 중성 밝은 색(1.45,1.42,1.30)으로 재보면
@@ -91,9 +92,43 @@ three.js 는 **렌더타깃에 그릴 때 머티리얼 톤매핑을 끈다**(`to
 > 🔭 **한계**: 직사광에서는 여전히 대비가 크지 않다(0.097). 3D 표식이 확실해야 한다면 HUD 웨이포인트가
 > 정공법이다. 현재 "어디로 가야 하나"의 신뢰 채널은 **미니맵**이다.
 
-미니맵은 충돌체에 랜드마크 플래그가 없어(콜라이더는 형상만 안다) 청크 등록분(`objReg`)에서 직접
-고른다 — [`forEachLandmarkNear`](../../src/world/chunkMesh.ts)(순수, 중심 기준 컬링 + 여유 120m).
+미니맵 **footprint** 는 충돌체에 랜드마크 플래그가 없어(콜라이더는 형상만 안다) 청크 등록분(`objReg`)에서
+직접 고른다 — [`forEachLandmarkNear`](../../src/world/chunkMesh.ts)(순수, 중심 기준 컬링 + 여유 120m).
 🔭 모놀리식 `World` 경로는 미배선(현 카탈로그가 전부 스트리밍이라 미사용).
+
+미니맵 **마커**(점·화살표)의 출처는 footprint 가 아니라 [`BuildingCombat.forEachLandmark`](../../src/world/BuildingCombat.ts) 다.
+이유가 둘 있다: ① **site 랜드마크**(해변·가트·교량 — `registerSite`)는 렌더 바인딩이 없어 footprint 경로로는
+영영 안 보인다(바라나시는 큐레이션 11개 중 5개가 site 다), ② 파괴 여부를 footprint 는 모른다 —
+무너진 랜드마크는 **빈 원**으로 남겨 사수 미션의 피해 현황이 읽히게 한다.
+
+반경 밖 랜드마크는 테두리 화살표로 방향만 준다. **각도가 겹치면 버린다**(`pickEdgeMarkers`, 최대 4개 ·
+최소 간격 12.6°) — 밀집 도시는 로드 반경 안에만 수십 개라(로마 실측 69개) 전부 그리면 테두리가
+화살표로 둘러싸여 방향 정보가 사라진다. 겹침 제거가 이 기능의 핵심이지 장식이 아니다.
+
+### 미니맵 고도 줌
+
+미니맵이 담는 월드 반경은 **지면 상대 고도(AGL)** 로 정한다 — 낮으면 확대(반경 45m), 높으면 축소(300m).
+곡선은 거듭제곱(`R = 80·(AGL/100)^0.58`, [minimapView.ts](../../src/ui/minimapView.ts) `minimapRadiusFor`):
+
+| AGL | 반경 | 상황 |
+|---|---|---|
+| ~1.7m | 45m (하한) | 보행 드론 — 골목 단위 식별 |
+| ~37m | 45m | 하한에 닿는 지점 |
+| 100m | 80m | 비행 스폰(`flyer.spawnHeight`) — 종전 고정값 70m 과 비슷 |
+| 1000m | 300m (상한) | 비행 천장 — 구역 조망 |
+
+**절대 Y 가 아니라 AGL** 인 이유: 절대 높이를 쓰면 고지대 전장(에베레스트)에서 지상에 서 있어도 최대
+축소가 된다. `PlayerController.HARD_CEILING`·`StreamingWorld` LOD 도 같은 규약이다.
+
+로그 곡선은 검토했으나 버렸다 — 1000m 에서 124m 에 그쳐 고고도가 무의미해진다. 선형은 반대로 저고도에서
+거의 변하지 않는다.
+
+반경이 변하면 **거리 링도 둥근 수로 다시 고른다**(`ringRadiiFor` — 2~4개 유지). 고정 20/40/60 을 그대로
+두면 축척을 잃는다. 같은 이유로 현재 반경을 원 밖 좌하단에 숫자로 표기한다(정사각 캔버스에 내접원이라
+네 모서리는 비어 있다).
+
+고도는 비행 중 빠르게 변하므로 목표 반경을 그대로 쓰면 미니맵이 떨린다 — 지수 감쇠로 따라간다
+(`approach`, τ=0.35s). dt 를 그대로 곱하면 프레임률에 따라 수렴 속도가 달라진다.
 
 ## 맵 데이터 — 섹션형 스키마 v2 + 정규화
 

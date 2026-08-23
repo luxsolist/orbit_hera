@@ -2,8 +2,7 @@ import type { PlayerController } from "../player/PlayerController";
 import type { EnemyManager } from "../enemies/EnemyManager";
 import type { GameWorld, MinimapSink } from "../world/GameWorld";
 import { hudSizesFor } from "./hudLayout";
-
-const WORLD_RADIUS = 70; // 미니맵 가장자리가 표현하는 월드 반경(유닛)
+import { minimapRadiusFor, approach, ringRadiiFor, pickEdgeMarkers, type EdgeMarker } from "./minimapView";
 
 // 희미한 지형/건물 레이어 색(배경 위, 마커 아래)
 const C_WATER = "rgba(46, 116, 150, 0.22)";
@@ -13,6 +12,9 @@ const C_ROCK = "rgba(180, 195, 200, 0.45)";
 // 랜드마크 — 호박색. 적(붉은 계열)·플레이어/HUD(시안)와 겹치지 않는 유일한 자리라 오독이 없다.
 // 일반 건물(C_BLD, 알파 0.20) 위에 덧그려지므로 알파를 높게 잡아 확실히 떠 보이게 한다.
 const C_LANDMARK = "rgba(255, 206, 122, 0.72)";
+const C_LANDMARK_DOT = "#ffce7a"; //          살아있는 랜드마크 점/화살표
+const C_LANDMARK_DEAD = "rgba(255, 206, 122, 0.30)"; // 파괴분(빈 원)
+const INK = "rgba(5, 12, 18, 0.9)"; //        어두운 외곽선(배경 위 대비 확보)
 
 /**
  * 우측 상단 레이더 미니맵. 플레이어 중심·시점 정렬(위=시선).
@@ -25,7 +27,11 @@ export class Minimap implements MinimapSink {
   private player: PlayerController;
   private enemies: EnemyManager;
   private world: GameWorld;
-  private scale!: number; // 픽셀/월드유닛 (configureCanvas 에서 설정)
+  private scale!: number; // 픽셀/월드유닛 (setWorldRadius 에서 설정)
+  /** 미니맵 가장자리가 표현하는 월드 반경(m) — 고도에 따라 변한다. 초기값은 비행 스폰 부근. */
+  private worldRadius = 80;
+  private edgeBuf: EdgeMarker[] = []; //  화살표 후보(프레임 재사용)
+  private edgePick: EdgeMarker[] = []; // 선별 결과(프레임 재사용)
   private size!: number; // 캔버스 한 변(px, 화면 비례)
   private half!: number;
 
@@ -59,7 +65,7 @@ export class Minimap implements MinimapSink {
   private configureCanvas(size: number): void {
     this.size = size;
     this.half = size / 2;
-    this.scale = this.half / WORLD_RADIUS; // 픽셀/월드유닛
+    this.scale = this.half / this.worldRadius; // 픽셀/월드유닛
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = size * dpr;
     this.canvas.height = size * dpr;
@@ -149,7 +155,14 @@ export class Minimap implements MinimapSink {
     ctx.fill();
   }
 
-  render() {
+  /** @param dt 프레임 시간(초) — 고도 줌 추종에만 쓴다(0 이면 반경 고정). */
+  render(dt = 0) {
+    // ---- 고도 줌 — 지면 상대 고도로 반경을 정하고 부드럽게 따라간다 ----
+    const pos = this.player.worldPosition;
+    const agl = pos.y - this.world.heightAt(pos.x, pos.z);
+    this.worldRadius = approach(this.worldRadius, minimapRadiusFor(agl), dt);
+    this.scale = this.half / this.worldRadius;
+
     const ctx = this.ctx;
     const half = this.half;
     const size = this.size;
@@ -175,12 +188,12 @@ export class Minimap implements MinimapSink {
     // ---- 지형/건물/콜라이더(희미) — World 가 근처 형상만 싱크로 방문(격자 브로드페이즈) ----
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
-    this.world.queryMinimap(this.px, this.pz, WORLD_RADIUS, this);
+    this.world.queryMinimap(this.px, this.pz, this.worldRadius, this);
 
-    // 동심 거리 링(20/40/60 월드 유닛)
+    // 동심 거리 링 — 반경이 변하므로 눈금도 둥근 수로 다시 고른다(고정 20/40/60 은 척도를 잃는다)
     ctx.strokeStyle = "rgba(52, 245, 255, 0.12)";
     ctx.lineWidth = 1;
-    for (const r of [20, 40, 60]) {
+    for (const r of ringRadiiFor(this.worldRadius)) {
       ctx.beginPath();
       ctx.arc(cx, cy, r * this.scale, 0, Math.PI * 2);
       ctx.stroke();
@@ -188,7 +201,7 @@ export class Minimap implements MinimapSink {
 
     // ---- 작전구역 경계 — 경계 근처(미니맵 반경 내)일 때 호박색 점선 호로 표시(이탈 불가 안내) ----
     const zone = this.player.zone;
-    if (zone && Math.abs(Math.hypot(this.px - zone.cx, this.pz - zone.cz) - zone.radius) < WORLD_RADIUS) {
+    if (zone && Math.abs(Math.hypot(this.px - zone.cx, this.pz - zone.cz) - zone.radius) < this.worldRadius) {
       this.project(zone.cx, zone.cz);
       ctx.strokeStyle = "rgba(255, 170, 40, 0.75)";
       ctx.lineWidth = 2;
@@ -209,13 +222,16 @@ export class Minimap implements MinimapSink {
     ctx.closePath();
     ctx.fill();
 
+    // ---- 랜드마크(점 + 테두리 화살표) — 적보다 **아래**에 그린다(교전 정보가 항상 위) ----
+    this.drawLandmarks(cx, cy);
+
     // ---- 적 ----
     const px = this.px;
     const pz = this.pz;
     for (const e of this.enemies.aliveSnapshot) {
       const lp = this.worldToLocal(e.x - px, e.z - pz, yaw);
       const dist = Math.hypot(lp.x, lp.y);
-      if (dist > WORLD_RADIUS) {
+      if (dist > this.worldRadius) {
         const a = Math.atan2(lp.y, lp.x);
         const ex = cx + Math.cos(a) * (half - 8);
         const ey = cy + Math.sin(a) * (half - 8);
@@ -279,8 +295,83 @@ export class Minimap implements MinimapSink {
     ctx.lineTo(size, cy);
     ctx.stroke();
 
+    // ---- 축척 — 반경이 고도마다 달라지므로 숫자로 못박지 않으면 링이 의미를 잃는다.
+    // 원 밖 좌하단 모서리(정사각 캔버스에 내접원이라 네 모서리는 비어 있다)에 둔다.
+    this.drawScale();
+
     // ---- 방위(컴퍼스) — 헤딩업이라 북쪽이 회전. N/E/S/W 를 테두리 안쪽에 표시, N 강조 + 북쪽 작은 삼각형 ----
     this.drawCompass(cx, cy);
+  }
+
+  /**
+   * 랜드마크 마커 — 반경 안은 **점**, 밖은 **테두리 화살표**(방향만).
+   * 출처가 BuildingCombat 인 이유: footprint 싱크에는 site 랜드마크가 없고, 파괴 여부도 모른다.
+   */
+  private drawLandmarks(cx: number, cy: number): void {
+    const bc = this.world.buildings;
+    if (!bc) return;
+    const ctx = this.ctx;
+    const R = this.worldRadius;
+    const dot = Math.max(2, this.size * 0.017);
+    this.edgeBuf.length = 0;
+
+    bc.forEachLandmark((wx, wz, intact) => {
+      const dx = wx - this.px, dz = wz - this.pz;
+      const lx = dx * this.cos - dz * this.sin; // 시점 정렬(project 와 동일 회전)
+      const ly = dx * this.sin + dz * this.cos;
+      const dist = Math.hypot(lx, ly);
+      if (dist > R) {
+        if (intact) this.edgeBuf.push({ a: Math.atan2(ly, lx), d: dist });
+        return;
+      }
+      const sx = cx + lx * this.scale, sy = cy + ly * this.scale;
+      ctx.beginPath();
+      ctx.arc(sx, sy, dot, 0, Math.PI * 2);
+      if (intact) {
+        ctx.fillStyle = C_LANDMARK_DOT;
+        ctx.fill();
+        ctx.strokeStyle = INK;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = C_LANDMARK_DEAD; // 무너진 랜드마크 — 빈 원(사수 미션의 피해 현황)
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+    });
+
+    // 테두리 화살표 — 가까운 순, 각도 겹침 제거(밀집 도시에서 테두리가 화살표로 둘러싸이지 않게)
+    ctx.fillStyle = C_LANDMARK_DOT;
+    for (const m of pickEdgeMarkers(this.edgeBuf, this.edgePick)) {
+      const ox = Math.cos(m.a), oy = Math.sin(m.a); // 단위 외향
+      const k = Math.min(1, (R * 2) / m.d); // 가까울수록 크게(거리 감각)
+      const tipR = this.half - 1.5;
+      const len = Math.max(4, this.size * 0.05) * Math.max(0.5, k);
+      const hw = len * 0.42;
+      ctx.beginPath();
+      ctx.moveTo(cx + ox * tipR, cy + oy * tipR);
+      ctx.lineTo(cx + ox * (tipR - len) - oy * hw, cy + oy * (tipR - len) + ox * hw);
+      ctx.lineTo(cx + ox * (tipR - len) + oy * hw, cy + oy * (tipR - len) - ox * hw);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  /** 현재 반경(m)을 원 밖 좌하단에 표기. 어두운 외곽선을 먼저 그어 배경과 무관하게 읽히게 한다. */
+  private drawScale(): void {
+    const ctx = this.ctx;
+    const fontPx = Math.max(7, Math.round(this.size * 0.072));
+    ctx.font = `${fontPx}px ui-monospace, "SFMono-Regular", monospace`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+    const t = `${Math.round(this.worldRadius)}m`;
+    const x = 1, y = this.size - fontPx * 0.35;
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = "round";
+    ctx.strokeText(t, x, y);
+    ctx.fillStyle = "rgba(52, 245, 255, 0.7)";
+    ctx.fillText(t, x, y);
   }
 
   /** N/E/S/W 방위 라벨(시점 회전 반영) + 북쪽 마커 삼각형. 월드 북=-Z, 동=+X. */

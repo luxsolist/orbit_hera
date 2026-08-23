@@ -652,7 +652,7 @@ export class Game {
     s.composer.render();
     if (this.state === "playing") {
       s.rearView.render();
-      s.minimap.render();
+      s.minimap.render(dt);
     }
   }
 
