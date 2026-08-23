@@ -7,7 +7,16 @@
 
 const ATTR = {};
 const attr = (s, name) => { const re = ATTR[name] || (ATTR[name] = new RegExp(` ${name}="([^"]*)"`)); const m = s.match(re); return m ? m[1] : null; };
-const unesc = (s) => s == null ? s : s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
+// XML 엔티티 해제 — 명명(&lt; 등) + **숫자 문자 참조**(&#39; / &#x27;) 둘 다. osmconvert 는 아포스트로피를
+// &#39; 로 쓰므로 숫자형을 빠뜨리면 "Sant&#39;Agostino" 가 그대로 랜드마크 표시명이 된다(실측: 로마 960개 중 106개).
+// 한 번의 치환으로 처리해야 "&amp;#39;"(= 리터럴 "&#39;")가 이중 해제되지 않는다.
+const NAMED = { lt: "<", gt: ">", quot: '"', apos: "'", amp: "&" };
+export const unesc = (s) =>
+  s == null ? s : s.replace(/&(?:#(\d+)|#[xX]([0-9a-fA-F]+)|(lt|gt|quot|apos|amp));/g, (m, dec, hex, name) => {
+    if (dec != null) { const c = Number(dec); return c >= 0 && c <= 0x10ffff ? String.fromCodePoint(c) : m; }
+    if (hex != null) { const c = parseInt(hex, 16); return c >= 0 && c <= 0x10ffff ? String.fromCodePoint(c) : m; }
+    return NAMED[name];
+  });
 
 /**
  * 스트리밍 OSM XML 파서 — 라인을 하나씩 먹여(line) 누적, result() 로 {elements} 회수.
