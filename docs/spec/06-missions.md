@@ -47,7 +47,23 @@ v1 은 `kind` 하나에 승리·실패·투입이 뭉쳐 있어 패턴 확장이
 | `fail.maxBuildingLoss` / `maxLandmarkLoss` | 손실 한도(도달 시 실패). 0 = 미사용 — **모든 goal 과 조합 가능**(복합 제약) |
 | `deploy` | 투입 모델(§1 표). `roster.units[] = { role, count, hp, shield?, formation?, behavior?, anchor? }` — **진형** cluster(밀집)/ring(중심 포위)/line(전선) · **행동** hunt/hold(거점 고수)/patrol(배치점 순회)/escort(anchor 유닛 추종). hunt 외 행동도 사거리 내 기회 공격은 수행하며 **피격 시 진형을 버리고 hunt 전환** |
 | `zoneRadius` | 작전구역(m). 0 = 무제한 |
-| `modifiers` | `sweepPeriodMul` · `zoneShrink{everySec, step, minRadius}` · `freqRegenMul` · `aggro` · `buildingBrands` — 전부 선택 |
+| `modifiers` | `sweepPeriodMul` · `zoneShrink{everySec, step, minRadius}` · `freqRegenMul` · `aggro` · `buildingBrands` · `offTargetPenalty` · `killHealMul` — 전부 선택 |
+
+### 체감 분화 — 승리 조건만으로는 미션이 갈리지 않는다
+
+2026-08-23 실플레이 피드백("목표가 달라도 전부 사냥으로 느껴진다")의 교훈: **goal 은 "언제 끝나는가"만
+정하고 "무엇을 해야 하는가"는 안 정한다.** 최적 전략이 같으면 승리 조건이 6종이어도 체감은 하나다.
+행동을 가르는 건 변조와 적 행동 쪽이다:
+
+| 미션 성격 | 걸어야 할 변조 | 없으면 |
+|---|---|---|
+| 사수형(`guard`) | `aggro: landmark/building` | 적이 플레이어만 쫓아 표적이 안 깎인다 = 생존전과 동일 |
+| 표적 사냥(`purge-role`) | `offTargetPenalty` — 비표적 1기당 시간 차감 | 잡몹 처치가 공짜라 "전부 죽인다"가 늘 최적 = 격멸전과 동일 |
+| 생존형(`survive`) | `killHealMul: 0` — 처치 환수 제거 | 처치가 위협 감소 + 회복까지 겸해 교전이 항상 이득 = 회피가 선택지가 안 된다 |
+
+전제 조건 둘(엔진 쪽): **유발(`provoked`)은 감쇠 타이머**여야 하고(영구 래치면 첫 교전 뒤 전장 전체가
+플레이어만 쫓는다 — 360° 자동사격이라 유발을 피할 수도 없다), **인식 해제 반경도 어그로 변조를 따라야**
+한다(획득만 막고 해제 히스테리시스를 남기면 한 번 붙은 적이 영영 안 떨어진다).
 
 **v1 호환**: `toLegacy(v2)` 가 현 엔진이 구동 가능한 부분집합(goal `purge`/`survive`/`guard` × deploy `pyramid` × 변조 없음)을
 v1 `MissionSpec` 으로 변환한다. 불가하면 `null` — 엔진 훅(§5) 도입에 맞춰 해제. 현행 4미션은 v2 로 기술해도
@@ -121,7 +137,7 @@ v1 과 동치임을 테스트가 고정한다([tests/missionV2.test.ts](../../te
 | ① deploy 모델 분리 ✅ | `horde`/`roster`/`boss` 투입기 — **구현됨**(`startHorde`/`startRoster`, elite=고체력 러셔·boss=다중 투영 그룹, `purge-all` 은 `deployKillCredits` 로 스펙 도출 평가). `RosterUnit` 의 진형(formation)/행동 필드는 조합 정립 단계에서 확장 | 1~12, 14, 20 |
 | ② 복합 실패 조건 ✅ | goal 과 무관하게 fail 4종 동시 평가(v1 은 kind 별 1개) — **구현됨**: 런타임이 v2 직구동(`evaluateMissionV2`), JSON v2 전환, 패턴 19 풀 편입 | 19 및 전 패턴의 제약 조합 |
 | ③ 직무별 격멸 목표 ✅ | `purge-role` — **구현됨**: `deployRole` 태깅(elite/boss 는 행동과 별개 직무) + `EnemyManager.roleKills` 집계 + `deployRoleCredits` 로 목표치 도출(roster/boss 투입 한정 — 확률 혼합 투입은 runnable 게이트가 거름). 보스 = 그룹당 1크레딧 | 5~7, 9, 11, 14 |
-| ④ 어그로 성향 노브 ✅ | `aggro: landmark/building` — **구현됨**: 인식 반경 0(때려서 provoked 될 때만 플레이어 교전) + landmark 는 거리 무제한 직행(`nearestLandmark`). 변조 게이트는 지원 키만 해금(`SUPPORTED_MODIFIERS`) | 15~18 |
+| ④ 어그로 성향 노브 ✅ | `aggro: landmark/building` — **구현됨**: 인식 **획득·해제 반경 둘 다 0**(때려서 provoked 될 때만 플레이어 교전) + landmark 는 거리 무제한 직행(`nearestLandmark`). 변조 게이트는 지원 키만 해금(`SUPPORTED_MODIFIERS`) | 15~18 |
 | ⑤ 보스 행동 확장 ✅ | **구현됨**: 소유 파문(ownSweep — 파문 원점이 보스를 따라감)·잡몹 분출(emit, 생존 상한 게이트)·회복 링크(healLink — 그룹 간 상호 회복 + 필라멘트 가시화)·호위 방패(RosterUnit.shield — 호위 생존 중 피해 감쇄, 표시 데미지도 반영). 페이즈 약점은 phased 콘텐츠 단계 🔭 | 7, 11~14 |
 | ⑥ 구역·페이즈 스크립트 ✅(부분) | **구현됨**: `phased`(페이즈 = HUD 웨이브, 전멸/afterSec 트리거, 카운터 관통 누적) · `zoneShrink`(주기 축소 + 에너지 벽 재생성 + 저음 신호) · `freqRegenMul`(옅은 장) · `sweepPeriodMul`. 다지점은 roster 클러스터가 담당. suture goal·랜드마크 연계 스폰 선정(16·18 완전체)은 콘텐츠 단계 🔭 | 2, 3, 8, 13, 14, 16, 18 |
 
