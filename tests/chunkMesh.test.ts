@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as THREE from "three";
-import { sampleChunkHeight, chunkTerrainEntry, buildChunkMesh, disposeChunkGroup } from "../src/world/chunkMesh";
+import { sampleChunkHeight, chunkTerrainEntry, buildChunkMesh, disposeChunkGroup, forEachLandmarkNear, linearToSrgbByte } from "../src/world/chunkMesh";
 import type { WorldChunk } from "../src/world/chunkManifest";
 
 // 청크 → 메시/등록 데이터 변환 — heightAt 샘플러, 지형 엔트리, 로컬 좌표 변환·콜리전 top 의 정확성.
@@ -199,5 +199,138 @@ describe("buildChunkMesh — 도로/물/면/차선은 지형 표면 텍스처에
   it("disposeChunkGroup — 지오메트리 해제(예외 없음)", () => {
     const cb = buildChunkMesh(makeChunk(), CHUNK, originX, originZ);
     expect(() => disposeChunkGroup(cb.group)).not.toThrow();
+  });
+});
+
+// ─────────── 랜드마크 시각 구분(2026-08-23) ───────────
+// 사수 미션이 실제로 랜드마크를 표적으로 삼게 된 뒤에도 렌더가 일반 건물과 똑같아
+// "무엇을 지켜야 하는지" 볼 수 없었다. 밝기(정점색 >1 → 블룸)로 가른다 —
+// 색상으로 가르면 플라즈모이드 온도 스펙트럼(빨강~파랑)·피격 틴트와 충돌한다.
+
+describe("buildChunkMesh — 랜드마크 발광", () => {
+  const twoBuildings = () => buildChunkMesh(
+    makeChunk({
+      objects: {
+        buildings: [
+          { p: [0, 0, 20, 0, 20, 20, 0, 20], h: 30, lm: "deep-roots", n: "L" }, // 랜드마크
+          { p: [50, 0, 70, 0, 70, 20, 50, 20], h: 30 },                          // 같은 높이 일반 건물
+        ],
+        roads: [], water: [],
+      },
+    } as never),
+    CHUNK, 0, 0
+  );
+  /** 병합 메시에서 그 건물 정점 범위의 첫 정점 색(RGB 최댓값). */
+  const peak = (cb: ReturnType<typeof buildChunkMesh>, i: number) => {
+    const col = cb.buildingMesh!.geometry.getAttribute("color") as THREE.BufferAttribute;
+    const v = cb.buildings[i].vStart;
+    return Math.max(col.getX(v), col.getY(v), col.getZ(v));
+  };
+
+  it("랜드마크는 **어떤 일반 건물보다도** 밝다 — 최고층(linear 0.956)보다 위", () => {
+    const cb = twoBuildings();
+    expect(peak(cb, 0)).toBeGreaterThan(0.956);
+  });
+
+  it("일반 건물은 1.0 을 넘지 않는다 — 도시 전체가 빛나지 않는다", () => {
+    const cb = twoBuildings();
+    expect(peak(cb, 1)).toBeLessThan(1);
+  });
+
+  it("파괴 번쩍임(FLASH 2.0)보다는 어둡다 — 파괴 피드백이 묻히지 않게", () => {
+    const cb = twoBuildings();
+    expect(peak(cb, 0)).toBeLessThan(2);
+  });
+
+  it("따뜻한 색조를 갖는다 — 밝기만으로는 ACES 톤매핑에 먹힌다(직사광 차이 0.027)", () => {
+    const cb = twoBuildings();
+    const col = cb.buildingMesh!.geometry.getAttribute("color") as THREE.BufferAttribute;
+    const v = cb.buildings[0].vStart;
+    const [r, g, b] = [col.getX(v), col.getY(v), col.getZ(v)];
+    expect(r).toBeGreaterThan(g);
+    expect(g).toBeGreaterThan(b);
+    expect(b).toBeLessThan(r * 0.5); // 파랑을 확실히 낮춰야 포화 상태에서도 색이 남는다
+
+    // 대조군: 일반 건물은 무채색(R=G=B)
+    const w = cb.buildings[1].vStart;
+    expect(col.getX(w)).toBeCloseTo(col.getZ(w), 5);
+  });
+
+  it("높이가 달라도 랜드마크 밝기는 동일 — 한 부류로 읽힌다", () => {
+    const cb = buildChunkMesh(
+      makeChunk({
+        objects: {
+          buildings: [
+            { p: [0, 0, 20, 0, 20, 20, 0, 20], h: 8, lm: "ritual" },    // 저층 랜드마크
+            { p: [50, 0, 70, 0, 70, 20, 50, 20], h: 95, lm: "ritual" }, // 고층 랜드마크
+          ],
+          roads: [], water: [],
+        },
+      } as never),
+      CHUNK, 0, 0
+    );
+    expect(peak(cb, 0)).toBeCloseTo(peak(cb, 1), 5);
+  });
+});
+
+describe("forEachLandmarkNear — 미니맵 덧그림 선택", () => {
+  const B = (x: number, lm?: string) => ({ poly: [x, 0, x + 10, 0, x + 10, 10, x, 10], ...(lm ? { lm } : {}) });
+
+  it("랜드마크만 고른다", () => {
+    const out: number[][] = [];
+    forEachLandmarkNear([B(0, "ritual"), B(20), B(40, "relay")] as never, 0, 0, 500, (p) => out.push(p));
+    expect(out).toHaveLength(2);
+  });
+
+  it("반경 + 여유 밖은 제외(중심 기준 컬링)", () => {
+    const out: number[][] = [];
+    forEachLandmarkNear([B(0, "ritual"), B(5000, "ritual")] as never, 0, 0, 300, (p) => out.push(p));
+    expect(out).toHaveLength(1);
+  });
+
+  it("여유(margin)만큼은 살린다 — 대형 footprint 가 화면에 걸치는 경우", () => {
+    const out: number[][] = [];
+    // 중심 x=395 → 반경 300 밖이지만 여유 120 안
+    forEachLandmarkNear([B(390, "deep-roots")] as never, 0, 0, 300, (p) => out.push(p));
+    expect(out).toHaveLength(1);
+  });
+
+  it("퇴화 폴리곤(정점 3 미만)은 건너뛴다", () => {
+    const out: number[][] = [];
+    forEachLandmarkNear([{ poly: [0, 0, 1, 1], lm: "relay" }] as never, 0, 0, 500, (p) => out.push(p));
+    expect(out).toHaveLength(0);
+  });
+});
+
+
+// ─────────── 지형 텍스처 베이크 감마(2026-08-23) ───────────
+// 베이스(elevationColor)는 **선형** THREE.Color 를, 덧칠(하천·도로)은 **sRGB** CSS 문자열을 쓴다.
+// 베이스에서 변환을 빼먹어 같은 0x55bcc4 가 바다에선 #17808d, 강에선 #55bcc4 로 나왔다 —
+// 색을 통일해도 바다만 어둡게 보이던 원인. 두 경로가 같은 바이트를 내는지 고정한다.
+
+describe("linearToSrgbByte — 베이스/덧칠 경로 색 일치", () => {
+  const roundTrip = (hex: number) => {
+    const c = new THREE.Color().setHex(hex); // 선형 작업 색공간
+    return (linearToSrgbByte(c.r) << 16) | (linearToSrgbByte(c.g) << 8) | linearToSrgbByte(c.b);
+  };
+
+  it("선형 THREE.Color 를 되돌리면 원래 sRGB 값이 나온다(덧칠 CSS 와 동일)", () => {
+    for (const hex of [0x55bcc4, 0xa6d985, 0xe4d8ba, 0xeef4f7, 0x44484f]) {
+      expect(roundTrip(hex), hex.toString(16)).toBe(hex);
+    }
+  });
+
+  it("변환을 빼먹으면 어두워진다 — 회귀의 크기를 명시", () => {
+    const c = new THREE.Color().setHex(0x55bcc4);
+    const naive = (Math.round(c.r * 255) << 16) | (Math.round(c.g * 255) << 8) | Math.round(c.b * 255);
+    expect(naive).not.toBe(0x55bcc4);
+    expect(naive).toBeLessThan(0x55bcc4); // 실제로 #17808d 로 어두워졌다
+  });
+
+  it("경계값 클램프", () => {
+    expect(linearToSrgbByte(0)).toBe(0);
+    expect(linearToSrgbByte(1)).toBe(255);
+    expect(linearToSrgbByte(-1)).toBe(0);
+    expect(linearToSrgbByte(2)).toBe(255);
   });
 });

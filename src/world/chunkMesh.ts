@@ -7,6 +7,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { setUniformColor, elevationColor, GROUND_GREEN, SAND_TAN } from "./geo";
 import { buildingBaseColor } from "./precinct";
+import { WALL_COLOR, LANDMARK_COLOR, WATER_COLOR } from "./palette";
 import type { WorldChunk } from "./chunkManifest";
 import type { EntanglementClass } from "./entanglement";
 import type { SiteLandmark } from "./MapData";
@@ -51,7 +52,10 @@ export interface ChunkBuild {
 // 지형은 청크 전용 베이크 텍스처(map)를 쓴다(아래 bakeSurfaceTexture). terrainMat 은 텍스처 실패 시 폴백(고도 vertexColors).
 const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.97, metalness: 0 });
 const cityMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.82, metalness: 0.05 });
-const wallMat = new THREE.MeshStandardMaterial({ color: 0x9c948a, flatShading: true, roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
+const wallMat = new THREE.MeshStandardMaterial({ color: WALL_COLOR, flatShading: true, roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
+
+// 랜드마크 색·근거는 palette.ts(요소 간 분리 계약과 함께 튜닝된다).
+const LANDMARK_GLOW = LANDMARK_COLOR;
 
 /**
  * 지표 면 종류 → 단일 2색 매핑(areaKind 와 짝): 초록 식생(공원/잔디/숲 등)은 바닥 초록, 비초록(사막/해변/바위/포장)은 황토색.
@@ -66,7 +70,7 @@ const AREA_COLOR: Record<string, number> = {
 // 굴곡과 무관하게 완벽 밀착(z-fighting·뚫림·부유 제거). 페인트 순서 = 기존 레이어 순서(면<물<도로<중앙선).
 const ROAD_CSS = "#44484f";   // 아스팔트
 const CENTER_CSS = "#cdb24a"; // 중앙선(연 노랑)
-const WATER_CSS = "#84c0f7";  // 수역(평면 색) — 연한 파랑(플라즈모이드 대비)
+const WATER_CSS = `#${WATER_COLOR.toString(16).padStart(6, "0")}`; // 수역(평면 색) — 청록. 근거는 palette.ts
 const SAND_CSS = "#e4d8ba";   // 비초록 지표(SAND_TAN, 연하게)
 const TEX_PER_M = 1;          // 텍스처 해상도(px/m)
 const MAX_TEX = 1024;         // 청크 텍스처 한 변 최대 px(메모리 상한)
@@ -79,6 +83,13 @@ const LANE_MIN_W = 16;
  * 면(비초록)·수역·도로·중앙선을 평면 페인트. 셀-로컬 [x,z,...] → 캔버스 px(원점=셀 NW, +X=동/+Z=남).
  * 반환 텍스처는 청크 전용(언로드 시 dispose). document 없거나 ctx 실패면 null(폴백 vertexColors).
  */
+/** 선형 채널값(0..1) → sRGB 바이트(0..255). 캔버스 ImageData 는 sRGB 를 기대한다. 순수. */
+export function linearToSrgbByte(v: number): number {
+  const c = v <= 0 ? 0 : v >= 1 ? 1 : v;
+  const s = c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+  return Math.round(s * 255);
+}
+
 function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain): THREE.CanvasTexture | null {
   if (typeof document === "undefined") return null;
   const { size: tn, cellX0, cellZ0, step } = t;
@@ -99,7 +110,13 @@ function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain): THREE.CanvasTex
   for (let k = 0; k < tn * tn; k++) {
     elevationColor(t.heights[k], col);
     const o = k * 4;
-    img.data[o] = col.r * 255; img.data[o + 1] = col.g * 255; img.data[o + 2] = col.b * 255; img.data[o + 3] = 255;
+    // ⚠ **선형 → sRGB 변환 필수**: THREE.Color 는 선형 작업 색공간이고 ImageData 바이트는 sRGB 다.
+    // 그냥 col.r*255 를 넣으면 어두워진다 — 같은 0x55bcc4 가 베이스에선 #17808d 로, 아래 CSS 문자열
+    // 덧칠(하천·도로)에선 #55bcc4 로 나와 **바다와 강이 딴 색**이 됐다(2026-08-23 발견).
+    img.data[o] = linearToSrgbByte(col.r);
+    img.data[o + 1] = linearToSrgbByte(col.g);
+    img.data[o + 2] = linearToSrgbByte(col.b);
+    img.data[o + 3] = 255;
   }
   sctx.putImageData(img, 0, 0);
   ctx.imageSmoothingEnabled = true;
@@ -219,6 +236,30 @@ function addMerged(group: THREE.Group, geos: THREE.BufferGeometry[], mat: THREE.
  * 청크 → 메시 + 등록 데이터. chunkSize=청크변(m), originX/Z=로컬 원점(셀-로컬 m).
  * 지형(격자 색칠) + 건물(압출·표고 위 안착·병합) + 도로 리본 + 수역 면. 전부 로컬 좌표.
  */
+/**
+ * 반경 안 랜드마크 footprint 순회(순수) — 미니맵 덧그림용. 충돌체엔 랜드마크 플래그가 없으므로
+ * (콜라이더는 형상만 안다) 청크 등록분에서 직접 고른다.
+ *
+ * 컬링은 **중심 기준**이라 반경에 여유(margin)를 준다 — 대형 footprint 는 중심이 밖이어도
+ * 일부가 화면에 걸친다. 랜드마크는 도시당 수백 개라 선형 순회로 충분하다.
+ */
+export function forEachLandmarkNear(
+  buildings: ReadonlyArray<{ poly: number[]; lm?: EntanglementClass }>,
+  cx: number, cz: number, radius: number,
+  fn: (poly: number[]) => void,
+  margin = 120,
+): void {
+  for (const b of buildings) {
+    if (!b.lm) continue;
+    const p = b.poly, n = p.length / 2;
+    if (n < 3) continue;
+    let mx = 0, mz = 0;
+    for (let i = 0; i < n; i++) { mx += p[i * 2]; mz += p[i * 2 + 1]; }
+    if (Math.hypot(mx / n - cx, mz / n - cz) > radius + margin) continue;
+    fn(p);
+  }
+}
+
 export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: number, originZ: number): ChunkBuild {
   const group = new THREE.Group();
   group.name = `chunk:${chunk.cx}:${chunk.cz}`;
@@ -298,8 +339,12 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     }
     geo.rotateX(-Math.PI / 2);
     geo.translate(0, baseY, 0);
-    const jitter = ((Math.abs(Math.round(cxs / n * 7 + czs / n * 13)) % 100) / 100) || 0.5;
-    bcol.setHex(buildingBaseColor(h, null)).offsetHSL(0, 0, (jitter - 0.5) * 0.12);
+    if (b.lm) {
+      bcol.copy(LANDMARK_GLOW); // 높이·지터 무관 고정 — 랜드마크는 한 부류로 읽혀야 한다
+    } else {
+      const jitter = ((Math.abs(Math.round(cxs / n * 7 + czs / n * 13)) % 100) / 100) || 0.5;
+      bcol.setHex(buildingBaseColor(h, null)).offsetHSL(0, 0, (jitter - 0.5) * 0.12);
+    }
     setUniformColor(geo, bcol);
     geo.deleteAttribute("uv");
     const vCount = geo.getAttribute("position").count;

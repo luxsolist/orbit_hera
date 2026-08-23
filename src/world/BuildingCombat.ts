@@ -19,11 +19,12 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { CollisionWorld } from "./CollisionWorld";
 import { ENTANGLEMENT_CLASSES, type EntanglementClass } from "./entanglement";
+import { RUBBLE_COLOR } from "./palette";
 
 const DAMAGE_RED = new THREE.Color(0xff2a14); // 피격 누적 → 점점 이 붉은색으로
 const FLASH_COLOR = new THREE.Color(2.0, 1.7, 1.3); // 파괴 직전 번쩍(>1 = 블룸 유발)
 const RUBBLE_DARK = new THREE.Color(0x050505); // 붕괴 중 셸이 잦아드는 색(거의 검정)
-const RUBBLE_BLACK = 0x000000; // 잔해 더미 단일 색 — 가장 검은 색(조명 무관)
+const RUBBLE_BLACK = RUBBLE_COLOR; // 잔해 더미 단일 색(조명 무관) — 순수 검정이면 어두운 배경에서 사라진다
 const FLASH_DUR = 0.16; // 번쩍 지속(s)
 const COLLAPSE_DUR = 1.5; // 와르르 붕괴(약간 슬로우, s)
 const HP_PER_M3 = 0.04; // 부피(바닥면적×높이) → 체력 계수

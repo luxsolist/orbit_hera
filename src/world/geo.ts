@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { MatDef } from "./MapData";
+import { WATER_COLOR } from "./palette";
 
 // 단순 지형 팔레트 — 바닥은 단일 옅은 초록, 고산은 단일 흰색(눈). 비초록 지표(사막/해변/바위/포장)는 SAND_TAN.
 // 모놀리식 World 와 스트리밍 청크가 공유.
@@ -7,7 +8,8 @@ import type { MatDef } from "./MapData";
 export const GROUND_GREEN = 0xa6d985; // 바닥 단일 초록(연한 파스텔 — 녹색 우세 유지)
 export const SAND_TAN = 0xe4d8ba; // 비초록 지표 단일 황토색(연하게)
 const SNOW = new THREE.Color(0xeef4f7); // 고산 눈
-const SEA = new THREE.Color(0x6fa3c8); // 해수면 이하(해안 맵) — 바다(연한 파랑 — 파랑 우세 유지)
+// 표고 0m 이하 지형 — 강·호수(폴리곤)와 **같은 색**. 바다만 다르게 보이지 않도록. palette.ts 참조.
+const SEA = new THREE.Color(WATER_COLOR);
 const GROUND = new THREE.Color(GROUND_GREEN);
 const SNOW_START = 380, SNOW_FULL = 620; // 이 고도(m) 사이에서 초록→흰색
 

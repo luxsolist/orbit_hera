@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { SpawnPoint } from "./MapData";
+import { SKY_COLOR, FOG_COLOR, FOG_NEAR_RATIO, FOG_FAR_DEFAULT, LIGHT } from "./palette";
 
 /**
  * 대기/조명 — 반구광 · 태양(그림자 추종) · 보조광 + 하늘 배경/포그.
@@ -8,11 +9,12 @@ import type { SpawnPoint } from "./MapData";
 export class SkyEnvironment {
   private readonly sun: THREE.DirectionalLight;
 
-  constructor(scene: THREE.Scene, spawn: SpawnPoint) {
-    const hemi = new THREE.HemisphereLight(0xbfdcff, 0x6f7a4a, 1.18);
+  /** viewFar = 지오메트리가 존재하는 최대 거리(스트리밍 청크 로드 반경). 포그가 그 지점에서 끝난다. */
+  constructor(scene: THREE.Scene, spawn: SpawnPoint, viewFar = FOG_FAR_DEFAULT) {
+    const hemi = new THREE.HemisphereLight(LIGHT.hemiSky, LIGHT.hemiGround, LIGHT.hemi);
     scene.add(hemi);
 
-    const sun = new THREE.DirectionalLight(0xfff3da, 2.0);
+    const sun = new THREE.DirectionalLight(LIGHT.sunColor, LIGHT.sun);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     sun.shadow.camera.near = 1;
@@ -28,12 +30,14 @@ export class SkyEnvironment {
     this.sun = sun;
     this.update(spawn.x, spawn.z); // 초기 위치
 
-    const fill = new THREE.DirectionalLight(0xaecbe6, 0.4);
+    const fill = new THREE.DirectionalLight(LIGHT.fillColor, LIGHT.fill);
     fill.position.set(-200, 160, -300);
     scene.add(fill);
 
-    scene.background = new THREE.Color(0x2f9bf2); // 선명한 하늘 파랑
-    scene.fog = new THREE.Fog(0xb8e0ff, 900, 5000); // 밝고 청량한 원경 헤이즈
+    scene.background = new THREE.Color(SKY_COLOR); // 차분한 회청 — 청백 플라즈모이드가 묻히지 않게
+    // 포그의 실질 기능은 **청크 경계 은폐**(로드 반경 밖은 지오메트리가 없다). 교전 사거리를 흐리지
+    // 않도록 늦게 시작해 경계에서 100% 가 된다. 색은 하늘보다 밝다 — 같게 두면 원경이 가라앉는다(palette.ts).
+    scene.fog = new THREE.Fog(FOG_COLOR, viewFar * FOG_NEAR_RATIO, viewFar);
   }
 
   /** 매 프레임 호출 — 태양(그림자 프러스텀)을 플레이어 위치로 평행이동(광원 방향은 유지). */
