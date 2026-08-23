@@ -10,6 +10,9 @@ const C_WATER = "rgba(46, 116, 150, 0.22)";
 const C_ROAD = "rgba(150, 162, 172, 0.16)";
 const C_BLD = "rgba(132, 156, 170, 0.20)";
 const C_ROCK = "rgba(180, 195, 200, 0.45)";
+// 랜드마크 — 호박색. 적(붉은 계열)·플레이어/HUD(시안)와 겹치지 않는 유일한 자리라 오독이 없다.
+// 일반 건물(C_BLD, 알파 0.20) 위에 덧그려지므로 알파를 높게 잡아 확실히 떠 보이게 한다.
+const C_LANDMARK = "rgba(255, 206, 122, 0.72)";
 
 /**
  * 우측 상단 레이더 미니맵. 플레이어 중심·시점 정렬(위=시선).
@@ -103,6 +106,21 @@ export class Minimap implements MinimapSink {
     ctx.beginPath();
     for (let k = 0; k < 4; k++) {
       this.project(c[k * 2], c[k * 2 + 1]);
+      if (k === 0) ctx.moveTo(this.bx, this.by);
+      else ctx.lineTo(this.bx, this.by);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+  /** 랜드마크 footprint — 가변 길이 폴리곤을 그대로 채운다(일반 건물 위 덧그림). */
+  landmark(poly: ReadonlyArray<number>): void {
+    const n = poly.length / 2;
+    if (n < 3) return;
+    const ctx = this.ctx;
+    ctx.fillStyle = C_LANDMARK;
+    ctx.beginPath();
+    for (let k = 0; k < n; k++) {
+      this.project(poly[k * 2], poly[k * 2 + 1]);
       if (k === 0) ctx.moveTo(this.bx, this.by);
       else ctx.lineTo(this.bx, this.by);
     }

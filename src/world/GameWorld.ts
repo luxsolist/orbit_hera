@@ -10,6 +10,11 @@ export interface MinimapSink {
   water(points: ReadonlyArray<number>): void;
   road(ax: number, az: number, bx: number, bz: number, width: number): void;
   building(corners: ReadonlyArray<number>): void;
+  /**
+   * 랜드마크 건물 — 일반 건물 위에 덧그려 구분한다(사수 미션에서 "어디로 가야 하나"의 답).
+   * corners 는 4점 AABB 가 아니라 **실제 footprint 폴리곤**(가변 길이 [x0,z0,...]).
+   */
+  landmark(poly: ReadonlyArray<number>): void;
   triangle(ax: number, az: number, bx: number, bz: number, cx: number, cz: number): void;
   rock(x: number, z: number, radius: number): void;
 }

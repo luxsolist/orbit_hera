@@ -14,7 +14,7 @@ import { SkyEnvironment } from "./SkyEnvironment";
 import { cellLocalOf, pickSpawnChunk, CHUNK_BLOCK, type Cell, type TilesManifest, type WorldChunk } from "./chunkManifest";
 import { fetchTiles, fetchWorldChunk } from "./mapLocator";
 import { ChunkStreamer, chunkIndex, type ChunkIO, type ChunkReq, type ChunkConfig } from "./chunkStream";
-import { buildChunkMesh, disposeChunkGroup, sampleChunkHeight, chunkTerrainEntry, type ChunkTerrain, type ChunkBuild } from "./chunkMesh";
+import { buildChunkMesh, disposeChunkGroup, sampleChunkHeight, chunkTerrainEntry, forEachLandmarkNear, type ChunkTerrain, type ChunkBuild } from "./chunkMesh";
 
 const chunkKey = (cx: number, cz: number): string => `${cx}_${cz}`;
 
@@ -91,7 +91,8 @@ export class StreamingWorld implements GameWorld {
     this.buildings.attachCollision(this.collision);
 
     this.streamer = new ChunkStreamer(this.makeIO(), STREAM_CFG(this.chunkSize));
-    this.sky = new SkyEnvironment(scene, this.spawn);
+    // 포그 far = 청크 로드 반경 — 둘이 어긋나면 경계가 드러나거나 교전 사거리가 흐려진다.
+    this.sky = new SkyEnvironment(scene, this.spawn, STREAM_CFG(this.chunkSize).fineRadius);
     scene.add(this.group);
   }
 
@@ -224,6 +225,8 @@ export class StreamingWorld implements GameWorld {
     const minX = cx - radius, minZ = cz - radius, maxX = cx + radius, maxZ = cz + radius;
     this.collision.forEachBuildingNear(minX, minZ, maxX, maxZ, (c) => sink.building(c));
     this.collision.forEachTriNear(minX, minZ, maxX, maxZ, (ax, az, bx, bz, tx, tz) => sink.triangle(ax, az, bx, bz, tx, tz));
+    // 랜드마크 덧그림 — 일반 건물 **뒤에** 그려야 위로 뜬다.
+    for (const o of this.objReg.values()) forEachLandmarkNear(o.buildings, cx, cz, radius, (poly) => sink.landmark(poly));
   }
 
   update(px: number, pz: number, py?: number): void {
