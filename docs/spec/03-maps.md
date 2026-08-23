@@ -172,6 +172,22 @@ node scripts/build-maps.mjs <id> && node scripts/build-world.mjs <id> && node sc
 
 배틀필드는 무제한([`StreamingWorld.bounds`](../../src/world/StreamingWorld.ts)=`1e7`) — 플레이어 주변만 스트리밍 로드, 데이터 없는 곳은 평지(y=0).
 
+### 셀 점유 — 한 셀에 두 도시는 못 들어간다
+
+`build-world` 는 `rmSync(cellDir)` 로 셀 디렉터리를 통째로 지우고 다시 쓴다. 두 도시의 중심이 같은
+1° 셀(≈111km)에 들어가면 **나중 빌드가 앞 도시를 조용히 삭제한다** — 파일이 사라지므로 검증 게이트도
+못 잡는다. 그래서 지우기 **전에** 카탈로그(`index.json`)를 보고 다른 맵이 그 셀을 쓰고 있으면 중단한다
+([`cellOwner`](../../scripts/worldValidate.mjs)). 덮어쓰려면 `--force`(그 도시는 카탈로그에서 사라진다).
+
+도시 100선 중 충돌 2 쌍 — [tests/worldValidate.test.ts](../../tests/worldValidate.test.ts)가 목록을 감시한다:
+
+| 셀 | 도시 |
+|---|---|
+| `34/135` | 오사카(서장) ↔ 나라(1장) |
+| `22/114` | 홍콩(2장) ↔ 선전(4장) |
+
+🔭 **정공법은 셀 병합**(한 `tiles.json` 에 두 도시의 청크를 합침). 해당 도시를 빌드할 차례에 필요하다.
+
 ### 검증 불변식(회귀 가드)
 
 지금까지 발생한 버그 클래스를 수치 불변식으로 고정한다 — `npm run validate:world -- <id>` 단독 실행 가능,

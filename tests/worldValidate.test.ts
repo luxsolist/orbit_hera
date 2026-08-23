@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 // @ts-expect-error — JS 빌드 헬퍼(타입 선언 없음)
-import { validateChunk, validateManifest, validateEntryConsistency, validateSeams, validateSpawn, validateDemConsistency, findDuplicateBuildings, demSample, cellToMapLocal, hasZeroLengthEdge, isSelfIntersecting, cellMLon } from "../scripts/worldValidate.mjs";
+import { validateChunk, validateManifest, validateEntryConsistency, validateSeams, validateSpawn, validateDemConsistency, findDuplicateBuildings, demSample, cellToMapLocal, hasZeroLengthEdge, isSelfIntersecting, cellMLon, cellOwner } from "../scripts/worldValidate.mjs";
 // @ts-expect-error — JS config(타입 선언 없음)
 import { MAPS } from "../scripts/maps.config.mjs";
 
@@ -301,5 +301,55 @@ describe("실데이터 회귀 가드(생성된 경복궁 타일)", () => {
     }
     expect(errs).toEqual([]);
     expect(findDuplicateBuildings(loaded)).toEqual([]); // 수집 시 dedup → 중복 0
+  });
+});
+
+
+// ─────────── 셀 점유(2026-08-23) ───────────
+// build-world 는 rmSync 로 셀을 통째로 지우고 다시 쓴다. 두 도시 중심이 같은 1° 셀에 들어가면
+// 나중 빌드가 앞 도시를 **조용히 삭제**한다 — 파일이 사라지므로 검증 게이트도 못 잡는다.
+// 100 도시 중 실제로 2 쌍이 겹친다(오사카↔나라 34/135 · 홍콩↔선전 22/114).
+
+describe("cellOwner — 셀을 이미 쓰는 다른 맵 탐지", () => {
+  const CAT = [
+    { id: "seoul-stream", name: "서울", lat: 37.578, lon: 126.977 },
+    { id: "osaka-stream", name: "오사카", lat: 34.694, lon: 135.502 },
+  ];
+
+  it("같은 셀을 쓰는 다른 맵을 찾는다 — 나라(34.685,135.805)는 오사카와 충돌", () => {
+    expect(cellOwner(CAT, 34, 135, "nara-stream")?.id).toBe("osaka-stream");
+  });
+
+  it("자기 자신은 충돌이 아니다 — 재빌드는 정상 동작", () => {
+    expect(cellOwner(CAT, 34, 135, "osaka-stream")).toBeNull();
+  });
+
+  it("빈 셀은 null", () => {
+    expect(cellOwner(CAT, 41, 12, "rome-stream")).toBeNull();
+  });
+
+  it("좌표 없는 항목·빈 카탈로그는 무시(최초 빌드)", () => {
+    expect(cellOwner([{ id: "x", name: "x" }], 34, 135, "y")).toBeNull();
+    expect(cellOwner([], 34, 135, "y")).toBeNull();
+    expect(cellOwner(undefined, 34, 135, "y")).toBeNull();
+  });
+
+  it("음수 위경도도 floor 로 올바르게 — 쿠스코(-13.5,-71.9) → 셀 -14/-72", () => {
+    const cat = [{ id: "cusco-stream", name: "쿠스코", lat: -13.53, lon: -71.97 }];
+    expect(cellOwner(cat, -14, -72, "other")?.id).toBe("cusco-stream");
+    expect(cellOwner(cat, -13, -71, "other")).toBeNull();
+  });
+});
+
+describe("현 도시 카탈로그의 셀 충돌 목록(회귀 감시)", () => {
+  it("100 도시 중 충돌 쌍은 알려진 2 건뿐 — 늘어나면 빌드 순서 계획을 갱신해야 한다", () => {
+    const cat = JSON.parse(readFileSync("scripts/data/city-catalog.json", "utf8")).cities;
+    const cells = new Map<string, string[]>();
+    for (const c of cat) {
+      const k = `${Math.floor(c.lat)}/${Math.floor(c.lon)}`;
+      cells.set(k, [...(cells.get(k) ?? []), c.id]);
+    }
+    const dup = [...cells.entries()].filter(([, v]) => v.length > 1).map(([k, v]) => `${k}: ${v.join("+")}`).sort();
+    expect(dup).toEqual(["22/114: hong-kong+shenzhen", "34/135: osaka+nara"]);
   });
 });

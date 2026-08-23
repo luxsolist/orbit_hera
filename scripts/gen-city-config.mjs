@@ -12,6 +12,7 @@
 //   --check : 파일을 쓰지 않고 현재 city-catalog.json 과 다르면 비0 종료(CI/테스트 게이트용)
 
 import { readFileSync, writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 
 const DOC = "docs/spec/09-city-catalog.md";
 const GEO = "scripts/data/geocode-city-cache.json";
@@ -43,8 +44,8 @@ export const normCity = (s) => s.replace(/\s*[(（][^)）]*[)）]\s*$/, "").trim
  *   2장 `| 쌍 | 도시 A | 도시 B | 근거 |` (도시가 "뉴욕 (미국)" 꼴로 국가를 품음)
  *   4~6장 `| # | 도시 | 국가 | 권역 |`
  *
- * 표 밖의 **기완료** 줄(서울·부산·오사카)은 서장 = chapter 0 으로 잡는다 — 표에 없다고 빠뜨리면
- * 100선 중 3개가 조용히 누락된다.
+ * 표 밖의 **서장** 줄(서울·부산·오사카)은 chapter 0 으로 잡는다 — 표에 없다고 빠뜨리면
+ * 100선 중 3개가 조용히 누락된다. 이 줄은 **장 배속 데이터**이지 빌드 상태가 아니다.
  */
 export function parseCatalogDoc(md) {
   const out = {};
@@ -53,8 +54,8 @@ export function parseCatalogDoc(md) {
     if (!key || key === "도시" || key === "도시 A" || key === "도시 B") return;
     if (!out[key]) out[key] = { chapter, country: country || "" };
   };
-  // 서장(기완료) — "**기완료**: 서울(홈, 서장) · 부산 · 오사카." 꼴. 국가는 표에 없으므로 빈 값(city-names 가 보정).
-  const done = md.match(/\*\*기완료\*\*\s*:\s*([^\n]*)/);
+  // 서장 — "**서장**: 서울(홈) · 부산 · 오사카." 꼴. 국가는 표에 없으므로 빈 값(city-names 가 보정).
+  const done = md.match(/\*\*서장\*\*\s*:\s*([^\n]*)/);
   if (done) for (const seg of done[1].split("·")) put(normCity(seg.split(".")[0]), 0, "");
 
   let chapter = 0;
@@ -94,7 +95,12 @@ export function cityEntry(cityKo, meta, geo, name) {
 }
 
 // ─────────────────────────── 실행 ───────────────────────────
+// **직접 실행할 때만** 돈다 — 테스트가 위 순수 헬퍼를 import 하는데, 조인 실패 시 process.exit 가
+// 파일 전체를 죽여 테스트 14개가 조용히 사라졌다(2026-08-23).
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) main();
 
+function main() {
 const doc = parseCatalogDoc(readFileSync(DOC, "utf8"));
 const geo = JSON.parse(readFileSync(GEO, "utf8"));
 const names = JSON.parse(readFileSync(NAMES, "utf8")).cities;
@@ -139,4 +145,5 @@ if (process.argv.includes("--check")) {
   const byCh = cities.reduce((a, c) => ((a[c.chapter] = (a[c.chapter] ?? 0) + 1), a), {});
   const handled = cities.filter((c) => c.mapId).length;
   console.error(`wrote ${OUT}: ${cities.length}개 도시 (장별 ${JSON.stringify(byCh)}, 기등록 맵 연결 ${handled}개)`);
+}
 }

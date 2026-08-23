@@ -16,6 +16,25 @@ export const cellLocalOf = (lat, lon, cell, mLon = cellMLon(cell[0])) => ({ x: (
 /** 얽힘 택소노미 6종 — src/world/entanglement.ts EntanglementClass · scripts/osm.mjs ENTANGLEMENT_CLS 와 동일 집합. */
 export const KNOWN_CLS = new Set(["deep-roots", "ritual", "archive", "resonance", "relay", "memorial"]);
 
+/**
+ * 이 셀을 이미 점유한 **다른** 맵을 찾는다(순수). 없으면 null.
+ *
+ * 왜 필요한가: build-world 는 `rmSync(cellDir)` 로 셀 디렉터리를 통째로 지우고 다시 쓴다.
+ * 두 도시의 중심이 같은 1° 셀에 들어가면 나중 빌드가 앞 도시를 **조용히 삭제**한다
+ * (검증 게이트도 못 잡는다 — 파일이 아예 없어지므로). 100 도시 중 실제로 2 쌍이 겹친다:
+ * 오사카↔나라(34/135) · 홍콩↔선전(22/114).
+ *
+ * catalog = public/maps/index.json 항목들(빌드된 맵만 들어 있다). selfStreamId 는 자기 자신.
+ */
+export function cellOwner(catalog, cellLat, cellLon, selfStreamId) {
+  for (const e of catalog ?? []) {
+    if (!e || e.id === selfStreamId) continue;
+    if (typeof e.lat !== "number" || typeof e.lon !== "number") continue;
+    if (Math.floor(e.lat) === cellLat && Math.floor(e.lon) === cellLon) return e;
+  }
+  return null;
+}
+
 /** chunkMesh AREA_COLOR 와 짝 — 알려진 지표 면 종류. */
 export const KNOWN_AREA = new Set(["park", "garden", "grass", "pitch", "wood", "scrub", "sand", "rock", "pavement"]);
 

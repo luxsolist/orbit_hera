@@ -14,6 +14,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node
 import { MAPS as MAP_DEFS } from "./maps.config.mjs";
 import { bbox, polyArea, clipRect, clipPolylineToRect, dedupeFlat } from "./clip.mjs";
 import { flattenUnderBuildings } from "./dem.mjs";
+import { cellOwner } from "./worldValidate.mjs";
 
 const BLOCK = 16; // 블록 디렉터리 한 변(청크) — 셀 내 <bx>_<bz>/<cx>_<cz>.json. 디렉터리당 ≤ BLOCK²(256) 파일.
 const id = process.argv[2];
@@ -33,7 +34,26 @@ const rad = (d) => (d * Math.PI) / 180;
 const M_LON0 = M_LAT * Math.cos(rad(lat0)); // 맵 원점 위도 기준(맵 로컬 좌표가 빌드된 기준)
 const cellLat = Math.floor(lat0), cellLon = Math.floor(lon0);
 const M_LONc = M_LAT * Math.cos(rad(cellLat + 0.5)); // 셀 중앙 위도 기준(셀 격자 일관)
+const mapDef = MAP_DEFS.find((m) => m.id === id); // 카탈로그 항목(name/subtitle/stream)·heightmap 권위
 const cellDir = `${MAPS}/${cellLat}/${cellLon}`;
+
+// ── 셀 점유 검사 — **다른 도시의 데이터를 지우려는 것이면 중단** ──
+// rmSync 는 셀을 통째로 날리므로, 같은 1° 셀을 쓰는 두 도시(오사카↔나라 34/135 ·
+// 홍콩↔선전 22/114)는 나중 빌드가 앞 도시를 조용히 삭제한다. 검증 게이트는 못 잡는다 —
+// 파일이 사라지는 것이라 검사할 대상 자체가 없어진다. 그래서 지우기 **전에** 막는다.
+{
+  const selfStream = mapDef?.stream?.id ?? `${id}-stream`;
+  let catalog = [];
+  try { catalog = JSON.parse(readFileSync(`${MAPS}/index.json`, "utf8")); } catch { /* 최초 빌드 */ }
+  const owner = cellOwner(Array.isArray(catalog) ? catalog : [], cellLat, cellLon, selfStream);
+  if (owner && existsSync(cellDir) && !process.argv.includes("--force")) {
+    console.error(`✗ 셀 ${cellLat}/${cellLon} 은 이미 '${owner.id}'(${owner.name}) 가 쓰고 있다.`);
+    console.error(`  이대로 빌드하면 그 도시의 청크가 삭제된다. 선택:`);
+    console.error(`   · 두 도시를 한 셀에 합치는 빌더 지원을 먼저 넣거나(정공법)`);
+    console.error(`   · 정말 덮어써도 되면 --force 를 붙인다(그 도시는 카탈로그에서 사라진다)`);
+    process.exit(1);
+  }
+}
 rmSync(cellDir, { recursive: true, force: true }); // 스테일 청크/블록 정리 후 재생성(범위 변경·구조 변경 대응)
 mkdirSync(cellDir, { recursive: true });
 
@@ -65,7 +85,6 @@ function binClipped(rp, push) {
 // 하이트맵(맵-로컬 좌표계) 바이리니어 샘플(− seaLevel). 없거나 범위 밖이면 0.
 let H = null, hm = null, gOrig = 0, gStep = 1;
 // heightmap 은 maps.config 가 권위(DEM 재생성이 OSM json 스냅샷과 분리되도록) — 없으면 json 스냅샷 사용.
-const mapDef = MAP_DEFS.find((m) => m.id === id); // 카탈로그 항목(name/subtitle/stream)·heightmap 권위
 const cfgHm = mapDef?.heightmap;
 const heightmap = cfgHm ?? terrain.heightmap;
 if (heightmap) {
