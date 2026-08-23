@@ -21,7 +21,12 @@ const [s, w, n, e] = m.bbox; // [남,서,북,동]
 const out = `/tmp/${id}-extract.osm`;
 if (!existsSync(out) || statSync(out).size < 1000 || process.env.REEXTRACT === "1") {
   console.error(`osmconvert bbox 추출 ${id}: lon ${w}..${e}, lat ${s}..${n}`);
-  execFileSync(osmconvert, [pbf, `-b=${w},${s},${e},${n}`, "--complete-ways", "--complete-multipolygons", "--out-osm", `-o=${out}`],
+  // --drop-author/--drop-version: 노드·웨이마다 붙는 version/timestamp/changeset 속성을 뺀다.
+  // 우리가 전혀 쓰지 않는 메타인데 XML 부피의 상당량을 차지한다 — 아테네 실측 **828 → 520 MB(-37%)**.
+  // 파싱은 전량을 메모리에 올리므로(osmxml) 이 감소가 그대로 OOM 여유가 된다. 7GB 머신에서
+  // 아테네가 힙 5.8GB 로 겨우 통과했고 첫 시도는 실제로 죽었다.
+  execFileSync(osmconvert, [pbf, `-b=${w},${s},${e},${n}`, "--complete-ways", "--complete-multipolygons",
+    "--drop-author", "--drop-version", "--out-osm", `-o=${out}`],
     { stdio: ["ignore", "ignore", "inherit"], maxBuffer: 1 << 30 });
 } else console.error(`기존 추출 재사용: ${out}`);
 console.error(`추출 XML: ${(statSync(out).size / 1048576).toFixed(0)} MB → 스트리밍 파싱`);
