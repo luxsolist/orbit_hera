@@ -68,5 +68,29 @@
   "lon": 28.9758715,
   "stream": true,
   "spawnYaw": 0
+ },
+ {
+  "id": "luxor-stream",
+  "name": "룩소르 · Luxor",
+  "subtitle": "이집트 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 4752,
+  "landmarks": 30,
+  "sites": 3,
+  "lat": 25.702096,
+  "lon": 32.647186,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "cairo-stream",
+  "name": "카이로 · Cairo",
+  "subtitle": "이집트 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 68248,
+  "landmarks": 264,
+  "sites": 1,
+  "lat": 30.0443879,
+  "lon": 31.2357257,
+  "stream": true,
+  "spawnYaw": 0
  }
 ]

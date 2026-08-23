@@ -4,7 +4,7 @@
 // 실행: node --max-old-space-size=8192 scripts/import-extract.mjs <id> [pbf=/tmp/south-korea.osm.pbf] [osmconvert=/tmp/osmconvert]
 // 산출: /tmp/osm-<id>.json (build-maps 가 그대로 소비) → 이후 `node scripts/build-maps.mjs <id>` → build-world → validate.
 import { execFileSync } from "node:child_process";
-import { createReadStream, writeFileSync, existsSync, statSync } from "node:fs";
+import { createReadStream, createWriteStream, existsSync, statSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { MAPS } from "./maps.config.mjs";
 import { createOsmParser } from "./osmxml.mjs";
@@ -39,8 +39,18 @@ await new Promise((resolve, reject) => {
   rl.on("error", reject);
 });
 const j = parser.result();
-const cache = `/tmp/osm-${id}.json`;
-writeFileSync(cache, JSON.stringify(j));
+// **NDJSON(요소 1개 = 1줄)** 로 기록한다. 단일 JSON 은 Node 의 문자열 한계(0x1fffffe8 ≈ 512MB)에
+// 걸린다 — 카이로 캐시가 545MB 로 넘어 JSON.stringify/readFileSync 양쪽에서 ERR_STRING_TOO_LONG
+// 이 났다(2026-08-23). 100 도시 중 도쿄·델리·멕시코시티 등 대도시가 같은 벽에 부딪힌다.
+// 줄 단위면 한 줄이 작아 한계와 무관하고, 읽는 쪽도 스트리밍으로 받을 수 있다.
+const cache = `/tmp/osm-${id}.ndjson`;
+await new Promise((resolve, reject) => {
+  const ws = createWriteStream(cache);
+  ws.on("error", reject);
+  ws.on("finish", resolve);
+  for (const el of j.elements) if (!ws.write(JSON.stringify(el) + "\n")) { /* 백프레셔는 무시 — 로컬 디스크 */ }
+  ws.end();
+});
 const nb = j.elements.filter((x) => x.tags?.building).length;
 const nh = j.elements.filter((x) => x.tags?.highway).length;
 console.error(`elements ${j.elements.length} (건물 ${nb}, highway ${nh}) → ${cache}`);

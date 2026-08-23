@@ -6,6 +6,8 @@
 //       node scripts/build-maps.mjs manhattan  (특정 맵만)
 import { writeFileSync, readFileSync, mkdirSync, existsSync, statSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { createReadStream } from "node:fs";
+import { createInterface } from "node:readline";
 import { MAPS } from "./maps.config.mjs";
 import { RECIPES } from "./landmarks.mjs";
 import { projFns, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius } from "./osm.mjs";
@@ -93,7 +95,21 @@ function fetchOverpass(bbox, qf, cacheFile) {
  * OSM 수집 — bbox 가 크면(>~0.06°) 타일 격자로 분할해 타일별 수집·캐시·병합(단일 쿼리 타임아웃 회피·재개 가능).
  * 작은 bbox 는 단일 쿼리. 타일 캐시 /tmp/osm-<id>-t<r>_<c>.json 로 중단 후 재실행 시 이어받음.
  */
-function fetchOSM(id, bbox) {
+async function fetchOSM(id, bbox) {
+  // NDJSON 우선(import-extract 산출) — 단일 JSON 은 Node 문자열 한계(≈512MB)에 걸려 대도시가 못 읽힌다.
+  const nd = `/tmp/osm-${id}.ndjson`;
+  if (existsSync(nd) && statSync(nd).size > 1000) {
+    console.error(`  using cached ${nd}`);
+    const elements = [];
+    await new Promise((resolve, reject) => {
+      const rl = createInterface({ input: createReadStream(nd), crlfDelay: Infinity });
+      rl.on("line", (l) => { if (l) elements.push(JSON.parse(l)); });
+      rl.on("close", resolve);
+      rl.on("error", reject);
+    });
+    return { elements };
+  }
+  // 레거시 단일 JSON(구 import-extract 산출 · Overpass 타일 병합 캐시).
   const cache = `/tmp/osm-${id}.json`;
   if (existsSync(cache) && statSync(cache).size > 1000) {
     console.error(`  using cached ${cache}`);
@@ -291,7 +307,7 @@ for (const m of MAPS) {
       precinct = src.precinct;
     }
   } else {
-    core = processOSM(fetchOSM(m.id, m.bbox), proj);
+    core = processOSM(await fetchOSM(m.id, m.bbox), proj);
     core.sites = applyCuratedLandmarks(core, m.catalogCity, proj).sites; // 사람 검수 카탈로그: 건물은 승격, 비건물은 site
   }
   precinct = m.precinct ?? precinct; // config 우선
