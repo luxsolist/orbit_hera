@@ -90,6 +90,64 @@ npm run build:map -- <id> [--no-terrain] [--zoom=13]
 > **셀 내 블록 분산**: 셀 디렉터리에 청크 파일 수천 개가 평면으로 쌓이지 않도록 **블록 디렉터리** 한 단계를 더 둔다 —
 > `public/maps/<floorLat>/<floorLon>/<bx>_<bz>/<cx>_<cz>.json`, 여기서 `<bx>_<bz> = floor(cx/BLOCK)_floor(cz/BLOCK)`(BLOCK=16). 블록당 ≤ BLOCK²=**256 파일**(경복궁 20km = 1,600 청크 → 12 블록 디렉터리, 평균 ~133). 블록 크기는 `tiles.json.block` 에 기록되고 런타임 [`worldChunkPath`](../../src/world/chunkManifest.ts)/[`StreamingWorld`](../../src/world/StreamingWorld.ts) 가 동일 계산으로 경로를 만든다. 규칙: **`<cx>_<cz>` = 셀 NW 원점 기준 1024m 청크의 정수 격자 인덱스**(cx=동/1024, cz=남/1024).
 
+### 랜드마크 승격 — OSM 태그 자동분류 + 큐레이션 카탈로그
+
+전장의 "랜드마크"는 별도 오브젝트가 아니라 **승격된 건물**이다. 빌드가 건물에 `lm`(얽힘 택소노미
+6종)·`n`(표시명)을 붙이면, 런타임([`StreamingWorld`](../../src/world/StreamingWorld.ts))이 그 표식을
+보고 [`BuildingCombat.registerBuilding`](../../src/world/BuildingCombat.ts)을 랜드마크 모드로 부른다.
+렌더는 일반 건물과 같은 병합 메시 그대로 — 바뀌는 건 전투 의미(고유 체력·랜드마크 집계·`aggro:landmark`
+직행 표적)뿐이다.
+
+승격 경로는 둘, **큐레이션이 자동분류를 덮는다**:
+
+| 경로 | 판정 | 비고 |
+|---|---|---|
+| 자동분류 | [`osm.landmarkFrom`](../../scripts/osm.mjs) — ① 태그 분류 ② 이름 보유 ③ 면적 ≥ 200㎡ **동시 충족** | 3조건을 다 걸어야 "소수"가 유지된다(실측: 서울 도심 태그만 158채 → 3조건 91채) |
+| 큐레이션 | [`landmark-catalog.json`](../../scripts/data/landmark-catalog.json) 실측 좌표 → **포함 우선**(footprint 안 → 없으면 30m 최근접) | 사람이 검수한 정본. 광장·공원은 미매칭으로 남겨 자동분류에 맡긴다(오매칭 방지) |
+
+분류 규칙은 런타임 정본 [`entanglement.classifyOsmTags`](../../src/world/entanglement.ts)와 빌드 미러
+[`osm.classifyOsmTags`](../../scripts/osm.mjs)에 이중으로 있고, 태그 표 전수 동치 테스트
+([landmarkPromote](../../tests/landmarkPromote.test.ts))가 둘이 갈라지는 것을 막는다.
+
+#### 비건물 랜드마크(site) — 해변·교량·공원·하천·곶
+
+큐레이션 카탈로그의 상당수는 **애초에 건물이 아니다**(실측: 부산 21개 중 8개 — 해운대·광안리·태종대·
+송도해수욕장·몰운대·광안대교·영도대교·시민공원). 건물 승격 경로로는 구조적으로 표현할 수 없어,
+이것들이 빠지면 `guard`/`aggro:landmark` 미션에서 **도시의 대표 표적이 통째로 사라진다** —
+"부산을 지킨다"가 해운대를 포함하지 못한다.
+
+그래서 **좌표 + 반경을 갖는 독립 엔티티**(`SiteLandmark`)를 따로 둔다:
+
+| | |
+|---|---|
+| 대상 | **큐레이션 항목 중 건물 매칭 실패분만**. 자동분류로 넓히지 않는다 — 이름 있는 공원·다리는 도시마다 수백 개라 편입하면 랜드마크가 폭주한다 |
+| 좌표 | 큐레이션 실측 위경도 → 셀-로컬 m. `y`(지표 높이)는 빌드가 **건물 평탄화 이후** DEM 에서 샘플해 굽는다(런타임엔 전역 DEM 이 없다) |
+| 반경 | 좌표를 품은 면(해변/공원/숲/수역)의 바운딩박스 반대각선 절반. 겹치면 **가장 작은 면**(태종대가 아니라 그 안의 전망대). 못 찾으면 기본 80m(교량 상정), [25, 600]m 클램프 |
+| 청크 배분 | **중심이 드는 청크 하나에만.** 면처럼 클립해 조각내면 해운대 하나가 랜드마크 여럿으로 세어져 미션 집계가 무너진다 |
+| 런타임 | [`BuildingCombat.registerSite`](../../src/world/BuildingCombat.ts) — 렌더 바인딩이 **없는** 세 번째 갈래(건물=병합 메시, 양식화 랜드마크=Group, site=없음). 표적·체력·집계만 갖고 형상 연출은 건너뛴다. 언로드는 청크 키 소유 단위(`unregisterSites`) |
+
+잔해 더미는 `r` 을 그대로 쓰지 않고 40m 로 자른다 — 해변 반경(수백 m)이면 전장을 덮는다.
+
+### 도시 100선 config 자동 생성
+
+도시당 `maps.config` 항목을 손으로 쓰면 오탈자·bbox 실수·누락이 그대로 수십 분짜리 빌드 낭비가 된다.
+[`gen-city-config.mjs`](../../scripts/gen-city-config.mjs)가 세 소스를 조인해 만든다:
+
+```
+npm run gen:cities        # 09-city-catalog.md(장·국가) + geocode-city-cache.json(실측 좌표)
+                          #   + city-names.json(id/영문) → scripts/data/city-catalog.json
+node scripts/gen-city-config.mjs --check   # 소스와 어긋나면 비0 종료(테스트 게이트)
+```
+
+`maps.config.mjs`는 손 맵(HAND) + 생성 맵을 합쳐 **101개**를 노출한다(같은 id 는 손 맵이 이김,
+이미 다른 id 의 손 맵이 담당하는 도시는 `mapId` 표시로 생성에서 빠짐 — 서울=gyeongbokgung).
+전 도시 공통 규격: 중심 반경 20km · 실측 DEM 2048² · `catalogHidden`(메뉴에는 스트리밍 항목만 노출).
+스트리밍 카탈로그 항목(`<id>-stream`)은 [`build-world.mjs`](../../scripts/build-world.mjs)가 청크를
+구우며 `public/maps/index.json` 에 업서트한다 — 손으로 적지 않는다.
+
+> ⚠️ `build-maps.mjs`는 **id 지정 필수**다(전량은 `--all`). 인자 없는 실행이 101개 도시를 통째로
+> 수집하려 드는 사고를 막는다.
+
 ### 대면적 OSM 수집 — **Geofabrik 추출 우선**(모든 광역 맵 공통 규약)
 
 광역(반경 수 km↑)은 **Geofabrik 지역 추출(.osm.pbf)에서 bbox 만 잘라 한 번에** 확보한다. Overpass 타일 폭격(서버 부하·과부하 시 빈 200 반환으로 누락)을 피하고 **완전·재현 가능**. 절차:

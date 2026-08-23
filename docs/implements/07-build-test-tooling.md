@@ -14,6 +14,7 @@
 | `npm run test:watch` | Vitest watch |
 | `npm run test:e2e` | `vite build` 후 Playwright 스모크 |
 | `npm run build:map -- <id>` | 맵 파이프라인(DEM→OSM→청크→검증) — [build-pipeline.mjs](../../scripts/build-pipeline.mjs) |
+| `npm run gen:cities` | 도시 100선 → [city-catalog.json](../../scripts/data/city-catalog.json) 생성(maps.config 가 읽음) — [gen-city-config.mjs](../../scripts/gen-city-config.mjs) |
 | `npm run validate:world -- <id>` | 청크 검증 게이트만 |
 
 ## 빌드 하드닝 (소스 보호) — [vite.config.ts](../../vite.config.ts)
@@ -74,6 +75,25 @@
   도메인) GeoJSON → equirectangular SVG 경로 → `src/ui/worldLand.ts`. 재생성: `node scripts/gen-worldmap.mjs`.
 - [`scripts/osm.mjs`](../../scripts/osm.mjs) — OSM 원시 데이터 → 로컬 미터 투영 + 건물 높이/도로 폭/
   폴리곤 면적 산출(맵 JSON 빌드 유틸). 순수 함수는 `osm.test.ts`가 가드.
+
+## 개발 서버의 맵 서빙 — [vite-serve-maps.mjs](../../scripts/vite-serve-maps.mjs)
+
+맵 청크는 수만 개라 `server.watch.ignored: ["**/public/maps/**"]` 로 워처에서 뺀다. 그런데 Vite 는
+**public/ 파일 색인을 워처로 갱신**하므로, 워처에서 빼면 새로 구운 셀이 색인에 영영 안 들어오고
+요청이 **SPA 폴백(index.html, HTTP 200)** 으로 샌다.
+
+증상: 새 도시를 빌드해도 메뉴에서 선택 시 "타일 월드 로드 실패 — 타일 매니페스트 없음". 서버를
+재시작해야만 고쳐졌다. 실패가 404 가 아니라 **200 + HTML** 이라 네트워크 탭만 봐선 원인이 안 보인다.
+
+`serveMapsFromDisk()` 플러그인이 `<base>maps/**` 를 디스크에서 직접 읽어 이 구멍을 막는다:
+
+- **재시작 불필요** — 도시를 구우면 즉시 잡힌다(100 도시 배치 시 필수)
+- **없는 파일은 404** — next() 로 넘기지 않는다. 폴백으로 새면 누락이 조용히 묻힌다
+- 경로 탈출(`../`)·잘못된 인코딩 차단, `Cache-Control: no-cache`(재빌드 즉시 반영)
+- 개발 서버 전용(`apply: "serve"`) — 프로덕션은 `public/` 이 `dist/` 로 복사되므로 불필요
+
+⚠️ `watch.ignored` 와 이 플러그인은 **한 쌍**이다. 하나만 두면 대량 watch 불안정(전자 없음) 또는
+새 셀 미검출(후자 없음)이 재발한다. 계약은 [tests/serveMaps.test.ts](../../tests/serveMaps.test.ts)가 고정.
 
 ## 맵 데이터 파이프라인 — [build-pipeline.mjs](../../scripts/build-pipeline.mjs)
 

@@ -6,31 +6,102 @@
 
 ---
 
-## 🚨 긴급 발견 (2026-08-21 e2e 검증) — 스트리밍 맵에 랜드마크가 전혀 등록되지 않음
+## ✅ 해결됨 (2026-08-22) — 스트리밍 맵 랜드마크 배선 + 도시 config 자동 생성
 
-**증상**: `aggro:landmark` 미션(오래 선 자리·절단 공성·공성 낙인 등)에서 적이 이따금 일반 건물을
-공격("CITY LOST" 상승)하는 것을 e2e로 관찰. 원인 추적 결과 — **스트리밍 맵(`seoul-stream`/
-`busan-stream`/`everest-stream`, 현재 카탈로그 전부)에는 `BuildingCombat.registerLandmark()`가
-단 한 번도 호출되지 않는다.**
+> 2026-08-21 e2e 로 발견된 "스트리밍 맵(현 카탈로그 전부)에 `registerLandmark` 호출이 단 한 번도
+> 없어 랜드마크가 0개" 문제. §9.7 도시 100선 배치의 **선결 차단 이슈**였다(청크 포맷이 바뀌는
+> 사안이라 이걸 먼저 고치지 않으면 100개 도시를 다 재빌드해야 했다).
 
-- `src/world/StreamingWorld.ts` 의 청크 빌드 콜백(`makeIO().build`)은 `registerBuilding` 만 호출 —
-  랜드마크 등록 코드 자체가 없음(grep 로 "landmark" 0건).
-- `scripts/build-world.mjs`(스트리밍 청크 빌더)는 `landmarks.json`(전역 인덱스, 주석 "전역 랜드마크
-  → 위치")을 만들지만 청크 페이로드에는 반영하지 않음 — `chunk(cx,cz)`에 buildings/roads/water/
-  walls/areas 만 배분, landmarks 배분 없음.
-- `public/maps/landmarks.json` 은 **`mapId: "gyeongbokgung"`(구 단일맵) 전용**이고, 이를 읽는
-  `src/world/mapLocator.ts`(`fetchLandmarkLocation`)는 어디서도 호출되지 않는 죽은 코드.
-- 구 단일맵 경로(`scripts/landmarks.mjs` RECIPES → `build-maps.mjs` bakeLandmarks → `World.ts`
-  `registerLandmark`)는 정상 동작 — **문제는 신 스트리밍 경로에만 있음**.
+**해결 방식 — 런타임 조회가 아니라 빌드 타임 승격**: 청크 페이로드의 건물에 `lm`(얽힘 택소노미)·
+`n`(표시명) 필드를 실어 보내고, 런타임은 그 표식을 보고 `registerBuilding` 을 랜드마크 모드로 부른다.
+스트리밍 로드/언로드·파괴 이력 보존이 일반 건물과 같은 경로를 타므로 별도 좌표 조회가 필요 없다.
 
-**영향**: `guard(landmarks)` 계열 미션이 스트리밍 맵에서 사실상 항상 성공(잃을 랜드마크가 없음),
-`aggro:landmark` 변조는 항상 일반 건물로 폴백(§9.4 "랜드마크로 직행한다"는 설계 의도 무효화).
-현재 등록된 3개 맵이 전부 스트리밍이라 **거의 모든 실제 플레이가 이 문제의 영향권**.
+- **승격 규칙** ([osm.mjs](../scripts/osm.mjs) `landmarkFrom`) — ① OSM 태그 자동분류 ② 이름 보유
+  ③ 바닥면적 ≥ 200㎡ **3조건 동시 충족**. 태그만으로 승격하면 로마·교토처럼 `historic` 이 흔한 도시에서
+  수천 채가 랜드마크가 되어 어그로 변조가 무의미해진다(실측: 서울 도심 2.8km² 에서 태그만 158채 →
+  3조건 91채 = 건물의 1.3%).
+- **큐레이션 카탈로그 반영** ([build-maps.mjs](../scripts/build-maps.mjs) `applyCuratedLandmarks`) —
+  1,574개 실측 좌표가 **포함 우선**(footprint 안 → 없으면 30m 최근접)으로 건물에 붙어 자동분류를 덮는다.
+  건물 아닌 랜드마크(광장·공원)는 미매칭으로 남겨 자동분류에 맡긴다 — 반경 최근접만 쓰면 "서울광장"이
+  옆 건물에 이름을 붙이는 오매칭이 난다(실측 확인).
+- **분류기 이원화 방지** — 런타임 정본 [entanglement.ts](../src/world/entanglement.ts) ↔ 빌드 미러
+  [osm.mjs](../scripts/osm.mjs) 를 태그 표 전수 동치 테스트로 묶었다.
+- **연출 분기 재정립** ([BuildingCombat.ts](../src/world/BuildingCombat.ts)) — `isLandmark`(의미:
+  집계·표적 질의)와 **렌더 바인딩**(Group 이냐 병합 메시냐)을 분리. 이전 코드는 둘을 섞어 써서
+  메시 기반 랜드마크가 피격·붕괴 연출 없이 조용히 사라졌을 것이다. 해제 저항(`resistMul`)도 이때 적용.
+- **검증 게이트** — 미지 택소노미는 error, 랜드마크 0개면 빌드가 경고.
+- **도시 config 자동 생성** ([gen-city-config.mjs](../scripts/gen-city-config.mjs)) —
+  `09-city-catalog.md`(장·국가) + `geocode-city-cache.json`(실측 좌표) + `city-names.json`(id/영문)을
+  조인해 [city-catalog.json](../scripts/data/city-catalog.json) 생성 → `maps.config.mjs` 가 읽어
+  **101개 맵**(손 4 + 생성 97)을 구성. 스트리밍 카탈로그 항목(`<id>-stream`)도 build-world 가 청크를
+  구우며 `index.json` 에 업서트한다(이전엔 손으로 적어야 했다).
+- 테스트 [landmarkPromote](../tests/landmarkPromote.test.ts)(23) ·
+  [cityConfig](../tests/cityConfig.test.ts)(20).
 
-**대응(미착수, 범위가 커서 별도 작업 필요)**: StreamingWorld 청크 빌드 시 `landmarks.json`(경위도)을
-청크 좌표로 변환해 해당 청크 로드 시점에 근접 건물 폴리곤을 랜드마크로 승격·`registerLandmark` 호출
-— OSM 자동 분류(얽힘 택소노미, §9.7)와 함께 정식 파이프라인화가 바람직. 우선순위: **P4 착수 전
-필수 선결**(P4의 균열/봉합 콘텐츠 상당수가 랜드마크 상태에 의존).
+**로마 파일럿 (2026-08-22 완료)** — Geofabrik `italy/centro`(382MB) → osmconvert bbox 추출(715MB XML) →
+스트리밍 파싱(820,407 elements) → 청크 **1,640개 / 43.8MB / 검증 0 errors**. 건물 260,152채,
+**랜드마크 621채**(0.24%), 큐레이션 24개 중 19개 반영(광장 4·좌표없음 1 제외 = 건물형은 전부).
+
+파일럿이 실제로 잡아낸 것 둘:
+
+1. **유형별 문턱 도입** — 단일 문턱 200㎡ 로는 ritual(교회)이 699/960 = **72.8%** 를 먹었다(로마엔
+   동네 본당이 그만큼 많다). 흔한 유형은 높이고(ritual 800㎡ — 교회 면적 중앙값 803㎡ 에서 절단)
+   드문 유형은 낮춰(memorial·relay 100㎡) **621채 / ritual 56.5%** 로 조정. 큐레이션 항목은 문턱을
+   우회하므로 손실 없음 — 실제로 콘스탄티누스 개선문(97㎡)·포로 로마노(128㎡)·카라칼라 욕장(167㎡) 등
+   정본 랜드마크 6개가 200㎡ 미만이었다(우회 설계가 아니었으면 전부 날아갔다).
+2. **XML 엔티티 파서 버그** — [osmxml.mjs](../scripts/osmxml.mjs) `unesc` 가 명명 엔티티만 풀고
+   **숫자 문자 참조**(`&#39;`)를 놓쳐 "Sant&#39;Agostino" 같은 표시명이 960개 중 106개 나왔다.
+   이름이 게임에 노출되기 전엔 드러나지 않던 잠복 버그. 단일 패스 치환으로 수정(이중 해제 방지).
+
+**서울·부산 재빌드 (2026-08-22)** — Geofabrik `south-korea`(286MB) 하나로 둘 다 커버. 각 셀 1,600 청크,
+검증 0 errors, e2e PASS(4맵 0 failure).
+
+| 맵 | 건물 | 랜드마크 | 유형 구성 |
+|---|---:|---:|---|
+| seoul-stream | 273,972 | **862** (0.31%) | ritual 340 · archive 317 · resonance 93 · deep-roots 84 · relay 16 · memorial 12 |
+| busan-stream | 44,500 | **158** (0.36%) | archive 67 · ritual 60 · resonance 14 · relay 10 · deep-roots 5 · memorial 2 |
+| rome-stream | 260,152 | **621** (0.24%) | ritual 351 · deep-roots 146 · archive 53 · resonance 34 · relay 24 · memorial 13 |
+
+카탈로그의 `seoul-stream` 건물 수도 교정됐다(손으로 적힌 낡은 값 3,805 → 실제 273,972).
+
+**큐레이션 커버리지는 이름이 아니라 위치로 재야 한다** — 청크는 OSM `name:en` 을 쓰고 카탈로그는 다른
+표기를 쓴다("N Seoul Tower" ↔ "Namsan Seoul Tower"). 좌표 150m 반경 기준 실측:
+로마 **23/23(100%)** · 서울 **23/26(88%)** · 부산 **11/19(58%)**.
+
+### 비건물 랜드마크(site) ✅ (2026-08-23)
+
+부산 미매칭 8개가 전부 해운대·광안리·송도해수욕장·태종대·몰운대(해변/곶) · 광안대교·영도대교(교량) ·
+시민공원(공원)이었다 — 승격 경로가 **건물 footprint 기반**이라 구조적으로 표현할 수 없었다.
+`guard`/`aggro:landmark` 에서 "부산을 지킨다"가 해운대를 포함하지 못한다는 뜻이라, 100개 도시 배치
+전에(청크 포맷이 또 바뀌므로) 처리했다.
+
+**설계**: 좌표+반경을 갖는 독립 엔티티 `SiteLandmark`([MapData.ts](../src/world/MapData.ts)) —
+청크 `objects.sites`, 런타임 [`BuildingCombat.registerSite`](../src/world/BuildingCombat.ts).
+**렌더 바인딩이 없는 세 번째 갈래**다(건물=병합 메시 · 양식화 랜드마크=Group · site=없음): 표적·체력·
+집계만 갖고 형상 연출은 건너뛴다. 앞서 `isLandmark` 와 렌더 바인딩을 분리해 둔 덕에 연출 함수들이
+mesh/group 없으면 조용히 반환해 추가 분기가 거의 필요 없었다.
+
+핵심 판단 셋:
+- **큐레이션 항목만** site 로 만든다(자동분류 확장 안 함) — 이름 있는 공원·다리는 도시마다 수백 개다.
+- **중심이 드는 청크 하나에만** 배분한다 — 면처럼 클립하면 해운대 하나가 랜드마크 여럿으로 세어진다.
+- `y`(지표 높이)는 **건물 평탄화 이후** DEM 을 샘플해 굽는다 — 런타임엔 전역 DEM 이 없고, 평탄화 전
+  샘플은 청크 지형과 어긋난다.
+
+반경은 좌표를 품은 면(해변/공원/숲/수역)의 바운딩박스 반대각선 절반, 겹치면 가장 작은 면, 없으면 80m,
+[25,600]m 클램프. 잔해 더미는 40m 로 따로 자른다(해변 반경이면 전장을 덮는다).
+
+**결과 — 좌표 보유 큐레이션 커버리지 100%(위치 150m 기준)**:
+
+| 맵 | 건물 | 랜드마크 | 그중 site | 큐레이션 커버리지 |
+|---|---:|---:|---:|---:|
+| seoul-stream | 273,972 | 870 | 8 | 26/26 (88% → **100%**) |
+| busan-stream | 44,500 | 168 | 10 | 19/19 (58% → **100%**) |
+| rome-stream | 260,152 | 627 | 6 | 23/23 (100%) |
+
+에베레스트는 도시가 아니라 큐레이션 대상 밖(랜드마크 0 정상).
+
+**잔여**: 에베레스트는 도시가 아니라 큐레이션 대상 밖(랜드마크 0 정상). 나머지 96개 도시는
+수요 순(1장 25 → 2장 20 → 3장 20 → 4~6장 33).
 
 ---
 
@@ -781,10 +852,12 @@ Free Roam 샤드 (1,000명): ~$20/월
   도시당 10~25개, 총 1,749개 랜드마크(이름·영문명·택소노미 `cls`·5~15자 설명). Nominatim(OSM)
   지오코딩으로 1,574개(90.0%)에 실측 위경도 채움, 나머지 175개(10.0%)는 날조 없이
   `geocodeStatus:"unresolved"`로 남겨 수동 검수 대상으로 표시 — 자세한 방침·재현 절차는
-  09-city-catalog.md "랜드마크 카탈로그" 절 참조. 잔여: **미해결 175개 수동 검수** +
-  **도시 메타 카탈로그 데이터화**(택소노미 특성 태그) + 빌드는 수요 순(챕터 도시군 먼저). 도시당
-  `npm run build:map`(또는 스트리밍 `build-world.mjs`) 배치 — 단, 스트리밍 경로는 위 "🚨 긴급
-  발견" 배선 완성이 선행되어야 실제로 게임에 반영된다.
+  09-city-catalog.md "랜드마크 카탈로그" 절 참조. 잔여: **미해결 175개 수동 검수**.
+  ✅ 카탈로그 → 게임 배선은 2026-08-22 완료(위 "해결됨" 절) — `applyCuratedLandmarks` 가 빌드 때 반영한다.
+- [x] **⭐⭐ 도시 config 자동 생성** ✅ (2026-08-22) — [gen-city-config.mjs](../scripts/gen-city-config.mjs)
+  → [city-catalog.json](../scripts/data/city-catalog.json)(100도시: id·영문·국가·장·실측 좌표·반경 20km bbox)
+  → `maps.config.mjs` 가 읽어 **101개 맵**(손 4 + 생성 97) 구성. 스트리밍 카탈로그 항목도 build-world 가
+  자동 업서트. 잔여: **실제 빌드는 수요 순**(1장 25 → 2장 20 → 3장 20 → 4~6장 33) — Geofabrik 추출 기반.
 - [ ] **⭐ 라이브 이벤트 훅** — 전 지구 동시 관측일(신년 등) 침공 스파이크(06-missions §8 세계 스케일 메타).
 
 ---
