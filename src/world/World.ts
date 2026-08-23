@@ -519,7 +519,7 @@ export class World implements GameWorld {
       const topY = isFinite(box.max.y) ? box.max.y : 30;
       const halfX = isFinite(box.max.x) ? (box.max.x - box.min.x) / 2 : 8;
       const halfZ = isFinite(box.max.z) ? (box.max.z - box.min.z) / 2 : 8;
-      this.buildings.registerLandmark(grp, lm.x, lm.z, topY, halfX, halfZ, lm.hp);
+      this.buildings.registerLandmark(grp, lm.x, lm.z, topY, halfX, halfZ, lm.hp, lm.cls); // cls = 얽힘 유형(해제 저항 배율)
     }
   }
 

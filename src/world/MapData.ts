@@ -6,12 +6,36 @@ export interface Ring {
   h?: number; // 건물/담장 높이(m)
   w?: number; // 도로 폭 / 담장 두께 / 하천 폭(m)
   holes?: number[][]; // 수역 멀티폴리곤 구멍(섬·제방=육지). 각 [x0,z0,...] 닫힌 링. even-odd 채움으로 도려냄.
+  /**
+   * 얽힘 유형 — 이 건물이 **랜드마크로 승격**됐음을 뜻한다(일반 건물엔 없음).
+   * 빌드가 부착(scripts/osm.mjs landmarkFrom = OSM 태그 자동분류, 또는 큐레이션 카탈로그 강제 승격),
+   * 런타임은 BuildingCombat 에 일반 건물 대신 랜드마크로 등록한다. 정본: [entanglement.ts]
+   */
+  lm?: import("./entanglement").EntanglementClass;
+  n?: string; // 랜드마크 표시명(브리핑/HUD) — lm 보유 시에만
 }
 
 /** 지표 면(공원/잔디/숲/모래/바위/포장 등) — k=종류(색 구분 키). */
 export interface AreaRing {
   p: number[]; // 닫힌 폴리곤 [x0,z0,...]
   k: string; // "park"|"garden"|"grass"|"pitch"|"wood"|"scrub"|"sand"|"rock"|"pavement"
+}
+
+/**
+ * 비건물 랜드마크(site) — 해변·교량·공원·하천·곶처럼 **건물 footprint 가 없는** 랜드마크.
+ *
+ * 왜 별도 엔티티인가: 랜드마크의 정본 경로는 "건물 승격"(Ring.lm)인데, 큐레이션 카탈로그의 상당수는
+ * 애초에 건물이 아니다(실측: 부산 21개 중 8개 — 해운대·광안대교·태종대 류). 면/선 지오메트리에 얹으면
+ * 청크 클립으로 조각나 하나가 여럿으로 세어지므로, 좌표+반경을 갖는 독립 엔티티로 둔다.
+ * 좌표는 셀-로컬 m, y 는 빌드가 DEM 에서 구운 지표 높이.
+ */
+export interface SiteLandmark {
+  x: number;
+  z: number;
+  y: number; // 지표 높이(빌드가 DEM 샘플) — 런타임은 전역 DEM 이 없어 직접 구할 수 없다
+  r: number; // 대표 반경(m) — 하부 면(해변/공원) 크기에서 추정, 없으면 기본값
+  lm: import("./entanglement").EntanglementClass;
+  n?: string; // 표시명
 }
 
 /** 데이터 구동 랜드마크(structure)용 — 재질 정의 */

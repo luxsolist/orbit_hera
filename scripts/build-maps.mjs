@@ -8,7 +8,7 @@ import { writeFileSync, readFileSync, mkdirSync, existsSync, statSync, rmSync } 
 import { execFileSync } from "node:child_process";
 import { MAPS } from "./maps.config.mjs";
 import { RECIPES } from "./landmarks.mjs";
-import { projFns, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM } from "./osm.mjs";
+import { projFns, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius } from "./osm.mjs";
 
 // 레시피가 있는 랜드마크는 부품 목록(structure)으로 베이킹, 나머지는 그대로(타입별 빌더).
 function bakeLandmarks(landmarks) {
@@ -45,8 +45,16 @@ const ENDPOINTS = [
   "https://overpass.kumi.systems/api/interpreter",
 ];
 
-const only = process.argv[2];
+// 대상 맵 — **id 지정 필수**. maps.config 가 도시 100선을 자동 포함하게 된 뒤로 인자 없는 실행은
+// 101개 도시를 통째로 수집하려 든다(공개 Overpass 폭격 + 수 시간). 전량 빌드는 --all 로만 허용.
+const only = process.argv[2] && !process.argv[2].startsWith("--") ? process.argv[2] : null;
+if (!only && !process.argv.includes("--all")) {
+  console.error(`usage: node scripts/build-maps.mjs <id>   (전량은 --all — ${MAPS.length}개 맵 수집)`);
+  console.error(`  등록된 맵: ${MAPS.length}개 (손 맵 + 도시 100선 자동 생성 — scripts/data/city-catalog.json)`);
+  process.exit(2);
+}
 const OUT_DIR = "public/maps";   // 런타임 자산(카탈로그 index.json)만
+const CURATED_PATH = "scripts/data/landmark-catalog.json"; // 사람이 검수한 랜드마크 정본(도시명 → 항목[])
 const BUILD_DIR = "build";        // 빌드 중간물(가공 OSM monolithic <id>.json) — 런타임 비사용, git 비추적
 mkdirSync(OUT_DIR, { recursive: true });
 mkdirSync(BUILD_DIR, { recursive: true });
@@ -154,7 +162,9 @@ function processOSM(osm, proj) {
     if (seenB.has(sig)) return; // OSM 중복 way
     seenB.add(sig);
     const { h, estimated } = buildingHeightInfo(t);
-    buildings.push({ p: cp, h });
+    // 얽힘 택소노미 승격 — 분류·이름·면적 3조건 통과 건물만 랜드마크(osm.landmarkFrom). 나머지는 일반 건물.
+    const lm = landmarkFrom(t, ringArea(cp));
+    buildings.push({ p: cp, h, ...(lm ? { lm: lm.cls, n: lm.n } : {}) });
     bEst.push(estimated);
   };
   // 면(폴리곤) 분류 — 수역/녹지·자연 면. 닫힌 면만(선형 제외). 자기교차면 드롭(복구 안 함 — 큰 concave 왜곡 방지).
@@ -217,6 +227,49 @@ function processOSM(osm, proj) {
   return { buildings, roads: mergedRoads, water, walls, areas };
 }
 
+/**
+ * 큐레이션 랜드마크 카탈로그(scripts/data/landmark-catalog.json) 반영 — 도시명 키로 항목을 찾아
+ * 실측 위경도를 맵-로컬로 투영하고, 가장 가까운 건물 footprint 를 그 항목의 택소노미/이름으로 **강제 승격**한다.
+ *
+ * 왜 필요한가: OSM 태그 자동분류(landmarkFrom)는 태그가 부실한 유적·현지어 고유명을 놓치고, 애매한 곳을
+ * 엉뚱한 유형으로 분류한다. 큐레이션 카탈로그는 사람이 검수한 정본이므로 자동분류를 덮어쓴다.
+ * 좌표 없는 항목(geocodeStatus:"unresolved")·반경 밖 항목은 조용히 건너뛴다(날조 금지 방침 유지).
+ */
+function applyCuratedLandmarks(core, cityKey, proj) {
+  const buildings = core.buildings;
+  if (!cityKey) return { matched: 0, sites: [], total: 0 };
+  let cat;
+  try { cat = JSON.parse(readFileSync(CURATED_PATH, "utf8")); }
+  catch { console.error(`  ⚠ 큐레이션 카탈로그 읽기 실패(${CURATED_PATH}) — 자동분류만 사용`); return { matched: 0, sites: [], total: 0 }; }
+  const list = cat.cities?.[cityKey];
+  if (!Array.isArray(list)) { console.error(`  ⚠ 큐레이션 카탈로그에 '${cityKey}' 없음 — 자동분류만 사용`); return { matched: 0, sites: [], total: 0 }; }
+
+  // site 반경 추정용 면 목록 — 공원·해변·숲(areas) + 수역(water 면). 큐레이션 좌표를 품은 면의 크기가 반경이 된다.
+  const polys = [...(core.areas ?? []), ...(core.water ?? []).filter((w) => w.w == null)];
+
+  const taken = new Set();
+  const sites = [];
+  let matched = 0, geo = 0;
+  for (const lm of list) {
+    if (typeof lm.lat !== "number" || typeof lm.lon !== "number") continue; // unresolved — 좌표 날조 안 함
+    geo++;
+    const [x, z] = proj(lm.lat, lm.lon);
+    const i = matchCuratedBuilding(buildings, x, z, CURATED_SNAP_M, taken);
+    if (i >= 0) {
+      taken.add(i);
+      buildings[i].lm = lm.cls;          // 큐레이션 택소노미가 자동분류를 덮어씀(사람 검수 우선)
+      buildings[i].n = lm.nameEn || lm.name;
+      matched++;
+      continue;
+    }
+    // 건물이 아니다 — 해변·교량·공원·하천·곶. 지오메트리에 얹지 않는 독립 랜드마크(site)로 등록한다.
+    // 이게 없으면 "부산을 지킨다"가 해운대·광안대교를 포함하지 못한다(실측 확인).
+    sites.push({ x, z, r: siteRadius(x, z, polys), lm: lm.cls, n: lm.nameEn || lm.name });
+  }
+  console.error(`  큐레이션 랜드마크: 건물 ${matched} + site(비건물) ${sites.length} = ${matched + sites.length}/${geo} (좌표 보유분, 전체 ${list.length}개)`);
+  return { matched, sites, total: list.length };
+}
+
 const catalog = [];
 for (const m of MAPS) {
   if (only && m.id !== only) continue;
@@ -239,6 +292,7 @@ for (const m of MAPS) {
     }
   } else {
     core = processOSM(fetchOSM(m.id, m.bbox), proj);
+    core.sites = applyCuratedLandmarks(core, m.catalogCity, proj).sites; // 사람 검수 카탈로그: 건물은 승격, 비건물은 site
   }
   precinct = m.precinct ?? precinct; // config 우선
 
@@ -259,6 +313,7 @@ for (const m of MAPS) {
       roads: core.roads,
       ...(core.walls?.length ? { walls: core.walls } : {}),
       ...(core.areas?.length ? { areas: core.areas } : {}),
+      ...(core.sites?.length ? { sites: core.sites } : {}), // 비건물 랜드마크(해변·교량·공원 등)
       ...(boundary ? { boundary } : {}),
       ...(m.gates ? { gates: m.gates } : {}),
       ...(m.landmarks ? { landmarks: bakeLandmarks(m.landmarks) } : {}),
@@ -270,7 +325,7 @@ for (const m of MAPS) {
   const path = `${BUILD_DIR}/${m.id}.json`; // 중간물 — build-world 입력. 런타임은 셀 청크만 읽음.
   writeFileSync(path, JSON.stringify(data));
   const bytes = statSync(path).size;
-  console.error(`  wrote ${path}: ${core.buildings.length} buildings, ${core.roads.length} roads, ${core.water.length} water, ${core.walls?.length ?? 0} walls, ${core.areas?.length ?? 0} areas, ${(bytes / 1024).toFixed(0)}KB`);
+  console.error(`  wrote ${path}: ${core.buildings.length} buildings, ${core.roads.length} roads, ${core.water.length} water, ${core.walls?.length ?? 0} walls, ${core.areas?.length ?? 0} areas, ${core.sites?.length ?? 0} sites, ${(bytes / 1024).toFixed(0)}KB`);
   // catalogHidden: 스트리밍 타일 월드의 소스 전용 맵(예: gyeongbokgung)은 메뉴 카탈로그에 노출하지 않음.
   if (!m.catalogHidden) catalog.push({ id: m.id, name: m.name, subtitle: m.subtitle, bytes, buildings: core.buildings.length, lat: m.lat0, lon: m.lon0 });
 }

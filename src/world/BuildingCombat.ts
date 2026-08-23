@@ -3,7 +3,12 @@
 // 렌더링은 성능을 위해 건물들이 단일 메시로 **병합**되어 있다(World.buildCity / chunkMesh). 병합은
 // 입력 순서대로 정점을 이어붙이므로, 빌드 시 **건물별 정점 범위(vStart/vCount)**만 기록해 두면 병합을
 // 유지한 채(드로우콜 1개) 개별 건물의 정점 색(점진 적색)·위치(붕괴)만 부분 갱신할 수 있다.
-// 랜드마크는 개별 Group 이라 group 변환(scale/sink)으로 처리한다.
+// 랜드마크는 두 갈래다: 손수 만든 양식화 랜드마크는 개별 Group(변환으로 처리), OSM 에서 승격된
+// 랜드마크(스트리밍 도시)는 **일반 건물과 같은 병합 메시**에 들어 있다. 그래서 연출 분기는
+// `isLandmark`(의미: 집계·표적 질의)가 아니라 **렌더 바인딩 유무(group 이냐 mesh 냐)**로 가른다 —
+// 이 둘을 섞으면 메시 기반 랜드마크가 피격·붕괴 연출 없이 조용히 사라진다.
+// 셋째 갈래는 **site 랜드마크**(해변·교량·공원 — registerSite): 렌더 바인딩이 **아예 없다**.
+// 표적/체력/집계만 갖고 형상 연출은 건너뛴다(연출 함수들은 mesh/group 없으면 조용히 반환).
 //
 // 파괴 결과물(잔해)은 인트로 해변 집 붕괴처럼 **낮게 쌓인 각진 조각 더미**로 남기되, 조명에 무관한
 // **순수 검정 단색**(MeshBasic)으로 통일해 지상/공중 어디서든 즉시 눈에 띄게 한다. 잔해는 단일
@@ -13,6 +18,7 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { CollisionWorld } from "./CollisionWorld";
+import { ENTANGLEMENT_CLASSES, type EntanglementClass } from "./entanglement";
 
 const DAMAGE_RED = new THREE.Color(0xff2a14); // 피격 누적 → 점점 이 붉은색으로
 const FLASH_COLOR = new THREE.Color(2.0, 1.7, 1.3); // 파괴 직전 번쩍(>1 = 블룸 유발)
@@ -25,6 +31,7 @@ const HP_MIN = 40; // 일반 건물 최소 체력
 const LANDMARK_HP_DEFAULT = 6000; // 랜드마크 기본 체력(고유값 미지정 시)
 const GRID_CELL = 128; // 건물 탐색 공간 격자 한 변(m)
 const MAX_RUBBLE = 2048; // 잔해 더미 인스턴스 상한
+const SITE_RUBBLE_MAX = 40; // site 랜드마크 잔해 더미 반경 상한(m) — 해변 반경(수백 m)을 그대로 쓰면 전장을 덮는다
 
 export type DamageResult = "none" | "hit" | "destroyed";
 type BState = "intact" | "flash" | "collapsing" | "rubble" | "abducting";
@@ -59,6 +66,8 @@ interface BEntry {
   rz: number; // footprint 반폭 Z
   rubbleH: number; // 잔해 더미 높이
   isLandmark: boolean;
+  cls?: EntanglementClass; // 얽힘 유형(랜드마크만) — 해제 저항 배율·브리핑 어휘의 출처
+  name?: string; //          표시명(랜드마크만) — 브리핑/HUD
   state: BState;
   anim: number; // 애니메이션 누적 시간
   lift?: number; //      납치 부양 고도(m) — abducting 전용
@@ -71,6 +80,7 @@ interface BEntry {
   topY?: number;
   baseColors?: Float32Array; // 원본 정점색 스냅샷(피격 틴트 보간 기준)
   origPos?: Float32Array; // 붕괴 시작 시 정점 위치 스냅샷
+  // ── site 랜드마크(해변·교량 등)는 mesh/group 둘 다 없다 — 표적/체력만 갖는다 ──
   // ── 랜드마크(Group 변환) ──
   group?: THREE.Group;
   matColors?: { mat: THREE.MeshStandardMaterial; r: number; g: number; b: number }[];
@@ -138,6 +148,7 @@ function buildRubbleTemplate(): THREE.BufferGeometry {
 export class BuildingCombat {
   private byId = new Map<string, BEntry>(); // 살아있는(intact) 건물 — 표적/피해 조회
   private byMesh = new Map<THREE.Mesh, BEntry[]>(); // 청크 메시별(언로드 시 일괄 해제)
+  private byOwner = new Map<string, BEntry[]>(); //  site 랜드마크의 청크별 소유(언로드 시 일괄 해제 — 메시가 없어 byMesh 를 못 쓴다)
   private grid = new Map<string, BEntry[]>(); // intact 건물 공간 격자(최근접 탐색)
   private active: BEntry[] = []; // 연출 진행 중(flash/collapsing)
   private abducting = new Map<string, BEntry>(); // 납치(부양) 진행 중 — 표적/피해 대상에서 제외
@@ -176,11 +187,18 @@ export class BuildingCombat {
   // ─────────────────────────── 등록 ───────────────────────────
 
   /**
-   * 일반 건물 등록 — 병합 메시(mesh)의 정점 범위(vStart/vCount)로 개별 갱신을 바인딩.
+   * 건물 등록 — 병합 메시(mesh)의 정점 범위(vStart/vCount)로 개별 갱신을 바인딩.
    * poly = 월드(=로컬 프레임) footprint [x0,z0,...]. 체력 = 바닥면적×높이×계수.
    * 이미 파괴 이력이 있으면 즉시 잔해 상태로 복원(스트리밍 재로드).
+   *
+   * lm 을 주면 **랜드마크로 승격**된다(빌드가 청크에 실어 보낸 얽힘 택소노미 — scripts/osm.mjs landmarkFrom).
+   * 승격된 건물은 렌더는 그대로(병합 메시) 두고 전투 의미만 바뀐다: 고유 체력(부피 체력과 기본값 중
+   * 큰 쪽 × 유형별 해제 저항 resistMul) · 랜드마크 집계 · `aggro:landmark` 직행 표적.
    */
-  registerBuilding(mesh: THREE.Mesh, vStart: number, vCount: number, poly: number[], baseY: number, topY: number): void {
+  registerBuilding(
+    mesh: THREE.Mesh, vStart: number, vCount: number, poly: number[], baseY: number, topY: number,
+    lm?: { cls: EntanglementClass; name?: string }
+  ): void {
     const n = poly.length / 2;
     if (n < 3) return;
     let cx = 0, cz = 0, area2 = 0, minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
@@ -195,13 +213,20 @@ export class BuildingCombat {
     cz /= n;
     const area = Math.abs(area2) / 2;
     const height = Math.max(1, topY - baseY);
-    const maxHp = Math.max(HP_MIN, area * height * HP_PER_M3);
-    const id = `b${Math.round(cx)}_${Math.round(cz)}`;
+    const volumeHp = Math.max(HP_MIN, area * height * HP_PER_M3);
+    // 랜드마크는 부피 체력과 기본값 중 큰 쪽에 유형별 해제 저항(resistMul)을 곱한다 —
+    // 작은 사당이 종잇장이 되지도, 거대 유적이 일반 건물과 같지도 않게.
+    const maxHp = lm
+      ? Math.max(volumeHp, LANDMARK_HP_DEFAULT) * ENTANGLEMENT_CLASSES[lm.cls].resistMul
+      : volumeHp;
+    // id 접두는 랜드마크 여부를 따른다 — 파괴 이력(destroyed)이 승격 전후로 섞이지 않게.
+    const id = `${lm ? "l" : "b"}${Math.round(cx)}_${Math.round(cz)}`;
     const e: BEntry = {
       id, hp: maxHp, maxHp, cx, cz, aimY: baseY + (topY - baseY) * 0.6,
       rx: Math.max(1.5, (maxX - minX) / 2), rz: Math.max(1.5, (maxZ - minZ) / 2),
       rubbleH: Math.min(9, 2.5 + height * 0.06),
-      isLandmark: false, state: "intact", anim: 0, mesh, vStart, vCount, baseY, topY,
+      isLandmark: !!lm, ...(lm ? { cls: lm.cls, ...(lm.name ? { name: lm.name } : {}) } : {}),
+      state: "intact", anim: 0, mesh, vStart, vCount, baseY, topY,
     };
     this.addToMesh(mesh, e);
     if (this.destroyed.has(id)) this.restoreRubbleBuilding(e);
@@ -212,17 +237,62 @@ export class BuildingCombat {
    * 랜드마크 등록 — 개별 Group 변환으로 처리. hp 미지정 시 기본 고유 체력.
    * topY = 대략 높이, halfX/halfZ = 대략 바닥 반폭(잔해 더미 크기).
    */
-  registerLandmark(group: THREE.Group, cx: number, cz: number, topY: number, halfX: number, halfZ: number, hp?: number): void {
-    const maxHp = hp ?? LANDMARK_HP_DEFAULT;
+  registerLandmark(group: THREE.Group, cx: number, cz: number, topY: number, halfX: number, halfZ: number, hp?: number, cls?: EntanglementClass): void {
+    const maxHp = hp ?? LANDMARK_HP_DEFAULT * (cls ? ENTANGLEMENT_CLASSES[cls].resistMul : 1);
     const id = `l${Math.round(cx)}_${Math.round(cz)}`;
     const e: BEntry = {
       id, hp: maxHp, maxHp, cx, cz, aimY: topY * 0.55,
       rx: Math.max(3, halfX), rz: Math.max(3, halfZ), rubbleH: Math.min(12, Math.max(3, topY * 0.25)),
-      isLandmark: true, state: "intact", anim: 0, group,
+      isLandmark: true, ...(cls ? { cls } : {}), state: "intact", anim: 0, group,
       baseScaleY: group.scale.y, baseGroupY: group.position.y,
     };
     if (this.destroyed.has(id)) this.restoreRubbleLandmark(e);
     else this.addIntact(e);
+  }
+
+  /**
+   * 비건물 랜드마크(site) 등록 — 해변·교량·공원·하천·곶처럼 **건물 footprint 가 없는** 랜드마크.
+   * 렌더 바인딩이 없어 형상 연출(틴트/붕괴)은 건너뛰고 표적·체력·집계만 갖는다.
+   *
+   * owner = 이 site 를 실어온 청크 키. 언로드 시 unregisterSites(owner) 로 일괄 해제한다
+   * (메시가 없어 byMesh 경로를 쓸 수 없다).
+   *
+   * r 은 하부 지형(해변/공원)의 대표 반경이라 킬로미터급이 될 수 있다 — 잔해 더미 크기로 그대로 쓰면
+   * 전장을 뒤덮으므로 SITE_RUBBLE_MAX 로 자른다. 표적 판정·기록에는 원래 반경을 쓴다.
+   */
+  registerSite(
+    owner: string, x: number, y: number, z: number, r: number,
+    cls: EntanglementClass, name?: string, hp?: number
+  ): void {
+    const maxHp = hp ?? LANDMARK_HP_DEFAULT * ENTANGLEMENT_CLASSES[cls].resistMul;
+    const id = `s${Math.round(x)}_${Math.round(z)}`;
+    const rubbleR = Math.min(SITE_RUBBLE_MAX, Math.max(3, r));
+    const e: BEntry = {
+      id, hp: maxHp, maxHp, cx: x, cz: z,
+      aimY: y + Math.min(40, Math.max(6, r * 0.15)), // 지표 위 — 넓은 site 일수록 높게(멀리서도 조준선이 잡히게)
+      rx: rubbleR, rz: rubbleR, rubbleH: Math.min(12, Math.max(3, rubbleR * 0.25)),
+      isLandmark: true, cls, ...(name ? { name } : {}),
+      state: "intact", anim: 0, baseY: y, topY: y,
+    };
+    const list = this.byOwner.get(owner);
+    if (list) list.push(e);
+    else this.byOwner.set(owner, [e]);
+    if (this.destroyed.has(id)) { e.state = "rubble"; this.placeRubble(e, 1); }
+    else this.addIntact(e);
+  }
+
+  /** 청크 언로드 — 그 청크가 실어온 site 랜드마크 등록 해제(파괴 이력·잔해는 유지). */
+  unregisterSites(owner: string): void {
+    const list = this.byOwner.get(owner);
+    if (!list) return;
+    for (const e of list) {
+      this.removeIntact(e);
+      const ai = this.active.indexOf(e);
+      if (ai >= 0) this.active.splice(ai, 1);
+      this.abducting.delete(e.id);
+      this.recentlyDestroyed = this.recentlyDestroyed.filter((r) => r.entry !== e);
+    }
+    this.byOwner.delete(owner);
   }
 
   private addToMesh(mesh: THREE.Mesh, e: BEntry): void {
@@ -287,14 +357,16 @@ export class BuildingCombat {
    * 최근접 랜드마크(intact) — 어그로 변조(`aggro: "landmark"`, 06-missions 훅 ④)용.
    * 랜드마크는 소수라 반경 제한 없이 전수 탐색(전장 반대편이라도 직행 표적이 된다).
    */
-  nearestLandmark(x: number, z: number): { id: string; x: number; y: number; z: number } | null {
+  nearestLandmark(x: number, z: number): { id: string; x: number; y: number; z: number; cls?: EntanglementClass; name?: string } | null {
     let best: BEntry | null = null, bestD = Infinity;
     for (const e of this.byId.values()) {
       if (!e.isLandmark || e.state !== "intact") continue;
       const d = (e.cx - x) ** 2 + (e.cz - z) ** 2;
       if (d < bestD) { bestD = d; best = e; }
     }
-    return best ? { id: best.id, x: best.cx, y: best.aimY, z: best.cz } : null;
+    return best
+      ? { id: best.id, x: best.cx, y: best.aimY, z: best.cz, ...(best.cls ? { cls: best.cls } : {}), ...(best.name ? { name: best.name } : {}) }
+      : null;
   }
 
   /** 표적 좌표를 out 에 채움 — 살아있는(intact) 건물이면 true. */
@@ -311,7 +383,7 @@ export class BuildingCombat {
   targetTop(id: string, out: THREE.Vector3): boolean {
     const e = this.byId.get(id);
     if (!e || e.state !== "intact") return false;
-    out.set(e.cx, (e.isLandmark ? e.aimY : e.topY ?? e.aimY) + 4, e.cz);
+    out.set(e.cx, (e.topY ?? e.aimY) + 4, e.cz); // 메시 건물은 옥상, Group 랜드마크(topY 없음)는 조준 높이
     return true;
   }
 
@@ -323,7 +395,7 @@ export class BuildingCombat {
     e.state = "abducting";
     e.lift = 0;
     e.liftDir = 1;
-    if (!e.isLandmark) this.snapshotPositions(e);
+    if (e.mesh) this.snapshotPositions(e); // 병합 메시 바인딩만 정점 스냅샷 필요(Group 은 변환으로 처리)
     this.abducting.set(id, e);
     return true;
   }
@@ -338,7 +410,7 @@ export class BuildingCombat {
   abductAnchor(id: string): { x: number; y: number; z: number } | null {
     const e = this.abducting.get(id);
     if (!e) return null;
-    return { x: e.cx, y: (e.isLandmark ? e.aimY : e.topY ?? e.aimY) + (e.lift ?? 0), z: e.cz };
+    return { x: e.cx, y: (e.topY ?? e.aimY) + (e.lift ?? 0), z: e.cz };
   }
 
   /**
@@ -370,11 +442,11 @@ export class BuildingCombat {
       if (e.liftDir === -1 && e.lift <= 0) { this.reanchor(e); continue; }
       if (e.lift >= ABDUCT_HEIGHT) { this.finishAbduct(e); continue; }
       const t01 = clamp01(e.lift / ABDUCT_HEIGHT);
-      if (e.isLandmark) {
-        if (e.group) e.group.position.y = (e.baseGroupY ?? 0) + e.lift;
+      if (e.group) {
+        e.group.position.y = (e.baseGroupY ?? 0) + e.lift;
         this.tintLandmark(e, 0.2 + t01 * 0.6, ABDUCT_TINT);
       } else {
-        this.liftBuilding(e, t01);
+        this.liftBuilding(e, t01); // 승격 랜드마크 포함 — 병합 메시는 정점 이동으로 부양
       }
     }
   }
@@ -393,8 +465,8 @@ export class BuildingCombat {
   /** 재안착 — 원위치·원색 복원 후 intact 재등록(표적/피해 대상 복귀). */
   private reanchor(e: BEntry): void {
     this.abducting.delete(e.id);
-    if (e.isLandmark) {
-      if (e.group) e.group.position.y = e.baseGroupY ?? 0;
+    if (e.group) {
+      e.group.position.y = e.baseGroupY ?? 0;
       this.tintLandmark(e, clamp01(1 - e.hp / e.maxHp) * 0.9);
     } else if (e.mesh && e.origPos) {
       const pos = e.mesh.geometry.getAttribute("position") as THREE.BufferAttribute;
@@ -417,13 +489,10 @@ export class BuildingCombat {
     this.abducting.delete(e.id);
     e.state = "rubble";
     this.destroyed.set(e.id, { cx: e.cx, cz: e.cz, isLandmark: e.isLandmark });
-    if (e.isLandmark) {
-      if (e.group) e.group.visible = false;
-      this.destroyedLandmarks++;
-    } else {
-      this.buryShell(e);
-      this.destroyedBuildings++;
-    }
+    if (e.group) e.group.visible = false;
+    else this.buryShell(e); // 병합 메시(승격 랜드마크 포함) — 셸 매장
+    if (e.isLandmark) this.destroyedLandmarks++;
+    else this.destroyedBuildings++;
     this.collision?.openBuildingAt(e.cx, e.cz);
     this.onDestroyed?.(e.isLandmark, e.cx, e.aimY, e.cz);
   }
@@ -441,7 +510,7 @@ export class BuildingCombat {
       return "destroyed";
     }
     const t = clamp01(1 - e.hp / e.maxHp) * 0.9;
-    if (e.isLandmark) this.tintLandmark(e, t);
+    if (e.group) this.tintLandmark(e, t);
     else this.tint(e, t);
     return "hit";
   }
@@ -470,22 +539,20 @@ export class BuildingCombat {
   private restoreIntact(e: BEntry): void {
     const ai = this.active.indexOf(e);
     if (ai >= 0) this.active.splice(ai, 1); // 진행 중이던 flash/collapsing 연출 중단
-    if (e.isLandmark) {
-      if (e.group) {
-        e.group.visible = true;
-        e.group.position.y = e.baseGroupY ?? e.group.position.y;
-        if (e.baseScaleY !== undefined) e.group.scale.y = e.baseScaleY;
-      }
+    if (e.group) {
+      e.group.visible = true;
+      e.group.position.y = e.baseGroupY ?? e.group.position.y;
+      if (e.baseScaleY !== undefined) e.group.scale.y = e.baseScaleY;
       this.tintLandmark(e, 0); // t=0 → 원색 복원
-      this.destroyedLandmarks = Math.max(0, this.destroyedLandmarks - 1);
     } else if (e.mesh && e.origPos) {
       const pos = e.mesh.geometry.getAttribute("position") as THREE.BufferAttribute;
       const o = e.origPos, v = e.vStart!, n = e.vCount!;
       for (let k = 0; k < n; k++) pos.setXYZ(v + k, o[k * 3], o[k * 3 + 1], o[k * 3 + 2]);
       pos.needsUpdate = true;
       this.tint(e, 0);
-      this.destroyedBuildings = Math.max(0, this.destroyedBuildings - 1);
     }
+    if (e.isLandmark) this.destroyedLandmarks = Math.max(0, this.destroyedLandmarks - 1);
+    else this.destroyedBuildings = Math.max(0, this.destroyedBuildings - 1);
     e.hp = e.maxHp;
     e.state = "intact";
     e.anim = 0;
@@ -501,13 +568,10 @@ export class BuildingCombat {
     e.state = "flash";
     e.anim = 0;
     this.active.push(e);
-    if (e.isLandmark) {
-      this.destroyedLandmarks++;
-      this.flashLandmark(e);
-    } else {
-      this.destroyedBuildings++;
-      this.tint(e, 1, FLASH_COLOR); // 즉시 번쩍
-    }
+    if (e.group) this.flashLandmark(e);
+    else this.tint(e, 1, FLASH_COLOR); // 즉시 번쩍(병합 메시 — 승격 랜드마크 포함)
+    if (e.isLandmark) this.destroyedLandmarks++;
+    else this.destroyedBuildings++;
     this.placeRubble(e, 0); // 잔해 더미 슬롯 확보(스케일 0 → 붕괴와 함께 자라남)
     this.collision?.openBuildingAt(e.cx, e.cz); // 잔해 위 통과 가능
     this.onDestroyed?.(e.isLandmark, e.cx, e.aimY, e.cz);
@@ -526,7 +590,7 @@ export class BuildingCombat {
       this.rubbleSlot.set(e.id, slot);
       this.rubble.count = this.rubbleCount;
     }
-    const baseY = e.isLandmark ? (e.baseGroupY ?? 0) : (e.baseY ?? 0);
+    const baseY = e.group ? (e.baseGroupY ?? 0) : (e.baseY ?? 0);
     const s = Math.max(1e-3, s01);
     _pos.set(e.cx, baseY, e.cz);
     _quat.setFromAxisAngle(_YAXIS, hash1(slot) * Math.PI * 2);
@@ -692,18 +756,18 @@ export class BuildingCombat {
         if (e.anim >= FLASH_DUR) {
           e.state = "collapsing";
           e.anim = 0;
-          if (!e.isLandmark) this.snapshotPositions(e);
+          if (e.mesh) this.snapshotPositions(e);
         }
         continue;
       }
       if (e.state === "collapsing") {
         const p = e.anim / COLLAPSE_DUR;
-        if (e.isLandmark) this.collapseLandmark(e, p);
-        else this.collapseBuilding(e, p);
+        if (e.group) this.collapseLandmark(e, p);
+        else this.collapseBuilding(e, p); // 승격 랜드마크도 병합 메시라 정점 붕괴
         this.placeRubble(e, smooth(p)); // 잔해 더미가 붕괴와 함께 쌓여 오름
         if (p >= 1) {
           e.state = "rubble";
-          if (e.isLandmark) { if (e.group) e.group.visible = false; }
+          if (e.group) e.group.visible = false;
           else this.buryShell(e); // 셸 매장 → 순수 검정 잔해 더미만 남김
           this.placeRubble(e, 1);
           this.active.splice(i, 1);

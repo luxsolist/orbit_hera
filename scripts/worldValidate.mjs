@@ -13,6 +13,9 @@ export const cellMLon = (cellLat) => M_LAT * Math.cos(((cellLat + 0.5) * Math.PI
 /** 위경도 → 셀-로컬 m(원점=셀 NW). src/world/chunkManifest.cellLocalOf 와 동일. */
 export const cellLocalOf = (lat, lon, cell, mLon = cellMLon(cell[0])) => ({ x: (lon - cell[1]) * mLon, z: (cell[0] + 1 - lat) * M_LAT });
 
+/** 얽힘 택소노미 6종 — src/world/entanglement.ts EntanglementClass · scripts/osm.mjs ENTANGLEMENT_CLS 와 동일 집합. */
+export const KNOWN_CLS = new Set(["deep-roots", "ritual", "archive", "resonance", "relay", "memorial"]);
+
 /** chunkMesh AREA_COLOR 와 짝 — 알려진 지표 면 종류. */
 export const KNOWN_AREA = new Set(["park", "garden", "grass", "pitch", "wood", "scrub", "sand", "rock", "pavement"]);
 
@@ -149,11 +152,28 @@ export function validateChunk(chunk, chunkSize, opts = {}) {
     else if (b.h > BUILDING_H_MAX) E("building-h-extreme", `건물 높이 ${b.h}m > ${BUILDING_H_MAX}m — 비현실적(OSM 태그 오류·가비지 의심)`); // 바늘 건물 게이트
     if (hasZeroLengthEdge(b.p)) W("building-dupvert", "건물 영길이 모서리(중복 정점)");
     if (isSelfIntersecting(b.p)) W("building-selfx", "건물 자기교차 footprint(압출 퇴화 위험)");
+    // 랜드마크 승격 표식 — 미지 택소노미는 런타임 ENTANGLEMENT_CLASSES 조회에서 터진다(등록 시점 크래시).
+    if (b.lm !== undefined) {
+      if (!KNOWN_CLS.has(b.lm)) E("landmark-cls", `미지 얽힘 유형 '${b.lm}' — entanglement.ts 6종 밖`);
+      if (b.n !== undefined && typeof b.n !== "string") W("landmark-name", "랜드마크 표시명이 문자열 아님");
+    } else if (b.n !== undefined) {
+      W("landmark-name-orphan", "lm 없는 건물에 표시명(n) — 승격 누락 의심");
+    }
   }
   for (const r of o.roads ?? []) { checkSeg(r, "road", true); if (!finite(r.w) || r.w <= 0) W("road-w", `도로 폭 ${r.w}`); } // 도로=청크 클립 → 경계 강제
   for (const w of o.water ?? []) { if (w.w != null) checkSeg(w, "water-line", false); else checkFill(w, "water"); } // 하천선은 centroid 배치(비강제)
   for (const a of o.areas ?? []) { checkFill(a, "area"); if (!KNOWN_AREA.has(a.k)) W("area-kind", `미지정 면 종류 '${a.k}'`); }
   for (const w of o.walls ?? []) { checkSeg(w, "wall", true); if (!finite(w.h) || w.h <= 0) W("wall-h", `담장 높이 ${w.h}`); } // 담장=청크 클립 → 경계 강제
+  // 비건물 랜드마크(site) — 점+반경이라 **중심이 자기 청크 안**에 있어야 한다(면처럼 클립되지 않으므로
+  // 배분 버그가 나면 조각이 아니라 통째로 엉뚱한 청크에 실린다 = 로드해도 안 나타나거나 두 번 세어진다).
+  for (const st of o.sites ?? []) {
+    if (!finite(st.x) || !finite(st.z) || !finite(st.y)) { E("site-coord", "site 좌표 비유한값"); continue; }
+    if (!KNOWN_CLS.has(st.lm)) E("site-cls", `미지 얽힘 유형 '${st.lm}' — entanglement.ts 6종 밖`);
+    if (!finite(st.r) || st.r <= 0) E("site-r", `site 반경 ${st.r}`);
+    else if (st.r > 1000) W("site-r-huge", `site 반경 ${st.r}m — 전장을 뒤덮는 크기(추정 로직 확인)`);
+    if (st.x < x0 || st.x > x1 || st.z < z0 || st.z > z1)
+      E("site-bounds", `site 중심(${st.x},${st.z})이 청크(${cx},${cz}) 밖 — 배분 버그`);
+  }
 
   // 정수 정밀도 가드 — 좌표·표고는 1m 정수로 굽는 용량 최적화. 비정수면 회귀(cm 부동소수 → 용량 폭증). 샘플 검사(전역 회귀는 즉시 검출).
   const nonInt = (v) => Number.isFinite(v) && Math.abs(v - Math.round(v)) > 1e-6;

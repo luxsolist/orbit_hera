@@ -8,6 +8,8 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { setUniformColor, elevationColor, GROUND_GREEN, SAND_TAN } from "./geo";
 import { buildingBaseColor } from "./precinct";
 import type { WorldChunk } from "./chunkManifest";
+import type { EntanglementClass } from "./entanglement";
+import type { SiteLandmark } from "./MapData";
 
 /** 청크 지형 격자(heightAt 바이리니어용) — 좌표·높이는 셀-로컬(샘플 시 origin 보정). */
 export interface ChunkTerrain {
@@ -29,9 +31,15 @@ export interface ChunkBuild {
    * 건물 footprint(로컬 폴리 [x0,z0,...]) + 옥상 높이(top) — CollisionWorld 재구축용.
    * + 병합 메시 내 정점 범위(vStart/vCount) + base(바닥 y) — BuildingCombat 개별 갱신 바인딩.
    */
-  buildings: { poly: number[]; top: number; vStart: number; vCount: number; baseY: number }[];
+  buildings: { poly: number[]; top: number; vStart: number; vCount: number; baseY: number; lm?: EntanglementClass; n?: string }[];
   /** 건물 병합 메시(정점 색·위치 부분 갱신 대상) — 건물 없으면 null. */
   buildingMesh: THREE.Mesh | null;
+  /**
+   * 비건물 랜드마크(해변·교량·공원 등) — 렌더 지오메트리가 없으므로 좌표를 로컬 프레임으로만 옮겨 넘긴다.
+   * BuildingCombat 이 표적/체력만 갖는 엔티티로 등록한다.
+   */
+  sites: { x: number; y: number; z: number; r: number; lm: EntanglementClass; n?: string }[];
+
   /** 담장/울타리 충돌 박스(로컬 AABB + 윗면 top) — CollisionWorld.addWallBox 용. */
   walls: { x0: number; x1: number; z0: number; z1: number; top: number }[];
   /** 도로 세그먼트(로컬) — 미니맵용. */
@@ -296,7 +304,8 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     geo.deleteAttribute("uv");
     const vCount = geo.getAttribute("position").count;
     bGeos.push(geo);
-    buildings.push({ poly: local, top, vStart: bVtx, vCount, baseY });
+    // lm/n = 랜드마크 승격 표식(빌드가 부착) — 등록 시 일반 건물과 갈라지는 유일한 신호. 렌더는 동일(병합 메시).
+    buildings.push({ poly: local, top, vStart: bVtx, vCount, baseY, ...(b.lm ? { lm: b.lm, ...(b.n ? { n: b.n } : {}) } : {}) });
     bVtx += vCount;
   }
   const buildingMesh = addMerged(group, bGeos, cityMat, true);
@@ -362,7 +371,13 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     water.push(localize(wpoly.p, originX, originZ));
   }
 
-  return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, walls, roads, water };
+  // 비건물 랜드마크 — 셀-로컬 → 청크 로컬 프레임(originX/Z 상대)으로만 옮긴다.
+  const sites: ChunkBuild["sites"] = [];
+  for (const st of (chunk.objects as { sites?: SiteLandmark[] })?.sites ?? []) {
+    sites.push({ x: st.x - originX, y: st.y, z: st.z - originZ, r: st.r, lm: st.lm, ...(st.n ? { n: st.n } : {}) });
+  }
+
+  return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, walls, roads, water, sites };
 }
 
 /**

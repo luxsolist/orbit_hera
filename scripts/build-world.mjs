@@ -65,7 +65,8 @@ function binClipped(rp, push) {
 // 하이트맵(맵-로컬 좌표계) 바이리니어 샘플(− seaLevel). 없거나 범위 밖이면 0.
 let H = null, hm = null, gOrig = 0, gStep = 1;
 // heightmap 은 maps.config 가 권위(DEM 재생성이 OSM json 스냅샷과 분리되도록) — 없으면 json 스냅샷 사용.
-const cfgHm = MAP_DEFS.find((m) => m.id === id)?.heightmap;
+const mapDef = MAP_DEFS.find((m) => m.id === id); // 카탈로그 항목(name/subtitle/stream)·heightmap 권위
+const cfgHm = mapDef?.heightmap;
 const heightmap = cfgHm ?? terrain.heightmap;
 if (heightmap) {
   hm = heightmap;
@@ -98,7 +99,7 @@ const inExt = (cx, cz) => cx >= cxMin && cx <= cxMax && cz >= czMin && cz <= czM
 
 // ── 청크 누적 ──
 const chunks = new Map();
-const chunk = (cx, cz) => { const k = `${cx}_${cz}`; let c = chunks.get(k); if (!c) { c = { cx, cz, buildings: [], roads: [], water: [], walls: [], areas: [] }; chunks.set(k, c); } return c; };
+const chunk = (cx, cz) => { const k = `${cx}_${cz}`; let c = chunks.get(k); if (!c) { c = { cx, cz, buildings: [], roads: [], water: [], walls: [], areas: [], sites: [] }; chunks.set(k, c); } return c; };
 
 const seenBld = new Set(); // 정수 반올림 후 동일 footprint 가 된 건물 중복 제거(z-fighting·용량↓). 검증기 findDuplicateBuildings 키와 동치.
 for (const b of objects.buildings ?? []) {
@@ -109,7 +110,9 @@ for (const b of objects.buildings ?? []) {
   const sig = `${Math.round(bcx * 10)}_${Math.round(bcz * 10)}_${Math.round(polyArea(rp))}_${rp.length / 2}`;
   if (seenBld.has(sig)) continue;
   seenBld.add(sig);
-  chunk(cx, cz).buildings.push({ p: rp, ...(b.h != null ? { h: b.h } : {}) });
+  // lm(얽힘 택소노미)·n(표시명)은 랜드마크로 승격된 건물만 보유 — 런타임 StreamingWorld 가
+  // 이 필드를 보고 registerBuilding 대신 랜드마크로 등록한다(일반 건물엔 없어서 용량 영향 없음).
+  chunk(cx, cz).buildings.push({ p: rp, ...(b.h != null ? { h: b.h } : {}), ...(b.lm ? { lm: b.lm } : {}), ...(b.lm && b.n ? { n: b.n } : {}) });
 }
 // 도로: 폴리라인을 청크 경계로 클립해 **연속 조각**으로 저장(2점 분할 폐기) → 연속 리본·중앙선, 끊김 방지.
 for (const r of objects.roads ?? []) binPolyline(reproj(r.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).roads.push({ p: piece, ...(r.w != null ? { w: r.w } : {}) }); });
@@ -143,6 +146,21 @@ if (H && objects.buildings?.length) {
   console.error(`  건물 footprint 평탄화 → ${flatPath}`);
 }
 
+// 비건물 랜드마크(site — 해변·교량·공원 등): 폴리곤이 아니라 점+반경이라 **중심이 드는 청크 하나**에만 넣는다.
+// 면처럼 청크마다 조각내면 해운대 하나가 랜드마크 여러 개로 세어져 미션 집계가 무너진다.
+// 지표 높이(y)는 여기서 DEM 을 샘플해 구워둔다 — 런타임 청크에는 이 좌표 주변 지형만 있고 전역 DEM 은 없다.
+const siteOut = [];
+for (const st of objects.sites ?? []) {
+  const [cxm, czm] = mapToCell(st.x, st.z);
+  const x = Math.round(cxm), z = Math.round(czm);
+  const cx = ci(x), cz = ci(z);
+  if (!inExt(cx, cz)) continue; // 맵(DEM) 범위 밖 — 폐기
+  const y = Math.round(sampleMap(st.x, st.z));
+  const entry = { x, z, y, r: st.r, lm: st.lm, ...(st.n ? { n: st.n } : {}) };
+  chunk(cx, cz).sites.push(entry);
+  siteOut.push({ ...entry, cx, cz });
+}
+
 // ── 지형: 하이트맵 커버(맵 ±meters/2) 범위의 청크에 표고 채움 ──
 if (H) {
   const step = C / (TSZ - 1);
@@ -163,7 +181,7 @@ if (H) {
 const entries = [];
 const madeBlocks = new Set();
 for (const c of chunks.values()) {
-  const hasObj = c.buildings.length || c.roads.length || c.water.length || c.walls.length || c.areas.length;
+  const hasObj = c.buildings.length || c.roads.length || c.water.length || c.walls.length || c.areas.length || c.sites.length;
   if (!hasObj && !c.terrain) continue;
   const bdir = `${cellDir}/${Math.floor(c.cx / BLOCK)}_${Math.floor(c.cz / BLOCK)}`;
   if (!madeBlocks.has(bdir)) { mkdirSync(bdir, { recursive: true }); madeBlocks.add(bdir); }
@@ -174,6 +192,7 @@ for (const c of chunks.values()) {
       buildings: c.buildings, roads: c.roads, water: c.water,
       ...(c.walls.length ? { walls: c.walls } : {}),
       ...(c.areas.length ? { areas: c.areas } : {}),
+      ...(c.sites.length ? { sites: c.sites } : {}),
     },
     underground: null,
   }));
@@ -196,6 +215,38 @@ for (const lm of objects.landmarks ?? []) {
   lmIdx[name] = { mapId: id, lat: la, lon: lo, cell: [cellLat, cellLon], cx: ci(x), cz: ci(z) };
 }
 writeFileSync(lmPath, JSON.stringify(lmIdx, null, 1));
+
+// ── 스트리밍 전장 카탈로그 항목(public/maps/index.json) 업서트 ──
+// 이전에는 `<id>-stream` 항목을 손으로 index.json 에 적어야 했다(100개 도시 배치의 병목 + 누락 위험).
+// 이제 청크를 구운 빌드가 자기 카탈로그 항목을 직접 갱신한다 — 건물/랜드마크 수는 방금 구운 실제 값.
+const st = mapDef?.stream ?? {};
+const streamId = st.id ?? `${id}-stream`;
+const catPath = `${MAPS}/index.json`;
+let cat = [];
+if (existsSync(catPath)) { try { cat = JSON.parse(readFileSync(catPath, "utf8")); } catch {} }
+if (!Array.isArray(cat)) cat = [];
+const totalBuildings = entries.reduce((n, e) => n + (e.buildings ?? 0), 0);
+const promotedBuildings = [...chunks.values()].reduce((n, c) => n + c.buildings.filter((b) => b.lm).length, 0);
+const siteLandmarks = [...chunks.values()].reduce((n, c) => n + c.sites.length, 0);
+const totalLandmarks = promotedBuildings + siteLandmarks;
+const entry = {
+  id: streamId,
+  name: st.name ?? mapDef?.name ?? id,
+  subtitle: st.subtitle ?? mapDef?.subtitle ?? "",
+  buildings: totalBuildings,
+  landmarks: totalLandmarks,
+  sites: siteLandmarks, //  그중 비건물(해변·교량·공원 등)
+  lat: lat0,
+  lon: lon0,
+  stream: true,
+  spawnYaw: st.spawnYaw ?? mapDef?.spawn?.yaw ?? 0,
+};
+const at = cat.findIndex((e) => e?.id === streamId);
+if (at >= 0) cat[at] = { ...cat[at], ...entry }; // 손으로 넣은 부가 필드는 보존
+else cat.push(entry);
+writeFileSync(catPath, JSON.stringify(cat, null, 1));
+console.error(`  + ${catPath}: ${streamId} (건물 ${totalBuildings}, 랜드마크 ${totalLandmarks} = 승격건물 ${promotedBuildings} + site ${siteLandmarks})`);
+if (totalLandmarks === 0) console.error(`  ⚠ 랜드마크 0 — guard/aggro:landmark 미션이 무의미해진다(태그 부실 또는 큐레이션 미매칭 확인)`);
 
 console.error(`wrote ${cellDir}/: ${entries.length} chunks (${entries.filter((e) => e.objects).length} w/objects, ${entries.filter((e) => e.terrain).length} w/terrain), chunkSize=${C}m`);
 console.error(`  + tiles.json, landmarks.json (${Object.keys(lmIdx).length} total)`);

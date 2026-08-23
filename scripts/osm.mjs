@@ -485,3 +485,173 @@ export function smoothPolyline(p, iterations = 2, simplifyTol = 0.2) {
   for (const pt of pts) flat.push(Math.round(pt[0] * 100) / 100, Math.round(pt[1] * 100) / 100);
   return flat;
 }
+
+// ─────────────────────────── 랜드마크 승격(얽힘 택소노미) ───────────────────────────
+// OSM 건물 → 랜드마크 후보 판정. 런타임 정본은 src/world/entanglement.ts 의 classifyOsmTags 이고,
+// 여기는 빌드(.mjs)에서 쓰는 **동일 규칙 미러**다(chunkManifest.cellLocalOf ↔ build-world.toCell 과 같은 관계).
+// 두 구현이 갈라지면 도시마다 다른 택소노미가 구워지므로 tests/landmarkPromote.test.ts 가 표 전수로 동치를 고정한다.
+
+/** 얽힘 유형 6종 — src/world/entanglement.ts EntanglementClass 와 동일 집합. */
+export const ENTANGLEMENT_CLS = ["deep-roots", "ritual", "archive", "resonance", "relay", "memorial"];
+
+/**
+ * OSM 태그 → 얽힘 유형(없으면 null). **src/world/entanglement.ts classifyOsmTags 의 미러 — 함께 고쳐야 한다.**
+ * 우선순위: 추모(가장 구체) → 의례 → 응축고 → 결맞음 → 이음 → 오래 선 자리(가장 포괄).
+ */
+export function classifyOsmTags(tags = {}) {
+  const t = tags;
+  if (t.historic === "memorial" || t.historic === "monument") return "memorial";
+  if (t.landuse === "cemetery" || t.amenity === "grave_yard") return "memorial";
+  if (t.amenity === "place_of_worship" || t.building === "temple" || t.building === "church" || t.building === "mosque")
+    return "ritual";
+  if (t.tourism === "museum" || t.amenity === "library" || t.amenity === "archive") return "archive";
+  if (t.place === "square" || t.leisure === "stadium" || t.building === "stadium" || t.amenity === "theatre")
+    return "resonance";
+  if (t.man_made === "tower" || t.man_made === "communications_tower" || t.man_made === "lighthouse") return "relay";
+  if (t.railway === "station" || t.aeroway === "terminal" || t.amenity === "ferry_terminal") return "relay";
+  if (t.historic !== undefined || t.heritage !== undefined || t.building === "castle" || t.building === "palace")
+    return "deep-roots";
+  return null;
+}
+
+// 승격 문턱 — 랜드마크는 "소수"여야 미션 문법이 성립한다(BuildingCombat.nearestLandmark 는 전장 전체 직행 표적).
+// 태그만으로 승격하면 로마·교토처럼 historic 이 흔한 도시에서 수천 채가 랜드마크가 되어 어그로 변조가 무의미해진다.
+//
+// **유형별로 문턱이 다르다** — 유형마다 도시 내 흔한 정도가 다르기 때문이다(실측: 로마 반경 20km 에서
+// 단일 문턱 200㎡ 로는 ritual 이 699/960 = 72.8% 를 차지했다. 로마엔 동네 본당 교회가 그만큼 많다).
+// 흔한 유형(ritual)은 문턱을 높여 대형 성당만 남기고, 드문 유형(memorial·relay — 위령비·등대·통신탑)은
+// 낮춰 작아도 살린다. 큐레이션 카탈로그로 강제 승격되는 항목은 이 문턱을 **우회**한다
+// (실측 근거: 콘스탄티누스 개선문 97㎡·포로 로마노 128㎡ 등 정본 랜드마크 상당수가 200㎡ 미만).
+export const LANDMARK_MIN_AREA = {
+  ritual: 800, //     종교시설 — 도시마다 수백 개. 교회 면적 중앙값(로마 803㎡)에서 자르면 대형 성당만 남는다
+  "deep-roots": 200, // 사적·유산 — 포괄 폴백이라 이름 조건이 이미 상당수를 거른다
+  archive: 200, //    박물관·도서관
+  resonance: 200, //  광장·경기장·공연장
+  relay: 100, //      탑·등대·역 — 바닥면적이 작아도 얽힘 노드로 성립(등대·통신탑)
+  memorial: 100, //   위령비·기념비 — 태생적으로 작다
+};
+export const LANDMARK_MIN_AREA_DEFAULT = 200; // 미지 유형 폴백(방어적 — 유형이 늘어나도 승격이 폭주하지 않게)
+
+/** 유형별 최소 바닥면적(㎡). 순수. */
+export const landmarkMinArea = (cls) => LANDMARK_MIN_AREA[cls] ?? LANDMARK_MIN_AREA_DEFAULT;
+
+const NAME_KEYS = ["name:en", "name", "int_name", "official_name"];
+
+/** OSM 태그의 표시명(영문 우선 — 전 세계 도시 공통 표기). 없으면 null. */
+export function osmName(tags = {}) {
+  for (const k of NAME_KEYS) { const v = tags[k]; if (typeof v === "string" && v.trim()) return v.trim(); }
+  return null;
+}
+
+/**
+ * 건물 하나의 랜드마크 승격 판정 — { cls, n } 또는 null.
+ * 조건 셋을 **모두** 만족해야 승격: ① 택소노미 분류됨 ② 이름 있음(무명 유적은 일반 건물)
+ * ③ 바닥면적 ≥ 유형별 문턱(landmarkMinArea). 큐레이션 카탈로그로 강제 승격되는 항목은 이 판정을
+ * 우회한다(build-maps 의 applyCuratedLandmarks) — 정본 랜드마크는 작아도 랜드마크다.
+ * minArea 를 주면 유형별 문턱 대신 그 값을 쓴다(테스트·실험용).
+ */
+export function landmarkFrom(tags = {}, area = 0, minArea = null) {
+  const cls = classifyOsmTags(tags);
+  if (!cls) return null;
+  const n = osmName(tags);
+  if (!n) return null;
+  if (area < (minArea ?? landmarkMinArea(cls))) return null;
+  return { cls, n };
+}
+
+/** 점(x,z)이 폴리곤 p([x,z,...]) 내부인지 — ray casting. dem.pointInPoly 와 동일 규칙. 순수. */
+export function inPoly(x, z, p) {
+  let inside = false;
+  const n = p.length / 2;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const xi = p[i * 2], zi = p[i * 2 + 1], xj = p[j * 2], zj = p[j * 2 + 1];
+    if (((zi > z) !== (zj > z)) && (x < ((xj - xi) * (z - zi)) / (zj - zi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+
+/** 큐레이션 좌표 → 건물 스냅 반경(m). 최근접 폴백은 짧게 — 길면 광장·공원이 옆 건물을 삼킨다. */
+export const CURATED_SNAP_M = 30;
+
+/**
+ * 큐레이션 좌표 → 해당 랜드마크의 건물 인덱스. 없으면 -1. 순수.
+ *
+ * **포함 우선, 근접은 폴백**: 먼저 그 점을 footprint 안에 품은 건물을 찾고(여럿이면 가장 작은 것 —
+ * 궁궐 경내 전체가 아니라 그 자리의 전각), 없을 때만 snapM(기본 30m) 안 최근접으로 떨어진다.
+ *
+ * 왜 이 순서인가: 단순 "반경 90m 최근접"으로 하면 **건물이 아닌 랜드마크**(광장·공원·유적지)가
+ * 근처 아무 건물에나 이름을 붙인다(실측 확인: "Seoul Plaza"·"Tapgol Park"가 옆 건물로 스냅됐다).
+ * 광장 중심은 어떤 footprint 안에도 없으므로 포함 판정에서 자연히 걸러지고, 짧은 폴백 반경이
+ * 남은 오매칭을 막는다 — 매칭 실패는 그 항목이 자동분류로 남는 것뿐이라 오매칭보다 훨씬 싸다.
+ *
+ * taken: 이미 배정된 인덱스 — 한 건물이 두 랜드마크 이름을 갖지 않게 건너뛴다.
+ */
+export function matchCuratedBuilding(buildings, x, z, snapM = CURATED_SNAP_M, taken = null) {
+  let best = -1, bestArea = Infinity;
+  for (let i = 0; i < buildings.length; i++) {
+    if (taken && taken.has(i)) continue;
+    const p = buildings[i].p;
+    if (p.length / 2 < 3 || !inPoly(x, z, p)) continue;
+    const a = ringArea(p);
+    if (a < bestArea) { bestArea = a; best = i; } // 가장 구체적인(작은) 건물 — 경내 전체보다 그 전각
+  }
+  if (best >= 0) return best;
+
+  let bestD = snapM * snapM;
+  for (let i = 0; i < buildings.length; i++) {
+    if (taken && taken.has(i)) continue;
+    const p = buildings[i].p, n = p.length / 2;
+    if (n < 3) continue;
+    let cx = 0, cz = 0;
+    for (let k = 0; k < n; k++) { cx += p[k * 2]; cz += p[k * 2 + 1]; }
+    const d = (cx / n - x) ** 2 + (cz / n - z) ** 2;
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return best;
+}
+
+
+// ─────────────────────────── 비건물(site) 랜드마크 ───────────────────────────
+// 해변·교량·공원·하천·곶 — 큐레이션 카탈로그의 상당수는 **건물이 아니다**(실측: 부산 21개 중 8개가
+// 해운대·광안대교·태종대 류). 건물 승격 경로로는 구조적으로 표현할 수 없어 `guard`/`aggro:landmark`
+// 미션에서 도시의 대표 표적이 통째로 빠진다. 그래서 지오메트리에 얹지 않는 **독립 랜드마크 엔티티**
+// (좌표 + 반경 + 택소노미)를 따로 둔다.
+//
+// 자동분류로 넓히지 않고 **큐레이션 항목만** site 로 만든다: 이름 있는 공원·다리는 도시마다 수백 개라
+// 자동 편입하면 랜드마크가 폭주한다. 사람이 검수한 정본만 쓰는 편이 안전하고, 카탈로그가 이미
+// 도시당 10~25개로 그 역할을 한다.
+
+export const SITE_R_DEFAULT = 80; //  하부 지오메트리를 못 찾았을 때 반경(m) — 교량·소규모 유적 상정
+export const SITE_R_MAX = 600; //     반경 상한(m) — 태종대(1.2km) 같은 광역 지형이 전장을 뒤덮지 않게
+export const SITE_R_MIN = 25; //      반경 하한(m)
+
+/** 폴리곤 [x,z,...] 의 바운딩박스 반대각선 절반 ≈ 대표 반경(m). 순수. */
+export function polyExtentRadius(p) {
+  let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+  for (let i = 0; i < p.length; i += 2) {
+    if (p[i] < x0) x0 = p[i];
+    if (p[i] > x1) x1 = p[i];
+    if (p[i + 1] < z0) z0 = p[i + 1];
+    if (p[i + 1] > z1) z1 = p[i + 1];
+  }
+  if (!isFinite(x0)) return SITE_R_DEFAULT;
+  return Math.hypot(x1 - x0, z1 - z0) / 2;
+}
+
+/**
+ * site 반경 추정 — 큐레이션 좌표를 **품은** 면(공원·해변·숲·수역)의 크기에서 가져온다.
+ * 못 찾으면 기본값(교량·소규모 유적). [SITE_R_MIN, SITE_R_MAX] 로 클램프. 순수.
+ *
+ * 면이 여럿 겹치면 가장 작은 것을 쓴다 — "태종대 안의 전망대"처럼 구체적인 쪽이 표적으로 옳다.
+ */
+export function siteRadius(x, z, polys = []) {
+  let best = null;
+  for (const poly of polys) {
+    const p = poly?.p;
+    if (!p || p.length / 2 < 3 || !inPoly(x, z, p)) continue;
+    const r = polyExtentRadius(p);
+    if (best == null || r < best) best = r;
+  }
+  const r = best ?? SITE_R_DEFAULT;
+  return Math.round(Math.min(SITE_R_MAX, Math.max(SITE_R_MIN, r)));
+}

@@ -7,7 +7,7 @@
 //   maps/<latCell>/<lonCell>/<cx>_<cz>.json      # 1024m 청크: 지형(DEM)+오브젝트(OSM)+지하 결합
 //   (latCell/lonCell = floor(lat)/floor(lon), 1° 셀 ≈ 111km. 셀 원점 = NW 모서리 lat=cell+1, lon=cell)
 
-import type { Ring, AreaRing } from "./MapData";
+import type { Ring, AreaRing, SiteLandmark } from "./MapData";
 
 /** 위경도 정수도 셀 [floor(lat), floor(lon)]. */
 export type Cell = [number, number];
@@ -94,7 +94,7 @@ export interface WorldChunk {
   cx: number;
   cz: number;
   terrain: { size: number; seaLevel: number; heights: number[] }; // size×size row-major(평지=size 0)
-  objects: { buildings: Ring[]; roads: Ring[]; water: Ring[]; walls?: Ring[]; areas?: AreaRing[] };
+  objects: { buildings: Ring[]; roads: Ring[]; water: Ring[]; walls?: Ring[]; areas?: AreaRing[]; sites?: SiteLandmark[] };
   underground: unknown | null; // 추후 별도 생성해 병합
 }
 

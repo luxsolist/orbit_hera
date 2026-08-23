@@ -128,7 +128,18 @@ export class StreamingWorld implements GameWorld {
         }
         // 건물 전투 등록(병합 메시 정점 범위로 개별 갱신 바인딩)
         if (cb.buildingMesh) {
-          for (const b of cb.buildings) this.buildings.registerBuilding(cb.buildingMesh, b.vStart, b.vCount, b.poly, b.baseY, b.top);
+          // lm 보유 건물 = 빌드가 승격한 랜드마크(얽힘 택소노미) → 랜드마크로 등록.
+          // 이 배선이 없으면 스트리밍 도시에 랜드마크가 0개가 되어 guard/aggro:landmark 미션이 무의미해진다.
+          for (const b of cb.buildings) {
+            this.buildings.registerBuilding(
+              cb.buildingMesh, b.vStart, b.vCount, b.poly, b.baseY, b.top,
+              b.lm ? { cls: b.lm, ...(b.n ? { name: b.n } : {}) } : undefined
+            );
+          }
+        }
+        // 비건물 랜드마크(해변·교량·공원 등) — 렌더 지오메트리가 없어 청크 키로 소유를 걸고 등록한다.
+        for (const st of cb.sites) {
+          this.buildings.registerSite(key, st.x, st.y, st.z, st.r, st.lm, st.n);
         }
         return { cx: cb.cx, cz: cb.cz, group: cb.group, hasObjects, buildingMesh: cb.buildingMesh };
       },
@@ -136,6 +147,7 @@ export class StreamingWorld implements GameWorld {
         const handle = h as ChunkHandle;
         const key = chunkKey(handle.cx, handle.cz);
         if (handle.buildingMesh) this.buildings.unregisterMesh(handle.buildingMesh);
+        this.buildings.unregisterSites(key); // site 는 메시가 없어 별도 해제(없으면 no-op)
         if (handle.group) {
           this.group.remove(handle.group);
           disposeChunkGroup(handle.group);
