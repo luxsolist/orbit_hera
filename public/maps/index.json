@@ -92,5 +92,41 @@
   "lon": 31.2357257,
   "stream": true,
   "spawnYaw": 0
+ },
+ {
+  "id": "delhi-stream",
+  "name": "델리 · Delhi",
+  "subtitle": "인도 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 369174,
+  "landmarks": 193,
+  "sites": 7,
+  "lat": 28.6328027,
+  "lon": 77.2197713,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "varanasi-stream",
+  "name": "바라나시 · Varanasi",
+  "subtitle": "인도 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 3270,
+  "landmarks": 35,
+  "sites": 5,
+  "lat": 25.3356491,
+  "lon": 83.0076292,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "mumbai-stream",
+  "name": "뭄바이 · Mumbai",
+  "subtitle": "인도 — 도심 반경 20km 청크 스트리밍 (2장 같은 박자)",
+  "buildings": 144257,
+  "landmarks": 184,
+  "sites": 5,
+  "lat": 19.054999,
+  "lon": 72.8692035,
+  "stream": true,
+  "spawnYaw": 0
  }
 ]
