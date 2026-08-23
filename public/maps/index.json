@@ -3,11 +3,13 @@
   "id": "seoul-stream",
   "name": "서울 도심 · Seoul",
   "subtitle": "37/126 경복궁 일대 — 청크 스트리밍 타일 월드",
-  "buildings": 3805,
-  "lat": 37.5797,
+  "buildings": 273972,
+  "lat": 37.578,
   "lon": 126.977,
   "stream": true,
-  "spawnYaw": 0
+  "spawnYaw": 0,
+  "landmarks": 870,
+  "sites": 8
  },
  {
   "id": "everest-stream",
@@ -23,10 +25,24 @@
   "id": "busan-stream",
   "name": "부산 · Busan",
   "subtitle": "35/129 부산 도심 반경 20km — 해운대·광안리·태종대",
-  "buildings": 44544,
+  "buildings": 44500,
   "lat": 35.16,
   "lon": 129.07,
   "stream": true,
-  "spawnYaw": 0
+  "spawnYaw": 0,
+  "landmarks": 168,
+  "sites": 10
+ },
+ {
+  "id": "rome-stream",
+  "name": "로마 · Rome",
+  "subtitle": "이탈리아 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 260152,
+  "landmarks": 627,
+  "lat": 41.9028,
+  "lon": 12.4964,
+  "stream": true,
+  "spawnYaw": 0,
+  "sites": 6
  }
 ]
