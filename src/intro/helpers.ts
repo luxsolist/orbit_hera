@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { SceneCtx } from "./CinematicPlayer";
 import { DEFAULT_PLASMOID, colorAt, colorWeight, sampleTemp } from "../enemies/PlasmoidSpec";
-import { lerp } from "../core/math";
+import { lerp, rng } from "../core/math";
 
 // 인트로 공용 헬퍼 — 순수 수학(ease/rng/lump), 카메라/회전, 메시 팩토리, 군집(InstancedMesh) 유틸.
 // 씬별 로직은 scenes.ts 가 보유하고, 여기서 재사용 가능한 빌딩블록만 제공한다.
@@ -11,11 +11,8 @@ import { lerp } from "../core/math";
 /** ease-in-out quadratic — [0,1] 단조 증가, 양 끝 평탄. */
 export const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
 
-/** 결정적 난수(시드 고정 — 재생마다 동일 별/바위). 0..1 반환. */
-export function rng(seed: number) {
-  let s = seed >>> 0 || 1;
-  return () => ((s = (Math.imul(s, 1103515245) + 12345) & 0x7fffffff) / 0x7fffffff);
-}
+// rng() 는 core/math 로 이전(EnemyManager 시드 주입에 재사용) — 여기서는 재export 유지.
+export { rng };
 
 /** 코히런트(부드러운) 노이즈 ~[-1,1] — 인접 정점이 비슷한 값 → 누더기 스파이크 대신 완만한 굴곡. */
 export function lump(x: number, y: number, z: number): number {

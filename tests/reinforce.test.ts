@@ -5,6 +5,7 @@ import { pyramidHp, DEFAULT_PLASMOID } from "../src/enemies/PlasmoidSpec";
 // 위상 이탈(§2.1)은 확률 거동이라 투입/개체수 검증을 흔든다 — 본 스위트는 비활성 스펙 사용.
 const NO_PHASE = { ...DEFAULT_PLASMOID, phase: undefined };
 import { EnemyManager, formationPos } from "../src/enemies/EnemyManager";
+import { rng } from "../src/core/math";
 
 // 미션 점진 투입 — 피라미드 체력 배분(잡몹→중견→정예→보스 순 증원 큐) + 균열 증원(동시 상한).
 // "일괄 100기" 모델 폐기의 근거였던 도시 붕괴 속도·압력 곡선 문제를 시스템으로 고정한다.
@@ -349,6 +350,20 @@ describe("진형/행동(조합 정립) — formationPos·hold/patrol/escort", ()
     } as any;
     return new EnemyManager(scene, world, [player], NO_PHASE);
   };
+  // 시드 주입 버전 — 스폰 배치(진형 중심·지터)를 재현 가능하게 만든다. EnemyManager 생성자의
+  // rand 파라미터는 프로덕션에서 기본 Math.random(동작 불변), 테스트에서만 시드를 건다.
+  const makeManagerSeeded = (seed: number) => {
+    const scene = new THREE.Scene();
+    const world = {
+      heightAt: () => 0, bounds: 5000, topAt: () => -Infinity,
+      resolveCollision: (x: number, z: number) => ({ x, z }), segmentHitsBuilding: () => Infinity,
+    } as any;
+    const player = {
+      worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
+      spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
+    } as any;
+    return new EnemyManager(scene, world, [player], NO_PHASE, rng(seed));
+  };
   const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };
 
   it("hold — 인식 반경 안 플레이어를 무시하고 배치 지점을 지키다, 피격(provoked) 시 hunt 전환", () => {
@@ -380,7 +395,10 @@ describe("진형/행동(조합 정립) — formationPos·hold/patrol/escort", ()
   });
 
   it("escort — 앵커 개체를 추종하고, 앵커 유닛 전멸 시 hunt 폴백", () => {
-    const em = makeManager();
+    // 회귀: Math.random 스폰 배치가 간헐적으로(약 10%) 앵커에서 먼 지점을 뽑아 4초 내 수렴을
+    // 놓쳤다(실측). EnemyManager 를 시드 주입 가능하게 바꿔(rand 생성자 파라미터) 여기서 고정한다
+    // — 남는 변동을 감추는 게 아니라 "이 배치에서 수렴하는가"를 결정적으로 검증한다.
+    const em = makeManagerSeeded(7);
     em.startRoster([
       { role: "elite", count: 2, hp: 3000, behavior: "hold" },
       { role: "kiter", count: 2, hp: 500, behavior: "escort", anchor: 0 },

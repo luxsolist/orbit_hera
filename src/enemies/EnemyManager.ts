@@ -248,15 +248,18 @@ export class EnemyManager {
   private bossHealLink: BossDeployCfg["healLink"] | null = null; // 그룹 간 상호 회복
   private healFxCd = 0;
   private shieldGroups: { shielded: CoreEnemy[]; escorts: CoreEnemy[] }[] = []; // 호위 방패(훅 ⑤)
+  private readonly rand: () => number; // 스폰 배치·진형 지터 등 내부 난수 — 기본 Math.random, 테스트는 시드 주입
 
   constructor(
     scene: THREE.Scene, world: GameWorld, players: PlayerController[],
-    spec: PlasmoidSpec = DEFAULT_PLASMOID
+    spec: PlasmoidSpec = DEFAULT_PLASMOID,
+    rand: () => number = Math.random // 결정적 테스트용 훅 — 프로덕션 동작은 그대로(기본값이 곧 Math.random)
   ) {
     this.scene = scene;
     this.world = world;
     this.players = players;
     this.spec = spec;
+    this.rand = rand;
     this.kiterArche = spec.archetypes.kiter;
     this.drain = new DrainBeams(scene);
     // 낙인/파문 — 파문이 낙인 붙은 플레이어를 통과하면 피해(머시 무적은 takeDamage 가 거름, 낙인은 소모됨)
@@ -472,11 +475,11 @@ export class EnemyManager {
 
     if (cap <= 0) {
       // 레거시 일괄 — 전량 즉시(구 모델. 미션 데이터가 concurrentCap 0 일 때만)
-      const hps = distributeHp(totalHp, bossHp, count, Math.random); // [0] = 보스
+      const hps = distributeHp(totalHp, bossHp, count, this.rand); // [0] = 보스
       for (let i = 0; i < count; i++) this.spawnBurstOne({ hp: hps[i], boss: i === 0 && bossHp > 0 }, true);
     } else {
       this.concurrentCap = cap;
-      const hps = pyramidHp(totalHp, bossHp, count, Math.random); // 잡몹→중견→정예, 마지막 = 보스
+      const hps = pyramidHp(totalHp, bossHp, count, this.rand); // 잡몹→중견→정예, 마지막 = 보스
       this.reinforceQueue = hps.map((hp, i) => ({ hp, boss: bossHp > 0 && i === hps.length - 1 }));
       // 초기 투입 — 상한의 일부(잡몹 위주: 큐 앞쪽)를 전장에 넓게 배치해 즉시 교전 밀도 확보
       const initial = Math.min(this.reinforceQueue.length, Math.max(1, Math.ceil(cap * INITIAL_CAP_FRAC)));
@@ -556,12 +559,12 @@ export class EnemyManager {
       let cx: number, cz: number;
       const anchorC = u.behavior === "escort" ? unitCenters[u.anchor ?? 0] : undefined;
       if (anchorC) {
-        const a = Math.random() * Math.PI * 2;
+        const a = this.rand() * Math.PI * 2;
         cx = anchorC.x + Math.cos(a) * 80;
         cz = anchorC.z + Math.sin(a) * 80;
       } else {
-        const ang = Math.random() * Math.PI * 2;
-        const cr = this.burstLim * (0.35 + Math.random() * 0.3);
+        const ang = this.rand() * Math.PI * 2;
+        const cr = this.burstLim * (0.35 + this.rand() * 0.3);
         cx = this.burstCx + Math.cos(ang) * cr;
         cz = this.burstCz + Math.sin(ang) * cr;
       }
@@ -570,7 +573,7 @@ export class EnemyManager {
       const type: PlasmoidArchetype = u.role === "elite" ? "rusher" : u.role;
       const total = u.count * n;
       for (let i = 0; i < total; i++) {
-        const pos = formationPos(u.formation ?? "cluster", i, total, fieldC, unitCenters[ui], this.burstLim, Math.random);
+        const pos = formationPos(u.formation ?? "cluster", i, total, fieldC, unitCenters[ui], this.burstLim, this.rand);
         const e = this.spawnOne(type, pos.x, pos.z, BURST_ROLL_WAVE, u.hp);
         e.deployRole = u.role; // elite 등 미션 계약 직무 태깅(purge-role 집계 — 행동은 type 그대로)
         e.behavior = u.behavior ?? "hunt";
@@ -629,7 +632,7 @@ export class EnemyManager {
     this.burstCz = c.z;
     this.burstLim = Math.min(radius > 0 ? radius : 1500, this.world.bounds - 6);
     if (offsetRift) {
-      const ang = Math.random() * Math.PI * 2;
+      const ang = this.rand() * Math.PI * 2;
       const rd = this.burstLim * RIFT_OFFSET_FRAC;
       this.riftAnchor.x = c.x + Math.cos(ang) * rd;
       this.riftAnchor.z = c.z + Math.sin(ang) * rd;
@@ -648,17 +651,17 @@ export class EnemyManager {
     }
     // 매칭 완화 — 워커도 카이터(모기)를 일부 끌어오도록 플라이어 가중에 워커 교차분을 더한다.
     const type: PlasmoidArchetype =
-      Math.random() < MARKER_BURST_FRAC
+      this.rand() < MARKER_BURST_FRAC
         ? "marker"
-        : pickBurstType(this.burstWalkers, this.burstFlyers + this.burstWalkers * KITER_CROSS_FRAC, Math.random);
-    const ang = Math.random() * Math.PI * 2;
+        : pickBurstType(this.burstWalkers, this.burstFlyers + this.burstWalkers * KITER_CROSS_FRAC, this.rand);
+    const ang = this.rand() * Math.PI * 2;
     let x: number, z: number;
     if (wide) {
-      const rr = Math.sqrt(Math.random()) * this.burstLim; // 원판 균등 분포(√ 보정)
+      const rr = Math.sqrt(this.rand()) * this.burstLim; // 원판 균등 분포(√ 보정)
       x = this.burstCx + Math.cos(ang) * rr;
       z = this.burstCz + Math.sin(ang) * rr;
     } else {
-      const rr = REINFORCE_R_MIN + Math.random() * (REINFORCE_R_MAX - REINFORCE_R_MIN); // 균열 주변 링
+      const rr = REINFORCE_R_MIN + this.rand() * (REINFORCE_R_MAX - REINFORCE_R_MIN); // 균열 주변 링
       x = this.riftAnchor.x + Math.cos(ang) * rr;
       z = this.riftAnchor.z + Math.sin(ang) * rr;
     }
@@ -679,11 +682,11 @@ export class EnemyManager {
     const group: CoreEnemy[] = [];
     this.bossGroups.push(group);
     for (let i = 0; i < projections; i++) {
-      const ang = (i / projections) * Math.PI * 2 + Math.random() * 0.7;
-      const rr = REINFORCE_R_MIN + Math.random() * (REINFORCE_R_MAX - REINFORCE_R_MIN);
+      const ang = (i / projections) * Math.PI * 2 + this.rand() * 0.7;
+      const rr = REINFORCE_R_MIN + this.rand() * (REINFORCE_R_MAX - REINFORCE_R_MIN);
       const x = THREE.MathUtils.clamp(this.riftAnchor.x + Math.cos(ang) * rr, -lim, lim);
       const z = THREE.MathUtils.clamp(this.riftAnchor.z + Math.sin(ang) * rr, -lim, lim);
-      const y = this.world.heightAt(x, z) + 30 + Math.random() * 50;
+      const y = this.world.heightAt(x, z) + 30 + this.rand() * 50;
       const spd = this.spec.archetypes.rusher.speedMin * BOSS_SPEED_MULS[i % BOSS_SPEED_MULS.length];
       const e = new CoreEnemy(new THREE.Vector3(x, y, z), { maxHp: totalHp, diameter: ap.diameter, color: ap.color }, spd);
       e.role = "rusher"; // 저속 접촉 압박형(추격) — 낙인/드레인 없음
@@ -768,12 +771,12 @@ export class EnemyManager {
       z = THREE.MathUtils.clamp(pz, -lim, lim);
     } else {
       const c = this.playersCentroid(_centroid);
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 55 + Math.random() * 150;
+      const angle = this.rand() * Math.PI * 2;
+      const radius = 55 + this.rand() * 150;
       x = THREE.MathUtils.clamp(c.x + Math.cos(angle) * radius, -lim, lim);
       z = THREE.MathUtils.clamp(c.z + Math.sin(angle) * radius, -lim, lim);
     }
-    const alt = arche.spawnAltMin + Math.random() * (arche.spawnAltMax - arche.spawnAltMin);
+    const alt = arche.spawnAltMin + this.rand() * (arche.spawnAltMax - arche.spawnAltMin);
     const y = this.world.heightAt(x, z) + alt;
 
     // 외형/체력/색. hpOverride(예산 배분 일괄 스폰)면 그 HP로 색·크기 산출(HP↑=청백·대형);
@@ -785,7 +788,7 @@ export class EnemyManager {
       app = { maxHp: hpOverride, diameter: ap.diameter, color: ap.color };
       temp = ap.temp;
     } else {
-      const roll = rollAppearance(this.spec, rollWave, Math.random);
+      const roll = rollAppearance(this.spec, rollWave, this.rand);
       app = { maxHp: roll.maxHp, diameter: roll.diameter, color: roll.color };
       temp = roll.temp;
     }
@@ -797,7 +800,7 @@ export class EnemyManager {
       const k = a.kiter;
       enemy = new CoreEnemy(new THREE.Vector3(x, y, z), app);
       // 개체 고유 방위(구면 균등 무작위 단위벡터) — keepDist 구 위 이 방향을 향해 xy·z 고르게 분산(z 위/아래 무작위).
-      const cz = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.max(0, 1 - cz * cz));
+      const cz = this.rand() * 2 - 1, th = this.rand() * Math.PI * 2, rr = Math.sqrt(Math.max(0, 1 - cz * cz));
       enemy.setKiter({
         speed: spd,
         turnRate: THREE.MathUtils.degToRad(k.turnRateDeg),
@@ -812,7 +815,7 @@ export class EnemyManager {
       // 마커(소인체) — 중거리 유영(카이터 이동 재사용, 회피 옵션 없음) + 낙인탄(공격은 update 루프에서 분기).
       const mk = a.marker;
       enemy = new CoreEnemy(new THREE.Vector3(x, y, z), app);
-      const cz = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.max(0, 1 - cz * cz));
+      const cz = this.rand() * 2 - 1, th = this.rand() * Math.PI * 2, rr = Math.sqrt(Math.max(0, 1 - cz * cz));
       enemy.setKiter({
         speed: spd,
         turnRate: THREE.MathUtils.degToRad(mk.turnRateDeg),
@@ -824,7 +827,7 @@ export class EnemyManager {
       // 역행체(§6.6) — 후방 원거리 유영(카이터 이동 재사용) + 역행 시전(rewinderCast 가 구동).
       const rw = a.rewinder;
       enemy = new CoreEnemy(new THREE.Vector3(x, y, z), app);
-      const cz = Math.random() * 2 - 1, th = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.max(0, 1 - cz * cz));
+      const cz = this.rand() * 2 - 1, th = this.rand() * Math.PI * 2, rr = Math.sqrt(Math.max(0, 1 - cz * cz));
       enemy.setKiter({
         speed: spd,
         turnRate: THREE.MathUtils.degToRad(rw.turnRateDeg),
@@ -850,7 +853,7 @@ export class EnemyManager {
     const ph = this.spec.phase;
     if (ph) {
       const s = strength(this.spec, app.maxHp);
-      if (phaseRoll(ph, s, Math.random())) enemy.enablePhase(phaseTimings(ph, s), Math.random());
+      if (phaseRoll(ph, s, this.rand())) enemy.enablePhase(phaseTimings(ph, s), this.rand());
     }
     this.enemies.push(enemy);
     // 살아있는 동안은 셸 InstancedMesh 로 렌더 — 그룹(개별 메시)은 디졸브 시작 시에만 씬에 추가.
@@ -1169,7 +1172,7 @@ export class EnemyManager {
     if (this.pendingRusher + this.pendingKiter + this.pendingMarker <= 0) return;
     this.spawnTimer -= dt;
     if (this.spawnTimer > 0) return;
-    const type = pickSpawnType(this.pendingRusher, this.pendingKiter, this.pendingMarker, Math.random);
+    const type = pickSpawnType(this.pendingRusher, this.pendingKiter, this.pendingMarker, this.rand);
     if (!type) return;
     this.spawnOne(type);
     if (type === "rusher") this.pendingRusher -= 1;
@@ -1420,8 +1423,8 @@ export class EnemyManager {
         if (host && alive < BOSS_EMIT_ALIVE_CAP) {
           const hp = host.group.position;
           for (let i = 0; i < this.bossEmit.count; i++) {
-            const ang = Math.random() * Math.PI * 2;
-            const rr = BOSS_EMIT_R_MIN + Math.random() * (BOSS_EMIT_R_MAX - BOSS_EMIT_R_MIN);
+            const ang = this.rand() * Math.PI * 2;
+            const rr = BOSS_EMIT_R_MIN + this.rand() * (BOSS_EMIT_R_MAX - BOSS_EMIT_R_MIN);
             const e = this.spawnOne(this.bossEmit.role, hp.x + Math.cos(ang) * rr, hp.z + Math.sin(ang) * rr, BURST_ROLL_WAVE, this.bossEmit.hp);
             e.deployRole = this.bossEmit.role;
           }
