@@ -212,5 +212,41 @@
   "lon": -7.9891608,
   "stream": true,
   "spawnYaw": 0
+ },
+ {
+  "id": "beijing-stream",
+  "name": "베이징 · Beijing",
+  "subtitle": "중국 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 93638,
+  "landmarks": 375,
+  "sites": 6,
+  "lat": 39.9057136,
+  "lon": 116.3912972,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "luoyang-stream",
+  "name": "뤄양 · Luoyang",
+  "subtitle": "중국 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 22369,
+  "landmarks": 63,
+  "sites": 5,
+  "lat": 34.6196539,
+  "lon": 112.4477046,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "xian-stream",
+  "name": "시안 · Xi'an",
+  "subtitle": "중국 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 135334,
+  "landmarks": 118,
+  "sites": 1,
+  "lat": 34.261004,
+  "lon": 108.9423363,
+  "stream": true,
+  "spawnYaw": 0
  }
 ]
