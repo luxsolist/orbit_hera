@@ -110,7 +110,7 @@
   "name": "바라나시 · Varanasi",
   "subtitle": "인도 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
   "buildings": 3270,
-  "landmarks": 35,
+  "landmarks": 36,
   "sites": 5,
   "lat": 25.3356491,
   "lon": 83.0076292,
@@ -126,6 +126,30 @@
   "sites": 5,
   "lat": 19.054999,
   "lon": 72.8692035,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "osaka-stream",
+  "name": "오사카 · Osaka",
+  "subtitle": "일본 — 도심 반경 20km 청크 스트리밍 (서장)",
+  "buildings": 2160199,
+  "landmarks": 262,
+  "sites": 3,
+  "lat": 34.6937569,
+  "lon": 135.5014539,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "kyoto-stream",
+  "name": "교토 · Kyoto",
+  "subtitle": "일본 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 926075,
+  "landmarks": 252,
+  "sites": 4,
+  "lat": 35.0115754,
+  "lon": 135.7681441,
   "stream": true,
   "spawnYaw": 0
  }
