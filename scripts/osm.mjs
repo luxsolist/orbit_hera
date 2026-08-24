@@ -611,6 +611,175 @@ export function matchCuratedBuilding(buildings, x, z, snapM = CURATED_SNAP_M, ta
 }
 
 
+
+// ─────────────────────── 큐레이션 ↔ OSM **이름** 매칭 ───────────────────────
+// 큐레이션 랜드마크 1,749개 중 175개(10%·71개 도시)가 지오코딩 미해결이었다. Nominatim 을 질의
+// 방식만 바꿔 세 번 두드렸지만 남았고, 실측해 보니 원인은 질의가 아니라 **출처**였다 —
+// "Umayyad Mosque" 를 물으면 요르단 암만의 동명 모스크가 1순위로 온다(거리 검증이 걸러 미해결).
+//
+// 그런데 좌표가 필요한 진짜 이유는 결국 **그 OSM 피처를 찾기 위해서**다. 외부에서 좌표를 받아 와
+// 다시 OSM 건물을 역으로 찾는 건 한 바퀴 돌아가는 것이다. 추출 안에서 이름으로 바로 찾으면
+// 좌표라는 중간 단계 없이 목표 대상에 직행한다(실측: 교토·바라나시 미해결 6개 중 5개가 추출에 있었다).
+//
+// 부수 효과: 네트워크·레이트리밋 없음(위키데이터는 429 로 175개에 2시간+), 재현 가능, 그리고
+// **추출 자체가 도시 bbox** 라 "다른 도시의 동명 대상" 함정이 구조적으로 배제된다.
+
+/** 표기 흔들림 흡수 — 소문자·발음기호 제거·구두점 제거·공백 정규화. */
+export function normName(s) {
+  return String(s ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // é→e
+    .toLowerCase()
+    .replace(/[''`´’]/g, "")                            // Philosopher's → philosophers
+    .replace(/[-_.,/()\[\]]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// 유형을 가리키는 일반명사 — 양쪽에서 떼어 내고 **핵심어**만 비교한다.
+// 실측 근거: "Philosopher's Path"(큐레이션) ↔ "Philosopher's Walk"(OSM),
+//           "Togetsukyo Bridge" ↔ "Togetsukyo", "Gion District" ↔ "Gion".
+// 접미사가 다를 뿐 핵심어는 같다 — 여기를 안 떼면 전부 미매칭이다.
+const GENERIC = new Set([
+  "path", "walk", "way", "road", "street", "st", "avenue", "ave", "lane", "alley", "dori", "dōri",
+  "bridge", "district", "quarter", "area", "zone", "park", "garden", "gardens", "square", "plaza",
+  "temple", "shrine", "mosque", "masjid", "church", "cathedral", "basilica", "monastery", "mandir",
+  "museum", "palace", "castle", "fort", "fortress", "tower", "gate", "market", "bazaar", "souq", "suq",
+  "tomb", "mausoleum", "memorial", "monument", "statue", "ruins", "site", "the", "of",
+]);
+// ⚠ "house"·"hall" 은 **일부러 뺐다**. 일반명사로 취급하자 "Gion District"(기온 지구)가
+//   "The Gion House"(게스트하우스 건물)와 같은 핵심어 "gion" 이 되어 붙었다(실측 오매칭).
+//   이 둘은 고유명의 일부인 경우가 많다(Blue House·Opera House) — 떼면 식별력이 사라진다.
+
+/** 일반명사를 뺀 토큰들. */
+export function coreTokens(s) {
+  return normName(s).split(" ").filter((t) => t && !GENERIC.has(t));
+}
+
+/** 일반명사를 뺀 핵심어(공백 없이 이어붙임). 너무 짧으면(<4) null — 오매칭 방지. */
+export function coreName(s) {
+  const core = coreTokens(s).join("");
+  return core.length >= 4 ? core : null;
+}
+
+/**
+ * 토큰 포함 관계 — 한쪽 핵심 토큰이 다른 쪽에 **전부** 들어 있으면 같은 대상으로 본다.
+ * 근거: OSM `name:en` 이 "The Great Sphinx" 인데 큐레이션은 "Great Sphinx of Giza" 다(실측).
+ * 지명 수식어가 붙고 빠지는 차이라 완전일치·핵심어 연결로는 못 잡는다.
+ *
+ * 오매칭 방지: 작은 쪽이 **토큰 2개 이상**이거나, 1개면 6자 이상이어야 한다.
+ * ({great, sphinx} 는 통과 · {old} 나 {new} 는 통과 못 함)
+ */
+export function tokensSubsume(a, b) {
+  if (!a.length || !b.length) return false;
+  const [small, big] = a.length <= b.length ? [a, b] : [b, a];
+  if (small.length < 2 && small[0].length < 6) return false;
+  const set = new Set(big);
+  return small.every((t) => set.has(t));
+}
+
+// 3단계(토큰 포함)에서만 요구하는 **랜드마크 적격성**. 느슨한 규칙에는 대상 자격 제한이 필요하다 —
+// 실측 오매칭: "Dongnae Eupseong"(동래읍성지·사적)이 `name:en="Dongnae"` 인 **동래역**(지하철역)에
+// 붙었다. "Dongnae" 는 "Dongnae Eupseong" 의 부분집합이라 문자열만으로는 막을 수 없다.
+// 교통·상업 시설을 빼고 유적·종교·건물·공원 류만 남기면 그 함정이 구조적으로 닫힌다.
+const NOT_LANDMARK = ["railway", "public_transport", "shop", "office", "highway", "aeroway", "barrier", "power"];
+function landmarkish(tags) {
+  for (const k of NOT_LANDMARK) if (tags[k]) return false;
+  return !!(tags.building || tags.historic || tags.man_made || tags.memorial ||
+    tags.amenity === "place_of_worship" || tags.tourism === "attraction" || tags.tourism === "museum" ||
+    tags.leisure === "park" || tags.natural || tags.waterway || tags.place === "square");
+}
+
+/** 요소의 대표 좌표(로컬 x,z). way/relation 은 지오메트리 중심, node 는 자기 좌표. 없으면 null. */
+function elemCenter(el, proj) {
+  const g = el.geometry;
+  if (Array.isArray(g) && g.length) {
+    let la = 0, lo = 0;
+    for (const q of g) { la += q.lat; lo += q.lon; }
+    return proj(la / g.length, lo / g.length);
+  }
+  if (Array.isArray(el.members)) { // 멀티폴리곤 — 지오메트리 있는 멤버들의 평균
+    let la = 0, lo = 0, n = 0;
+    for (const m of el.members) for (const q of m.geometry ?? []) { la += q.lat; lo += q.lon; n++; }
+    if (n) return proj(la / n, lo / n);
+  }
+  if (typeof el.lat === "number" && typeof el.lon === "number") return proj(el.lat, el.lon);
+  return null;
+}
+
+/**
+ * 이름 색인 — { exact: Map<정규화명, 항목[]>, core: Map<핵심어, 항목[]> }.
+ * 항목 = { x, z, type, id, name, area }. `name:*` 전부(다국어)를 색인해 한글·현지어 표기도 잡는다.
+ */
+export function buildNameIndex(elements, proj) {
+  const exact = new Map(), core = new Map();
+  const add = (map, key, v) => { if (!key) return; const a = map.get(key); if (a) a.push(v); else map.set(key, [v]); };
+  for (const el of elements ?? []) {
+    const tags = el.tags;
+    if (!tags) continue;
+    const names = [];
+    for (const k in tags) {
+      if (k === "name" || k.startsWith("name:") || k === "int_name" || k === "official_name" || k === "alt_name") {
+        const v = tags[k];
+        if (typeof v === "string" && v.trim()) names.push(v.trim());
+      }
+    }
+    if (!names.length) continue;
+    const c = elemCenter(el, proj);
+    if (!c) continue;
+    const g = el.geometry;
+    const item = { x: c[0], z: c[1], type: el.type, id: el.id, name: names[0],
+                   area: Array.isArray(g) && g.length > 2 ? 1 : 0, lm: landmarkish(tags) };
+    const seen = new Set();
+    for (const nm of names) {
+      const n = normName(nm);
+      if (n && !seen.has("e" + n)) { seen.add("e" + n); add(exact, n, item); }
+      const k = coreName(nm);
+      if (k && !seen.has("c" + k)) { seen.add("c" + k); add(core, k, item); }
+    }
+  }
+  return { exact, core };
+}
+
+/**
+ * 좌표 없는 큐레이션 항목을 이름으로 해결 — { x, z, via, src } 또는 null.
+ *
+ * 순서가 신뢰도 순이다: ① 정규화 완전일치 → ② 핵심어 일치(일반명사 제거) → ③ 토큰 포함.
+ * 앞 단계가 맞으면 뒤로 내려가지 않는다 — 느슨한 규칙이 먼저 이기면 엉뚱한 대상을 집는다.
+ * 가장 느슨한 ③ 은 **랜드마크 적격 요소로만** 한정한다(위 landmarkish 주석의 동래역 사례).
+ * 후보가 여럿이면 **면을 가진 것(건물·폴리곤)** 을 먼저, 그 다음 색인 순서를 따른다.
+ */
+export function matchCuratedByName(index, lm) {
+  if (!index) return null;
+  const terms = [lm?.nameEn, lm?.name].filter(Boolean);
+  for (const [map, via] of [[index.exact, "name-exact"], [index.core, "name-core"]]) {
+    for (const t of terms) {
+      const key = via === "name-exact" ? normName(t) : coreName(t);
+      const hits = key ? map.get(key) : null;
+      if (!hits || !hits.length) continue;
+      const best = hits.reduce((a, b) => (b.area > a.area ? b : a));
+      return { x: best.x, z: best.z, via, src: { osmType: best.type, osmId: best.id, name: best.name } };
+    }
+  }
+  // ③ 토큰 포함 — 색인 키를 훑는다. 미해결 항목은 도시당 한 줌이라 선형 훑기로 충분하고,
+  //    별도 역색인을 두지 않아 대도시(오사카 300만 요소)에서 메모리가 늘지 않는다.
+  for (const t of terms) {
+    const toks = coreTokens(t);
+    if (!toks.length) continue;
+    let best = null, bestScore = -1;
+    for (const [key, items] of index.exact) {
+      const kt = key.split(" ").filter((w) => w && !GENERIC.has(w));
+      if (!tokensSubsume(toks, kt)) continue;
+      for (const it of items) {
+        if (!it.lm) continue; // 역·상점 등은 후보에서 제외 — 이 단계는 문자열이 느슨해 자격으로 막는다
+        const score = it.area * 2 + Math.min(kt.length, toks.length); // 면 우선, 그다음 겹친 토큰 수
+        if (score > bestScore) { bestScore = score; best = it; }
+      }
+    }
+    if (best) return { x: best.x, z: best.z, via: "name-subset", src: { osmType: best.type, osmId: best.id, name: best.name } };
+  }
+  return null;
+}
+
 // ─────────────────────────── 비건물(site) 랜드마크 ───────────────────────────
 // 해변·교량·공원·하천·곶 — 큐레이션 카탈로그의 상당수는 **건물이 아니다**(실측: 부산 21개 중 8개가
 // 해운대·광안대교·태종대 류). 건물 승격 경로로는 구조적으로 표현할 수 없어 `guard`/`aggro:landmark`

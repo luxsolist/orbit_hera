@@ -105,6 +105,42 @@ npm run build:map -- <id> [--no-terrain] [--zoom=13]
 | 자동분류 | [`osm.landmarkFrom`](../../scripts/osm.mjs) — ① 태그 분류 ② 이름 보유 ③ 면적 ≥ 200㎡ **동시 충족** | 3조건을 다 걸어야 "소수"가 유지된다(실측: 서울 도심 태그만 158채 → 3조건 91채) |
 | 큐레이션 | [`landmark-catalog.json`](../../scripts/data/landmark-catalog.json) 실측 좌표 → **포함 우선**(footprint 안 → 없으면 30m 최근접) | 사람이 검수한 정본. 광장·공원은 미매칭으로 남겨 자동분류에 맡긴다(오매칭 방지) |
 
+#### 좌표 없는 큐레이션 항목 — **추출 안에서 이름으로** 찾는다
+
+큐레이션 1,749개 중 **175개(10%·71개 도시)** 가 지오코딩 미해결이다. Nominatim 을 질의 방식만 바꿔
+세 번 두드렸지만(`geocode-landmarks.py` → `-retry` → `-retry2`) 남았고, 실측해 보니 원인은 질의가
+아니라 **출처**였다 — "Umayyad Mosque" 를 물으면 **요르단 암만의 동명 모스크**가 1순위로 온다
+(거리 검증이 올바르게 걸러 미해결로 남았다).
+
+그런데 좌표가 필요한 진짜 이유는 결국 **그 OSM 피처를 찾기 위해서**다. 외부에서 좌표를 받아 와 다시
+OSM 건물을 역으로 찾는 건 한 바퀴 돌아가는 것이다. 도시를 구울 때 우리는 이미 그 도시의 추출을
+갖고 있으므로, 추출 안에서 이름으로 바로 찾으면 중간 단계가 사라진다
+([`buildNameIndex`/`matchCuratedByName`](../../scripts/osm.mjs), build-maps 가 좌표 없는 항목에만 적용).
+
+부수 효과: 네트워크·레이트리밋 없음(Wikidata 는 429 로 175개에 2시간+), 재현 가능, 그리고
+**추출 자체가 도시 bbox** 라 "다른 도시의 동명 대상" 함정이 구조적으로 배제된다.
+
+매칭은 신뢰도 순 3단계, 앞이 맞으면 뒤로 내려가지 않는다(느슨한 규칙이 먼저 이기면 안 된다):
+
+| 단계 | 규칙 | 실측 사례 |
+|---|---|---|
+| ① `name-exact` | 정규화 완전일치(대소문자·발음기호·구두점 흡수) | `Sant'Agostino` ↔ `santagostino` |
+| ② `name-core` | 유형 일반명사 제거 후 핵심어 일치 | `Philosopher's Path` ↔ OSM `Philosopher's Walk` · `Bharat Mata` ↔ `Bharatmata` |
+| ③ `name-subset` | 토큰 포함(수식어 차이) — **랜드마크 적격 요소만** | `Great Sphinx of Giza` ↔ OSM `The Great Sphinx` |
+
+③ 이 가장 느슨해서 **오매칭 방어가 본체**다. 실제로 두 번 잡혔다:
+
+- `Dongnae Eupseong`(동래읍성지·사적)이 `name:en="Dongnae"` 인 **동래역**(지하철역)에 붙었다
+  → ③ 단계는 유적·종교·건물·공원 류(`landmarkish`)로만 한정. 역·상점·도로는 후보에서 뺀다.
+- `Gion District`(기온 지구)가 **The Gion House**(게스트하우스)에 붙었다
+  → `house`·`hall` 을 일반명사 목록에서 **뺐다**. 고유명의 일부인 경우가 많아(Blue House·Opera House)
+    떼면 식별력이 사라진다.
+
+실측 효과: 교토 18/22 → **22/22**, 바라나시 11/13 → **13/13**, 카이로 15/16 → **16/16**,
+부산 19/21 → 20/21. 남는 잔여는 외래어 표기가 OSM 과 다른 경우다(`Appian Way` vs OSM `Via Appia Antica`)
+— 문자열로는 닿지 않아 [`geocode-wikidata.py`](../../scripts/data/geocode-wikidata.py)(다국어 라벨 보유)가
+보조 수단이다. **좌표를 지어내지는 않는다** — 못 찾으면 미해결로 남긴다.
+
 분류 규칙은 런타임 정본 [`entanglement.classifyOsmTags`](../../src/world/entanglement.ts)와 빌드 미러
 [`osm.classifyOsmTags`](../../scripts/osm.mjs)에 이중으로 있고, 태그 표 전수 동치 테스트
 ([landmarkPromote](../../tests/landmarkPromote.test.ts))가 둘이 갈라지는 것을 막는다.

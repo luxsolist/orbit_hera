@@ -10,7 +10,7 @@ import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
 import { MAPS } from "./maps.config.mjs";
 import { RECIPES } from "./landmarks.mjs";
-import { projFns, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius } from "./osm.mjs";
+import { projFns, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius, buildNameIndex, matchCuratedByName } from "./osm.mjs";
 
 // 레시피가 있는 랜드마크는 부품 목록(structure)으로 베이킹, 나머지는 그대로(타입별 빌더).
 function bakeLandmarks(landmarks) {
@@ -251,7 +251,7 @@ function processOSM(osm, proj) {
  * 엉뚱한 유형으로 분류한다. 큐레이션 카탈로그는 사람이 검수한 정본이므로 자동분류를 덮어쓴다.
  * 좌표 없는 항목(geocodeStatus:"unresolved")·반경 밖 항목은 조용히 건너뛴다(날조 금지 방침 유지).
  */
-function applyCuratedLandmarks(core, cityKey, proj) {
+function applyCuratedLandmarks(core, cityKey, proj, nameIndex = null) {
   const buildings = core.buildings;
   if (!cityKey) return { matched: 0, sites: [], total: 0 };
   let cat;
@@ -265,11 +265,19 @@ function applyCuratedLandmarks(core, cityKey, proj) {
 
   const taken = new Set();
   const sites = [];
-  let matched = 0, geo = 0;
+  let matched = 0, geo = 0, byName = 0, unresolved = 0;
   for (const lm of list) {
-    if (typeof lm.lat !== "number" || typeof lm.lon !== "number") continue; // unresolved — 좌표 날조 안 함
-    geo++;
-    const [x, z] = proj(lm.lat, lm.lon);
+    let x, z;
+    if (typeof lm.lat === "number" && typeof lm.lon === "number") {
+      geo++;
+      [x, z] = proj(lm.lat, lm.lon);
+    } else {
+      // 지오코딩 미해결 — **이 도시의 추출 안에서 이름으로** 찾는다(좌표 날조는 여전히 안 한다).
+      // 외부 지오코더가 못 찾은 것들 상당수가 실은 추출에 이름째로 들어 있다(교토·바라나시 6개 중 5개).
+      const hit = matchCuratedByName(nameIndex, lm);
+      if (!hit) { unresolved++; continue; }
+      x = hit.x; z = hit.z; byName++;
+    }
     const i = matchCuratedBuilding(buildings, x, z, CURATED_SNAP_M, taken);
     if (i >= 0) {
       taken.add(i);
@@ -282,8 +290,11 @@ function applyCuratedLandmarks(core, cityKey, proj) {
     // 이게 없으면 "부산을 지킨다"가 해운대·광안대교를 포함하지 못한다(실측 확인).
     sites.push({ x, z, r: siteRadius(x, z, polys), lm: lm.cls, n: lm.nameEn || lm.name });
   }
-  console.error(`  큐레이션 랜드마크: 건물 ${matched} + site(비건물) ${sites.length} = ${matched + sites.length}/${geo} (좌표 보유분, 전체 ${list.length}개)`);
-  return { matched, sites, total: list.length };
+  const via = byName ? ` · 이름매칭 ${byName}` : "";
+  const left = unresolved ? ` · 미해결 ${unresolved}` : "";
+  console.error(`  큐레이션 랜드마크: 건물 ${matched} + site(비건물) ${sites.length} = ${matched + sites.length}/${list.length}` +
+                ` (좌표 ${geo}${via}${left})`);
+  return { matched, sites, total: list.length, byName, unresolved };
 }
 
 const catalog = [];
@@ -307,8 +318,11 @@ for (const m of MAPS) {
       precinct = src.precinct;
     }
   } else {
-    core = processOSM(await fetchOSM(m.id, m.bbox), proj);
-    core.sites = applyCuratedLandmarks(core, m.catalogCity, proj).sites; // 사람 검수 카탈로그: 건물은 승격, 비건물은 site
+    const osm = await fetchOSM(m.id, m.bbox);
+    core = processOSM(osm, proj);
+    // 이름 색인은 **가공 전 원본 요소**에서 만든다 — processOSM 은 태그를 버리고 형상만 남긴다.
+    const nameIndex = buildNameIndex(osm.elements, proj);
+    core.sites = applyCuratedLandmarks(core, m.catalogCity, proj, nameIndex).sites; // 사람 검수 카탈로그: 건물은 승격, 비건물은 site
   }
   precinct = m.precinct ?? precinct; // config 우선
 

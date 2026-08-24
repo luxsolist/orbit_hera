@@ -2,7 +2,7 @@
 // 대면적 수집의 정석: Overpass 타일 폭격 대신 추출 1개에서 bbox 만 잘라 한 번에 확보(서버 부하 없음, 완전·재현 가능).
 //
 // 실행: node --max-old-space-size=8192 scripts/import-extract.mjs <id> [pbf=/tmp/south-korea.osm.pbf] [osmconvert=/tmp/osmconvert]
-// 산출: /tmp/osm-<id>.json (build-maps 가 그대로 소비) → 이후 `node scripts/build-maps.mjs <id>` → build-world → validate.
+// 산출: /tmp/osm-<id>.ndjson (build-maps 가 스트리밍으로 소비) → 이후 `node scripts/build-maps.mjs <id>` → build-world → validate.
 import { execFileSync } from "node:child_process";
 import { createReadStream, createWriteStream, existsSync, statSync } from "node:fs";
 import { createInterface } from "node:readline";
@@ -31,27 +31,32 @@ if (!existsSync(out) || statSync(out).size < 1000 || process.env.REEXTRACT === "
 } else console.error(`기존 추출 재사용: ${out}`);
 console.error(`추출 XML: ${(statSync(out).size / 1048576).toFixed(0)} MB → 스트리밍 파싱`);
 
-const parser = createOsmParser();
-await new Promise((resolve, reject) => {
-  const rl = createInterface({ input: createReadStream(out), crlfDelay: Infinity });
-  rl.on("line", (l) => parser.line(l));
-  rl.on("close", resolve);
-  rl.on("error", reject);
-});
-const j = parser.result();
-// **NDJSON(요소 1개 = 1줄)** 로 기록한다. 단일 JSON 은 Node 의 문자열 한계(0x1fffffe8 ≈ 512MB)에
-// 걸린다 — 카이로 캐시가 545MB 로 넘어 JSON.stringify/readFileSync 양쪽에서 ERR_STRING_TOO_LONG
-// 이 났다(2026-08-23). 100 도시 중 도쿄·델리·멕시코시티 등 대도시가 같은 벽에 부딪힌다.
-// 줄 단위면 한 줄이 작아 한계와 무관하고, 읽는 쪽도 스트리밍으로 받을 수 있다.
+// ── 파싱 → NDJSON 기록을 **한 패스로** 흘려보낸다 ──
+// 요소를 배열에 모았다가 마지막에 쓰면 전량이 메모리에 남는다(오사카 3.0M 요소). 파서가 요소를
+// 완성하는 즉시 한 줄씩 기록하면 그 객체는 바로 쓰레기가 된다.
+//
+// **역압 처리 필수**: write() 가 false 를 돌려줄 때 계속 밀어 넣으면 커널이 아니라 Node 내부
+// 버퍼에 쌓여, 메모리를 줄이려던 게 도로 아미타불이 된다. 쓰기 버퍼가 차면 읽기를 멈춘다.
 const cache = `/tmp/osm-${id}.ndjson`;
+let nb = 0, nh = 0, count = 0;
+
 await new Promise((resolve, reject) => {
   const ws = createWriteStream(cache);
+  const rl = createInterface({ input: createReadStream(out), crlfDelay: Infinity });
+  let paused = false;
+  const parser = createOsmParser((el) => {
+    count++;
+    if (el.tags?.building) nb++;
+    if (el.tags?.highway) nh++;
+    if (!ws.write(JSON.stringify(el) + "\n") && !paused) { paused = true; rl.pause(); }
+  });
+  ws.on("drain", () => { if (paused) { paused = false; rl.resume(); } });
   ws.on("error", reject);
-  ws.on("finish", resolve);
-  for (const el of j.elements) if (!ws.write(JSON.stringify(el) + "\n")) { /* 백프레셔는 무시 — 로컬 디스크 */ }
-  ws.end();
+  rl.on("line", (l) => parser.line(l));
+  rl.on("error", reject);
+  rl.on("close", () => { ws.end(); });
+  ws.on("finish", () => { console.error(`  노드 ${parser.stats().nodes} · way ${parser.stats().ways}`); resolve(); });
 });
-const nb = j.elements.filter((x) => x.tags?.building).length;
-const nh = j.elements.filter((x) => x.tags?.highway).length;
-console.error(`elements ${j.elements.length} (건물 ${nb}, highway ${nh}) → ${cache}`);
+
+console.error(`elements ${count} (건물 ${nb}, highway ${nh}) → ${cache}`);
 console.error(`다음: node scripts/build-maps.mjs ${id} → build-world → validate-world`);
