@@ -12,6 +12,8 @@
 // lat0/lon0: 로컬 미터 좌표 원점(보통 명소 중심)
 // stream: 스트리밍 카탈로그(public/maps/index.json) 항목 — build-world 가 청크를 구우며 업서트한다.
 import { readFileSync } from "node:fs";
+// bbox 공식은 gen-city-config 가 정본 — 여기서 다시 쓰면 조용히 갈라진다(순환 없음: 그쪽은 이 파일을 안 읽는다).
+import { radiusBbox, RADIUS_M } from "./gen-city-config.mjs";
 
 const HAND = [
   {
@@ -112,7 +114,7 @@ const HAND = [
 // ─────────────────────────── 도시 100선 자동 생성 ───────────────────────────
 
 const CITY_CATALOG = "scripts/data/city-catalog.json";
-const DEM_METERS = 40000; // 반경 20km 전장 = 변 40km. city-catalog.radiusM 과 짝(어긋나면 지형이 맵보다 좁아짐).
+// DEM 변 = 반경×2 (cityMapDef 가 계산). 어긋나면 지형이 맵보다 좁아진다.
 
 /** 장 번호 → 카탈로그 부제에 쓰는 라벨. 0 = 서장(기완료 3도시). */
 const CHAPTER_LABEL = {
@@ -129,22 +131,37 @@ const CHAPTER_LABEL = {
  * 전 도시 공통 규격: 중심 반경 20km · 실측 DEM 2048² · bareEarth 끔(전역 형태학 열림은 산세를 깎는다 —
  * 건물 스파이크는 build-world 의 footprint 평탄화가 처리). catalogHidden = 메뉴에는 스트리밍 항목만 노출.
  */
+// 배치 오버라이드 — **더 이상 필요 없다.** 지형이 위치의 순수 함수가 되기 전에는 두 도시의 상자가
+// 겹치면 소유 경계에서 지형이 어긋나(실측 최대 30m) 나라를 반경 11.2km 로 줄여야 했다.
+// 지금은 겹쳐도 같은 값이 나오므로(실측 0m) 모든 도시가 규격 반경 20km 를 쓴다.
+// 남겨 두는 이유: 특정 도시의 중심·반경을 손으로 조정할 필요가 생길 때의 자리.
+export const PLACEMENT = {}; // 지형이 위치 순수 함수가 되어 배치 조정이 불필요해졌다(검증 중)
+
+
 export function cityMapDef(c) {
+  // 오버라이드는 **중심·반경만** 갈아끼운다(재귀 호출로 처리하면 오버라이드가 다시 걸려 무한 재귀 —
+  // 실제로 밟았다). 나머지 필드 구성은 한 곳에만 둔다.
+  const ov = PLACEMENT[c.id];
+  const lat = ov?.lat ?? c.lat;
+  const lon = ov?.lon ?? c.lon;
+  const r = ov?.radiusM ?? RADIUS_M;
+  const bbox = ov ? radiusBbox(lat, lon, r) : c.bbox;
+  const km = r / 1000;
   return {
     id: c.id,
     name: `${c.en} · ${c.cityKo}`,
-    subtitle: `${c.cityKo} 도심 반경 20km — ${c.country}`,
+    subtitle: `${c.cityKo} 도심 반경 ${km}km — ${c.country}`,
     catalogCity: c.cityKo, // 큐레이션 랜드마크 카탈로그(landmark-catalog.json) 조회 키
-    lat0: c.lat,
-    lon0: c.lon,
-    bbox: c.bbox,
+    lat0: lat,
+    lon0: lon,
+    bbox,
     catalogHidden: true,
     bareEarth: false,
-    heightmap: { src: `${c.id}.terrain.bin`, size: 2048, meters: DEM_METERS },
+    heightmap: { src: `${c.id}.terrain.bin`, size: 2048, meters: r * 2 },
     stream: {
       id: `${c.id}-stream`,
       name: `${c.cityKo} · ${c.en}`,
-      subtitle: `${c.country} — 도심 반경 20km 청크 스트리밍 (${CHAPTER_LABEL[c.chapter] ?? `${c.chapter}장`})`,
+      subtitle: `${c.country} — 도심 반경 ${km}km 청크 스트리밍 (${CHAPTER_LABEL[c.chapter] ?? `${c.chapter}장`})`,
     },
     chapter: c.chapter,
   };

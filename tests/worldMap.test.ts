@@ -124,3 +124,53 @@ describe("clusterDots / zoomMapBox — 엣지 케이스", () => {
     for (const it of items) { const p = projectInBox(it.lat, it.lon, box); expect(p.x).toBeGreaterThan(2); expect(p.x).toBeLessThan(98); }
   });
 });
+
+// ── 확대창 최소 간격 ──
+// 한 셀에 두 도시를 담게 된 뒤(오사카+나라 34/135) 간사이 3도시가 지도상 0.36° 안에 모였고,
+// 확대창에서 점 간격이 40px 남짓이 되어 **클릭이 서로 가로막혔다**(e2e 실측: 나라 점이 오사카를 인터셉트).
+// minSpan 하한만 있으면 가까울수록 더 뭉치는 역설이 생긴다 — 실제 간격이 좁으면 더 당겨야 한다.
+describe("zoomMapBox — 최근접 쌍이 화면에서 겹치지 않는다", () => {
+  const KANSAI = [
+    { lat: 34.6937, lon: 135.5015 }, // 오사카
+    { lat: 35.0116, lon: 135.7681 }, // 교토
+    { lat: 34.6845, lon: 135.86 },   //  나라
+  ];
+  const sepPct = (a: { lat: number; lon: number }, b: { lat: number; lon: number }, box: { x: number; y: number; w: number; h: number }) => {
+    const pa = projectInBox(a.lat, a.lon, box), pb = projectInBox(b.lat, b.lon, box);
+    return Math.hypot(pa.x - pb.x, pa.y - pb.y);
+  };
+
+  it("간사이 3도시가 확대창에서 13% 이상 떨어진다", () => {
+    const box = zoomMapBox(KANSAI, 300 / 220);
+    for (let i = 0; i < KANSAI.length; i++) for (let j = i + 1; j < KANSAI.length; j++) {
+      expect(sepPct(KANSAI[i], KANSAI[j], box)).toBeGreaterThan(13);
+    }
+  });
+
+  it("아주 가까운 두 도시도 벌어진다 — 가까울수록 더 당긴다", () => {
+    const near = [{ lat: 34.68, lon: 135.80 }, { lat: 34.69, lon: 135.81 }];
+    const box = zoomMapBox(near, 300 / 220);
+    expect(sepPct(near[0], near[1], box)).toBeGreaterThan(13);
+    expect(box.w).toBeLessThan(0.5); // 실제 범위(0.01°)에 맞춰 크게 당겨졌다
+  });
+
+  it("점이 하나면 최소 범위를 유지한다 — 무한 확대 방지", () => {
+    const box = zoomMapBox([{ lat: 34.68, lon: 135.80 }], 300 / 220);
+    expect(box.w).toBeGreaterThan(1);
+  });
+
+  it("멀리 떨어진 쌍은 종전대로 범위 기준 — 서울·부산", () => {
+    const box = zoomMapBox([{ lat: 37.5796, lon: 126.977 }, { lat: 35.1379, lon: 129.0756 }], 300 / 220);
+    expect(box.w).toBeGreaterThan(4); // 실제 범위(2.44°)+패딩이 지배
+    expect(sepPct({ lat: 37.5796, lon: 126.977 }, { lat: 35.1379, lon: 129.0756 }, box)).toBeGreaterThan(13);
+  });
+
+  it("모든 점이 확대 박스 안에 들어온다", () => {
+    const box = zoomMapBox(KANSAI, 300 / 220);
+    for (const c of KANSAI) {
+      const p = projectInBox(c.lat, c.lon, box);
+      expect(p.x).toBeGreaterThan(0); expect(p.x).toBeLessThan(100);
+      expect(p.y).toBeGreaterThan(0); expect(p.y).toBeLessThan(100);
+    }
+  });
+});

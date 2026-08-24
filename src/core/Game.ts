@@ -278,7 +278,7 @@ export class Game {
     if (entry?.stream) {
       if (entry.lat == null || entry.lon == null) return this.failToMenu("스트리밍 전장 좌표 누락 — " + id);
       try {
-        world = await StreamingWorld.create(this.scene, entry.lat, entry.lon, entry.spawnYaw ?? 0);
+        world = await StreamingWorld.create(this.scene, entry.lat, entry.lon, entry.spawnYaw ?? 0, entry.id);
       } catch (e) {
         return this.failToMenu("타일 월드 로드 실패 — " + (e as Error).message);
       }

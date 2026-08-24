@@ -353,3 +353,34 @@ describe("현 도시 카탈로그의 셀 충돌 목록(회귀 감시)", () => {
     expect(dup).toEqual(["22/114: hong-kong+shenzhen", "34/135: osaka+nara"]);
   });
 });
+
+// ── 셀 공유 병합 불변식 ──
+// 병합이 깨지면 같은 (cx,cz) 항목이 두 번 들어온다. 그러면 한 청크 파일에 주인이 둘이고
+// 나중에 쓴 쪽이 이겨 상대 도시는 지형만 남는다 — 파일 개수·크기는 정상이라 눈으로 안 잡힌다.
+describe("validateManifest — 청크 중복(셀 공유 병합)", () => {
+  const base = { cell: [34, 135], chunkSize: 1024, terrainSize: 33, block: 16, mLon: cellMLon(34) };
+
+  it("같은 (cx,cz) 가 두 번이면 error", () => {
+    const issues = validateManifest({ ...base, chunks: [
+      { cx: 5, cz: 5, objects: true, terrain: true, m: "osaka-stream" },
+      { cx: 5, cz: 5, objects: true, terrain: true, m: "nara-stream" },
+    ] });
+    expect(issues.some((i: { code: string }) => i.code === "chunk-dup")).toBe(true);
+  });
+
+  it("소유자가 달라도 좌표가 안 겹치면 정상 — 공유 자체는 막지 않는다", () => {
+    const issues = validateManifest({ ...base, chunks: [
+      { cx: 5, cz: 5, objects: true, terrain: true, m: "osaka-stream" },
+      { cx: 35, cz: 5, objects: true, terrain: true, m: "nara-stream" },
+    ] });
+    expect(issues.filter((i: { code: string }) => i.code === "chunk-dup")).toEqual([]);
+  });
+
+  it("소유 표기가 없는 구 매니페스트도 중복만 본다", () => {
+    const issues = validateManifest({ ...base, chunks: [
+      { cx: 1, cz: 1, objects: true, terrain: true },
+      { cx: 1, cz: 1, objects: true, terrain: true },
+    ] });
+    expect(issues.some((i: { code: string }) => i.code === "chunk-dup")).toBe(true);
+  });
+});

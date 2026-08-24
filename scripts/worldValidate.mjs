@@ -17,11 +17,13 @@ export const cellLocalOf = (lat, lon, cell, mLon = cellMLon(cell[0])) => ({ x: (
 export const KNOWN_CLS = new Set(["deep-roots", "ritual", "archive", "resonance", "relay", "memorial"]);
 
 /**
- * 이 셀을 이미 점유한 **다른** 맵을 찾는다(순수). 없으면 null.
+ * 같은 셀을 쓰는 **다른** 맵을 찾는다(순수). 없으면 null.
  *
- * 왜 필요한가: build-world 는 `rmSync(cellDir)` 로 셀 디렉터리를 통째로 지우고 다시 쓴다.
- * 두 도시의 중심이 같은 1° 셀에 들어가면 나중 빌드가 앞 도시를 **조용히 삭제**한다
- * (검증 게이트도 못 잡는다 — 파일이 아예 없어지므로). 100 도시 중 실제로 2 쌍이 겹친다:
+ * 한때는 이것이 빌드 **차단** 조건이었다 — build-world 가 `rmSync(cellDir)` 로 셀을 통째로 지워
+ * 나중 빌드가 앞 도시를 조용히 삭제했기 때문이다. 지금은 청크마다 소유자(`m`)를 적어 자기 것만
+ * 지우고 tiles.json 을 병합하므로 **공유가 정상 동작**이고, 차단은 청크 좌표가 실제로 겹칠 때만 한다.
+ *
+ * 그래서 이 함수는 이제 "동거 도시 조회"다(보고·진단용). 100 도시 중 2 쌍이 해당한다:
  * 오사카↔나라(34/135) · 홍콩↔선전(22/114).
  *
  * catalog = public/maps/index.json 항목들(빌드된 맵만 들어 있다). selfStreamId 는 자기 자신.
@@ -215,6 +217,16 @@ export function validateManifest(m) {
   if (Array.isArray(m.cell) && finite(m.mLon)) {
     const exp = cellMLon(m.cell[0]);
     if (Math.abs(m.mLon - exp) > 1) E("mLon", `mLon ${m.mLon} != cellMLon ${exp.toFixed(2)} (생성기↔런타임 격자 불일치)`);
+  }
+  // 같은 (cx,cz) 가 두 번 — **셀 공유 병합이 깨진 신호**. 한 청크 파일에 주인이 둘이면 나중에
+  // 쓴 쪽이 이기고 상대 도시는 조용히 지형만 남는다. 파일은 멀쩡해 보여 눈으로는 안 잡힌다.
+  {
+    const seen = new Map();
+    for (const e of m.chunks ?? []) {
+      const k = `${e.cx}_${e.cz}`;
+      if (seen.has(k)) { E("chunk-dup", `청크(${k}) 중복 — 소유 '${seen.get(k) ?? "?"}' ↔ '${e.m ?? "?"}'`); break; }
+      seen.set(k, e.m);
+    }
   }
   // 청크 인덱스 — 광역 맵은 셀 경계를 넘어 음수/대형 인덱스도 정상(인접 셀 영역). cellOOB(±250km)와 동일 스팬으로 검사.
   const lim = Math.ceil(250000 / (m.chunkSize || 1024));

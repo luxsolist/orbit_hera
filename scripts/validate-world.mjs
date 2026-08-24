@@ -6,7 +6,8 @@
 //   node scripts/validate-world.mjs <lat> <lon>   (셀 직접 지정)
 import { readFileSync, existsSync } from "node:fs";
 import { MAPS } from "./maps.config.mjs";
-import { validateChunk, validateManifest, validateEntryConsistency, validateSeams, validateSpawn, validateDemConsistency, findDuplicateBuildings, demSample, cellToMapLocal } from "./worldValidate.mjs";
+import { sampleLattice } from "./geodem.mjs";
+import { validateChunk, validateManifest, validateEntryConsistency, validateSeams, validateSpawn, validateDemConsistency, findDuplicateBuildings } from "./worldValidate.mjs";
 
 const a = process.argv.slice(2);
 let cellLat, cellLon;
@@ -34,26 +35,33 @@ const report = (loc, issues) => {
 
 report("tiles.json", validateManifest(manifest));
 
-// 소스 DEM(.bin) 로드 — 청크 표고를 소스와 교차검증(있으면). 이 셀을 덮는 heightmap 보유 맵을 찾는다.
-let demExpected = null;
+// ── 소스 DEM 교차검증 — **셀 정렬 작업 격자** 기준 ──
+// 지형이 위치의 순수 함수가 된 뒤(geodem.cellLattice) 도시마다 다른 격자를 볼 이유가 없어졌다.
+// 예전에는 셀에서 맵 하나를 골라 그 .bin 으로 전부 검사해 옆 도시 청크가 통째로 틀렸다
+// (실측: 나라 청크 529개가 오사카 DEM 과 최대 532m 불일치). 지금은 청크 소유자의 격자를 쓰되,
+// **어느 도시의 격자를 써도 같은 값**이므로 표기가 없어도 안전하다.
+const demCache = new Map(); // 스트림 id → 샘플러(또는 null)
+const demFor = (streamId) => {
+  const key = streamId ?? "";
+  if (demCache.has(key)) return demCache.get(key);
+  const m = streamId
+    ? MAPS.find((x) => (x.stream?.id ?? `${x.id}-stream`) === streamId)
+    : MAPS.find((x) => x.heightmap && Math.floor(x.lat0) === cellLat && Math.floor(x.lon0) === cellLon);
+  let fn = null;
+  if (m) {
+    const binPath = `build/${m.id}.lattice.bin`, metaPath = `build/${m.id}.lattice.json`;
+    if (existsSync(binPath) && existsSync(metaPath)) {
+      const meta = JSON.parse(readFileSync(metaPath, "utf8"));
+      const buf = readFileSync(binPath);
+      const grid = new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4));
+      const L = { grid, size: meta.size, orig: meta.orig, step: meta.step };
+      fn = (cellX, cellZ) => sampleLattice(L, cellX, cellZ) - (meta.seaLevel ?? 0);
+    } else console.error(`  ⚠ DEM 교차검증 생략(${m.id}) — ${binPath} 없음`);
+  }
+  demCache.set(key, fn);
+  return fn;
+};
 const srcMap = MAPS.find((m) => m.heightmap && Math.floor(m.lat0) === cellLat && Math.floor(m.lon0) === cellLon);
-if (srcMap) {
-  // DEM .bin = 빌드 중간물(build/). 건물 footprint 평탄화 결과(.flat.bin)가 있으면 그것을 기준으로(청크가 평탄 격자에서 샘플됨).
-  const base = `build/${srcMap.heightmap.src.split("/").pop()}`;
-  const flat = base.replace(/\.bin$/, ".flat.bin");
-  const binPath = existsSync(flat) ? flat : base;
-  if (existsSync(binPath)) {
-    const buf = readFileSync(binPath);
-    const bin = new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4));
-    const { size, meters } = srcMap.heightmap;
-    const ox = srcMap.heightmap.originX ?? -meters / 2, oz = srcMap.heightmap.originZ ?? -meters / 2;
-    const seaLevel = srcMap.seaLevel ?? 0;
-    demExpected = (cellX, cellZ) => {
-      const [mx, mz] = cellToMapLocal(cellX, cellZ, manifest.cell, srcMap.lat0, srcMap.lon0);
-      return demSample(bin, size, meters, ox, oz, seaLevel, mx, mz);
-    };
-  } else console.error(`  ⚠ DEM 교차검증 생략 — ${binPath} 없음`);
-}
 
 // 파일↔매니페스트 정합 + 청크별 불변식 + 플래그 일치 + DEM 정합. 청크는 이음새 검사용으로 수집.
 const naturalTerrain = srcMap?.bareEarth === false; // 자연 산악(bareEarth 끔) → terrain-steep 검사 생략(실제 급경사)
@@ -67,7 +75,8 @@ for (const e of manifest.chunks) {
   catch (err) { report(`${e.cx}_${e.cz}`, [{ level: "error", code: "parse", msg: String(err.message) }]); continue; }
   report(`${e.cx}_${e.cz}`, validateChunk(ch, manifest.chunkSize, { naturalTerrain }));
   report(`${e.cx}_${e.cz}`, validateEntryConsistency(e, ch));
-  if (demExpected) report(`${e.cx}_${e.cz}`, validateDemConsistency(ch, manifest.chunkSize, demExpected));
+  const dem = demFor(e.m);
+  if (dem) report(`${e.cx}_${e.cz}`, validateDemConsistency(ch, manifest.chunkSize, dem));
   chunks.push(ch);
 }
 

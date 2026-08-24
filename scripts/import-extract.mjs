@@ -17,7 +17,15 @@ if (!id || !m) { console.error(`usage: import-extract.mjs <id>  (maps.config 에
 if (!existsSync(pbf)) { console.error(`pbf 없음: ${pbf}`); process.exit(1); }
 if (!existsSync(osmconvert)) { console.error(`osmconvert 없음: ${osmconvert} (gcc osmconvert.c -lz -O3 -o ...)`); process.exit(1); }
 
-const [s, w, n, e] = m.bbox; // [남,서,북,동]
+// bbox 에 **여유**를 둔다 — 청크 지형 평탄화(flattenUnderBuildings)가 이웃 건물을 보기 때문이다.
+// 커버리지 경계에 딱 맞춰 자르면 그 경계 청크의 평탄화가 불완전해지고, 같은 땅을 온전한 건물로
+// 평탄화한 옆 도시와 값이 어긋난다(실측: 오사카↔나라 겹침에서 이음새 33건이 이 이유로 남았다).
+// 여유 = halo(≈236m) + 청크 한 칸 여유. 추출 부피는 40km 상자에서 7% 남짓 늘어난다.
+const EXTRACT_MARGIN_M = 1500;
+const [s0, w0, n0, e0] = m.bbox; // [남,서,북,동]
+const dLat = EXTRACT_MARGIN_M / 111320;
+const dLon = EXTRACT_MARGIN_M / (111320 * Math.cos(((s0 + n0) / 2) * Math.PI / 180));
+const [s, w, n, e] = [s0 - dLat, w0 - dLon, n0 + dLat, e0 + dLon];
 const out = `/tmp/${id}-extract.osm`;
 if (!existsSync(out) || statSync(out).size < 1000 || process.env.REEXTRACT === "1") {
   console.error(`osmconvert bbox 추출 ${id}: lon ${w}..${e}, lat ${s}..${n}`);

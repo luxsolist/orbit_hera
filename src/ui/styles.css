@@ -754,6 +754,9 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 .clusterpop__map .zone-dot__lbl {
   position: absolute; left: 10px; top: -4px; white-space: nowrap;
   font: 600 10px/1 ui-monospace, monospace; color: #cfeef5; text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+  /* 라벨은 장식 — 클릭 대상이 아니다. 점 바깥으로 뻗은 nowrap 텍스트(70px 남짓)가 **옆 점을 덮어
+     클릭을 가로막았다**(간사이 3도시가 가까워 확대창에서 겹쳤다 · e2e 실측). */
+  pointer-events: none;
 }
 .clusterpop__map .zone-dot__lbl--l { left: auto; right: 10px; } /* 오른쪽 점 — 라벨 왼쪽 정렬 */
 

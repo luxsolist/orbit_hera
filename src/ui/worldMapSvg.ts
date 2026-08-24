@@ -57,13 +57,38 @@ export function buildWorldSvg(box: { x: number; y: number; w: number; h: number 
  * 점들(위경도)을 둘러싸는 **확대 뷰 박스**(SVG 좌표) — 패딩 + 박스 종횡비(boxAspect=너비/높이)에 맞춰 확장(왜곡 방지).
  * 확대창마다 호출하는 공통 로직. minSpan(°)으로 한 점/근접 점도 적당히 확대. 순수.
  */
-export function zoomMapBox(items: Array<{ lat: number; lon: number }>, boxAspect: number, padFrac = 0.5, minSpan = 1.2): { x: number; y: number; w: number; h: number } {
+export function zoomMapBox(
+  items: Array<{ lat: number; lon: number }>,
+  boxAspect: number,
+  padFrac = 0.5,
+  minSpan = 1.2, //     점이 하나일 때의 범위(°) — 무한 확대 방지
+  minSpanMulti = 0.03, // 점이 여럿일 때의 하한(≈3.3km)
+  minSepPct = 13, //     최근접 쌍의 화면 간격 목표(%)
+): { x: number; y: number; w: number; h: number } {
   let sxMin = Infinity, sxMax = -Infinity, syMin = Infinity, syMax = -Infinity;
   for (const p of items) { const sx = p.lon + 180, sy = 90 - p.lat; if (sx < sxMin) sxMin = sx; if (sx > sxMax) sxMax = sx; if (sy < syMin) syMin = sy; if (sy > syMax) syMax = sy; }
   const cx = (sxMin + sxMax) / 2, cy = (syMin + syMax) / 2;
-  let w = Math.max(sxMax - sxMin, minSpan) * (1 + padFrac * 2);
-  let h = Math.max(syMax - syMin, minSpan) * (1 + padFrac * 2);
+  const exW = sxMax - sxMin, exH = syMax - syMin;
+  // ⚠ 하한(minSpan)을 점이 여럿일 때도 1.2° 로 두면 **가까운 도시들이 한 점에 뭉친다**.
+  // 오사카·교토·나라는 0.36° 안에 모여 있어 상자가 2.4° 로 잡혔고, 확대창 점 간격이 40px 남짓이
+  // 되어 클릭이 서로 가로막혔다(e2e 실측: 나라 점이 오사카 클릭을 인터셉트). 범위가 좁으면 더 당겨야 한다.
+  const floor = items.length > 1 ? minSpanMulti : minSpan;
+  let w = Math.max(exW, floor) * (1 + padFrac * 2);
+  let h = Math.max(exH, floor) * (1 + padFrac * 2);
   if (w / h < boxAspect) w = h * boxAspect; else h = w / boxAspect;
+
+  // 그래도 최근접 쌍이 겹치면 더 좁힌다 — 단 **모든 점이 상자 안에 남는 한도**까지만.
+  // 둘을 동시에 만족할 수 없는 배치(한쪽은 아주 가깝고 전체는 넓은 경우)도 있어 여기서 멈춘다.
+  let minSep = Infinity;
+  for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+    const dx = (items[j].lon - items[i].lon) / w, dy = (items[i].lat - items[j].lat) / h;
+    const d = Math.hypot(dx, dy) * 100;
+    if (d > 1e-9 && d < minSep) minSep = d;
+  }
+  if (Number.isFinite(minSep) && minSep < minSepPct) {
+    const k = Math.max(minSep / minSepPct, exW / w || 0, exH / h || 0); // 범위 밖으로 밀려나지 않게
+    if (k < 1) { w *= k; h *= k; }
+  }
   return { x: cx - w / 2, y: cy - h / 2, w, h };
 }
 

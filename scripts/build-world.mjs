@@ -10,10 +10,10 @@
 // 기존 maps/<id>.json(모놀리식)은 보존(레거시). 실 NASA DEM/글로벌 OSM 취득은 별도(현재는 맵별 데이터로 시연).
 //
 // 실행: node scripts/build-world.mjs <id> [chunkSize=1024] [terrainSize=33]
-import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, readdirSync } from "node:fs";
 import { MAPS as MAP_DEFS } from "./maps.config.mjs";
 import { bbox, polyArea, clipRect, clipPolylineToRect, dedupeFlat } from "./clip.mjs";
-import { flattenUnderBuildings } from "./dem.mjs";
+import { elevationMosaic, cellLattice, sampleLattice, DEM_HALO, DEM_PER_CHUNK } from "./geodem.mjs";
 import { cellOwner } from "./worldValidate.mjs";
 
 const BLOCK = 16; // 블록 디렉터리 한 변(청크) — 셀 내 <bx>_<bz>/<cx>_<cz>.json. 디렉터리당 ≤ BLOCK²(256) 파일.
@@ -36,30 +36,52 @@ const cellLat = Math.floor(lat0), cellLon = Math.floor(lon0);
 const M_LONc = M_LAT * Math.cos(rad(cellLat + 0.5)); // 셀 중앙 위도 기준(셀 격자 일관)
 const mapDef = MAP_DEFS.find((m) => m.id === id); // 카탈로그 항목(name/subtitle/stream)·heightmap 권위
 const cellDir = `${MAPS}/${cellLat}/${cellLon}`;
+const chunkPath = (dir, cx, cz) => `${dir}/${Math.floor(cx / BLOCK)}_${Math.floor(cz / BLOCK)}/${cx}_${cz}.json`;
+const readTiles = (dir) => { try { return JSON.parse(readFileSync(`${dir}/tiles.json`, "utf8")); } catch { return null; } };
 
-// ── 셀 점유 검사 — **다른 도시의 데이터를 지우려는 것이면 중단** ──
-// rmSync 는 셀을 통째로 날리므로, 같은 1° 셀을 쓰는 두 도시(오사카↔나라 34/135 ·
-// 홍콩↔선전 22/114)는 나중 빌드가 앞 도시를 조용히 삭제한다. 검증 게이트는 못 잡는다 —
-// 파일이 사라지는 것이라 검사할 대상 자체가 없어진다. 그래서 지우기 **전에** 막는다.
+// ── 셀 공유 — 한 셀에 두 도시 ──
+// 1° 셀은 ~111km 인데 전장은 40km 사방이라 **공간은 충분하다**. 겹치는 건 좌표가 아니라
+// 파일 경로와 인덱스였다: ① rmSync 가 셀을 통째로 날려 상대 도시 청크까지 지웠고
+// ② tiles.json 이 셀당 하나라 덮어쓰였다. 실제 해당 도시는 2쌍(오사카↔나라 34/135 ·
+// 홍콩↔선전 22/114 — 100도시 전수 확인).
+//
+// 그래서 청크마다 **소유자(m = 스트림 id)** 를 적고, 지울 때도 쓸 때도 자기 것만 건드린다.
+// 범위 산술 대신 소유자 표기를 쓰는 이유: 도시 범위가 빌드마다 바뀌어도(bbox 조정·데이터 변동)
+// 스테일 청크가 정확히 회수된다. 범위로 지우면 이전 범위 밖에 남은 것을 놓친다.
+const selfStream = mapDef?.stream?.id ?? `${id}-stream`;
+const prevTiles = readTiles(cellDir);
+const prevChunks = prevTiles?.chunks ?? [];
+
+// ── m 표기가 없는 레거시 항목의 주인 가리기 ──
+// 병합 지원 이전에 구운 셀은 표기가 없다. "표기 없음 = 내 것"으로 두면 **나중에 들어오는 도시가
+// 기존 도시를 통째로 지운다**(오사카 1,600청크에 표기가 0개였다 — 실제로 밟을 함정이었다).
+// 레거시 셀은 단일 소유였으므로, 내가 이 셀에 처음 들어오는데 카탈로그에 동거 도시가 있다면
+// 레거시는 **그 도시 것**이다. 보존할 때 m 을 채워 넣어 다음부터는 모호함이 사라진다(마이그레이션).
+let catalog = [];
+try { catalog = JSON.parse(readFileSync(`${MAPS}/index.json`, "utf8")); } catch { /* 최초 빌드 */ }
+const coTenant = cellOwner(Array.isArray(catalog) ? catalog : [], cellLat, cellLon, selfStream);
+const iAmStamped = prevChunks.some((c) => c.m === selfStream);
+const legacyIsForeign = !!coTenant && !iAmStamped;
+const isForeign = (c) => (c.m ? c.m !== selfStream : legacyIsForeign);
+const foreign = prevChunks.filter(isForeign).map((c) => (c.m ? c : { ...c, m: coTenant.id }));
 {
-  const selfStream = mapDef?.stream?.id ?? `${id}-stream`;
-  let catalog = [];
-  try { catalog = JSON.parse(readFileSync(`${MAPS}/index.json`, "utf8")); } catch { /* 최초 빌드 */ }
-  const owner = cellOwner(Array.isArray(catalog) ? catalog : [], cellLat, cellLon, selfStream);
-  if (owner && existsSync(cellDir) && !process.argv.includes("--force")) {
-    console.error(`✗ 셀 ${cellLat}/${cellLon} 은 이미 '${owner.id}'(${owner.name}) 가 쓰고 있다.`);
-    console.error(`  이대로 빌드하면 그 도시의 청크가 삭제된다. 선택:`);
-    console.error(`   · 두 도시를 한 셀에 합치는 빌더 지원을 먼저 넣거나(정공법)`);
-    console.error(`   · 정말 덮어써도 되면 --force 를 붙인다(그 도시는 카탈로그에서 사라진다)`);
-    process.exit(1);
+  const mineKeys = new Set(prevChunks.filter((c) => !isForeign(c)).map((c) => `${c.cx}_${c.cz}`));
+  // 내 소유 청크 파일만 회수 — 셀 통째 삭제를 대체한다.
+  for (const k of mineKeys) {
+    const [cx, cz] = k.split("_").map(Number);
+    rmSync(chunkPath(cellDir, cx, cz), { force: true });
+  }
+  if (foreign.length) {
+    const tag = legacyIsForeign && prevChunks.some((c) => !c.m) ? " (레거시 → m 표기 부여)" : "";
+    console.error(`  셀 공유: '${foreign[0].m}' 청크 ${foreign.length}개 보존${tag}`);
   }
 }
-rmSync(cellDir, { recursive: true, force: true }); // 스테일 청크/블록 정리 후 재생성(범위 변경·구조 변경 대응)
 mkdirSync(cellDir, { recursive: true });
 
 // 맵-로컬(x,z) → 위경도 → 셀-로컬(NW 원점, x동/z남 ≥0)
 const toLL = (x, z) => [lat0 - z / M_LAT, lon0 + x / M_LON0];
 const toCell = (la, lo) => [(lo - cellLon) * M_LONc, (cellLat + 1 - la) * M_LAT];
+const toLLc = (cx, cz) => [cellLat + 1 - cz / M_LAT, cellLon + cx / M_LONc]; // 셀-로컬 → 위경도(toCell 의 역)
 const mapToCell = (x, z) => { const [la, lo] = toLL(x, z); return toCell(la, lo); };
 const reproj = (p) => { const o = []; for (let i = 0; i < p.length; i += 2) { const [cx, cz] = mapToCell(p[i], p[i + 1]); o.push(Math.round(cx), Math.round(cz)); } return dedupeFlat(o); }; // 1m 정수 + 연속중복 제거(용량↓·퇴화 방지)
 const centroid = (p) => { let x = 0, z = 0, n = p.length / 2; for (let i = 0; i < p.length; i += 2) { x += p[i]; z += p[i + 1]; } return [x / n, z / n]; };
@@ -83,52 +105,47 @@ function binClipped(rp, push) {
 }
 
 // 하이트맵(맵-로컬 좌표계) 바이리니어 샘플(− seaLevel). 없거나 범위 밖이면 0.
-let H = null, hm = null, gOrig = 0, gStep = 1;
-// heightmap 은 maps.config 가 권위(DEM 재생성이 OSM json 스냅샷과 분리되도록) — 없으면 json 스냅샷 사용.
-const cfgHm = mapDef?.heightmap;
-const heightmap = cfgHm ?? terrain.heightmap;
-if (heightmap) {
-  hm = heightmap;
-  const buf = readFileSync(`${BUILD_DIR}/${hm.src.split("/").pop()}`);
-  H = new Float32Array(buf.buffer, buf.byteOffset, buf.length / 4);
-  gOrig = hm.originX ?? -hm.meters / 2; gStep = hm.meters / (hm.size - 1);
-}
+// ── 지형 = **위치의 순수 함수** ──
+// 예전에는 도시별 2048² .bin(맵 중심 격자)을 샘플했다. 청크 샘플 위치는 이미 셀-로컬이라 도시와
+// 무관했는데 높이 조회만 도시에 묶여 있어, 한 셀의 두 도시가 경계에서 어긋났다(실측 최대 30m).
+// 이제 셀 정렬 작업 격자(geodem.cellLattice)에서 뽑는다 — 누가 구워도 같은 값이다(실측 0.00m).
+// 격자는 오브젝트 비닝 뒤에 만든다(평탄화에 셀-로컬 건물 폴리곤이 필요).
 const seaLevel = terrain.seaLevel ?? 0;
-const sampleMap = (mx, mz) => { // 맵-로컬 (mx,mz) 표고
-  if (!H) return 0;
-  const gx = Math.min(hm.size - 1, Math.max(0, (mx - gOrig) / gStep));
-  const gz = Math.min(hm.size - 1, Math.max(0, (mz - gOrig) / gStep));
-  const x0 = Math.floor(gx), z0 = Math.floor(gz), x1 = Math.min(hm.size - 1, x0 + 1), z1 = Math.min(hm.size - 1, z0 + 1);
-  const fx = gx - x0, fz = gz - z0;
-  const a = H[z0 * hm.size + x0], b = H[z0 * hm.size + x1], c = H[z1 * hm.size + x0], d = H[z1 * hm.size + x1];
-  const t = a + (b - a) * fx, bo = c + (d - c) * fx; return (t + (bo - t) * fz) - seaLevel;
-};
+const coverM = mapDef?.heightmap?.meters ?? terrain.heightmap?.meters ?? null; // 전장 한 변(m)
+let LAT = null; // 작업 격자(cellLattice 결과)
+const sampleAt = (cx, cz) => (LAT ? sampleLattice(LAT, cx, cz) - seaLevel : 0); // 셀-로컬 표고
 // 셀-로컬 (x,z) → 맵-로컬 (하이트맵 샘플용 역변환)
 const cellToMap = (cx, cz) => { const la = cellLat + 1 - cz / M_LAT, lo = cellLon + cx / M_LONc; return [(lo - lon0) * M_LON0, -(la - lat0) * M_LAT]; };
 
 // ── 맵(DEM) 청크 범위 — 오브젝트/지형 모두 이 범위로 한정. 추출이 bbox 밖(긴 도로·거대 relation)까지 끌어와도 맵 밖은 폐기. ──
 let cxMin = -Infinity, cxMax = Infinity, czMin = -Infinity, czMax = Infinity;
-if (H) {
-  const corners = [[-hm.meters / 2, -hm.meters / 2], [hm.meters / 2, -hm.meters / 2], [-hm.meters / 2, hm.meters / 2], [hm.meters / 2, hm.meters / 2]];
+if (coverM) {
+  const corners = [[-coverM / 2, -coverM / 2], [coverM / 2, -coverM / 2], [-coverM / 2, coverM / 2], [coverM / 2, coverM / 2]];
   const cxs = [], czs = [];
   for (const [mx, mz] of corners) { const [x, z] = mapToCell(mx, mz); cxs.push(ci(x)); czs.push(ci(z)); }
   cxMin = Math.min(...cxs); cxMax = Math.max(...cxs); czMin = Math.min(...czs); czMax = Math.max(...czs);
 }
 const inExt = (cx, cz) => cx >= cxMin && cx <= cxMax && cz >= czMin && cz <= czMax;
+// 평탄화용 범위는 **한 칸 넓다** — 경계 청크의 평탄화가 바깥 이웃 건물을 봐야 값이 완전해진다.
+// 이 여유가 없으면 같은 땅을 온전히 평탄화한 옆 도시와 경계에서 어긋난다(실측 이음새 33건).
+const inFlat = (cx, cz) => cx >= cxMin - 1 && cx <= cxMax + 1 && cz >= czMin - 1 && cz <= czMax + 1;
 
 // ── 청크 누적 ──
 const chunks = new Map();
 const chunk = (cx, cz) => { const k = `${cx}_${cz}`; let c = chunks.get(k); if (!c) { c = { cx, cz, buildings: [], roads: [], water: [], walls: [], areas: [], sites: [] }; chunks.set(k, c); } return c; };
 
+const flatPolys = []; // 평탄화용 셀-로컬 건물 폴리곤 — 비닝에서 만든 rp 를 재사용(2.1M 재투영 회피)
 const seenBld = new Set(); // 정수 반올림 후 동일 footprint 가 된 건물 중복 제거(z-fighting·용량↓). 검증기 findDuplicateBuildings 키와 동치.
 for (const b of objects.buildings ?? []) {
   const [mx, mz] = centroid(b.p); const [x, z] = mapToCell(mx, mz); const cx = ci(x), cz = ci(z);
-  if (!inExt(cx, cz)) continue;
+  if (!inFlat(cx, cz)) continue; // 평탄화 여유 범위 밖 — 완전히 무관
   const rp = reproj(b.p); if (rp.length < 6) continue; // <3 정점 = 퇴화
   const [bcx, bcz] = centroid(rp);
   const sig = `${Math.round(bcx * 10)}_${Math.round(bcz * 10)}_${Math.round(polyArea(rp))}_${rp.length / 2}`;
   if (seenBld.has(sig)) continue;
   seenBld.add(sig);
+  flatPolys.push({ p: rp }); //  평탄화는 여유 범위 전체를 본다
+  if (!inExt(cx, cz)) continue; // 청크로는 커버리지 안만 기록
   // lm(얽힘 택소노미)·n(표시명)은 랜드마크로 승격된 건물만 보유 — 런타임 StreamingWorld 가
   // 이 필드를 보고 registerBuilding 대신 랜드마크로 등록한다(일반 건물엔 없어서 용량 영향 없음).
   chunk(cx, cz).buildings.push({ p: rp, ...(b.h != null ? { h: b.h } : {}), ...(b.lm ? { lm: b.lm } : {}), ...(b.lm && b.n ? { n: b.n } : {}) });
@@ -156,13 +173,22 @@ for (const w of terrain.water ?? []) {
 // 지표 면(공원/잔디/숲 등): 청크별로 클립해 분배 — 각 조각이 자기 청크 격자 안에서 지형에 드레이프.
 for (const a of objects.areas ?? []) binClipped(reproj(a.p), (cx, cz, c) => { if (inExt(cx, cz)) chunk(cx, cz).areas.push({ p: c, k: a.k }); });
 
-// ── 건물 풋프린트 아래 지형 평탄화(도시 DSM 스파이크 제거, 산·공원 등은 원본 보존) ──
-// raw DEM → 평탄 격자(전역, 이음매 일관) → .flat.bin 기록(검증·샘플 동일). build-terrain bareEarth 와 독립.
-if (H && objects.buildings?.length) {
-  H = flattenUnderBuildings(H, hm.size, objects.buildings, gOrig, gStep, 4);
-  const flatPath = `${BUILD_DIR}/${hm.src.split("/").pop().replace(/\.bin$/, ".flat.bin")}`;
-  writeFileSync(flatPath, Buffer.from(H.buffer));
-  console.error(`  건물 footprint 평탄화 → ${flatPath}`);
+// ── 작업 격자 구성(실측 표고 → bare-earth → 건물 아래 평탄화) ──
+// 순서가 중요하다: 오브젝트 비닝이 끝난 뒤여야 셀-로컬 건물 폴리곤(flatPolys)이 준비된다.
+// 격자·모자이크 모두 셀-로컬/위경도 기준이라 도시 중심에 의존하지 않는다.
+if (coverM) {
+  const range = { cxMin, cxMax, czMin, czMax };
+  const halo = DEM_HALO * (C / DEM_PER_CHUNK);
+  const [laN, loW] = toLLc(cxMin * C - halo, czMin * C - halo);
+  const [laS, loE] = toLLc((cxMax + 1) * C + halo, (czMax + 1) * C + halo);
+  const mosaic = elevationMosaic(Math.min(laN, laS), Math.max(laN, laS), Math.min(loW, loE), Math.max(loW, loE), 13);
+  LAT = cellLattice(range, C, [cellLat, cellLon], M_LONc, mosaic, {
+    bareEarthOn: mapDef?.bareEarth !== false, buildings: flatPolys,
+  });
+  // 검증용 산출물 — validate-world 가 같은 격자로 청크 표고를 교차검증한다.
+  writeFileSync(`${BUILD_DIR}/${id}.lattice.bin`, Buffer.from(LAT.grid.buffer));
+  writeFileSync(`${BUILD_DIR}/${id}.lattice.json`, JSON.stringify({ size: LAT.size, orig: LAT.orig, step: LAT.step, cell: [cellLat, cellLon], seaLevel }, null, 1));
+  console.error(`  작업 격자 ${LAT.size}×${LAT.size} (${LAT.step.toFixed(2)} m/샘플, halo ${DEM_HALO}) · 평탄화 건물 ${flatPolys.length}`);
 }
 
 // 비건물 랜드마크(site — 해변·교량·공원 등): 폴리곤이 아니라 점+반경이라 **중심이 드는 청크 하나**에만 넣는다.
@@ -174,27 +200,35 @@ for (const st of objects.sites ?? []) {
   const x = Math.round(cxm), z = Math.round(czm);
   const cx = ci(x), cz = ci(z);
   if (!inExt(cx, cz)) continue; // 맵(DEM) 범위 밖 — 폐기
-  const y = Math.round(sampleMap(st.x, st.z));
+  const y = Math.round(sampleAt(cxm, czm));
   const entry = { x, z, y, r: st.r, lm: st.lm, ...(st.n ? { n: st.n } : {}) };
   chunk(cx, cz).sites.push(entry);
   siteOut.push({ ...entry, cx, cz });
 }
 
 // ── 지형: 하이트맵 커버(맵 ±meters/2) 범위의 청크에 표고 채움 ──
-if (H) {
+if (LAT) {
   const step = C / (TSZ - 1);
   for (let cz = czMin; cz <= czMax; cz++) for (let cx = cxMin; cx <= cxMax; cx++) {
     const heights = new Array(TSZ * TSZ);
     let mn = Infinity, mx2 = -Infinity;
     for (let j = 0; j < TSZ; j++) for (let i = 0; i < TSZ; i++) {
-      const [mxx, mzz] = cellToMap(cx * C + i * step, cz * C + j * step);
-      const h = Math.round(sampleMap(mxx, mzz)); heights[j * TSZ + i] = h; // 1m 정수(보간 표면은 매끄러움 유지)
+      // 샘플 위치가 셀-로컬이라 인접 청크가 공유 모서리에서 **같은 좌표**를 쓴다 → 값도 같다.
+      const h = Math.round(sampleAt(cx * C + i * step, cz * C + j * step));
+      heights[j * TSZ + i] = h; // 1m 정수(보간 표면은 매끄러움 유지)
       if (h < mn) mn = h; if (h > mx2) mx2 = h;
     }
     // 평탄 청크도 생성 — 해안 맵의 바다(평탄 0m)가 빈 공간이 아니라 파란 수면으로 렌더되도록(내륙 맵은 0m 청크 없음).
     chunk(cx, cz).terrain = { size: TSZ, seaLevel, heights };
   }
 }
+
+// ── 겹침은 무해하다 ──
+// 청크 내용이 **위치의 순수 함수**가 된 뒤(geodem 공유 격자 + 평탄화 여유 범위) 같은 청크를 두 도시가
+// 구워도 결과가 같다. 실측: 오사카↔나라 12.2km 겹침에서 소유자 다른 인접 쌍 52개·표본 1,716점
+// 모서리 차이 **전부 0m**. 그래서 양보·차단이 필요 없고, 나중 빌드가 그냥 다시 쓰면 된다.
+//
+// 소유 표기(m)는 남긴다 — 스폰을 자기 영역으로 한정하는 데 여전히 쓰인다(남의 도심에서 시작 방지).
 
 // ── 청크 파일(블록 디렉터리 분산) + tiles.json ──
 const entries = [];
@@ -215,12 +249,28 @@ for (const c of chunks.values()) {
     },
     underground: null,
   }));
-  entries.push({ cx: c.cx, cz: c.cz, objects: !!hasObj, terrain: !!c.terrain, buildings: c.buildings.length });
+  entries.push({ cx: c.cx, cz: c.cz, objects: !!hasObj, terrain: !!c.terrain, buildings: c.buildings.length, m: selfStream });
 }
-entries.sort((a, b) => a.cz - b.cz || a.cx - b.cx);
+// 내가 다시 쓴 청크는 상대 항목에서 뺀다(중복 = chunk-dup 오류). 내용은 동일하니 소유만 옮겨간다.
+const mineKeys2 = new Set(entries.map((e) => `${e.cx}_${e.cz}`));
+const keptForeign = foreign.filter((c) => !mineKeys2.has(`${c.cx}_${c.cz}`));
+if (keptForeign.length !== foreign.length) console.error(`  겹침 ${foreign.length - keptForeign.length}청크 소유 이전(내용 동일)`);
+
+// tiles.json 은 **셀당 하나**라 덮어쓰면 상대 도시가 사라진다 — 남의 항목을 보존해 병합한다.
+// 격자 파라미터(chunkSize·terrainSize·mLon·block)는 셀 단위라 두 도시가 같은 값을 쓴다.
+const merged = [...keptForeign, ...entries];
+merged.sort((a, b) => a.cz - b.cz || a.cx - b.cx);
 writeFileSync(`${cellDir}/tiles.json`, JSON.stringify({
-  cell: [cellLat, cellLon], originLat: cellLat + 1, originLon: cellLon, chunkSize: C, terrainSize: TSZ, mLon: M_LONc, block: BLOCK, chunks: entries,
+  cell: [cellLat, cellLon], originLat: cellLat + 1, originLon: cellLon, chunkSize: C, terrainSize: TSZ, mLon: M_LONc, block: BLOCK, chunks: merged,
 }, null, 1));
+
+// 빈 블록 디렉터리 회수 — 셀 통째 삭제를 그만뒀으므로(공유 셀 보호) 여기서 치운다.
+{
+  const live = new Set(merged.map((e) => `${Math.floor(e.cx / BLOCK)}_${Math.floor(e.cz / BLOCK)}`));
+  for (const d of readdirSync(cellDir, { withFileTypes: true })) {
+    if (d.isDirectory() && !live.has(d.name)) rmSync(`${cellDir}/${d.name}`, { recursive: true, force: true });
+  }
+}
 
 // ── 전역 랜드마크 인덱스(merge) — 셀-로컬 위치 + 위경도 ──
 const lmPath = `${MAPS}/landmarks.json`;

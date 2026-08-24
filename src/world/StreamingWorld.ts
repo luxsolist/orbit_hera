@@ -11,7 +11,7 @@ import type { SpawnPoint } from "./MapData";
 import { CollisionWorld } from "./CollisionWorld";
 import { BuildingCombat } from "./BuildingCombat";
 import { SkyEnvironment } from "./SkyEnvironment";
-import { cellLocalOf, pickSpawnChunk, CHUNK_BLOCK, type Cell, type TilesManifest, type WorldChunk } from "./chunkManifest";
+import { cellLocalOf, pickSpawnChunk, chunksOwnedBy, CHUNK_BLOCK, type Cell, type TilesManifest, type WorldChunk } from "./chunkManifest";
 import { fetchTiles, fetchWorldChunk } from "./mapLocator";
 import { ChunkStreamer, chunkIndex, type ChunkIO, type ChunkReq, type ChunkConfig } from "./chunkStream";
 import { buildChunkMesh, disposeChunkGroup, sampleChunkHeight, chunkTerrainEntry, forEachLandmarkNear, type ChunkTerrain, type ChunkBuild } from "./chunkMesh";
@@ -69,7 +69,7 @@ export class StreamingWorld implements GameWorld {
   private vx = 0;
   private vz = 0;
 
-  private constructor(scene: THREE.Scene, manifest: TilesManifest, lat: number, lon: number, _yaw: number) {
+  private constructor(scene: THREE.Scene, manifest: TilesManifest, lat: number, lon: number, _yaw: number, mapId?: string) {
     this.cell = manifest.cell;
     this.chunkSize = manifest.chunkSize;
     this.block = manifest.block ?? CHUNK_BLOCK;
@@ -77,7 +77,10 @@ export class StreamingWorld implements GameWorld {
     // 로컬 원점 = 시작 위치의 셀-로컬 좌표(셀 NW 기준 동/남 m). 플레이어는 항상 로컬 (0,0)에 두어
     // Float32 정밀도를 확보(부동 원점). **시작 위치는 매 게임 무작위** — 건물 있는 청크 중 하나를 골라
     // 그 중심을 원점으로 삼는다(맵마다 다른 곳에서 시작). 후보 없으면 카탈로그 좌표(lat/lon)로 폴백.
-    const sc = pickSpawnChunk(manifest.chunks, Math.random);
+    // 셀 공유(오사카↔나라·홍콩↔선전) 대비 — **자기 도시 청크에서만** 고른다.
+    // 이걸 빠뜨리면 파일은 멀쩡한데 "나라를 골랐는데 오사카에서 시작"한다.
+    // 스트리밍 자체는 제한하지 않는다(옆 도시로 이어지는 지형은 정상) — 작전구역이 5km 로 묶는다.
+    const sc = pickSpawnChunk(chunksOwnedBy(manifest.chunks, mapId), Math.random);
     if (sc) {
       this.originX = (sc.cx + 0.5) * this.chunkSize;
       this.originZ = (sc.cz + 0.5) * this.chunkSize;
@@ -98,13 +101,13 @@ export class StreamingWorld implements GameWorld {
 
   /**
    * 스트리밍 전장 생성 — tiles.json 로드 → 인스턴스 구성 → 스폰 주변 지형 프리로드(지표면 확보).
-   * (lat,lon)=스폰 위경도, yaw=시작 방위.
+   * (lat,lon)=스폰 위경도, yaw=시작 방위, mapId=스트림 카탈로그 id(셀 공유 시 스폰 범위 한정).
    */
-  static async create(scene: THREE.Scene, lat: number, lon: number, yaw = 0): Promise<StreamingWorld> {
+  static async create(scene: THREE.Scene, lat: number, lon: number, yaw = 0, mapId?: string): Promise<StreamingWorld> {
     const cell: Cell = [Math.floor(lat), Math.floor(lon)];
     const manifest = await fetchTiles(cell);
     if (!manifest) throw new Error(`타일 매니페스트 없음: maps/${cell[0]}/${cell[1]}/tiles.json`);
-    const w = new StreamingWorld(scene, manifest, lat, lon, yaw);
+    const w = new StreamingWorld(scene, manifest, lat, lon, yaw, mapId);
     await w.preloadSpawn();
     return w;
   }

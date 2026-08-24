@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import {
   geoCell, landmarkIndexPath, worldChunkPath, chunkBlockDir, tilesPath, cellChunkOf, cellMLon, cellLocalOf,
-  pickSpawnChunk,
+  pickSpawnChunk, chunksOwnedBy,
   type TilesManifest, type WorldChunk, type ChunkEntry,
 } from "../src/world/chunkManifest";
 
@@ -128,5 +128,57 @@ describe("pickSpawnChunk — 무작위 시작 청크 선택", () => {
     const chunks = [E(0, 0, false, true), E(1, 0, true, true), E(2, 0, true, true)]; // buildings 미지정
     const c = pickSpawnChunk(chunks, () => 0)!;
     expect(c.objects && c.terrain).toBe(true); // 건물 필드 없어도 objects 기준 동작
+  });
+});
+
+// ── 셀 공유(한 셀에 두 도시) ──
+// 1° 셀은 ~111km 인데 전장은 40km 사방이라 오사카↔나라(34/135)·홍콩↔선전(22/114)이 한 셀을 쓴다
+// (100도시 전수 확인 = 2쌍). 청크 파일 경로는 안 부딪히지만 **스폰**은 부딪힌다 —
+// 매니페스트 청크 목록이 합쳐지므로 "나라를 골랐는데 오사카에서 시작"할 수 있다.
+// 파일은 멀쩡하고 플레이만 엉뚱해지는 종류의 버그라 눈으로 안 잡힌다.
+
+describe("chunksOwnedBy — 스폰 범위 한정", () => {
+  const mk = (cx: number, cz: number, m?: string): ChunkEntry =>
+    ({ cx, cz, objects: true, terrain: true, buildings: 50, ...(m ? { m } : {}) });
+
+  it("자기 도시 청크만 남긴다", () => {
+    const chunks = [mk(0, 0, "osaka-stream"), mk(30, 0, "nara-stream"), mk(31, 0, "nara-stream")];
+    expect(chunksOwnedBy(chunks, "nara-stream").map((c) => c.cx)).toEqual([30, 31]);
+    expect(chunksOwnedBy(chunks, "osaka-stream").map((c) => c.cx)).toEqual([0]);
+  });
+
+  it("표기가 전혀 없으면 전부 자기 것 — 구 매니페스트(단일 소유 셀)", () => {
+    const chunks = [mk(0, 0), mk(1, 0)];
+    expect(chunksOwnedBy(chunks, "kyoto-stream")).toHaveLength(2);
+  });
+
+  it("표기가 섞여 있으면 미표기 항목을 자기 것으로 삼지 않는다 — 남의 레거시 청크에서 스폰하던 함정", () => {
+    // 오사카가 병합 지원 이전에 구워져 표기가 없고, 나라가 나중에 들어온 상황.
+    const chunks = [mk(0, 0), mk(1, 0), mk(30, 0, "nara-stream")];
+    expect(chunksOwnedBy(chunks, "nara-stream").map((c) => c.cx)).toEqual([30]);
+  });
+
+  it("mapId 를 안 주면 전부 — 호출부가 아직 배선 안 된 경로", () => {
+    const chunks = [mk(0, 0, "a"), mk(1, 0, "b")];
+    expect(chunksOwnedBy(chunks, undefined)).toHaveLength(2);
+  });
+
+  it("내 것이 하나도 없으면 원본을 준다 — 빈 후보로 스폰 실패하는 것보다 낫다", () => {
+    const chunks = [mk(0, 0, "osaka-stream")];
+    expect(chunksOwnedBy(chunks, "nara-stream")).toHaveLength(1);
+  });
+
+  it("스폰이 실제로 자기 도시에서 잡힌다 — 옆 도시가 더 밀집해도", () => {
+    // 오사카(건물 5000)가 나라(건물 50)보다 훨씬 밀집 — 필터가 없으면 항상 오사카가 뽑힌다.
+    const chunks: ChunkEntry[] = [
+      { cx: 0, cz: 0, objects: true, terrain: true, buildings: 5000, m: "osaka-stream" },
+      { cx: 1, cz: 0, objects: true, terrain: true, buildings: 5000, m: "osaka-stream" },
+      { cx: 30, cz: 0, objects: true, terrain: true, buildings: 50, m: "nara-stream" },
+    ];
+    for (const u of [0, 0.5, 0.99]) {
+      const c = pickSpawnChunk(chunksOwnedBy(chunks, "nara-stream"), () => u)!;
+      expect(c.m).toBe("nara-stream");
+    }
+    expect(pickSpawnChunk(chunksOwnedBy(chunks, "osaka-stream"), () => 0)!.m).toBe("osaka-stream");
   });
 });

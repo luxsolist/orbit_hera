@@ -53,6 +53,27 @@ export interface ChunkEntry {
   objects: boolean; // 건물·도로·수역·구역 중 하나라도 있으면 true
   terrain: boolean;
   buildings?: number; // 이 청크의 건물 수(신 매니페스트). 미존재 시 objects 불리언으로 폴백.
+  /**
+   * 소유 전장(스트림 카탈로그 id) — **한 셀에 두 도시**가 들어갈 때만 의미가 있다.
+   * 1° 셀은 ~111km 인데 전장은 40km 사방이라 오사카↔나라(34/135)·홍콩↔선전(22/114)이 한 셀을 쓴다.
+   * 없으면(구 매니페스트) 그 셀은 단일 소유였다는 뜻이라 전부 자기 것으로 본다.
+   */
+  m?: string;
+}
+
+/**
+ * 특정 전장이 소유한 청크만 — 셀 공유 시 스폰이 옆 도시에서 잡히는 것을 막는다. 순수.
+ *
+ * ⚠ 표기 없는 항목(`m` 미존재)을 무조건 자기 것으로 보면 안 된다 — 공유 셀에서 **남의 레거시
+ * 청크를 자기 것으로 삼아** 옆 도시에서 스폰한다. 그래서 표기된 항목이 하나라도 있으면
+ * (= 병합된 셀) 표기가 일치하는 것만 쓴다. 표기가 전혀 없으면 단일 소유 셀이므로 전부 자기 것이다.
+ */
+export function chunksOwnedBy(chunks: ChunkEntry[], mapId?: string): ChunkEntry[] {
+  if (!mapId) return chunks;
+  const anyStamped = chunks.some((c) => c.m);
+  if (!anyStamped) return chunks; // 구 매니페스트(단일 소유)
+  const mine = chunks.filter((c) => c.m === mapId);
+  return mine.length ? mine : chunks; // 내 표기가 없다면 판단 근거가 없다 — 원본(스폰 실패보다 낫다)
 }
 
 /** 청크 건물 수 — 신 매니페스트는 buildings, 구 매니페스트는 objects 불리언(1/0)으로 폴백. 순수. */

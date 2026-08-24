@@ -251,14 +251,31 @@ function processOSM(osm, proj) {
  * 엉뚱한 유형으로 분류한다. 큐레이션 카탈로그는 사람이 검수한 정본이므로 자동분류를 덮어쓴다.
  * 좌표 없는 항목(geocodeStatus:"unresolved")·반경 밖 항목은 조용히 건너뛴다(날조 금지 방침 유지).
  */
-function applyCuratedLandmarks(core, cityKey, proj, nameIndex = null) {
+function applyCuratedLandmarks(core, cityKey, proj, nameIndex = null, cover = null) {
   const buildings = core.buildings;
   if (!cityKey) return { matched: 0, sites: [], total: 0 };
   let cat;
   try { cat = JSON.parse(readFileSync(CURATED_PATH, "utf8")); }
   catch { console.error(`  ⚠ 큐레이션 카탈로그 읽기 실패(${CURATED_PATH}) — 자동분류만 사용`); return { matched: 0, sites: [], total: 0 }; }
-  const list = cat.cities?.[cityKey];
-  if (!Array.isArray(list)) { console.error(`  ⚠ 큐레이션 카탈로그에 '${cityKey}' 없음 — 자동분류만 사용`); return { matched: 0, sites: [], total: 0 }; }
+  const own = cat.cities?.[cityKey];
+  if (!Array.isArray(own)) { console.error(`  ⚠ 큐레이션 카탈로그에 '${cityKey}' 없음 — 자동분류만 사용`); return { matched: 0, sites: [], total: 0 }; }
+  // ── 카탈로그를 **전역 랜드마크 레지스트리**로 본다 ──
+  // 도시가 "맵의 특정 영역을 지칭하는 가상 개념"이면, 청크에 실리는 랜드마크도 위치로 결정돼야 한다.
+  // 도시별 목록만 적용하면 같은 청크를 누가 굽느냐로 랜드마크 표시가 달라진다(순수 함수 위반).
+  // 도시 이름은 조회·관리용 라벨일 뿐이다. 실측: 100도시 중 영향받는 곳은 1곳(선전 ← 홍콩 만불사).
+  // 좌표 없는 항목은 자기 도시분만 이름 매칭에 넘긴다(남의 도시 이름을 이 추출에서 찾을 이유가 없다).
+  const list = [...own];
+  if (cover) {
+    for (const [c, arr] of Object.entries(cat.cities ?? {})) {
+      if (c === cityKey || !Array.isArray(arr)) continue;
+      for (const lm of arr) {
+        if (typeof lm.lat !== "number" || typeof lm.lon !== "number") continue;
+        const [x, z] = proj(lm.lat, lm.lon);
+        if (Math.abs(x) <= cover / 2 && Math.abs(z) <= cover / 2) list.push(lm);
+      }
+    }
+    if (list.length !== own.length) console.error(`  큐레이션 전역 적용: 타도시 ${list.length - own.length}건이 이 영역에 포함`);
+  }
 
   // site 반경 추정용 면 목록 — 공원·해변·숲(areas) + 수역(water 면). 큐레이션 좌표를 품은 면의 크기가 반경이 된다.
   const polys = [...(core.areas ?? []), ...(core.water ?? []).filter((w) => w.w == null)];
@@ -322,7 +339,7 @@ for (const m of MAPS) {
     core = processOSM(osm, proj);
     // 이름 색인은 **가공 전 원본 요소**에서 만든다 — processOSM 은 태그를 버리고 형상만 남긴다.
     const nameIndex = buildNameIndex(osm.elements, proj);
-    core.sites = applyCuratedLandmarks(core, m.catalogCity, proj, nameIndex).sites; // 사람 검수 카탈로그: 건물은 승격, 비건물은 site
+    core.sites = applyCuratedLandmarks(core, m.catalogCity, proj, nameIndex, m.heightmap?.meters ?? null).sites; // 사람 검수 카탈로그: 건물은 승격, 비건물은 site
   }
   precinct = m.precinct ?? precinct; // config 우선
 
