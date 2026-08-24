@@ -1,0 +1,12814 @@
+{
+ "cell": [
+  34,
+  -6
+ ],
+ "originLat": 35,
+ "originLon": -6,
+ "chunkSize": 1024,
+ "terrainSize": 33,
+ "mLon": 91741.7273174028,
+ "block": 16,
+ "chunks": [
+  {
+   "cx": 68,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 46,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 138,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 72,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 142,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 82,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 24,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 39,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 244,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 45,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 367,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 459,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 49,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 105,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 105,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 105,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 105,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 105,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 203,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 415,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 261,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 159,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 73,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 105,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 106,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 106,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 415,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 279,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 107,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 54,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 45,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 106,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 106,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 107,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 107,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 107,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 107,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 45,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 71,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 110,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 22,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 35,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 314,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1273,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 107,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 40,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 44,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 174,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 273,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 21,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 22,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 70,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 109,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 109,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 109,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 109,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 109,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 109,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 109,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 414,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 523,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 110,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 110,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 157,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 187,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 114,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 103,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 72,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 114,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 135,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 34,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 129,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 114,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 114,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 83,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 43,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 172,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 114,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 114,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 114,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 114,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 114,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 114,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 121,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 121,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 122,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 122,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 122,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 122,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 122,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 122,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 122,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 122,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 122,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 122,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 122,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 123,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 123,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 68,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 69,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 70,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 71,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 72,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 73,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 74,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 75,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 76,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 77,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 78,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 79,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 80,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 81,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 82,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 83,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 84,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 85,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 86,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 87,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 88,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 89,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 90,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 91,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 92,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 93,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 94,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 95,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 96,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 97,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 98,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 99,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 100,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 101,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 102,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 103,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 104,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 105,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 106,
+   "cz": 124,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  },
+  {
+   "cx": 107,
+   "cz": 124,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "fez-stream"
+  }
+ ]
+}
