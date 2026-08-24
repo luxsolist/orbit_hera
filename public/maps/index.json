@@ -164,5 +164,29 @@
   "lon": 135.8048359,
   "stream": true,
   "spawnYaw": 0
+ },
+ {
+  "id": "hong-kong-stream",
+  "name": "홍콩 · Hong Kong",
+  "subtitle": "중국 — 도심 반경 20km 청크 스트리밍 (2장 같은 박자)",
+  "buildings": 93413,
+  "landmarks": 307,
+  "sites": 3,
+  "lat": 22.2818333,
+  "lon": 114.1582831,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "shenzhen-stream",
+  "name": "선전 · Shenzhen",
+  "subtitle": "중국 — 도심 반경 20km 청크 스트리밍 (4~6장 확장)",
+  "buildings": 119171,
+  "landmarks": 190,
+  "sites": 1,
+  "lat": 22.5445741,
+  "lon": 114.0545429,
+  "stream": true,
+  "spawnYaw": 0
  }
 ]
