@@ -30,7 +30,7 @@
   "lon": 129.07,
   "stream": true,
   "spawnYaw": 0,
-  "landmarks": 168,
+  "landmarks": 169,
   "sites": 10
  },
  {
@@ -133,8 +133,8 @@
   "id": "osaka-stream",
   "name": "오사카 · Osaka",
   "subtitle": "일본 — 도심 반경 20km 청크 스트리밍 (서장)",
-  "buildings": 2160199,
-  "landmarks": 262,
+  "buildings": 2195735,
+  "landmarks": 267,
   "sites": 3,
   "lat": 34.6937569,
   "lon": 135.5014539,
@@ -150,6 +150,18 @@
   "sites": 4,
   "lat": 35.0115754,
   "lon": 135.7681441,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "nara-stream",
+  "name": "나라 · Nara",
+  "subtitle": "일본 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 373265,
+  "landmarks": 126,
+  "sites": 3,
+  "lat": 34.6845445,
+  "lon": 135.8048359,
   "stream": true,
   "spawnYaw": 0
  }
