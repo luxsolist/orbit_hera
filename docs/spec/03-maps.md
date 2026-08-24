@@ -72,9 +72,14 @@ SVG 경로로 변환해 임베드한다([`src/ui/worldLand.ts`](../../src/ui/wor
 수집·가공·검증을 표준 순서로 실행하고, 검증 실패 시 빌드를 중단한다.
 
 ```
-npm run build:map -- <id> [--no-terrain] [--zoom=13]
-# 내부: build-terrain(real DEM) → build-maps(OSM) → build-world(타일 청크) → validate-world(게이트)
+npm run build:map -- <id> [--force-terrain] [--zoom=13]
+# 내부: build-terrain(real DEM, stream 맵은 생략) → build-maps(OSM) → build-world(타일 청크) → validate-world(게이트)
 ```
+
+101개 맵 전부 stream(청크 스트리밍)이라 1단계(도시별 DEM `.bin`)는 **기본적으로 생략**된다 —
+지형이 위치 순수 함수로 전환된 뒤(`geodem.mjs`) build-world 가 셀 정렬 격자로 직접 샘플하고,
+도시별 `.bin` 은 아무도 읽지 않는다(monolithic World 로 로드되는 경로가 없다 — 전부
+`catalogHidden`). `--force-terrain` 은 디버깅용으로만 남겨 뒀다.
 
 | 단계 | 스크립트 | 출력 |
 |---|---|---|
@@ -104,6 +109,31 @@ npm run build:map -- <id> [--no-terrain] [--zoom=13]
 |---|---|---|
 | 자동분류 | [`osm.landmarkFrom`](../../scripts/osm.mjs) — ① 태그 분류 ② 이름 보유 ③ 면적 ≥ 200㎡ **동시 충족** | 3조건을 다 걸어야 "소수"가 유지된다(실측: 서울 도심 태그만 158채 → 3조건 91채) |
 | 큐레이션 | [`landmark-catalog.json`](../../scripts/data/landmark-catalog.json) 실측 좌표 → **포함 우선**(footprint 안 → 없으면 30m 최근접) | 사람이 검수한 정본. 광장·공원은 미매칭으로 남겨 자동분류에 맡긴다(오매칭 방지) |
+
+#### 큐레이션 배제 기준(2026-08-24 정책)
+
+큐레이션은 "그 도시를 대표하는가"만으로 고르지 않는다 — **각 종교의 주요 성지·유적은 대상에서 뺄
+이유가 없지만**, 아래 5개 범주에 해당하는 개별 항목은 배제한다. 자동 필터가 아니라 사람이 판단해
+`landmark-catalog.json` 에서 직접 뺀다 — 지오코딩처럼 재현 가능한 규칙이 아니라 매번 다시 사람이
+봐야 하는 판단이기 때문이다.
+
+| 범주 | 기준 | 아닌 것 |
+|---|---|---|
+| `living-person` | 현존 인물을 기리는 동상·기념물 | — |
+| `dispute-symbol` | 현재진행형 주권·영토 분쟁의 상징물(미승인/분쟁 국가의 정부청사, 반환·귀속 기념물 등) | 일반 국가의 정부청사(백악관·버킹엄궁 등)는 해당 아님 |
+| `war-glorification` | 전쟁을 애도가 아니라 승리·정복으로 과시하는 기념물 | 전쟁 피해자를 기리는 위령비·국립묘지(ANZAC·펀치볼 등)는 해당 아님 |
+| `war-perpetrator` | 전쟁범죄·학살의 가해자(또는 그 직접 지휘·합사 시설)를 기리는 상징물 | — |
+| `atrocity-symbol` | 기타 반인륜적 행위(식민 착취, 유혈 진압 등)의 **가해 쪽**을 대표하는 상징물 | 홀로코스트·노예제·아파르트헤이트 **추모관**(피해자를 기림)은 해당 아님 — 오히려 이 범주 판단의 반대 기준점 |
+
+실제 배제 이력은 `landmark-catalog.json` 의 `curationPolicy`(기준 원문) · `excludedLandmarks`(항목·범주·사유
+감사 로그)에 있다. 첫 적용(8건): 야스쿠니 신사(도쿄, war-perpetrator) · 총통부(타이베이,
+dispute-symbol) · 중정기념당(타이베이, war-perpetrator) · 천안문광장(베이징, atrocity-symbol) ·
+로즈 기념관(케이프타운, atrocity-symbol) · 골든 보히니아 광장(홍콩, dispute-symbol) · 와가 국경
+국기하강식(라호르, dispute-symbol) · 승리의 손(바그다드, war-glorification).
+
+경계 사례는 배제 대신 **설명 문구 중립화**로 처리했다 — 리마 대성당은 정당한 종교 유적(대상 자체가
+가톨릭 대성당)이지만 소개 문구가 "정복자 피사로 안장"으로 정복자를 전면에 세우고 있어 "리마 구시가
+대표 대성당"으로 바꿨다. 랜드마크 자체를 빼는 것과 서술 관점을 바꾸는 것은 다른 조치다.
 
 #### 좌표 없는 큐레이션 항목 — **추출 안에서 이름으로** 찾는다
 
