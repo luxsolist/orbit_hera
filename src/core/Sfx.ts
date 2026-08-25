@@ -24,6 +24,7 @@ export class Sfx {
   private master: GainNode | null = null;
   private noiseBuf: AudioBuffer | null = null; // 짧은 감쇠 노이즈(어택 클릭)
   private noiseBufLong: AudioBuffer | null = null; // 긴 평탄 노이즈(폭발 본체 — 엔벨로프/필터로 성형)
+  private crushCurve: Float32Array<ArrayBuffer> | null = null; // 비트크러시 웨이브셰이퍼 커브(처치음 그레인 — 1회 생성)
   private enabled = true;
 
   constructor(private volume = 0.5) {}
@@ -247,6 +248,158 @@ export class Sfx {
       r.start(now + 0.03);
       r.stop(now + 0.45);
     }
+  }
+
+  /**
+   * 처치음(타격감 ①) — "결맞음 붕괴"(§1.6): 발사음(포격 계열)과 성격이 다른, 유일한 **붕괴** 사운드.
+   * (1) 상승 차지 → 급격한 피치 다운(결맞음이 끊기는 순간) (2) 하이패스 디지털 노이즈 버스트("정보
+   * 상실"의 질감 — 유기적 타격음과 갈라야 함) (3) 비화음 벨 링 2부분음(수정이 깨지는 여운).
+   * strength(0..1)에 비례해 더 낮고·길고·크게 — barrage 의 "강할수록 묵직" 문법을 그대로 따른다.
+   * 강체(strength≥0.35, §2.1과 동일 문턱)만 서브 저음 바디를 더해 보스급 무게감을 얹는다.
+   */
+  kill(strength: number): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.master || ctx.state !== "running") return;
+    const now = ctx.currentTime;
+    const master = this.master;
+    const s = Math.max(0, Math.min(1, strength));
+    // 기본음이 낮아야 무게가 생긴다 — 초기 구현 560~900Hz(가느다란 "삑") → 420~240Hz → 지금 300~170Hz.
+    // 고역 바이트는 크랙·크런치 노이즈가 담당하므로 톤 자체는 계속 낮춰도 명료도가 죽지 않는다.
+    const f0 = 300 - 130 * s; // 170Hz(강체) ~ 300Hz(약체)
+    const peak = 0.26 + 0.18 * s;
+    const dur = 0.18 + 0.16 * s; // 무게 = 지속 — 짧으면 아무리 저역이어도 "톡" 하고 만다
+
+    // (1) 임팩트 크랙 — **맨 앞 18ms** 광대역 클릭. 총성의 "탕"에 해당하는 즉각 타격감으로,
+    //     구 버전에 없던(노이즈가 50ms 뒤에야 들어와 물렁했던) 부분.
+    if (this.noiseBuf) {
+      const n = ctx.createBufferSource();
+      n.buffer = this.noiseBuf;
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = 900 + 300 * (1 - s); // 낮출수록 "탁"(경쾌) → "퍽"(둔중). 무게 요청 반영.
+      bp.Q.value = 0.6;
+      const g = ctx.createGain();
+      g.gain.value = peak * 1.25;
+      n.connect(bp).connect(g).connect(master);
+      n.start(now);
+      n.stop(now + 0.018);
+    }
+
+    // (2) 붕괴 코어 — **링 변조**(캐리어 × 비화성 모듈레이터)로 "삐—"가 아니라 지지직대는 에너지 톤.
+    //     피치는 상승 차지 없이 **즉시 14ms 스냅 하강**: 결어긋남은 미끄러지는 게 아니라 끊기는 사건이다
+    //     (구 버전의 "차지 후 긴 글리산도"가 만화적 "왱" 소리의 정체였다).
+    const carrier = ctx.createOscillator();
+    carrier.type = "sine";
+    carrier.frequency.setValueAtTime(f0 * 1.25, now);
+    carrier.frequency.exponentialRampToValueAtTime(f0 * 0.34, now + 0.014); // 스냅 드롭
+    carrier.frequency.exponentialRampToValueAtTime(f0 * 0.2, now + dur); // 이후 완만한 소멸
+    // 링 변조: 게인의 gain 파라미터를 오디오 레이트로 흔들어 합/차 주파수(비화성 금속 질감) 생성.
+    const ring = ctx.createGain();
+    ring.gain.value = 0; // 모듈레이터만 게인을 구동(순수 링 변조)
+    const mod = ctx.createOscillator();
+    mod.type = "sine";
+    mod.frequency.setValueAtTime(f0 * 0.73, now); // 비화성 비율 — 정수배면 그냥 화음이 된다
+    mod.frequency.exponentialRampToValueAtTime(f0 * 0.29, now + dur * 0.8); // 함께 무너져 내림
+    const modDepth = ctx.createGain();
+    modDepth.gain.value = 1;
+    mod.connect(modDepth).connect(ring.gain);
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.0001, now);
+    env.gain.exponentialRampToValueAtTime(peak, now + 0.004); // 즉발 어택
+    env.gain.exponentialRampToValueAtTime(0.0004, now + dur);
+    carrier.connect(ring).connect(env).connect(master);
+    carrier.start(now);
+    mod.start(now);
+    carrier.stop(now + dur + 0.03);
+    mod.stop(now + dur + 0.03);
+
+    // (3) 서브 저음 — **전 개체 공통**(구 버전은 s≥0.35 강체 전용이라 잡몹 처치가 몸통 없이 텅 비었다.
+    //     잡몹을 훨씬 많이 죽으므로 체감상 거의 모든 처치가 가벼웠던 주원인). 세기만 강함에 비례.
+    const sub = ctx.createOscillator();
+    sub.type = "sine";
+    sub.frequency.setValueAtTime(f0 * 0.45, now);
+    sub.frequency.exponentialRampToValueAtTime(f0 * 0.13, now + dur * 1.25); // 22~39Hz 까지 내려가 몸으로 느껴지는 대역
+    const sg = ctx.createGain();
+    sg.gain.setValueAtTime(0.0001, now);
+    sg.gain.exponentialRampToValueAtTime(peak * (1.0 + 1.1 * s), now + 0.014); // 대폭 증량(구 0.55+0.75s)
+    sg.gain.exponentialRampToValueAtTime(0.0004, now + dur * 1.5);
+    sub.connect(sg).connect(master);
+    sub.start(now);
+    sub.stop(now + dur * 1.5 + 0.03);
+
+    // (3b) 저역 붐 — 로우패스 노이즈 스웰. 사인 서브가 "음정"이라면 이건 **공기가 밀리는 부피감**이다.
+    //      둘을 겹쳐야 "낮은 삐" 가 아니라 "묵직한 퍼억"이 된다(reckoning 의 럼블과 같은 원리, 더 짧게).
+    if (this.noiseBufLong) {
+      const n = ctx.createBufferSource();
+      n.buffer = this.noiseBufLong;
+      n.loop = true;
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.setValueAtTime(220, now);
+      lp.frequency.exponentialRampToValueAtTime(70, now + dur); // 대역이 가라앉으며 바닥으로
+      lp.Q.value = 0.9;
+      const bg = ctx.createGain();
+      bg.gain.setValueAtTime(0.0001, now);
+      bg.gain.exponentialRampToValueAtTime(peak * (0.7 + 0.6 * s), now + 0.018);
+      bg.gain.exponentialRampToValueAtTime(0.0004, now + dur * 1.1);
+      n.connect(lp).connect(bg).connect(master);
+      n.start(now);
+      n.stop(now + dur * 1.15);
+    }
+
+    // (4) 크런치 디지털 노이즈 — 비트크러시(계단 양자화) 웨이브셰이퍼를 통과시켜 매끈한 화이트노이즈가
+    //     아니라 **깨진 그레인**으로. "정보가 소실된다"는 질감(물리편 §3.2 디테일 상실)의 청각 대응.
+    if (this.noiseBufLong) {
+      const n = ctx.createBufferSource();
+      n.buffer = this.noiseBufLong;
+      n.playbackRate.value = 0.7 + Math.random() * 0.5; // 매번 미세 변주(기계적 반복 방지)
+      const shaper = ctx.createWaveShaper();
+      shaper.curve = this.getCrushCurve();
+      const hp = ctx.createBiquadFilter();
+      hp.type = "highpass";
+      hp.frequency.setValueAtTime(1200 - 400 * s, now); // 히스를 줄여 저역이 묻히지 않게(무게 요청)
+      hp.frequency.exponentialRampToValueAtTime(420, now + dur); // 대역이 내려앉으며 뭉개짐
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.0001, now + 0.008);
+      ng.gain.exponentialRampToValueAtTime(peak * 0.5, now + 0.02); // 구 0.75 — 그레인은 질감만 담당
+      ng.gain.exponentialRampToValueAtTime(0.0004, now + dur * 0.8);
+      n.connect(shaper).connect(hp).connect(ng).connect(master);
+      n.start(now + 0.008);
+      n.stop(now + dur + 0.02);
+    }
+
+    // (5) 비화성 파열 링 — 구 버전(3.16×/5.9× 순정 사인, 긴 감쇠)은 "댕" 하는 종소리라 장식으로 들렸다.
+    //     배음비를 벌리고 삼각파 + 짧은 감쇠로 바꿔 "파직"에 가까운 파열 여운으로.
+    // 배음이 세면 소리가 위로 뜬다 — 무게 요청에 따라 게인을 낮추고(0.3→0.18) 여운도 더 짧게.
+    for (const [mult, g] of [[4.1, 1], [6.7, 0.55]] as const) {
+      const r = ctx.createOscillator();
+      r.type = "triangle";
+      r.frequency.value = f0 * mult;
+      const re = ctx.createGain();
+      re.gain.setValueAtTime(0.0001, now + 0.006);
+      re.gain.exponentialRampToValueAtTime(peak * 0.18 * g, now + 0.014);
+      re.gain.exponentialRampToValueAtTime(0.0003, now + 0.06); // 짧게 — 여운이 길면 다시 "종"이 된다
+      r.connect(re).connect(master);
+      r.start(now + 0.006);
+      r.stop(now + 0.075);
+    }
+  }
+
+  /**
+   * 비트크러시 웨이브셰이퍼 커브(계단 양자화) — 입력을 N단계로 뭉개 디지털 그레인을 만든다.
+   * 처치음(kill)의 "정보 소실" 질감 전용. 커브는 상태가 없어 1회 생성 후 공유.
+   */
+  private getCrushCurve(): Float32Array<ArrayBuffer> {
+    if (this.crushCurve) return this.crushCurve;
+    const n = 1024;
+    const steps = 7; // 낮을수록 거칠다 — 7단계면 노이즈가 확연히 "깨져" 들린다
+    const curve = new Float32Array(new ArrayBuffer(n * 4));
+    for (let i = 0; i < n; i++) {
+      const x = (i / (n - 1)) * 2 - 1; // -1..1
+      curve[i] = Math.round(x * steps) / steps; // 계단 양자화
+    }
+    this.crushCurve = curve;
+    return curve;
   }
 
   /**

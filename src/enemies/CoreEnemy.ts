@@ -389,7 +389,6 @@ export class CoreEnemy {
   maxHp: number;
   hp: number;
   color: number; // 발광/표면 색(드레인 빔 연출 등에서 참조) — 준위 강등(P3)이 적색 쪽으로 갱신
-  killRefund = 0; // 처치 시 플레이어 HP 환수(아키타입에서 주입)
   // 피격 유발 인식 — 플레이어 공격에 노출되면 거리 무관 추격. **영구 래치가 아니라 감쇠 타이머**다.
   // 영구 래치였을 때: 주무기가 360° 자동사격이라 유발을 피할 수 없고, 유발이 반경 100m 로 전파되므로
   // 첫 교전 몇 초 뒤엔 전장 전체가 플레이어만 쫓았다 → aggro=landmark/building 변조와 진형 행동이
@@ -694,7 +693,13 @@ export class CoreEnemy {
     if (this.state === "dissolving") {
       this.dissolveProgress += dt * 1.8;
       this.shellMat.setProgress(this.dissolveProgress);
-      this.coreScale = Math.max(0, 1 - this.dissolveProgress * 1.2); // 코어 수축(인스턴스로 렌더)
+      // 코어 수축(인스턴스로 렌더) — 시작 직후 짧게 부풀었다(POP) 가라앉는다. 곧장 수축만 하면
+      // "타격"이 아니라 "쪼그라듦"으로만 읽힌다(타격감 ②). pop 은 progress 0→POP_END 구간에서
+      // 0→최대→0 으로 되돌아와 기존 수축 곡선과 이어 붙는 지점에 불연속이 없다.
+      const base = Math.max(0, 1 - this.dissolveProgress * 1.2);
+      const POP_END = 0.15;
+      const pop = this.dissolveProgress < POP_END ? 0.5 * Math.sin((this.dissolveProgress / POP_END) * Math.PI) : 0;
+      this.coreScale = base + pop;
       this.coreBright = 4.5 * (1 - this.dissolveProgress);
       // 소산 표류 — 흩어지는 입자가 균열(앵커) 방향으로 흐른다. 모든 죽음이 한 곳을 가리킨다.
       if (this.driftAnchor) {

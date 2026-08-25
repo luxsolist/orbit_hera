@@ -19,10 +19,11 @@ const PYRAMID = {
 describe("toLegacy — v2 → v1 동치 변환", () => {
   it("변조 없는 기본 미션만 v1 과 동치 — 변조가 붙으면 v1 표현 불가(null)", () => {
     const legacy = DEFAULT_MISSIONS_V2.map(toLegacy);
-    // 1번(정화 작전)만 변조가 없다. 2~4번(도시 방어·랜드마크 사수·지역 사수)은 체감 분화 보정으로
-    // aggro/killHealMul 변조가 붙어 v1 계약 밖이 됐다 — v1 은 변조 축 자체가 없다.
+    // 1번(정화 작전)만 변조가 없다. 2·3번(도시 방어·랜드마크 사수)은 aggro 변조가 붙어 v1 계약 밖.
+    // 4번(지역 사수)은 killHealMul 폐지(2026-08-25 회복 전면 삭제)로 변조가 사라져 다시 v1 동치가 됐다.
     expect(legacy[0]).toEqual(DEFAULT_MISSIONS[0]);
-    expect(legacy.slice(1, 5)).toEqual([null, null, null, null]);
+    expect(legacy.slice(1, 3)).toEqual([null, null]);
+    expect(legacy[3]).toEqual(DEFAULT_MISSIONS[3]);
     // 대조군: 변조를 걷어내면 다시 v1 과 동치가 된다(어댑터가 깨진 게 아님을 고정)
     const bare = DEFAULT_MISSIONS_V2.slice(1, 4).map((m) => toLegacy({ ...m, modifiers: undefined }));
     expect(bare).toEqual(DEFAULT_MISSIONS.slice(1, 4));
@@ -331,9 +332,11 @@ describe("runnableV2 — 신규 변조 지원", () => {
     deploy: { model: "horde", count: 10, unitHp: 50, concurrentCap: 5, reinforceInterval: 1, spawnRadius: 100 },
     zoneRadius: 0,
   };
-  it("killHealMul·offTargetPenalty 는 구동 가능", () => {
-    expect(runnableV2({ ...base, modifiers: { killHealMul: 0 } })).toBe(true);
+  it("offTargetPenalty 는 구동 가능", () => {
     expect(runnableV2({ ...base, modifiers: { offTargetPenalty: 6 } })).toBe(true);
+  });
+  it("폐지된 killHealMul 은 미지 변조로 거부된다 — 회복 전면 삭제(2026-08-25)", () => {
+    expect(runnableV2({ ...base, modifiers: { killHealMul: 0 } as never })).toBe(false);
   });
   it("미지 변조는 여전히 제외", () => {
     expect(runnableV2({ ...base, modifiers: { bogus: 1 } as never })).toBe(false);

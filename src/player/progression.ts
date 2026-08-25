@@ -26,12 +26,19 @@ export function xpForKill(s: number): number {
   return Math.round(10 + 40 * clamp(s, 0, 1));
 }
 
-/** 드론별 레벨 성장치 — 워커=맷집(HP/재생), 플라이어=화력(%) 우위. 미지의 드론 id 는 무성장(안전). */
+/**
+ * 드론별 레벨 성장치 — 워커=맷집(최대 HP), 플라이어=화력(%) 우위. 미지의 드론 id 는 무성장(안전).
+ *
+ * ⚠ `hpRegen` 은 **전 드론 0**(2026-08-25) — 회복 수단을 게임에서 없앤 설계 결정(처치 환수 폐지와
+ * 한 세트). 잃은 체력이 시간으로 돌아오면 "교전을 피해 숨어서 회복"이 최적해가 되고, 피격의 무게가
+ * 사라진다. 성장은 **최대 HP 를 늘리는 것**(같은 피해를 더 견딤)이지 **잃은 것을 되돌리는 것**이 아니다.
+ * 필드/전이 함수(regenStep)는 남겨 둔다 — 수치만 0 이면 되고, 되살릴 때 여기만 고치면 된다.
+ */
 export function droneGrowth(droneId: string, level: number): { hpBonus: number; dmgMult: number; hpRegen: number } {
   const n = clamp(Math.floor(level), 1, LEVEL_CAP) - 1; // 레벨 1 = 무보정
   switch (droneId) {
-    case "walker": return { hpBonus: 6 * n, dmgMult: 1 + 0.02 * n, hpRegen: 0.5 * n };
-    case "flyer": return { hpBonus: 3 * n, dmgMult: 1 + 0.03 * n, hpRegen: 0.3 * n };
+    case "walker": return { hpBonus: 6 * n, dmgMult: 1 + 0.02 * n, hpRegen: 0 };
+    case "flyer": return { hpBonus: 3 * n, dmgMult: 1 + 0.03 * n, hpRegen: 0 };
     default: return { hpBonus: 0, dmgMult: 1, hpRegen: 0 };
   }
 }

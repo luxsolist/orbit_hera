@@ -108,7 +108,6 @@ export interface MissionModifiers {
    * 선택지가 되지 않는다. 증원이 처치를 즉시 메우므로(concurrentCap), 환수를 빼면 "굳이 다 잡을
    * 이유"가 사라진다.
    */
-  killHealMul?: number;
 }
 
 // ─────────────────────────── 명세 ───────────────────────────
@@ -390,7 +389,7 @@ export function missionProgressTextV2(spec: MissionSpecV2, rt: MissionRuntime, r
 
 // 엔진이 지원하는 변조 키(훅 ④⑥에서 해금) — 그 외 변조가 지정된 미션은 풀에서 제외.
 const SUPPORTED_MODIFIERS = new Set<keyof MissionModifiers>([
-  "aggro", "zoneShrink", "freqRegenMul", "sweepPeriodMul", "buildingBrands", "offTargetPenalty", "killHealMul",
+  "aggro", "zoneShrink", "freqRegenMul", "sweepPeriodMul", "buildingBrands", "offTargetPenalty",
 ]);
 
 /**
@@ -465,7 +464,7 @@ export function fromLegacy(v1: MissionSpec): MissionSpecV2 {
  *
  * **변조가 미션의 체감을 가른다**: 승리 조건만 다르고 적 행동이 같으면 모든 미션이 "사냥" 하나로
  * 수렴한다(2026-08-23 실플레이 피드백). 그래서 사수형에는 aggro(표적 직행), 생존형에는
- * killHealMul: 0(교전 유인 제거), purge-role 에는 offTargetPenalty(골라 죽이기의 대가)를 건다.
+ * purge-role 에는 offTargetPenalty(골라 죽이기의 대가)를 건다.
  * 그 결과 1번(정화 작전)만 v1 `DEFAULT_MISSIONS` 와 `toLegacy` 동치이고 — v1 은 변조 축이 없다 —
  * 나머지는 v2 전용이다.
  */
@@ -499,7 +498,6 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     fail: { respawns: 2, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
     deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
     zoneRadius: 5000,
-    modifiers: { killHealMul: 0 }, // 처치 환수 없음 — 교전이 항상 이득이면 회피가 선택지가 안 된다
   },
   {
     // 패턴 19 정밀 정화(06-missions §3-F) — 훅 ② 복합 실패 조건의 첫 소비처: 격멸 + 건물 손실 한도.
@@ -666,7 +664,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     fail: { respawns: 2, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
     deploy: { model: "horde", count: 130, unitHp: 300, concurrentCap: 45, reinforceInterval: 0.5, spawnRadius: 1400 },
     zoneRadius: 4000,
-    modifiers: { killHealMul: 0, zoneShrink: { everySec: 45, step: 800, minRadius: 1200 } },
+    modifiers: { zoneShrink: { everySec: 45, step: 800, minRadius: 1200 } },
   },
   {
     // 패턴 2 해일(phased — 훅 ⑥) — 밀물·썰물: 90초마다 더 큰 파도가 겹쳐 온다.
@@ -683,7 +681,6 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
       ],
     },
     zoneRadius: 4500,
-    modifiers: { killHealMul: 0 }, // 처치 환수 없음 — 썰물에 숨 고르기가 유효하도록
   },
   {
     // 패턴 20 옅은 장(freqRegenMul — 훅 ⑥) — 게이지 회복 절반: 볼리 한 발의 가치가 오른다.

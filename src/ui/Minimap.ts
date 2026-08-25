@@ -15,6 +15,8 @@ const C_LANDMARK = "rgba(255, 206, 122, 0.72)";
 const C_LANDMARK_DOT = "#ffce7a"; //          살아있는 랜드마크 점/화살표
 const C_LANDMARK_DEAD = "rgba(255, 206, 122, 0.30)"; // 파괴분(빈 원)
 const INK = "rgba(5, 12, 18, 0.9)"; //        어두운 외곽선(배경 위 대비 확보)
+const C_PHASE = "rgba(255, 90, 110,"; //       위상 이탈(§2.1) 방향 핑 — 적 색조 유지 + 펄스 알파(뒤에 알파값 이어붙임)
+const PHASE_PULSE_HZ = 1.6; // 확률 구름 펄스 속도(Hz) — 빠르면 산만하고 느리면 "이상 신호" 느낌이 죽는다
 
 /**
  * 우측 상단 레이더 미니맵. 플레이어 중심·시점 정렬(위=시선).
@@ -32,6 +34,9 @@ export class Minimap implements MinimapSink {
   private worldRadius = 80;
   private edgeBuf: EdgeMarker[] = []; //  화살표 후보(프레임 재사용)
   private edgePick: EdgeMarker[] = []; // 선별 결과(프레임 재사용)
+  private phaseBuf: EdgeMarker[] = []; //  위상 이탈 개체 방향 후보(프레임 재사용)
+  private phasePick: EdgeMarker[] = []; // 선별 결과(프레임 재사용)
+  private pulseT = 0; //                  위상 핑 펄스 시계(dt 누적)
   private size!: number; // 캔버스 한 변(px, 화면 비례)
   private half!: number;
 
@@ -162,6 +167,7 @@ export class Minimap implements MinimapSink {
     const agl = pos.y - this.world.heightAt(pos.x, pos.z);
     this.worldRadius = approach(this.worldRadius, minimapRadiusFor(agl), dt);
     this.scale = this.half / this.worldRadius;
+    this.pulseT += dt;
 
     const ctx = this.ctx;
     const half = this.half;
@@ -226,10 +232,18 @@ export class Minimap implements MinimapSink {
     this.drawLandmarks(cx, cy);
 
     // ---- 적 ----
+    // 위상 이탈(§2.1) 개체는 **위치를 아예 그리지 않는다** — 질량-에너지 서명(=중력 이상)만
+    // 새어 나온다는 설정이라, 미니맵도 "어디쯤"이 아니라 "어느 방향"까지만 준다. 정확한 거리는
+    // 화면의 중력 렌즈 왜곡(§2.7.1, Game.ts lens 패스)으로만 읽힌다 — 채널을 둘로 쪼갠 것.
     const px = this.px;
     const pz = this.pz;
+    this.phaseBuf.length = 0;
     for (const e of this.enemies.aliveSnapshot) {
       const lp = this.worldToLocal(e.x - px, e.z - pz, yaw);
+      if (e.phased) {
+        this.phaseBuf.push({ a: Math.atan2(lp.y, lp.x), d: Math.hypot(lp.x, lp.y) });
+        continue;
+      }
       const dist = Math.hypot(lp.x, lp.y);
       if (dist > this.worldRadius) {
         const a = Math.atan2(lp.y, lp.x);
@@ -243,15 +257,6 @@ export class Minimap implements MinimapSink {
       }
       const ex = cx + lp.x;
       const ey = cy + lp.y;
-      if (e.phased) {
-        // 위상 이탈(§2.1) — 빈 원(확률 구름): 위치는 알지만 붙잡을 수 없다
-        ctx.strokeStyle = "rgba(255, 59, 78, 0.5)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(ex, ey, 3.5, 0, Math.PI * 2);
-        ctx.stroke();
-        continue;
-      }
       const grad = ctx.createRadialGradient(ex, ey, 0, ex, ey, 8);
       grad.addColorStop(0, "rgba(255, 59, 78, 0.95)");
       grad.addColorStop(1, "rgba(255, 59, 78, 0)");
@@ -264,6 +269,7 @@ export class Minimap implements MinimapSink {
       ctx.arc(ex, ey, 2.5, 0, Math.PI * 2);
       ctx.fill();
     }
+    this.drawPhaseDirections(cx, cy);
 
     // ---- 플레이어(중앙 삼각형, 위쪽 = 시점 방향) ----
     ctx.fillStyle = "#34f5ff";
@@ -354,6 +360,39 @@ export class Minimap implements MinimapSink {
       ctx.lineTo(cx + ox * (tipR - len) + oy * hw, cy + oy * (tipR - len) - ox * hw);
       ctx.closePath();
       ctx.fill();
+    }
+  }
+
+  /**
+   * 위상 이탈(§2.1) 개체 — 이상 중력장 방향 핑. 랜드마크 화살표와 의도적으로 다르게 그린다:
+   * **속이 빈 채 펄스**(랜드마크는 꽉 찬 정삼각 고정) — "확정된 대상"이 아니라 "확률 구름"이라는
+   * 기존 미니맵 언어("빈 원")를 방향 표시로 옮긴 것. 색은 적 색조(붉은 계열)를 유지해 위협
+   * 자체는 명확히 전달하되, 랜드마크(호박·꽉 참)·일반 적(붉은·꽉 참)과는 채움 유무로 갈린다.
+   *
+   * 거리 무관 전원 방향만 — 위상 개체는 애초에 미니맵에 위치를 올리지 않는다(render 의 호출부 참조).
+   * 겹치면 가까운 것 우선으로 솎아낸다(pickEdgeMarkers 재사용 — 밀집 웨이브에서 테두리가 뒤덮이지 않게).
+   */
+  private drawPhaseDirections(cx: number, cy: number): void {
+    if (!this.phaseBuf.length) return;
+    const ctx = this.ctx;
+    const picks = pickEdgeMarkers(this.phaseBuf, this.phasePick, 6, 0.18);
+    const pulse = 0.35 + 0.35 * (0.5 + 0.5 * Math.sin(this.pulseT * Math.PI * 2 * PHASE_PULSE_HZ));
+    const r = this.half - 7;
+    const len = Math.max(4, this.size * 0.045);
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = `${C_PHASE} ${pulse.toFixed(3)})`;
+    for (const m of picks) {
+      const ox = Math.cos(m.a), oy = Math.sin(m.a);
+      const tx = cx + ox * r, ty = cy + oy * r;
+      const hw = len * 0.5;
+      // 속이 빈 다이아몬드(펄스) — 랜드마크의 꽉 찬 삼각 화살표와 형태로 구분.
+      ctx.beginPath();
+      ctx.moveTo(tx, ty);
+      ctx.lineTo(tx - ox * len - oy * hw, ty - oy * len + ox * hw);
+      ctx.lineTo(tx - ox * (len * 1.7), ty - oy * (len * 1.7));
+      ctx.lineTo(tx - ox * len + oy * hw, ty - oy * len - ox * hw);
+      ctx.closePath();
+      ctx.stroke();
     }
   }
 

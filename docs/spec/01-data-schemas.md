@@ -160,7 +160,7 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 
 **공통 베이스**(rusher·kiter 모두): `name`("국문 / ENGLISH" 표시명),
 `spawnAltMin`/`spawnAltMax`(지면 대비 스폰 고도 밴드 m), `countBase`(웨이브1 동시 수, 매칭 드론 1인 기준),
-`countCap`(웨이브 증가분 상한, 1인 기준), `killRefund`(처치 시 플레이어 HP 환수),
+`countCap`(웨이브 증가분 상한, 1인 기준),
 `speed`(가장 빠른=적색·약체 속도), `speedMin`(가장 느린=청백·강체 속도). 개체 속도 = `speed↔speedMin`를
 색 강도 `colorStrength01`로 보간(적색=`speed`, 청백=`speedMin`). 물량은 매칭 드론 수에 비례(러셔=워커, 카이터=플라이어).
 

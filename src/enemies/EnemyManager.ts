@@ -77,7 +77,6 @@ const REINFORCE_R_MAX = 200; // 증원 스폰 링 외반경(m)
 const BOSS_PROJECTIONS = 3; // 투영 수
 const BOSS_SPEED_MULS = [0.6, 0.85, 1.1] as const; // 투영별 속도 차 — "가장 느리고 가까운 구를 때린다"
 const BOSS_VIS_HP_FRAC = 0.5; // 투영 렌더 크기 산정 HP 비율(전 풀 크기로 3기를 그리면 과대)
-const BOSS_KILL_REFUND = 15; // 보스 처치 환수(그룹당 1회)
 const BOSS_FILAMENT_CD = 0.18; // 피격 시 투영 간 빛 필라멘트 스로틀(s) — "이어져 있다"는 복선 연출
 const ROSTER_CLUSTER_R = 70; // 로스터 유닛 그룹 산개 반경(m) — 그룹이 한 덩어리로 읽히게
 const LINE_SPACING = 28; // line 진형 개체 간격(m)
@@ -236,8 +235,6 @@ export class EnemyManager {
   // 어그로 성향(훅 ④ — 미션 변조 `modifiers.aggro`): player = 현행(인식 반경 내 플레이어 전환),
   // building/landmark = 표적 직행 — 플레이어는 **때려야만**(provoked) 어그로가 끌린다.
   private aggro: "player" | "landmark" | "building" = "player";
-  // 처치 HP 환수 배수(미션 변조 killHealMul) — 생존 미션에서 0 으로 낮춰 "교전이 항상 이득"을 깬다.
-  private killHealMul = 1;
   private buildingBrandsEnabled = false; // 공성 낙인(modifiers.buildingBrands) — 미션 변조, clear 가 리셋
   private bossGroups: CoreEnemy[][] = []; // 다중 투영 보스 그룹들(필라멘트·동반 소산 — roster 는 복수 가능)
   private bossFilamentCd = 0;
@@ -404,7 +401,11 @@ export class EnemyManager {
     return out;
   }
 
-  /** 미니맵용 살아있는 적 위치 스냅샷(읽기 전용). 위상 이탈 개체는 phased 플래그 — 빈 원(확률 구름)으로 그림. */
+  /**
+   * 미니맵용 살아있는 적 위치 스냅샷(읽기 전용). 위상 이탈 개체는 `phased` 플래그를 단다 —
+   * Minimap 은 이 좌표를 위치로 찍지 않고 **방향만**(테두리 펄스) 쓴다(질량-에너지 서명만
+   * 새어 나온다는 설정, 2026-08-24). 좌표 자체는 방향 계산에 필요해 그대로 넘긴다.
+   */
   get aliveSnapshot(): readonly { x: number; z: number; phased?: boolean }[] {
     const out: { x: number; z: number; phased?: boolean }[] = [];
     for (const e of this.enemies) {
@@ -418,11 +419,6 @@ export class EnemyManager {
   /** 어그로 성향 설정(훅 ④) — 미션 변조. 투입(start*) 후 호출(clear 가 "player" 로 리셋). */
   setAggro(mode: "player" | "landmark" | "building"): void {
     this.aggro = mode;
-  }
-
-  /** 처치 HP 환수 배수(미션 변조 killHealMul). 0 = 환수 없음. */
-  setKillHealMul(mul: number) {
-    this.killHealMul = Math.max(0, mul);
   }
 
   /** 공성 낙인 허용(modifiers.buildingBrands, 훅 ④) — 미션 변조. 투입 후 호출(clear 가 false 로 리셋). */
@@ -692,7 +688,6 @@ export class EnemyManager {
       e.role = "rusher"; // 저속 접촉 압박형(추격) — 낙인/드레인 없음
       e.deployRole = "boss"; // 투입 직무 — purge-role(boss) 집계(크레딧은 그룹당 1: registerKill 1회 계약)
       e.sharedPool = pool;
-      e.killRefund = BOSS_KILL_REFUND;
       e.archetypeName = this.spec.archetypes.rusher.name;
       e.glow = 1 + GLOW_STRENGTH * g01;
       e.driftAnchor = this.riftAnchor;
@@ -844,7 +839,6 @@ export class EnemyManager {
     enemy.deployRole = type; // 투입 직무 기본값 = 행동 직무(roster 의 elite 는 호출부가 덮어씀)
     enemy.applySilhouette(SHELL_GEOS[type]); // 디졸브 개별 메시도 직무 형태(P3 §6.7)
     enemy.glow = 1 + GLOW_STRENGTH * g01; // 청백(강)일수록 밝게 빛남(블룸)
-    enemy.killRefund = arche.killRefund;
     enemy.archetypeName = arche.name;
     enemy.driftAnchor = this.riftAnchor; // 소산 표류 앵커(공유 참조) — 죽음이 균열 방향을 가리킴
     // 준위 강등(P3 §2.3) — 정예·보스급만 색 계단 주입(HP 경계 하향 통과 시 강등 연출)
@@ -1115,17 +1109,6 @@ export class EnemyManager {
       else if (enemy.role === "rewinder") this.rewinderCast(enemy, p, t.pos, dt); // hold 진형의 후방 시전자
       else this.attack(enemy, t.pos, p, t.player, null);
     }
-  }
-
-  /** 사망 지점 최근접 플레이어(처치 환수 대상 근사 — MP 무기 소유자 미배선 단계). */
-  private nearestPlayer(pos: THREE.Vector3): PlayerController | undefined {
-    let best: PlayerController | undefined, bestD = Infinity;
-    for (const pl of this.players) {
-      if (pl.isDead) continue;
-      const d = pl.worldPosition.distanceToSquared(pos);
-      if (d < bestD) { bestD = d; best = pl; }
-    }
-    return best;
   }
 
   /** 매 프레임 플레이어 스냅샷(위치·EMA 속도·생존) 갱신 — 멀티타깃 조향/공격 입력. */
@@ -1476,8 +1459,10 @@ export class EnemyManager {
 
   registerKill(enemy?: CoreEnemy) {
     this.killCount += 1;
-    // 처치 = 흡수당한 물질 회수(HP 환수). 사망 지점 최근접 플레이어에게(근사).
-    if (enemy && this.killHealMul > 0) this.nearestPlayer(enemy.group.position)?.heal(enemy.killRefund * this.killHealMul);
+    // 처치 HP 환수는 **폐지**(2026-08-25) — 한 번 잃은 체력은 그 생(生) 안에서 돌아오지 않는다.
+    // 회복 수단이 리스폰뿐이면 피격 하나하나가 되돌릴 수 없는 손실이 되고, "적을 잡아 회복한다"는
+    // 안전판이 사라져 교전 자체가 위험 부담이 된다. 자연 재생(progression.droneGrowth.hpRegen)도
+    // 같은 이유로 0 — 회복 경로는 게임 전체에 존재하지 않는다.
     // 역행 후보 기록(§6.6) — 계류(W2) 중 격파는 확정으로 표기(되감기지 않는다). 상한 64.
     if (enemy) {
       this.killLog.push({
@@ -1546,7 +1531,6 @@ export class EnemyManager {
     this.stats.sweepCleanPasses = 0;
     for (const k of Object.keys(this.roleKills) as (keyof typeof this.roleKills)[]) this.roleKills[k] = 0;
     this.aggro = "player"; // 어그로 변조 리셋 — 미션이 투입 후 setAggro 로 재지정
-    this.killHealMul = 1; //  처치 환수 배수 리셋 — 미션이 setKillHealMul 로 재지정
     this.buildingBrandsEnabled = false; // 공성 낙인 변조 리셋 — 미션이 투입 후 setBuildingBrands 로 재지정
     this.burstMode = false;
     this.hasPrev = false; // 재입장 시 순간이동 변위로 인한 가짜 속도 스파이크 방지

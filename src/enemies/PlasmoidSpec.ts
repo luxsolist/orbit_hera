@@ -59,7 +59,6 @@ export interface PlasmoidArchetypeBase {
   spawnAltMax: number; // 스폰 고도 상한(지면 대비 m)
   countBase: number; // 웨이브1 동시 개체 수(매칭 드론 1인 기준)
   countCap: number; // 웨이브 증가분 상한(1인 기준)
-  killRefund: number; // 처치 시 플레이어 HP 환수(흡수당한 물질 회수)
   speed: number; // 가장 빠른(약체·적색) 개체 속도
   speedMin: number; // 가장 느린(강체·청백) 개체 속도 — 색 강도 g01 로 speed↔speedMin 보간
 }
@@ -481,30 +480,30 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
   archetypes: {
     rusher: {
       name: "거머리 플라즈모이드 / LEECH",
-      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 12, killRefund: 5, speed: 17, speedMin: 12,
+      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 12, speed: 17, speedMin: 12,
     },
     kiter: {
       name: "모기 플라즈모이드 / SKEETER",
-      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, killRefund: 8, speed: 89, speedMin: 67,
+      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, speed: 89, speedMin: 67,
       turnRateDeg: 100, keepDist: 35, keepBand: 12, strafeMix: 0, orbitRef: 35, evadeGain: 0.85,
       attackRange: 95, drainDamage: 1.4, drainInterval: 1.5,
     },
     marker: {
       name: "소인체 플라즈모이드 / BRANDER",
-      spawnAltMin: 40, spawnAltMax: 160, countBase: 2, countCap: 4, killRefund: 8, speed: 30, speedMin: 22,
+      spawnAltMin: 40, spawnAltMax: 160, countBase: 2, countCap: 4, speed: 30, speedMin: 22,
       turnRateDeg: 90, keepDist: 70, keepBand: 18,
       tomb: { projSpeed: 22, projTurnRateDeg: 70, projTtl: 14, fireRange: 220, fireInterval: 7, sweepDamage: 18 },
     },
     cutter: {
       // 절단체(§6.3) — 웨이브 물량 0(로스터/미션 전용). 방어 미션의 주적 — 격추 시 건물 재안착.
       name: "절단체 플라즈모이드 / SEVERER",
-      spawnAltMin: 30, spawnAltMax: 120, countBase: 0, countCap: 0, killRefund: 8, speed: 26, speedMin: 18,
+      spawnAltMin: 30, spawnAltMax: 120, countBase: 0, countCap: 0, speed: 26, speedMin: 18,
       attachRange: 22, severSec: 5, seekRange: 900,
     },
     rewinder: {
       // 역행체(§6.6) — 웨이브 물량 0(미니보스 슬롯). 최우선 표적 — 시전을 끊지 못하면 전과가 되감긴다.
       name: "역행체 플라즈모이드 / RETROGRADE",
-      spawnAltMin: 60, spawnAltMax: 200, countBase: 0, countCap: 0, killRefund: 12, speed: 24, speedMin: 16,
+      spawnAltMin: 60, spawnAltMax: 200, countBase: 0, countCap: 0, speed: 24, speedMin: 16,
       turnRateDeg: 70, keepDist: 160, keepBand: 30,
       rollback: { castSec: 4, castCd: 14, castRange: 360, radius: 300, rewindSec: 5 },
     },

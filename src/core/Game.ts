@@ -19,7 +19,7 @@ import { DEFAULT_PLASMOID } from "../enemies/PlasmoidSpec";
 import { FrequencyBeam } from "../weapons/FrequencyBeam";
 import { SpecialBarrage } from "../weapons/SpecialBarrage";
 import { SpecialStream } from "../weapons/SpecialStream";
-import { HUD } from "../ui/HUD";
+import { HUD, KILL_PULSE_MIN_STRENGTH } from "../ui/HUD";
 import { RearView } from "../ui/RearView";
 import { Minimap } from "../ui/Minimap";
 import { hudSizesFor, hudComponentsFor } from "../ui/hudLayout";
@@ -29,6 +29,7 @@ import { projectLensPoints } from "../fx/lensDistort";
 import type { LensDistortPass } from "../fx/LensDistortPass";
 import { TargetBrackets } from "../fx/TargetBrackets";
 import { EnergyWall } from "../fx/EnergyWall";
+import { KillBurst } from "../fx/killBurst";
 import { CinematicPlayer } from "../intro/CinematicPlayer";
 import { MenuBackground } from "../intro/MenuBackground";
 import { introScenes } from "../intro/scenes";
@@ -73,6 +74,7 @@ interface Session {
   brackets: TargetBrackets;
   instance: GameInstance; // 이 플레이타임의 미션/상태/종료 조건 관리
   wall?: EnergyWall; // 작전구역 경계 에너지 벽(존 있을 때만)
+  killBurst: KillBurst; // 처치 파편 + 환수 실선(타격감 ③④) — EnemyManager.onKill 에서 스폰
 }
 
 /**
@@ -320,6 +322,7 @@ export class Game {
     const rearView = new RearView(this.renderer, this.scene, player);
     const minimap = new Minimap(player, enemies, world);
     const brackets = new TargetBrackets(this.scene);
+    const killBurst = new KillBurst(this.scene); // 처치 파편 + 환수 실선(타격감 ③④)
     // 이 플레이타임의 미션 — 탐방은 FREE_ROAM, 전투는 **챕터 가중 선택**(캠페인 §9 — 규칙 기반 감독).
     const pool = peaceful ? [] : await fetchMissions().catch(() => DEFAULT_MISSIONS_V2);
     const mission = peaceful
@@ -347,7 +350,7 @@ export class Game {
       wall = new EnergyWall(this.scene, sx, sz, mission.zoneRadius, gy - 200, gy + 1600);
       this.wallParams = { sx, sz, y0: gy - 200, y1: gy + 1600 }; // 구역 축소 시 벽 재생성용
     } else this.wallParams = null;
-    this.session = { world, player, enemies, beam, special, composer, lens, rearView, minimap, brackets, instance, wall };
+    this.session = { world, player, enemies, beam, special, composer, lens, rearView, minimap, brackets, instance, wall, killBurst };
     this.applyHudLayout(); // 새 미니맵을 현재 화면 비례로 동기화
     this.diag.snapshot(this.renderer, "battle-built"); // 세션(컴포저 등) 생성 직후 — 누수 추적 핵심 지점
     this.wireEvents(this.session);
@@ -374,7 +377,6 @@ export class Game {
     // 변조 레이어(훅 ④⑥) — 투입 후 지정(start*/clear 가 기본값으로 리셋하므로 반드시 이후에)
     s.enemies.setAggro(m.modifiers?.aggro ?? "player");
     s.enemies.setBuildingBrands(!!m.modifiers?.buildingBrands); // 공성 낙인(패턴 17)
-    s.enemies.setKillHealMul(m.modifiers?.killHealMul ?? 1); // 처치 환수 배수(생존 미션은 0 — 교전 유인 제거)
     // 자매쌍 난이도 전이(§9.2-3) — 짝 도시가 무너져 있으면 파문 주기 단축(가중과 미션 변조 곱)
     const pairMul = this.peaceful || !this.currentCity ? 1 : pairAggravation(campaignStore.load(), this.currentCity.id);
     const sweepMul = (m.modifiers?.sweepPeriodMul ?? 1) * pairMul;
@@ -426,10 +428,21 @@ export class Game {
     s.beam.onManualHit = (killed) => this.hitstop(killed ? 0.06 : 0.025);
     s.enemies.onKill = (enemy) => {
       this.hud.setKills(s.enemies.killCount);
-      this.hitstop(0.045); // 처치 확정 정지 프레임(오토/특수 포함)
+      // 타격감 ①②③④ — strength(0..1)에 비례해 히트스톱·처치음·화면 펄스·파편/환수가 함께 커진다.
+      // 잡몹 한 마리와 보스 한 마리가 "같은 처치"로 뭉개지지 않게 하는 게 핵심(2026-08-24).
+      const s01 = enemy ? s.enemies.strengthOf(enemy) : 0;
+      this.hitstop(0.045 + 0.075 * s01); // 처치 확정 정지 프레임 — 강체는 최대 ~0.12s
+      this.sfx.kill(s01); // 결맞음 붕괴음(§1.6) — 발사음과 다른 유일한 "붕괴" 사운드
+      if (s01 >= KILL_PULSE_MIN_STRENGTH) this.hud.pulseKill(s01); // 강체만 화면 펄스(잡몹까지 하면 연사 중 눈 피로)
+      if (enemy) {
+        const color = new THREE.Color(enemy.color);
+        s.killBurst.spawnShards(enemy.group.position, color, s01); // 코어 파편 — KK 색 그대로 이어받아 발광
+        // 환수 실선(spawnRefund)은 **제거**(2026-08-25) — HP 환수 폐지로 "죽여서 회복했다"는 인과가
+        // 사라졌다. 회복이 없는데 플레이어로 빨려드는 입자를 그리면 화면이 거짓 신호를 준다.
+      }
       // 처치 XP(§7.4) — 강함 비례 10~50. update 는 스로틀 기록이라 프레임 부담 없음.
       if (!this.peaceful && enemy) {
-        const gain = xpForKill(s.enemies.strengthOf(enemy));
+        const gain = xpForKill(s01);
         const id = this.currentDroneId;
         progressStore.update((p) => ({
           ...p,
@@ -516,7 +529,7 @@ export class Game {
     this.renderer.setAnimationLoop(null);
     this.intro?.dispose();
     this.menuBg?.dispose();
-    if (this.session) { disposeComposer(this.session.composer); this.session.wall?.dispose(); }
+    if (this.session) { disposeComposer(this.session.composer); this.session.wall?.dispose(); this.session.killBurst.clear(); }
     this.renderer.forceContextLoss(); // GPU 컨텍스트 즉시 반납(iOS 회수 촉진)
     this.renderer.dispose();
   }
@@ -598,6 +611,7 @@ export class Game {
       s.beam.update(dt, this.input.fireHeld);
       s.special.update(dt, this.input.specialPressed);
       s.enemies.update(dt);
+      s.killBurst.update(dt); // 처치 파편 낙하·소산
 
       // 락온 토글(W 두번 연타 / 조이스틱 더블탭)
       if (this.input.lockOnPressed) {

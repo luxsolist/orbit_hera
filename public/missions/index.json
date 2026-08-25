@@ -101,10 +101,7 @@
    "reinforceInterval": 1.5,
    "spawnRadius": 1500
   },
-  "zoneRadius": 5000,
-  "modifiers": {
-   "killHealMul": 0
-  }
+  "zoneRadius": 5000
  },
  {
   "id": "surgical",
@@ -510,8 +507,7 @@
     "everySec": 45,
     "step": 800,
     "minRadius": 1200
-   },
-   "killHealMul": 0
+   }
   }
  },
  {
@@ -565,10 +561,7 @@
     }
    ]
   },
-  "zoneRadius": 4500,
-  "modifiers": {
-   "killHealMul": 0
-  }
+  "zoneRadius": 4500
  },
  {
   "id": "thin-field",

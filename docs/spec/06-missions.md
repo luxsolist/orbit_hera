@@ -47,7 +47,7 @@ v1 은 `kind` 하나에 승리·실패·투입이 뭉쳐 있어 패턴 확장이
 | `fail.maxBuildingLoss` / `maxLandmarkLoss` | 손실 한도(도달 시 실패). 0 = 미사용 — **모든 goal 과 조합 가능**(복합 제약) |
 | `deploy` | 투입 모델(§1 표). `roster.units[] = { role, count, hp, shield?, formation?, behavior?, anchor? }` — **진형** cluster(밀집)/ring(중심 포위)/line(전선) · **행동** hunt/hold(거점 고수)/patrol(배치점 순회)/escort(anchor 유닛 추종). hunt 외 행동도 사거리 내 기회 공격은 수행하며 **피격 시 진형을 버리고 hunt 전환** |
 | `zoneRadius` | 작전구역(m). 0 = 무제한 |
-| `modifiers` | `sweepPeriodMul` · `zoneShrink{everySec, step, minRadius}` · `freqRegenMul` · `aggro` · `buildingBrands` · `offTargetPenalty` · `killHealMul` — 전부 선택 |
+| `modifiers` | `sweepPeriodMul` · `zoneShrink{everySec, step, minRadius}` · `freqRegenMul` · `aggro` · `buildingBrands` · `offTargetPenalty` — 전부 선택 |
 
 ### 체감 분화 — 승리 조건만으로는 미션이 갈리지 않는다
 
@@ -59,7 +59,7 @@ v1 은 `kind` 하나에 승리·실패·투입이 뭉쳐 있어 패턴 확장이
 |---|---|---|
 | 사수형(`guard`) | `aggro: landmark/building` | 적이 플레이어만 쫓아 표적이 안 깎인다 = 생존전과 동일 |
 | 표적 사냥(`purge-role`) | `offTargetPenalty` — 비표적 1기당 시간 차감 | 잡몹 처치가 공짜라 "전부 죽인다"가 늘 최적 = 격멸전과 동일 |
-| 생존형(`survive`) | `killHealMul: 0` — 처치 환수 제거 | 처치가 위협 감소 + 회복까지 겸해 교전이 항상 이득 = 회피가 선택지가 안 된다 |
+| 생존형(`survive`) | (구 `killHealMul: 0`) | 2026-08-25 회복 전면 폐지로 **전 미션 공통** — 이 변조 자체가 제거됐다 |
 
 전제 조건 둘(엔진 쪽): **유발(`provoked`)은 감쇠 타이머**여야 하고(영구 래치면 첫 교전 뒤 전장 전체가
 플레이어만 쫓는다 — 360° 자동사격이라 유발을 피할 수도 없다), **인식 해제 반경도 어그로 변조를 따라야**

@@ -36,13 +36,15 @@ describe("XP 소스·성장치", () => {
     expect(CLEAR_XP).toBe(200);
   });
 
-  it("droneGrowth — L20 정본치(워커 234HP/×1.38/9.5s · 플라이어 +57HP/×1.57/5.7s)", () => {
+  // hpRegen 은 **전 드론·전 레벨 0** — 회복 수단 전면 폐지(2026-08-25). 성장은 최대 HP 를 늘릴 뿐
+  // 잃은 것을 되돌리지 않는다. 이 값이 0 이 아니게 되면 "숨어서 회복"이 최적해로 돌아온다.
+  it("droneGrowth — L20 정본치(워커 234HP/×1.38 · 플라이어 +57HP/×1.57) · 재생은 전부 0", () => {
     const w = droneGrowth("walker", 20);
-    expect(w).toEqual({ hpBonus: 114, dmgMult: 1.38, hpRegen: 9.5 }); // 120+114=234
+    expect(w).toEqual({ hpBonus: 114, dmgMult: 1.38, hpRegen: 0 }); // 120+114=234
     const f = droneGrowth("flyer", 20);
     expect(f.hpBonus).toBe(57); // 60+57=117
     expect(f.dmgMult).toBeCloseTo(1.57);
-    expect(f.hpRegen).toBeCloseTo(5.7);
+    expect(f.hpRegen).toBe(0);
     expect(droneGrowth("walker", 1)).toEqual({ hpBonus: 0, dmgMult: 1, hpRegen: 0 }); // L1 무보정
     expect(droneGrowth("unknown", 20)).toEqual({ hpBonus: 0, dmgMult: 1, hpRegen: 0 }); // 미지 드론 안전
   });

@@ -17,10 +17,10 @@
 스펙 구조(`PlasmoidSpec`): `hp`(`PlasmoidHpSpec`), `color.stops`(`ColorStop[]`), `visual`(`PlasmoidVisualSpec`), `spawn`(`PlasmoidSpawnSpec`), `contact`(`PlasmoidContactSpec`), `archetypes`(`PlasmoidArchetypesSpec` = `{rusher, kiter, marker}`), `sweep`(`SweepSpec` — 심판 파문 전장 이벤트).
 
 ### 아키타입 — 행동을 드론에서 분리
-- **카이터 = "모기 플라즈모이드 / SKEETER"**(공중형, `PlasmoidKiterArchetype`): `keepDist` 거리를 유지하되 **keepDist 구(球) 위 개체 고유 방위(`homeDir`)** 로 향해 무리가 xy·z 모두 고르게 분산하고, 사거리에서 **드레인 빔**(`drainDamage`/`drainInterval`)으로 원거리 공격. `homeDir`은 매 프레임 **구면 랜덤워크로 표류**해 한 마리도 죽기 전까지 xyz 전 방향으로 자유 유영(`HOME_WANDER`). 너무 가까우면 직접 도주(`KITER_FLEE_LEAD` 예측 리드), 플레이어 원돌기엔 **수직 회피**(개체별 위/아래 무작위 = `homeDir.y` 부호; `orbitRef`/`evadeGain`). 상공(`spawnAlt` 80–300m)에 소수(`countBase 3`, `countCap 5`) 등장, 처치 환수 8. 튜닝: 속도 `speed 89`↔`speedMin 67`(플라이어 최고속 −20%~−40%), `turnRateDeg 100`, `keepDist 60`, `keepBand 12`, `attackRange 95`, `drainDamage 1.4`, `drainInterval 1.5`.
-- **러셔 = "거머리 플라즈모이드 / LEECH"**(지상형, `PlasmoidRusherArchetype`): 적극 **접근**해 **접촉**으로 흡수(`spec.contact`). 속도 `speed 17`↔`speedMin 12`(워커 최고속 19.44보다 약간 느려 공격할 틈을 줌). 지표(`spawnAlt` 0–60m)에 떼(`countBase 6`, `countCap 12`)로 등장, 처치 환수 5.
-- **마커 = "소인체 플라즈모이드 / BRANDER"**(중공형, `PlasmoidMarkerArchetype` — 서사편 §6.1 ① MARK): 카이터형 유영(`turnRateDeg 90`/`keepDist 70`/`keepBand 18`, 회피 옵션 없음)으로 중거리를 맴돌며 **낙인 유도탄**(`tomb`: `projSpeed 22`, `projTurnRateDeg 70`, `projTtl 14`, `fireRange 220`, `fireInterval 7`)을 발사. 명중해도 무피해 — **낙인**만 부착되고(표적당 상한 5), 주기적 **심판 파문**이 지나갈 때 낙인 1개당 `sweepDamage 18` 피해(최대 90 — 워커는 만피에서 생존, 플라이어는 방치 시 치명). 카운터: 느린 유도탄 회피(선회 캡이라 스트레이프로 흘림) / **근원 마커 격파**(그 개체의 낙인·유도탄 소산) / 관측 고정(W1)으로 장전 동결. 물량은 드론 종류 무관 전원 비례(`countBase 2`, `countCap 4`), 중고도(`spawnAlt` 40–160m). 접촉·드레인 없음, 처치 환수 8(최우선 표적 보상). 건물 낙인은 커터(§6.10-2) 단계에서 도입 예정 🔭.
-- 공통 베이스(`PlasmoidArchetypeBase`): `name`(표시명 "국문 / ENGLISH"), `spawnAltMin/spawnAltMax`, `countBase/countCap`, `killRefund`. 스폰 시 각 개체에 `archetypeName`·`killRefund`·`targetIndex`·`role`(직무 — 공격 경로 분기)이 실린다.
+- **카이터 = "모기 플라즈모이드 / SKEETER"**(공중형, `PlasmoidKiterArchetype`): `keepDist` 거리를 유지하되 **keepDist 구(球) 위 개체 고유 방위(`homeDir`)** 로 향해 무리가 xy·z 모두 고르게 분산하고, 사거리에서 **드레인 빔**(`drainDamage`/`drainInterval`)으로 원거리 공격. `homeDir`은 매 프레임 **구면 랜덤워크로 표류**해 한 마리도 죽기 전까지 xyz 전 방향으로 자유 유영(`HOME_WANDER`). 너무 가까우면 직접 도주(`KITER_FLEE_LEAD` 예측 리드), 플레이어 원돌기엔 **수직 회피**(개체별 위/아래 무작위 = `homeDir.y` 부호; `orbitRef`/`evadeGain`). 상공(`spawnAlt` 80–300m)에 소수(`countBase 3`, `countCap 5`) 등장. 튜닝: 속도 `speed 89`↔`speedMin 67`(플라이어 최고속 −20%~−40%), `turnRateDeg 100`, `keepDist 60`, `keepBand 12`, `attackRange 95`, `drainDamage 1.4`, `drainInterval 1.5`.
+- **러셔 = "거머리 플라즈모이드 / LEECH"**(지상형, `PlasmoidRusherArchetype`): 적극 **접근**해 **접촉**으로 흡수(`spec.contact`). 속도 `speed 17`↔`speedMin 12`(워커 최고속 19.44보다 약간 느려 공격할 틈을 줌). 지표(`spawnAlt` 0–60m)에 떼(`countBase 6`, `countCap 12`)로 등장.
+- **마커 = "소인체 플라즈모이드 / BRANDER"**(중공형, `PlasmoidMarkerArchetype` — 서사편 §6.1 ① MARK): 카이터형 유영(`turnRateDeg 90`/`keepDist 70`/`keepBand 18`, 회피 옵션 없음)으로 중거리를 맴돌며 **낙인 유도탄**(`tomb`: `projSpeed 22`, `projTurnRateDeg 70`, `projTtl 14`, `fireRange 220`, `fireInterval 7`)을 발사. 명중해도 무피해 — **낙인**만 부착되고(표적당 상한 5), 주기적 **심판 파문**이 지나갈 때 낙인 1개당 `sweepDamage 18` 피해(최대 90 — 워커는 만피에서 생존, 플라이어는 방치 시 치명). 카운터: 느린 유도탄 회피(선회 캡이라 스트레이프로 흘림) / **근원 마커 격파**(그 개체의 낙인·유도탄 소산) / 관측 고정(W1)으로 장전 동결. 물량은 드론 종류 무관 전원 비례(`countBase 2`, `countCap 4`), 중고도(`spawnAlt` 40–160m). 접촉·드레인 없음. 건물 낙인은 커터(§6.10-2) 단계에서 도입 예정 🔭.
+- 공통 베이스(`PlasmoidArchetypeBase`): `name`(표시명 "국문 / ENGLISH"), `spawnAltMin/spawnAltMax`, `countBase/countCap`. 스폰 시 각 개체에 `archetypeName`·`targetIndex`·`role`(직무 — 공격 경로 분기)이 실린다.
 
 ### "분리형" 모델 — 체력 ↔ 보이는 크기 디커플링
 1. **체력(밸런스)** `plasmoidHp(spec, diameter, T)` = `basePerArea × 지름² × colorWeight` (표면적 기반 → 크기로 폭주 안 함). 지름은 `hp.minDiameter`~`hp.maxDiameter` 클램프.
@@ -61,7 +61,7 @@
 
 ### 기본 스펙 / 로더
 - `DEFAULT_PLASMOID` — `public/enemies/plasmoid.json`과 동일(테스트 동치 검증). 비동기 로드가 어려운 곳(인트로 연출, `EnemyManager` 기본값)이 동기적으로 사용.
-- 현 데이터(`plasmoid.json`): `hp{ basePerArea 100, minDiameter 0.5, maxDiameter 60 }`; `color.stops` 5단계(3000K `0xff3b30` w1.0 → 12000K `0x4aa6ff` w5.0); `visual{ minDiameter 2, maxDiameter 600, anchorHp 200000, anchorDiameter 500, exponent 0.82 }`(렌더 크기 ×2); `spawn{ tempAlpha 2, speedMax 13.5, speedMin 3.75, hpFloor 100, hpCeil 200000 }`; `contact{ hpDamage 10, strengthMul 2.0 }`; `archetypes.rusher{ name "거머리 플라즈모이드 / LEECH", spawnAltMin 0, spawnAltMax 60, countBase 6, countCap 12, killRefund 5, speed 17, speedMin 12 }`; `archetypes.kiter{ name "모기 플라즈모이드 / SKEETER", spawnAltMin 80, spawnAltMax 300, countBase 3, countCap 5, killRefund 8, speed 89, speedMin 67, turnRateDeg 100, keepDist 60, keepBand 12, strafeMix 0, orbitRef 35, evadeGain 0.85, attackRange 95, drainDamage 1.4, drainInterval 1.5 }`. (`speed`/`speedMin`은 아키타입 공통 base 필드.)
+- 현 데이터(`plasmoid.json`): `hp{ basePerArea 100, minDiameter 0.5, maxDiameter 60 }`; `color.stops` 5단계(3000K `0xff3b30` w1.0 → 12000K `0x4aa6ff` w5.0); `visual{ minDiameter 2, maxDiameter 600, anchorHp 200000, anchorDiameter 500, exponent 0.82 }`(렌더 크기 ×2); `spawn{ tempAlpha 2, speedMax 13.5, speedMin 3.75, hpFloor 100, hpCeil 200000 }`; `contact{ hpDamage 10, strengthMul 2.0 }`; `archetypes.rusher{ name "거머리 플라즈모이드 / LEECH", spawnAltMin 0, spawnAltMax 60, countBase 6, countCap 12, speed 17, speedMin 12 }`; `archetypes.kiter{ name "모기 플라즈모이드 / SKEETER", spawnAltMin 80, spawnAltMax 300, countBase 3, countCap 5, speed 89, speedMin 67, turnRateDeg 100, keepDist 60, keepBand 12, strafeMix 0, orbitRef 35, evadeGain 0.85, attackRange 95, drainDamage 1.4, drainInterval 1.5 }`. (`speed`/`speedMin`은 아키타입 공통 base 필드.)
 - [plasmoids.ts](../../src/enemies/plasmoids.ts) — `makeLoader("enemies","적")` 기반. `fetchPlasmoidCatalog()`(`public/enemies/index.json`) + `fetchPlasmoid(id)`(`<id>.json`).
 - 테스트: [tests/plasmoidSpec.test.ts](../../tests/plasmoidSpec.test.ts).
 
@@ -122,7 +122,7 @@
   - **체력 총합 예산(`totalHp`)**: HP를 온도 롤이 아니라 **예산으로 배분**한다 — `distributeHp(totalHp, bossHp, count, rand)`가 합계 = `totalHp`(기본 7만)로, **index 0 = 중간보스(`bossHp` 기본 1만)** + 나머지 `count−1`기가 `totalHp−bossHp`(6만)를 무작위(0.5~1.5 가중)로 나눠 갖는다. 개체 외형은 **HP에서 산출**(`appearanceForHp`): HP↑ → 고온(청백)·대형(`visualDiameter`)·발광↑·속도↓ → 보스가 가장 크고 푸르게. (`hpFloor`~`hpCeil` 로그 정규화 `strength`로 온도 매핑.)
 - 레거시 점진 스폰(`spawnOne`/`tickSpawns`)은 플레이어 무게중심 주변 근거리 밴드(반경 55~205 m, `TERRAIN_HALF` 클램프)에 배치.
 - 고도는 **아키타입 고도 밴드**: `alt = spawnAltMin + rand×(spawnAltMax−spawnAltMin)`(러셔 0–60m 지표 / 카이터 80–300m 상공). 최종 y = `world.heightAt(x,z) + alt`. ([tests/spawn.test.ts](../../tests/spawn.test.ts))
-- 외형/색은 `rollAppearance(spec, wave, Math.random)`(온도 시스템 유지). **개체 속도**는 색 강도 `g01 = colorStrength01(stops, temp)`로 `arche.speed↔speedMin`를 보간(러셔·카이터 공통), **발광** `glow = 1 + GLOW_STRENGTH·g01`. 카이터는 `setKiter(...)`(구면 균등 무작위 `homeDir` 주입, `turnRateDeg→rad`), 러셔는 `CoreEnemy(pos, app, spd)`. 각 개체에 `killRefund`·`archetypeName` 주입.
+- 외형/색은 `rollAppearance(spec, wave, Math.random)`(온도 시스템 유지). **개체 속도**는 색 강도 `g01 = colorStrength01(stops, temp)`로 `arche.speed↔speedMin`를 보간(러셔·카이터 공통), **발광** `glow = 1 + GLOW_STRENGTH·g01`. 카이터는 `setKiter(...)`(구면 균등 무작위 `homeDir` 주입, `turnRateDeg→rad`), 러셔는 `CoreEnemy(pos, app, spd)`. 각 개체에 `archetypeName` 주입.
 - `tickSpawns`는 `pickSpawnType`으로 두 잔여 예산(`pendingRusher`/`pendingKiter`)을 잔여 비율로 섞어 `SPAWN_INTERVAL=0.35s`마다 1마리씩 투입.
 
 ### 매 프레임 군집 조향 + 공격 (`update`)
@@ -136,7 +136,7 @@
 - 워커·플라이어 수를 세어 `pendingRusher = archetypeCount(rusher, wave, walkers)`, `pendingKiter = archetypeCount(kiter, wave, flyers)`로 **아키타입별 독립 예산** 산정 — 구성 기반 자기정렬(단일 구성은 자기 타입만, 이길 수 없는 미스매치 없음).
 - 화면 적이 모두 정화(`enemies.length === 0` + 두 예산 0)되면 다음 웨이브 — 무한 증식.
 - 집계: `killCount`(`registerKill(enemy?)`→`onKill`), `wave`(`onWaveChange`). `onPlayerHit`로 피격 통지.
-- `registerKill(enemy?)` — `killCount++`, 사망 지점 **최근접 플레이어**를 그 개체의 아키타입 `killRefund`만큼 `heal`(흡수당한 물질 회수).
+- `registerKill(enemy?)` — `killCount++` + 역행 후보 기록·마커 소산·직무별 집계. **HP 환수는 없다**(2026-08-25 폐지 — 아래 "회복 없음" 참조).
 
 ### 집계 게터
 - `hitMeshes` — 레이캐스트 대상 = **셸 InstancedMesh 1개**(`[shellInst]`). 매 프레임 `boundingSphere`를 무효화해 이동한 인스턴스도 광역검사에 잡힘.
@@ -176,7 +176,7 @@
 미션 보스 예산(`bossHp`) 1기는 단일 구가 아니라 **HP 를 공유하는 투영 3기**(`BOSS_PROJECTIONS`)로 균열 주변에 등장한다
 (`spawnBossProjections`) — 하나의 손이 드리우는 여러 그림자. 어느 구를 때려도 같은 풀(`CoreEnemy.sharedPool`)이 줄므로
 **가장 느리고 가까운 구를 때리는 게 정답**(투영별 속도 차 `BOSS_SPEED_MULS`). 풀 소진 시 전 투영 동반 소산(`forceDissolve`),
-처치 크레딧·환수(`BOSS_KILL_REFUND 15`)는 **그룹당 1회**(풀의 `killCredited` 래치 — 미션 격멸 수 계약 유지). 피격 순간
+처치 크레딧은 **그룹당 1회**(풀의 `killCredited` 래치 — 미션 격멸 수 계약 유지). 피격 순간
 형제 투영으로 빛 필라멘트가 스치는 연출(`DrainBeams` 재활용, `BOSS_FILAMENT_CD` 스로틀)은 §1.10 계시 복선("이어져 있다")의
 상시 리마인더다. 테스트: [tests/reinforce.test.ts](../../tests/reinforce.test.ts).
 
@@ -194,8 +194,9 @@
 
 - **위상 이탈**(물리편 §2.1) — [PlasmoidSpec.phase](../../src/enemies/PlasmoidSpec.ts)(phaseRoll/
   phaseTimings — 강함 보간) + CoreEnemy 상태기계. 이탈 중 발광 감쇠(PHASE_DIM)·일반 무기 무효·공격
-  불가·오토/어시스트/브래킷 제외·미니맵 빈 원. 카운터: `manual.decohere`(관측 펄스 — 강제 실체화) ·
+  불가·오토/어시스트/브래킷 제외. 카운터: `manual.decohere`(관측 펄스 — 강제 실체화) ·
   `manual.pinSec`(W2 관측 계류 — 재이탈 봉쇄). [tests/phase.test.ts](../../tests/phase.test.ts)
+  🔭 미니맵은 **방향만**(2026-08-24 개정 — 아래 참조), 화면은 중력 렌즈 왜곡으로 정확한 위치를 준다.
 - **커터(절단체)** — cutterStep: 건물 상단 부착 → 절단 채널(W1 동결·경직 인터럽트) → 납치
   (BuildingCombat `abducting`: 부양·창백 틴트·고도 200 소거(잔해 없음)·격추/W4 `manual.mend` 재안착).
   [tests/abduct.test.ts](../../tests/abduct.test.ts)

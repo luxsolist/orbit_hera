@@ -9,6 +9,9 @@ const DMG_RING_RADIUS = 88; // 피해 방향 인디케이터 반경(px) — 적 
 const DMG_WEDGE_LIFE = 0.7; // 피해 방향 인디케이터 수명(s)
 const DMG_WEDGE_MAX = 6; // 동시 표시 상한(풀)
 const SWEEP_PULSE_LIFE = 0.55; // 파문 통과 화면 펄스 수명(s)
+const KILL_PULSE_LIFE = 0.32; // 강체 처치 화면 펄스 수명(s) — 파문(위협)보다 짧고 화끈하게(보상감)
+/** §2.1 위상 이탈과 같은 "강체" 기준(0.35) — Game.ts 가 pulseKill 호출 게이트에 그대로 재사용. */
+export const KILL_PULSE_MIN_STRENGTH = 0.35;
 
 /**
  * 원격 접속 HUD 오버레이 제어.
@@ -34,9 +37,12 @@ export class HUD {
   private foresight!: HTMLDivElement; // 예지 — 역행 시전 카운트다운(동적 생성)
   private sweepPulse!: HTMLDivElement; // 파문 통과 전면 펄스(동적 생성)
   private observePulse!: HTMLDivElement; // 위상 소급 시전 펄스(동적 생성)
+  private killPulse!: HTMLDivElement; //  강체 처치 전면 펄스(동적 생성)
   private observePulseTimer = 0;
   private sweepPulseTimer = 0;
   private sweepPulsePeak = 0;
+  private killPulseTimer = 0;
+  private killPulsePeak = 0;
   private dmgWedges: { el: HTMLDivElement; life: number }[] = []; // 피해 방향 인디케이터 풀
   private _v = new THREE.Vector3();
 
@@ -125,6 +131,16 @@ export class HUD {
       "position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;" +
       "background:radial-gradient(ellipse at center, rgba(52,245,255,0) 30%, rgba(52,245,255,0.4) 100%)";
     this.root.appendChild(this.observePulse);
+
+    // 강체 처치 펄스 — 호박색(랜드마크·크리티컬 데미지와 같은 "보상" 색 언어). 파문(위협·붉은)·
+    // 관측(정보·청록)과 색으로 갈라 "좋은 일이 일어났다"가 즉시 구분되게 한다. 중앙은 비우고
+    // 테두리만 밝혀 조준 시야를 가리지 않는다(sweepPulse 와 동일 원칙).
+    this.killPulse = document.createElement("div");
+    this.killPulse.className = "hud__killpulse";
+    this.killPulse.style.cssText =
+      "position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;" +
+      "background:radial-gradient(ellipse at center, rgba(255,180,72,0) 45%, rgba(255,180,72,0.5) 100%)";
+    this.root.appendChild(this.killPulse);
   }
 
   setActive(active: boolean) {
@@ -283,6 +299,16 @@ export class HUD {
   }
 
   /**
+   * 강체 처치 화면 펄스(타격감 ②) — strength(0..1, KILL_STRENGTH_MIN 미만은 호출측이 걸러야 함)에
+   * 비례해 밝기·지속시간이 커진다. 잡몹까지 매번 번쩍이면 연사 중 눈이 피로해지므로 문턱 위만 호출.
+   */
+  pulseKill(strength: number) {
+    const s = Math.max(0, Math.min(1, strength));
+    this.killPulsePeak = 0.5 + 0.5 * s;
+    this.killPulseTimer = KILL_PULSE_LIFE * (0.7 + 0.3 * s);
+  }
+
+  /**
    * 방향 쐐기 인디케이터 공용 구현 — 월드 좌표를 화면 각도로 투영해 조준선 둘레(적 화살표보다
    * 바깥)에 색이 지정된 쐐기를 잠깐 표시. "어디서 무슨 일이 있었는지"의 즉답. 풀(DMG_WEDGE_MAX)은
    * 피해/건물 파괴 등 모든 방향 이벤트가 공유(오래된 것부터 재사용).
@@ -358,6 +384,11 @@ export class HUD {
       this.sweepPulse.style.opacity = String(this.sweepPulsePeak * t);
     }
     // 위상 소급 펄스 — 동일 페이드 곡선(파문과 별개 색 채널)
+    if (this.killPulseTimer > 0) {
+      this.killPulseTimer -= dt;
+      const t = Math.max(0, this.killPulseTimer / KILL_PULSE_LIFE);
+      this.killPulse.style.opacity = String(this.killPulsePeak * t * t); // 제곱 감쇠 — 화끈하게 켜졌다 빨리 꺼짐
+    }
     if (this.observePulseTimer > 0) {
       this.observePulseTimer -= dt;
       this.observePulse.style.opacity = String(Math.max(0, this.observePulseTimer / SWEEP_PULSE_LIFE));
