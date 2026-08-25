@@ -5,6 +5,7 @@ import type { Sfx } from "../core/Sfx";
 import { DamageNumbers } from "../fx/damageNumbers";
 import type { BeamSpec } from "./WeaponSpec";
 import { makeGlowTexture, BeamPool, fireEmitters, type BeamStyle } from "./beamFx";
+import { autoFireAllowed } from "./WeaponSpec";
 import { parseHexColor } from "../core/math";
 import { bestAlignedDir, nearestVisibleInCone } from "./targeting";
 
@@ -77,8 +78,10 @@ export class FrequencyBeam {
     if (this.cooldown > 0) this.cooldown -= dt;
     if (this.autoCooldown > 0) this.autoCooldown -= dt;
 
-    // 360° 근거리 오토파이어(소프트락) — 정면을 안 봐도 최근접 추격자를 자동 타격(이동·조준 분리 → 백페달 완화)
-    if (this.autoCooldown <= 0) {
+    // 360° 근거리 오토파이어(소프트락) — 정면을 안 봐도 최근접 추격자를 자동 타격(이동·조준 분리 → 백페달 완화).
+    // 단 **게이지 바닥 위에서만**: 오토는 입력과 무관하게 상시 소모하므로 바닥이 없으면 회복이 소모를
+    // 못 이기는 구간(옅은 장 = freqRegenMul 0.5)에서 게이지가 0 에 고착된다. 바닥 아래선 쉬어 회복이 이긴다.
+    if (this.autoCooldown <= 0 && autoFireAllowed(this.player.freq, this.player.maxFreq, this.spec.auto.freqFloor)) {
       const origin = this.player.camera.position;
       const autoDir = this.acquireAutoFireTarget(origin);
       if (autoDir) {

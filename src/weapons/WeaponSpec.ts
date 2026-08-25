@@ -38,9 +38,29 @@ export interface BeamSpec {
     pinSec?: number; //    W2 관측 계류 — 수동 명중 후 이 시간 동안 재이탈 봉쇄(중주파=하드 핀/경주파=소프트 핀)
     mend?: number; //      W4 복구 사격 — 납치 중 건물 명중 시 부양 고도 감쇄(m). 무기가 공격이자 복구 도구
   };
-  auto: { damage: number; freqCost: number; fireInterval: number; range: number }; // coneDeg 제거(360° 오토 전환으로 미사용)
+  auto: {
+    damage: number; freqCost: number; fireInterval: number; range: number; // coneDeg 제거(360° 오토 전환으로 미사용)
+    freqFloor?: number; // 오토 사격 바닥(maxFreq 대비 0..1). 미지정 시 DEFAULT_AUTO_FREQ_FLOOR
+  };
   falloff: DamageFalloff;
   zeno?: ZenoSpec; // 관측 고정(W1) — 지속 조사 감속→동결. 없으면 순수 피해 무기
+}
+
+/**
+ * 오토 사격 바닥 기본값(maxFreq 대비). 오토파이어는 발사 입력과 무관하게 사거리 내 적이 있으면 상시
+ * 소모하므로, 바닥이 없으면 **회복이 소모를 못 이기는 순간 게이지가 0 에 고착**된다(2026-08-25 버그 —
+ * freqRegenMul 0.5 인 "옅은 장"에서 재현). 오토는 어디까지나 배경 관측 스레드이지 플레이어의 수동·특수
+ * 예산을 굶겨선 안 된다: 바닥 아래로는 쉬게 해 회복이 항상 이기도록 보장한다. 특수 발동 하한(freq 5)보다
+ * 넉넉해 이 바닥에서도 특수는 언제나 쓸 수 있다.
+ */
+export const DEFAULT_AUTO_FREQ_FLOOR = 0.25;
+
+/**
+ * 오토 사격 허용 여부(순수) — 게이지가 바닥 이상일 때만. 수동 사격은 이 게이트를 받지 않는다
+ * (게이지를 0 까지 쓰는 건 플레이어의 선택이고, 그건 손을 떼면 회복된다).
+ */
+export function autoFireAllowed(freq: number, maxFreq: number, floor: number = DEFAULT_AUTO_FREQ_FLOOR): boolean {
+  return freq >= maxFreq * floor;
 }
 
 /** 자동조준/사격 강화 — 에임어시스트 콘(manual.assistConeDeg)·자동사격 사거리(auto.range)에 각각 배수 적용한 새 스펙.

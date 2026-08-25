@@ -22,7 +22,8 @@
     "damage": 15,
     "freqCost": 2,
     "fireInterval": 0.13,
-    "range": 1000
+    "range": 1000,
+    "freqFloor": 0.25
   },
   "falloff": {
     "refDist": 1000,
