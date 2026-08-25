@@ -26,6 +26,7 @@
  {
   "id": "hold-city",
   "name": "도시 방어 / HOLD THE CITY",
+  "spawnMix": "rusher",
   "goal": {
    "type": "guard",
    "target": "buildings",
@@ -54,6 +55,7 @@
  {
   "id": "guard-landmark",
   "name": "랜드마크 사수 / GUARD",
+  "spawnMix": "kiter",
   "goal": {
    "type": "guard",
    "target": "landmarks",
@@ -82,6 +84,7 @@
  {
   "id": "survive",
   "name": "지역 사수 / SURVIVE",
+  "spawnMix": "kiter",
   "goal": {
    "type": "survive",
    "seconds": 300
@@ -163,6 +166,7 @@
  {
   "id": "grand-purge",
   "name": "대정화 / GRAND PURGE",
+  "spawnMix": "rusher",
   "brief": "오늘은 세는 날이 아니다 — 쓸어내는 날이다.",
   "goal": {
    "type": "purge-all"
@@ -482,6 +486,7 @@
  {
   "id": "last-stand",
   "name": "최후 저지선 / LAST STAND",
+  "spawnMix": "rusher",
   "brief": "물러설 자리가 줄어든다 — 경계가 닫히기 전에 버텨라.",
   "goal": {
    "type": "survive",

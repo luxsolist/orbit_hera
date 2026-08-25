@@ -88,10 +88,24 @@ export interface MissionPhase {
 
 // ─────────────────────────── 변조(modifiers) ───────────────────────────
 
+/**
+ * 전장 스폰 구성(§6.8) — 이 전장에 어떤 플라즈모이드가 나오는가. **드론과 무관**하다.
+ * 미지정 = "even". 로스터/보스 투입은 role 을 직접 지정하므로 이 값의 영향을 받지 않는다
+ * (pyramid·horde·웨이브 경로 전용).
+ */
+export type { SpawnMix } from "../enemies/PlasmoidSpec";
+import type { SpawnMix as SpawnMixT } from "../enemies/PlasmoidSpec";
+
 export interface MissionModifiers {
   sweepPeriodMul?: number; // 파문 주기 배수(<1 = 잦게)
   zoneShrink?: { everySec: number; step: number; minRadius: number }; // 구역 축소
   freqRegenMul?: number; // 게이지 회복 배수(옅은 장 — 물리편 §2.5)
+  /**
+   * 차원도약(§6.7) 빈도/간격 — 배틀필드 난이도 노브. 확률 배수(>1 = 잦게)와 쿨다운 배수(<1 = 잦게).
+   * 스키터는 관측 파기(고정 교전 해체), 리치는 회피 강제 — 올릴수록 "붙들고 버티기"가 안 통한다.
+   */
+  leapChanceMul?: number;
+  leapCdMul?: number;
   aggro?: "player" | "landmark" | "building"; // 어그로 성향(랜드마크 직행 등)
   buildingBrands?: boolean; // 건물/랜드마크 낙인 허용(공성 낙인 — 커터 단계)
   /**
@@ -113,6 +127,7 @@ export interface MissionModifiers {
 // ─────────────────────────── 명세 ───────────────────────────
 
 export interface MissionSpecV2 {
+  spawnMix?: SpawnMixT; // 전장 스폰 구성(§6.8) — 미지정 = "even"
   id: string;
   name: string; // 표시명 "국문 / ENGLISH" — 표면 어휘 규칙 준수(06-missions §7)
   brief?: string; // 브리핑 한 줄(세계관 통로) — 표면 어휘만
@@ -387,9 +402,11 @@ export function missionProgressTextV2(spec: MissionSpecV2, rt: MissionRuntime, r
   }
 }
 
+const SUPPORTED_MIXES = new Set<SpawnMixT>(["kiter", "rusher", "even"]); // 전장 스폰 구성(§6.8)
+
 // 엔진이 지원하는 변조 키(훅 ④⑥에서 해금) — 그 외 변조가 지정된 미션은 풀에서 제외.
 const SUPPORTED_MODIFIERS = new Set<keyof MissionModifiers>([
-  "aggro", "zoneShrink", "freqRegenMul", "sweepPeriodMul", "buildingBrands", "offTargetPenalty",
+  "aggro", "zoneShrink", "freqRegenMul", "leapChanceMul", "leapCdMul", "sweepPeriodMul", "buildingBrands", "offTargetPenalty",
 ]);
 
 /**
@@ -410,7 +427,10 @@ export function runnableV2(spec: MissionSpecV2): boolean {
   const modifiersOk = !spec.modifiers ||
     (Object.entries(spec.modifiers) as [keyof MissionModifiers, unknown][])
       .every(([k, v]) => v === undefined || SUPPORTED_MODIFIERS.has(k));
-  return goalOk && deployOk && modifiersOk;
+  // 스폰 구성 오타를 풀에서 걸러낸다 — 잘못된 값은 mixShares 가 조용히 "even" 으로 흡수하는데,
+  // 그러면 의도한 난이도(카이터 단독/러셔 단독)가 말없이 바뀐다. 변조 키와 같은 취급.
+  const mixOk = spec.spawnMix === undefined || SUPPORTED_MIXES.has(spec.spawnMix);
+  return goalOk && deployOk && modifiersOk && mixOk;
 }
 
 /** 결과 화면 채점 입력(EnemyManager.stats 부분집합) — 표면 어휘 독해는 implements/08. */
@@ -478,6 +498,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
   },
   {
     id: "hold-city", name: "도시 방어 / HOLD THE CITY",
+    spawnMix: "rusher", // 건물 손실 10채가 실패 조건 — 리치 접촉 피해(10~30dps)가 목표를 실제로 위협한다
     goal: { type: "guard", target: "buildings", hold: 300 },
     fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 10, maxLandmarkLoss: 0 },
     deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
@@ -486,6 +507,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
   },
   {
     id: "guard-landmark", name: "랜드마크 사수 / GUARD",
+    spawnMix: "kiter", // 랜드마크는 접촉 피해가 큰 리치보다 공중 압박이 어울린다
     goal: { type: "guard", target: "landmarks", hold: 300 },
     fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 1 },
     deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
@@ -494,6 +516,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
   },
   {
     id: "survive", name: "지역 사수 / SURVIVE",
+    spawnMix: "kiter", // 지속 압박형 — 300초 버티기라 끊김 없는 드레인이 맞는다
     goal: { type: "survive", seconds: 300 },
     fail: { respawns: 2, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
     deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
@@ -525,6 +548,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
   {
     // 패턴 1 대정화(horde — 훅 ①) — 균일 저체력 대량 군집, 살포/광역·복선 노출의 본산.
     id: "grand-purge", name: "대정화 / GRAND PURGE",
+    spawnMix: "rusher", // 쓸어내는 물량전 — 지상 떼
     brief: "오늘은 세는 날이 아니다 — 쓸어내는 날이다.",
     goal: { type: "purge-all" },
     fail: { respawns: 3, timeLimit: 360, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
@@ -659,6 +683,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
   {
     // 패턴 3 최후 저지선(zoneShrink — 훅 ⑥) — 조여드는 경계 안에서 버틴다.
     id: "last-stand", name: "최후 저지선 / LAST STAND",
+    spawnMix: "rusher", // 경계가 닫히는 저지선 — 밀려드는 지상 압력
     brief: "물러설 자리가 줄어든다 — 경계가 닫히기 전에 버텨라.",
     goal: { type: "survive", seconds: 240 },
     fail: { respawns: 2, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },

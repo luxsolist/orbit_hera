@@ -128,3 +128,41 @@ describe("TimedMod — 감독 변조의 한시성", () => {
     expect(stepMod(m, 1, DUR).next.mul).toBe(1);
   });
 });
+
+// 거부 경로 — 이 게이트의 존재 이유가 "통과"가 아니라 "차단"이므로, 거부 분기가 곧 계약이다.
+describe("validateDirectorAction — 거부 경로", () => {
+  it("알 수 없는 aggro 값은 거부", () => {
+    const v = validateDirectorAction({ type: "set-modifiers", modifiers: { aggro: "tower" as never } });
+    expect(v.ok).toBe(false);
+    expect(v.ok === false && v.reason).toBe("bad-aggro");
+  });
+
+  it("지원하지 않는 변조 키는 거부 — 조용히 무시되면 밸런스가 말없이 어긋난다", () => {
+    const v = validateDirectorAction({ type: "set-modifiers", modifiers: { zoneShrink: 1 } as never });
+    expect(v.ok).toBe(false);
+    expect(v.ok === false && v.reason).toMatch(/^unsupported-modifier:/);
+  });
+
+  it("알 수 없는 행동 타입은 거부", () => {
+    const v = validateDirectorAction({ type: "teleport-player" } as never);
+    expect(v.ok).toBe(false);
+    expect(v.ok === false && v.reason).toBe("unknown-action");
+  });
+
+  it("leapChanceMul 봉투 — 경계 안은 통과, 밖은 거부", () => {
+    const lim = DIRECTOR_LIMITS.leapChanceMul;
+    const mk = (leapChanceMul: number): DirectorAction => ({ type: "set-modifiers", modifiers: { leapChanceMul } });
+    expect(validateDirectorAction(mk(lim.min)).ok).toBe(true);
+    expect(validateDirectorAction(mk(lim.max)).ok).toBe(true);
+    for (const bad of [lim.min - 0.01, lim.max + 0.01]) {
+      const v = validateDirectorAction(mk(bad));
+      expect(v.ok).toBe(false);
+      expect(v.ok === false && v.reason).toBe("out-of-envelope:leapChanceMul");
+    }
+  });
+
+  it("leapChanceMul 이 숫자가 아니면 거부", () => {
+    const v = validateDirectorAction({ type: "set-modifiers", modifiers: { leapChanceMul: "2" as never } });
+    expect(v.ok).toBe(false);
+  });
+});

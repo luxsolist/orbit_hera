@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { CoreEnemy, chooseTarget, matchupMul, engageKeepDist, buildBoidGrid, recomputeSteer, advanceGlobalPulse, KILL_STAGGER_SEC, CORE_GEO, SHELL_GEOS, MARKER_TELEGRAPH_SEC, type Boid } from "./CoreEnemy";
+import { CoreEnemy, chooseTarget, buildBoidGrid, recomputeSteer, advanceGlobalPulse, KILL_STAGGER_SEC, CORE_GEO, SHELL_GEOS, MARKER_TELEGRAPH_SEC, type Boid } from "./CoreEnemy";
 import type { GameWorld } from "../world/GameWorld";
 import type { PlayerController } from "../player/PlayerController";
 import { bestAlignedInCone } from "../player/PlayerController";
@@ -7,11 +7,13 @@ import { DrainBeams } from "../fx/DrainBeams";
 import { BrandSystem } from "./BrandSystem";
 import {
   DEFAULT_PLASMOID, rollAppearance, contactDamage, archetypeCount, pickSpawnType, pickBurstType, colorStrength01,
+  mixShares, type SpawnMix,
   distributeHp, pyramidHp, appearanceForHp, strength, phaseRoll, phaseTimings,
   kkLevelOf, kkLevelColors, KK_MIN_HP, KK_DEMOTE_STAGGER,
   type PlasmoidSpec, type PlasmoidKiterArchetype, type PlasmoidArchetype,
 } from "./PlasmoidSpec";
 import { clampToDisk, type Vec3 } from "../core/math";
+import { sampleLeapOffset, leapInterrupted, canBeginLeap, leapChanceWith, leapCooldownWith } from "./leap";
 
 const ATTACK_RANGE = 3.2; // 접촉 교전 거리(피해는 PlasmoidSpec.contact 로 산출)
 const RUSHER_DASH_MIN = 15; // 러셔 돌진 발동 밴드(m) — 너무 가까우면 불필요, 멀면 무의미(P3 안티카이팅)
@@ -32,6 +34,10 @@ const PROVOKE_RADIUS = 100; // 피격 전파 반경(m)
 // 피격 유발 지속(s) — 이 시간 동안 거리 무관 추격, 이후 미션 본래 행동(랜드마크 직행·진형)으로 복귀.
 // 영구 래치였을 때 어그로 변조가 도입부에만 살아있다 사라지던 문제를 이 감쇠가 막는다.
 const PROVOKE_HOLD = 10;
+const SPAWN_GROUND_CLEARANCE = 0.5; // 스폰 시 지면에서 띄우는 여유(m) — 지형에 박히지 않게
+const LEAP_TRIES = 6; //             착지점 재시도 횟수 — 전부 실패면 이번 주기는 도약 없음
+const LEAP_BLINK_HZ = 4; //          텔레그래프 깜빡임 주기(Hz) — 시간 기준(프레임률 무관)
+const LEAP_GROUND_CLEARANCE = 1.5; // 착지 시 지면에서 띄우는 여유(m) — 지형에 박히지 않게
 const PROVOKE_RADIUS_SQ = PROVOKE_RADIUS * PROVOKE_RADIUS;
 const AWARENESS_LOSE_SQ = AWARENESS_LOSE_RADIUS * AWARENESS_LOSE_RADIUS;
 
@@ -63,9 +69,6 @@ const GLOW_STRENGTH = 2.0; // 색 강도 비례 발광 가산 — glow = 1 + 2·
 const _m4 = new THREE.Matrix4(); // 인스턴스 행렬 임시
 const _col = new THREE.Color(); // 인스턴스 색 임시
 const AGGRO_PENALTY = 0.4; // 어그로 분산 — 이미 표적이 된 플레이어당 거리 점수 가산(한 명에게 몰빵 방지)
-const MISMATCH_PENALTY = 3.0; // 상성 불일치 표적 점수 배수(>1) — 적이 자기 상성 드론을 우선(MP 혼합팀). 절대 배제 아닌 가중
-const KITER_CLOSE_MUL = 1.0; // 카이터가 비상성(워커) 표적을 노릴 때 keepDist 배수. 워커가 장거리 빔(AA)을 갖게 되어 좁힐 필요 없음 → 모기는 거리 유지, 워커가 지상에서 격추.
-const KITER_CROSS_FRAC = 0.5; // 매칭 완화 — 워커도 카이터(모기)를 끌어오는 교차 비율(워커 1인당 모기 물량 ×이 값). 워커=만능 AA, 플라이어는 공중 특화 유지(러셔는 워커 전용).
 const MARKER_BURST_FRAC = 0.15; // 미션 투입 중 마커(소인체) 비율 — 미션 종류 비례 개편(§6.8) 전 임시 상수
 // 점진 투입(균열 증원) — 초기엔 잡몹 소수, 이후 균열에서 강도 오름차순 보충(피라미드 큐).
 const RIFT_OFFSET_FRAC = 0.5; // 균열 앵커를 전장 중심에서 투입 반경 ×이 값만큼 이격 — 위협 방향이 읽히게
@@ -185,6 +188,10 @@ export class EnemyManager {
   private zoneCx = 0;
   private zoneCz = 0;
   private zoneR = 0;
+  // 차원도약 난이도 배수(배틀필드 = 미션 변조 `leapChanceMul`/`leapCdMul`, 감독은 한시 적용).
+  private leapChanceMul = 1;
+  private leapCdMul = 1;
+  private leapCasting: Record<"rusher" | "kiter", number> = { rusher: 0, kiter: 0 }; // 동시 텔레그래프 수(상한 판정)
   private _clampOut = { x: 0, z: 0 }; // clampToDisk 결과 재사용
   private pendingRusher = 0; // 아키타입별 잔여 스폰 예산(거머리 떼 / 모기 소수정예 / 소인체 독립 조절)
   private pendingKiter = 0;
@@ -198,8 +205,8 @@ export class EnemyManager {
   private burstCx = 0; // 초기 투입 중심(플레이어 무게중심 스냅샷)
   private burstCz = 0;
   private burstLim = 0; // 초기 투입 분산 반경(월드 경계 클램프 후)
-  private burstWalkers = 0; // 투입 시점 드론 구성(아키타입 추첨용 스냅샷)
-  private burstFlyers = 0;
+  // 전장 스폰 구성(§6.8) — 드론 종류와 무관. 미션이 지정(Game.selectMission), 기본 반반.
+  private spawnMix: SpawnMix = "even";
   // 군집 조향용 — 플레이어별 속도 추정(예측 요격) + 살아있는 적 스냅샷(분리)
   private prevPos: THREE.Vector3[] = [];
   private vels: Vec3[] = [];
@@ -209,8 +216,6 @@ export class EnemyManager {
   private dists: number[] = []; // pickTarget 스크래치(할당 회피)
   private scores: number[] = []; // chooseTarget 스크래치
   private load: number[] = [];
-  private playerIsFlyer: boolean[] = []; // 플레이어별 비행 여부(상성 타깃팅) — buildTargets 에서 갱신
-  private matchMul: number[] = []; // pickTarget 상성 가중 스크래치
 
   onKill?: (enemy?: CoreEnemy) => void; // 처치 통지 — enemy 로 XP(강함 비례)·채점 등 후처리
   onPlayerHit?: (damage: number, source?: Vec3) => void; // source = 피해 발원 위치(방향 인디케이터용)
@@ -621,8 +626,6 @@ export class EnemyManager {
       if (pl.spec.move.mode === "fly") flyers++;
       else walkers++;
     }
-    this.burstWalkers = walkers;
-    this.burstFlyers = flyers;
     const c = this.playersCentroid(_centroid);
     this.burstCx = c.x; // 스냅샷 — 루프 중 갱신되는 임시 벡터 회피
     this.burstCz = c.z;
@@ -645,11 +648,9 @@ export class EnemyManager {
       this.spawnBossProjections(entry.hp);
       return;
     }
-    // 매칭 완화 — 워커도 카이터(모기)를 일부 끌어오도록 플라이어 가중에 워커 교차분을 더한다.
+    // 아키타입은 전장 구성이 결정한다(드론 무관). 마커는 그 축과 직교해 비율로 얹힌다.
     const type: PlasmoidArchetype =
-      this.rand() < MARKER_BURST_FRAC
-        ? "marker"
-        : pickBurstType(this.burstWalkers, this.burstFlyers + this.burstWalkers * KITER_CROSS_FRAC, this.rand);
+      this.rand() < MARKER_BURST_FRAC ? "marker" : pickBurstType(this.spawnMix, this.rand);
     const ang = this.rand() * Math.PI * 2;
     let x: number, z: number;
     if (wide) {
@@ -715,21 +716,14 @@ export class EnemyManager {
 
   private startNextWave() {
     this.wave += 1;
-    // 아키타입별 독립 물량 — 러셔는 워커 수, 카이터는 플라이어 수에 비례(자기정렬). 단일 구성은 자기 타입만.
-    let walkers = 0, flyers = 0;
-    for (const pl of this.players) {
-      if (pl.spec.move.mode === "fly") flyers++;
-      else walkers++;
-    }
+    // 아키타입 물량 = 인원 × 전장 구성 비중. 드론 종류는 더 이상 관여하지 않는다(§6.8).
     const a = this.spec.archetypes;
-    this.pendingRusher = archetypeCount(a.rusher, this.wave, walkers);
-    // 매칭 완화 — 카이터(모기) 물량 = 플라이어 정수 비례 + 워커 교차분(워커도 공중 원거리 적에 대응).
-    // walkers=0이면 교차분 0 → 종전(플라이어 비례)과 동치. 러셔는 워커 전용 유지(플라이어=공중 특화).
-    this.pendingKiter =
-      archetypeCount(a.kiter, this.wave, flyers) +
-      Math.round(archetypeCount(a.kiter, this.wave, walkers) * KITER_CROSS_FRAC);
-    // 마커(소인체) — 드론 종류 무관 전원 비례(낙인탄은 지상/공중 모두 위협 — §6.7 대응 축은 사냥 상성)
-    this.pendingMarker = archetypeCount(a.marker, this.wave, walkers + flyers);
+    const n = Math.max(1, this.players.length);
+    const w = mixShares(this.spawnMix);
+    this.pendingRusher = archetypeCount(a.rusher, this.wave, n, w.rusher);
+    this.pendingKiter = archetypeCount(a.kiter, this.wave, n, w.kiter);
+    // 마커(소인체) — 구성 축과 직교. 낙인탄은 지상/공중 모두를 위협하므로 전원 비례로 따로 얹는다.
+    this.pendingMarker = archetypeCount(a.marker, this.wave, n);
     this.spawnTimer = 0;
     this.onWaveChange?.(this.wave);
   }
@@ -758,21 +752,27 @@ export class EnemyManager {
       type === "rewinder" ? (a.rewinder ?? a.rusher) :
       a.rusher;
 
-    // 위치: 명시(일괄 스폰) 또는 플레이어 무게중심 주변 근거리 밴드. 고도는 아키타입 밴드(카이터=상공, 러셔=지표).
+    // 위치: 명시(일괄 스폰) 또는 플레이어 무게중심 주변 근거리 밴드.
     const lim = this.world.bounds - 6;
+    const c = this.playersCentroid(_centroid);
     let x: number, z: number;
     if (px !== undefined && pz !== undefined) {
       x = THREE.MathUtils.clamp(px, -lim, lim);
       z = THREE.MathUtils.clamp(pz, -lim, lim);
     } else {
-      const c = this.playersCentroid(_centroid);
       const angle = this.rand() * Math.PI * 2;
       const radius = 55 + this.rand() * 150;
       x = THREE.MathUtils.clamp(c.x + Math.cos(angle) * radius, -lim, lim);
       z = THREE.MathUtils.clamp(c.z + Math.sin(angle) * radius, -lim, lim);
     }
+    // 고도는 아키타입 밴드를 **플레이어 고도 기준**으로 얹는다(지면 하한 클램프).
+    //
+    // 지면 기준이면 비행 중인 플레이어를 아무도 못 만난다: 러셔 스폰 밴드가 0~60m 인데 인식 반경이
+    // 500m(3D)라, 플레이어가 560m 이상 고도에 있으면 신규 러셔가 인식조차 못 하고 건물만 뜯는다
+    // (플라이어 천장 1000m → 560~1000m 가 무적 지대였다). 모든 플라즈모이드는 지상/공중 무관하게
+    // 이동하므로(2026-08-25 통일) 스폰도 같은 규칙을 따른다. 지상 플레이어면 y≈지면이라 종전과 동치.
     const alt = arche.spawnAltMin + this.rand() * (arche.spawnAltMax - arche.spawnAltMin);
-    const y = this.world.heightAt(x, z) + alt;
+    const y = Math.max(this.world.heightAt(x, z) + SPAWN_GROUND_CLEARANCE, c.y + alt);
 
     // 외형/체력/색. hpOverride(예산 배분 일괄 스폰)면 그 HP로 색·크기 산출(HP↑=청백·대형);
     // 아니면 온도 롤(rollAppearance, 저온편향). 일괄 스폰은 전 색 스펙트럼 해금(rollWave).
@@ -837,6 +837,9 @@ export class EnemyManager {
     }
     enemy.role = type;
     enemy.deployRole = type; // 투입 직무 기본값 = 행동 직무(roster 의 elite 는 호출부가 덮어씀)
+    // 차원도약 첫 쿨다운 — 등장 직후 즉시 도약하면 "왜 사라졌는지" 읽을 수 없다(역행체 castCd*0.5 와 같은 규약)
+    const lp = type === "kiter" ? a.kiter.leap : type === "rusher" ? a.rusher.leap : undefined;
+    if (lp) enemy.leapCd = leapCooldownWith(lp, this.leapCdMul) * 0.5;
     enemy.applySilhouette(SHELL_GEOS[type]); // 디졸브 개별 메시도 직무 형태(P3 §6.7)
     enemy.glow = 1 + GLOW_STRENGTH * g01; // 청백(강)일수록 밝게 빛남(블룸)
     enemy.archetypeName = arche.name;
@@ -1010,6 +1013,99 @@ export class EnemyManager {
     enemy.markerAimLeft = MARKER_TELEGRAPH_SEC;
   }
 
+  /** 전장 스폰 구성(§6.8) — 미션이 지정. 드론 종류와 무관하게 적 구성이 결정된다. */
+  setSpawnMix(mix: SpawnMix): void {
+    this.spawnMix = mix;
+  }
+
+  /** 차원도약 난이도(배틀필드 변조 + 감독). 확률/쿨다운 배수 — 1 = 스펙 그대로. */
+  setLeapMuls(chanceMul = 1, cdMul = 1): void {
+    this.leapChanceMul = chanceMul;
+    this.leapCdMul = cdMul;
+  }
+
+  /** 현재 텔레그래프 중인 도약 수(HUD/테스트 관측용). */
+  get leapCastingCount(): number {
+    return this.leapCasting.rusher + this.leapCasting.kiter;
+  }
+
+  /**
+   * 차원도약(leap.ts) — **플레이어를 인식 중인** 개체만. 텔레그래프(예고선) → 인터럽트 없으면 순간이동.
+   *
+   * 취소는 피해가 아니라 상태다(leapInterrupted — 역행체 시전과 같은 목록). 오토파이어가 3초에
+   * 15~23발을 자동으로 넣으므로 "맞으면 취소"면 플레이어 개입 없이 100% 취소돼 메커닉이 죽는다.
+   *
+   * 착지점은 **개시 시점에 확정**하고 그 지점까지 예고선을 그린다 — 리치 근접 도약은 예고 없이는
+   * 회피가 운이 되기 때문(회피 "강제"의 전제가 읽을 수 있음이다).
+   */
+  private leapStep(enemy: CoreEnemy, p: THREE.Vector3, targetPos: THREE.Vector3, dt: number): void {
+    const role = enemy.role === "kiter" ? "kiter" : "rusher";
+    const spec = role === "kiter" ? this.spec.archetypes.kiter.leap : this.spec.archetypes.rusher.leap;
+    if (!spec) return;
+    const interrupted = leapInterrupted(enemy.isZenoFrozen, enemy.isStaggered, enemy.isPinned, enemy.isPhased);
+
+    if (enemy.leapCastLeft > 0) {
+      this.leapCasting[role]++;
+      if (interrupted || !enemy.leapTarget) { // 취소 — 짧은 재정렬 후 재시도(완전 리셋은 과한 보상)
+        enemy.leapCastLeft = 0;
+        enemy.leapTarget = null;
+        enemy.leapCd = leapCooldownWith(spec, this.leapCdMul) * 0.6;
+        return;
+      }
+      enemy.leapCastLeft -= dt;
+      // 깜빡임은 **시간** 기준(프레임률이 달라도 같은 속도로 보이게). "곧 사라진다"는 신호.
+      enemy.coreBright = 4.5 + Math.sin(this.timeSec * Math.PI * 2 * LEAP_BLINK_HZ) * 1.5;
+      const t = enemy.leapTarget;
+      if ((this.frame & 3) === 0) this.drain.spawn(p, new THREE.Vector3(t.x, t.y, t.z), enemy.color); // 착지 예고선
+      if (enemy.leapCastLeft <= 0) {
+        p.set(t.x, t.y, t.z); // 도약 — 위치만 옮긴다(HP·상태 불변)
+        enemy.resetZenoExposure(); // 관측 파기: 도약의 본체. 붙들고 있던 노출이 끊긴다
+        enemy.leapRecover = spec.recoverSec;
+        enemy.leapTarget = null;
+        enemy.leapCd = leapCooldownWith(spec, this.leapCdMul);
+      }
+      return;
+    }
+
+    enemy.leapCd -= dt;
+    if (!canBeginLeap(enemy.leapCd, interrupted, this.leapCasting[role], spec.concurrentCap)) return;
+    if (this.rand() > leapChanceWith(spec, this.leapChanceMul)) {
+      enemy.leapCd = leapCooldownWith(spec, this.leapCdMul); // 불발 — 다음 주기까지 대기
+      return;
+    }
+    const dest = this.pickLeapDest(spec, targetPos);
+    if (!dest) { // 유효 착지점 없음(전부 건물/구역 밖) — 짧게 재시도
+      enemy.leapCd = leapCooldownWith(spec, this.leapCdMul) * 0.35;
+      return;
+    }
+    enemy.leapTarget = dest;
+    enemy.leapCastLeft = spec.telegraphSec;
+    this.leapCasting[role]++;
+  }
+
+  /**
+   * 착지점 표본 — 최대 LEAP_TRIES 회 뽑아 유효한 첫 지점. 유효 조건:
+   *   (1) 작전구역 안(밖이면 매 프레임 clampToDisk 에 눌려 경계에 붙어버린다)
+   *   (2) 플레이어까지 시야선이 건물에 막히지 않음(= 건물 내부·벽 뒤 착지 배제)
+   * 전부 실패하면 null — 이번 주기는 도약하지 않는다(억지로 밀어넣지 않는다).
+   */
+  private pickLeapDest(spec: NonNullable<PlasmoidSpec["archetypes"]["kiter"]["leap"]>, targetPos: THREE.Vector3): Vec3 | null {
+    for (let i = 0; i < LEAP_TRIES; i++) {
+      const o = sampleLeapOffset(spec, this.rand);
+      const x = targetPos.x + o.dx, z = targetPos.z + o.dz;
+      if (this.zoneR > 0) {
+        const dx = x - this.zoneCx, dz = z - this.zoneCz;
+        if (dx * dx + dz * dz > this.zoneR * this.zoneR) continue; // 구역 밖
+      }
+      // 고도는 **플레이어 기준** 오프셋 — 지면 기준이면 비행 중인 플레이어 발밑 수백 m 에 떨어진다.
+      // 지면 하한만 클램프해 지하로 내려가지 않게 한다(지상 플레이어면 사실상 지면 착지가 된다).
+      const y = Math.max(this.world.heightAt(x, z) + LEAP_GROUND_CLEARANCE, targetPos.y + o.dy);
+      if (this.world.segmentHitsBuilding(x, y, z, targetPos.x, targetPos.y, targetPos.z) <= 1) continue; // 시야 차단
+      return { x, y, z };
+    }
+    return null;
+  }
+
   /**
    * 역행체(§6.6) 시전 — 사거리 내 표적에 castSec 시전 후 역행(performRewind). 카운터 3종이 정본:
    * 시전 중 격파 / W1 동결·경직(인터럽트) / W2 계류(관측된 회로는 되감을 수 없다). 예지 HUD 는
@@ -1128,26 +1224,25 @@ export class EnemyManager {
         v.z += ((cur.z - this.prevPos[i].z) / dt - v.z) * a;
       }
       this.prevPos[i].copy(cur);
-      this.playerIsFlyer[i] = pl.spec.move.mode === "fly"; // 상성 타깃팅용
       this.targets[i] = { pos: cur, vel: v, player: pl, alive: !pl.isDead };
     }
-    this.playerIsFlyer.length = n;
     this.hasPrev = true;
   }
 
   /**
-   * 개체의 표적 선택 — 거리 + 어그로 부하 + **상성 가중** 점수의 최소(현 표적은 히스테리시스로 유지). 없으면 -1.
-   * 적은 자기 상성 드론(카이터→플라이어 / 러셔→워커)을 우선 — MP 혼합팀에서 각자 자기 레인을 맡게 한다.
+   * 개체의 표적 선택 — 거리 + 어그로 부하 점수의 최소(현 표적은 히스테리시스로 유지). 없으면 -1.
+   *
+   * 상성 가중(matchupMul)은 폐지했다(§6.8): 전장 구성이 드론과 분리되면서, 단일 아키타입 전장에서는
+   * 모든 개체가 같은 가중을 받아 한 플레이어에게 몰린다(카이터만 있는 전장 = 전원이 플라이어에게).
+   * 거리 + 부하만으로 고르는 편이 혼합팀에서 더 고르게 분산된다.
    */
-  private pickTarget(pos: THREE.Vector3, currentIdx: number, isKiter: boolean): number {
-    const { targets, dists, matchMul } = this;
+  private pickTarget(pos: THREE.Vector3, currentIdx: number): number {
+    const { targets, dists } = this;
     dists.length = targets.length;
-    matchMul.length = targets.length;
     for (let i = 0; i < targets.length; i++) {
-      matchMul[i] = matchupMul(isKiter, this.playerIsFlyer[i], MISMATCH_PENALTY);
       dists[i] = targets[i].alive ? Math.sqrt(targets[i].pos.distanceToSquared(pos)) : Infinity;
     }
-    return chooseTarget(dists, this.load, currentIdx, AGGRO_PENALTY, TARGET_HYSTERESIS, this.scores, matchMul);
+    return chooseTarget(dists, this.load, currentIdx, AGGRO_PENALTY, TARGET_HYSTERESIS, this.scores);
   }
 
   /** 점진적 스폰 — 세 아키타입 예산을 잔여 비율로 섞어 SPAWN_INTERVAL 마다 1마리씩 투입. */
@@ -1167,6 +1262,10 @@ export class EnemyManager {
   update(dt: number) {
     this.frame++;
     this.timeSec += dt; // patrol 등 시간 기반 진형 행동
+    // 동시 도약 상한은 **이번 프레임에 실제로 시전 중인 수**로 판정한다 — 누적 카운터로 두면
+    // 상한이 영구히 소진돼 도약이 한 번만 일어나고 끝난다. 매 프레임 0 에서 다시 센다.
+    this.leapCasting.rusher = 0;
+    this.leapCasting.kiter = 0;
     advanceGlobalPulse(dt); // 박동 동기화 — 전 개체 공유 위상(프레임당 1회)
     this.world.buildings?.update(dt); // 건물 피격 틴트/붕괴 연출 진행
     this.tickSpawns(dt);
@@ -1245,7 +1344,7 @@ export class EnemyManager {
         this.formationStep(enemy, p, dt, boids, grid, myIdx);
         continue;
       }
-      const idx = this.pickTarget(p, enemy.targetIndex, enemy.isKiter); // 상성 가중 포함
+      const idx = this.pickTarget(p, enemy.targetIndex);
       // 기본 = 건물 공격. 플레이어가 인식 범위(AWARENESS_RADIUS) 안에 들면 플레이어로 전환하고,
       // 한번 인식하면 AWARENESS_LOSE_RADIUS 까지 계속 추격(히스테리시스). 벗어나면 다시 건물.
       // provoked(피격 유발)면 거리 게이트를 무시하고 살아있는 플레이어를 계속 추격.
@@ -1258,6 +1357,10 @@ export class EnemyManager {
       const loseSq = player ? AWARENESS_LOSE_SQ : 0;
       if (!engagesPlayer(idx >= 0, enemy.targetIndex >= 0, distSq, enemy.provoked, acquireSq, loseSq)) {
         enemy.targetIndex = -1;
+        // 인식이 풀리면 진행 중인 도약 시전도 버린다. 남겨 두면 leapStep 이 호출되지 않아 시전이
+        // 얼어붙고, 나중에 재인식했을 때 **플레이어가 떠난 지 한참 된 옛 좌표**로 도약한다.
+        enemy.leapCastLeft = 0;
+        enemy.leapTarget = null;
         this.buildingStep(enemy, p, dt, boids, grid, myIdx);
         continue;
       }
@@ -1265,8 +1368,6 @@ export class EnemyManager {
       enemy.buildingId = null;
       load[idx]++;
       const t = targets[idx];
-      // 상성 폴백 — 카이터가 비상성(워커=지상) 표적을 노릴 땐 keepDist 를 좁혀 사거리 안으로(처치 가능하게)
-      if (enemy.isKiter) enemy.setEngageKeepDist(engageKeepDist(enemy.kiterBaseKeepDist, this.playerIsFlyer[idx], KITER_CLOSE_MUL));
       const recompute = recomputeSteer(p.distanceToSquared(t.pos), NEAR_DIST_SQ, this.frame, myIdx, STEER_STRIDE);
       const steer = { vel: t.vel, boids, index: myIdx, grid, recompute };
       // 도주형 = 예측 회피·원거리 드레인 / 추격형 = 예측 요격·접촉. 공격은 공통 attack()(흡수=성장).
@@ -1277,6 +1378,8 @@ export class EnemyManager {
         const dd = p.distanceTo(t.pos);
         if (dd > RUSHER_DASH_MIN && dd < RUSHER_DASH_MAX) enemy.startDash();
       }
+      // 차원도약 — 이 분기에 도달했다는 건 engagesPlayer 통과, 즉 **플레이어를 인식 중**이라는 뜻이다.
+      if (t.player && (enemy.role === "kiter" || enemy.role === "rusher")) this.leapStep(enemy, p, t.pos, dt);
       if (enemy.role === "marker") this.markerFire(enemy, p, t.pos, idx, dt);
       else if (enemy.role === "rewinder") this.rewinderCast(enemy, p, t.pos, dt);
       else this.attack(enemy, t.pos, p, t.player, null);

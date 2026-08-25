@@ -41,7 +41,7 @@ export interface DirectorSnapshot {
  */
 export type DirectorAction =
   | { type: "none" }
-  | { type: "set-modifiers"; modifiers: Pick<MissionModifiers, "aggro" | "sweepPeriodMul" | "freqRegenMul"> }
+  | { type: "set-modifiers"; modifiers: Pick<MissionModifiers, "aggro" | "sweepPeriodMul" | "freqRegenMul" | "leapChanceMul"> }
   | { type: "reinforce"; deploy: MissionDeployAction }
   | { type: "brief"; text: string };
 
@@ -57,6 +57,7 @@ export interface Director {
 export const DIRECTOR_LIMITS = {
   sweepPeriodMul: { min: 0.4, max: 2.0 }, //  파문 주기 배수 허용 범위
   freqRegenMul: { min: 0.5, max: 1.5 }, //    게이지 회복 배수 허용 범위
+  leapChanceMul: { min: 0.5, max: 2.0 }, //   차원도약 확률 배수 허용 범위
   reinforceMaxCredits: 30, //                 1회 증원 상한(처치 크레딧 기준)
   briefMaxLen: 200, //                        통신 메시지 길이 상한
 } as const;
@@ -111,7 +112,7 @@ export function validateDirectorAction(action: DirectorAction): DirectorVerdict 
           if (m.aggro !== undefined && !["player", "landmark", "building"].includes(m.aggro)) {
             return { ok: false, reason: "bad-aggro" };
           }
-        } else if (k === "sweepPeriodMul" || k === "freqRegenMul") {
+        } else if (k === "sweepPeriodMul" || k === "freqRegenMul" || k === "leapChanceMul") {
           const v = m[k];
           const lim = DIRECTOR_LIMITS[k];
           if (v !== undefined && (typeof v !== "number" || v < lim.min || v > lim.max)) {

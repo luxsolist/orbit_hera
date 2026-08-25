@@ -255,21 +255,6 @@ export function chooseTarget(
   return idx >= 0 && scores[idx] !== Infinity ? idx : -1;
 }
 
-/**
- * 상성 가중(순수) — 카이터↔플라이어 / 러셔↔워커가 상성. 상성이면 1, 비상성이면 penalty(>1)배로
- * 점수를 불리하게 줘 적이 **자기 상성 드론을 우선 표적**으로 삼게 한다(거리/부하와 곱해짐). MP 혼합팀 대응.
- */
-export function matchupMul(isKiter: boolean, targetIsFlyer: boolean, penalty: number): number {
-  return isKiter === targetIsFlyer ? 1 : penalty; // kiter+flyer 또는 rusher+walker = 상성(1)
-}
-
-/**
- * 카이터 교전 거리(순수) — 비상성(워커=지상) 표적을 노릴 땐 keepDist 를 좁혀 그 무기 사거리 안으로
- * 들어가게(처치 가능). 상성(플라이어) 표적이면 기본 keepDist 유지(원거리 카이팅). MP 미스매치 폴백.
- */
-export function engageKeepDist(baseKeepDist: number, targetIsFlyer: boolean, closeMul: number): number {
-  return targetIsFlyer ? baseKeepDist : baseKeepDist * closeMul;
-}
 
 /** 도주형(카이터) 조향 파라미터 — turnRate 는 rad/s. */
 export interface KiterParams {
@@ -414,6 +399,12 @@ export class CoreEnemy {
   markerAimLeft = 0; //              낙인탄 텔레그래프 잔여(s) — 장전 조준선(P3 §6.7, 매니저 구동)
   rewCastLeft = 0; //                역행체 시전 잔여(s) — 예지 HUD 카운트다운(매니저 구동)
   rewCd = 6; //                      역행 시전 쿨다운(s) — 스폰 직후 즉시 시전 방지 초기값
+  // 차원도약(leap.ts) — 매니저가 구동. 착지점은 **텔레그래프 개시 시점에 확정**한다: 예고선을
+  // 그 지점으로 그려야 플레이어가 "어디로 가는지" 읽고 대응할 수 있다(회피 강제의 전제).
+  leapCastLeft = 0; //               도약 텔레그래프 잔여(s). >0 = 시전 중
+  leapCd = 0; //                     도약 쿨다운(s) — 매니저가 스폰 시 스펙으로 초기화
+  leapTarget: Vec3 | null = null; // 확정된 착지점(월드) — 텔레그래프 예고선의 끝점
+  leapRecover = 0; //                착지 후 공격 불가 잔여(s) — 회피 창
   private dashLeft = 0; //           러셔 돌진 잔여(s) — 카이팅 파훼(안티카이팅)
   private dashCd = 0;
   driftAnchor: Vec3 | null = null; // 소산 표류 앵커(균열 위치) — 매니저가 주입(공유 참조)
@@ -439,7 +430,6 @@ export class CoreEnemy {
   private maxScale: number; // 흡수 성장 시각 상한(초기 baseScale 의 1.5배)
   private vel: Vec3 = { x: 0, y: 0, z: 0 }; // 카이터 속도 상태(선회 캡용)
   private kiter?: KiterParams; // 설정 시 도주형 행동
-  private kiterKeepBase = 0; // 기본 keepDist(상성 폴백에서 좁혔다 복원할 기준)
   // 관측 고정(zeno) — 지속 조사 노출 상태. 무기가 applyZeno 로 갱신, update 가 누적/감쇠.
   private zeno?: ZenoSpec;
   private zenoExposure = 0;
@@ -566,6 +556,17 @@ export class CoreEnemy {
     this.zenoSince = 0;
   }
 
+  /**
+   * 관측 노출 초기화 — 차원도약의 본체(§6.7). 붙들고 쌓아 둔 지속조사 누적이 도약으로 끊긴다.
+   * "붙들면 멈춘다"(W1)에 대한 대항 수단: 고정 교전만으로 이기는 안정 상태를 깬다.
+   */
+  resetZenoExposure(): void {
+    this.zenoExposure = 0;
+    this.zenoSince = Infinity;
+    this.zeno = undefined;
+    this.zenoLatch = false;
+  }
+
   /** 현재 관측 감속 배수(1=정상, 0=동결). 이동 적분에 곱한다. */
   get zenoMul(): number {
     return this.zeno ? zenoSlowMul(this.zenoExposure, this.zeno.slowPerSec, this.zeno.freezeAfter) : 1;
@@ -600,18 +601,8 @@ export class CoreEnemy {
   /** 도주형(카이터) 행동 활성화 — 도주+선회+원거리 드레인. */
   setKiter(params: KiterParams): void {
     this.kiter = params;
-    this.kiterKeepBase = params.keepDist;
   }
 
-  /** 상성 폴백 — 비상성(워커) 표적이면 keepDist 를 좁혀 그 사거리 안으로 진입(처치 가능). 상성이면 복원. */
-  setEngageKeepDist(dist: number): void {
-    if (this.kiter) this.kiter.keepDist = dist;
-  }
-
-  /** 기본 keepDist(매니저가 engageKeepDist 산출 기준으로 사용). */
-  get kiterBaseKeepDist(): number {
-    return this.kiterKeepBase;
-  }
 
   /** 카이터 여부(매니저가 드레인/접촉 경로를 분기). */
   get isKiter(): boolean {
@@ -660,6 +651,7 @@ export class CoreEnemy {
     if (this.observedLeft > 0) this.observedLeft -= dt; // 동시 조사 창 감쇠
     if (this.pinLeft > 0) this.pinLeft -= dt; //           관측 계류(W2) 감쇠
     if (this.dashCd > 0) this.dashCd -= dt; //             러셔 돌진 쿨다운
+    if (this.leapRecover > 0) this.leapRecover -= dt; //    차원도약 착지 경직(공격 불가) 감쇠
     if (this.dashLeft > 0) { this.dashLeft -= dt; speedScale *= DASH_MUL; } // 돌진 가속
     // 위상 이탈 주기(§2.1) — 계류(pin)·동결(zeno) 중엔 이탈 진입 불가(관측된 것은 숨지 못한다)
     if (this.phaseCfg && this.state === "alive") {
@@ -770,6 +762,7 @@ export class CoreEnemy {
   /** 공격 가능 여부 (사거리 + 쿨다운 + 경직/동결 게이트). cooldown 으로 접촉/드레인/낙인탄 간격을 분기. */
   tryAttack(playerPos: THREE.Vector3, range: number, cooldown = 1.0): boolean {
     if (this.state !== "alive" || this.attackCooldown > 0 || this.staggerLeft > 0 || this.isZenoFrozen || this.phasedOut) return false;
+    if (this.leapRecover > 0) return false; // 착지 직후 — 회피 창(도약이 곧 피해가 되지 않게)
     const d = this.group.position.distanceTo(playerPos);
     if (d <= range) {
       this.attackCooldown = cooldown;

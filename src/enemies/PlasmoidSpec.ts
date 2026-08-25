@@ -7,6 +7,9 @@
 //      여기서 hp 산정용 '지름'은 설계 노브(nominal)이고, 실제 화면/충돌 크기는 visualDiameter() 가 결정한다.
 
 import { clamp, parseHexColor } from "../core/math";
+// 차원도약 스펙(leap.ts) — 아키타입별. 미지정 = 그 아키타입 미도약(구 JSON 하위호환).
+import type { PlasmoidLeapSpec as LeapSpec } from "./leap";
+export type { PlasmoidLeapSpec } from "./leap";
 
 /** 색 구간 기준점 — 별 표면온도(K)에 색·체력가중치를 묶는다(낮은 온도=적색·최약, 높은 온도=청백·최강). */
 export interface ColorStop {
@@ -77,10 +80,13 @@ export interface PlasmoidKiterArchetype extends PlasmoidArchetypeBase {
   attackRange: number; // 원거리 드레인 사거리(m)
   drainDamage: number; // 1틱 흡수량(= 플레이어 HP 피해 = 적 성장량)
   drainInterval: number; // 드레인 틱 간격(s)
+  leap?: LeapSpec; // 차원도약 — 원거리(관측 파기). 미지정 시 미도약
 }
 
 /** 러셔(지상 돌격형) 아키타입 — 적극 접근 + 접촉 흡수(spec.contact). 주로 워커와 교전. */
-export type PlasmoidRusherArchetype = PlasmoidArchetypeBase;
+export interface PlasmoidRusherArchetype extends PlasmoidArchetypeBase {
+  leap?: LeapSpec; // 차원도약 — 근접(회피 강제). 미지정 시 미도약
+}
 
 /**
  * 커터(내부 id: cutter, 표시명 절단체 — 서사편 §6.3/§6.7) — 건물 상단 부착 → 절단 채널 →
@@ -337,13 +343,40 @@ export function contactDamage(spec: PlasmoidSpec, hp: number): number {
 }
 
 /**
- * 아키타입별 웨이브 동시 개체 수 — (기본 + 2웨이브당 +1, countCap 상한) × 매칭 드론 수.
- * 매칭 드론(러셔=워커/카이터=플라이어)이 0이면 0 → 단일 구성은 자기 타입만(자기정렬·언윈너블 방지). 순수.
+ * 전장 스폰 구성(§6.8) — **드론 종류와 무관한 전장 속성**. 종전에는 적 구성이 드론에 자기정렬했으나
+ * (러셔=워커/카이터=플라이어), 차원도약이 두 아키타입 모두를 두 드론에 유효하게 만들면서 그 결합이
+ * 근거를 잃었다. 전장이 스스로 구성을 선언하면 설정 축이 하나로 줄고 난이도 설계가 명시적이 된다.
  */
-export function archetypeCount(arche: PlasmoidArchetypeBase, wave: number, matchingPlayers: number): number {
-  if (matchingPlayers <= 0) return 0;
+export type SpawnMix = "kiter" | "rusher" | "even";
+
+/** 구성별 아키타입 비중(합 1). 마커는 이 축과 직교 — 어느 구성에서도 인원 비례로 따로 얹힌다. */
+export function mixShares(mix: SpawnMix): { kiter: number; rusher: number } {
+  switch (mix) {
+    case "kiter": return { kiter: 1, rusher: 0 };
+    case "rusher": return { kiter: 0, rusher: 1 };
+    default: return { kiter: 0.5, rusher: 0.5 };
+  }
+}
+
+/**
+ * 구성별 기본 도약 빈도 배수 — 카이터 단독 전장만 낮춘다.
+ *
+ * 왜: 워커는 카이터(89m/s)를 추격할 수 없고 조준 보정 콘이 13°(플라이어 28°의 절반)라, 원거리 도약이
+ * 잦으면 재조준·시야 차폐로 클리어가 늘어져 제한시간(300s)을 위협한다. 화력 손실은 없다(중빔은 667m
+ * 까지 감쇠 0) — 순전히 조준 부담이다. 미션이 modifiers.leapChanceMul 을 명시하면 그쪽이 우선한다.
+ */
+export function mixLeapChanceMul(mix: SpawnMix): number {
+  return mix === "kiter" ? 0.5 : 1;
+}
+
+/**
+ * 아키타입별 웨이브 동시 개체 수 — (기본 + 2웨이브당 +1, countCap 상한) × 인원 × 전장 비중.
+ * 비중 0 이면 0 → 단독 구성에서 상대 아키타입이 나오지 않는다. 순수.
+ */
+export function archetypeCount(arche: PlasmoidArchetypeBase, wave: number, players: number, share = 1): number {
+  if (players <= 0 || share <= 0) return 0;
   const per = Math.min(arche.countCap, arche.countBase + Math.floor(Math.max(0, wave - 1) / 2));
-  return per * matchingPlayers;
+  return Math.round(per * players * share);
 }
 
 /**
@@ -361,14 +394,12 @@ export function pickSpawnType(
   return "marker";
 }
 
-/**
- * 일괄 스폰 1마리의 아키타입 — 전장 드론 구성에 비례(워커↔러셔/지표, 플라이어↔카이터/상공).
- * 단일 구성은 자기 매칭 타입만(자기정렬 — 이길 수 없는 미스매치 차단). 둘 다 없으면 50:50. rand: ()=>[0,1). 순수.
- */
-export function pickBurstType(walkers: number, flyers: number, rand: () => number): PlasmoidArchetype {
-  const total = walkers + flyers;
-  if (total <= 0) return rand() < 0.5 ? "rusher" : "kiter";
-  return rand() * total < walkers ? "rusher" : "kiter";
+/** 일괄 스폰 1마리의 아키타입 — 전장 구성(SpawnMix)이 결정. rand: ()=>[0,1). 순수. */
+export function pickBurstType(mix: SpawnMix, rand: () => number): PlasmoidArchetype {
+  const w = mixShares(mix);
+  if (w.rusher <= 0) return "kiter";
+  if (w.kiter <= 0) return "rusher";
+  return rand() < w.rusher ? "rusher" : "kiter";
 }
 
 /** 가장 낮은(가장 차가운·최약) 색 stop. */
@@ -480,13 +511,22 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
   archetypes: {
     rusher: {
       name: "거머리 플라즈모이드 / LEECH",
-      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 12, speed: 17, speedMin: 12,
+      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 8, speed: 17, speedMin: 12,
+      // 근접 도약(회피 강제) — 유저 주변 12~25m **링** + 수직 ±10m. 구(球) 안이 아니라 링인 이유:
+      // 10m 구면 균등이면 절반이 지하이고, 착지 즉시 접촉(10m·속도 17 = 0.59초)이라 회피 창이 없다.
+      // 수직 오프셋이 플레이어 기준이라 비행 중에도 성립한다(러셔 이동은 원래 3D 추격이다).
+      leap: { telegraphSec: 3, cd: 18, chance: 0.45, minDist: 12, maxDist: 25, dyMin: -10, dyMax: 10, recoverSec: 0.8, concurrentCap: 3 },
     },
     kiter: {
       name: "모기 플라즈모이드 / SKEETER",
-      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 5, speed: 89, speedMin: 67,
+      spawnAltMin: 80, spawnAltMax: 300, countBase: 8, countCap: 10, speed: 89, speedMin: 67,
       turnRateDeg: 100, keepDist: 35, keepBand: 12, strafeMix: 0, orbitRef: 35, evadeGain: 0.85,
-      attackRange: 95, drainDamage: 1.4, drainInterval: 1.5,
+      attackRange: 95, drainDamage: 3.0, drainInterval: 1.5,
+      // 원거리 도약(관측 파기) — 수평 150~450m + 플레이어보다 20~250m **위**(모기는 내려다본다).
+      // 상한이 450 인 이유: 어그로 해제 반경 900m 의 절반이라
+      // 교전이 끊기지 않고, 복귀 시간이 (450−95)/89 ≈ 4.0초로 무행동 구간이 짧다. 1000m 면 11%가
+      // 900m 밖에 떨어져 표적이 해제되고(건물 공격 복귀) provoked 10초가 끝나면 돌아오지 않는다.
+      leap: { telegraphSec: 3, cd: 12, chance: 0.6, minDist: 150, maxDist: 450, dyMin: 20, dyMax: 250, recoverSec: 0, concurrentCap: 2 },
     },
     marker: {
       name: "소인체 플라즈모이드 / BRANDER",

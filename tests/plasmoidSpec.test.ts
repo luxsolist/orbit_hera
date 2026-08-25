@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import {
   colorWeight, colorStrength01, colorAt, plasmoidHp, visualDiameter, lowestColor, highestColor,
-  strength, speedForStrength, sampleTemp, rollAppearance, contactDamage, pickBurstType,
+  strength, speedForStrength, sampleTemp, rollAppearance, contactDamage, pickBurstType, mixShares, mixLeapChanceMul,
   distributeHp, appearanceForHp,
   DEFAULT_PLASMOID, type PlasmoidSpec,
 } from "../src/enemies/PlasmoidSpec";
@@ -152,22 +152,33 @@ describe("colorStrength01 — 색 강도 정규화(적색 0 → 청백 1, 속도
   });
 });
 
-describe("pickBurstType — 일괄 스폰 아키타입(자기정렬)", () => {
-  const r = (v: number) => () => v;
-  it("워커만 → 항상 러셔, 플라이어만 → 항상 카이터", () => {
-    expect(pickBurstType(1, 0, r(0.0))).toBe("rusher");
-    expect(pickBurstType(1, 0, r(0.99))).toBe("rusher");
-    expect(pickBurstType(0, 1, r(0.0))).toBe("kiter");
-    expect(pickBurstType(0, 1, r(0.99))).toBe("kiter");
+/** 고정값을 돌려주는 난수 스텁. */
+const r = (v: number) => () => v;
+
+describe("pickBurstType — 전장 구성이 아키타입을 결정(드론 무관)", () => {
+  it("단독 구성은 그 타입만 — 난수와 무관", () => {
+    for (const u of [0.0, 0.5, 0.99]) {
+      expect(pickBurstType("kiter", r(u))).toBe("kiter");
+      expect(pickBurstType("rusher", r(u))).toBe("rusher");
+    }
   });
-  it("혼합 구성 → 인원 비율로 가중", () => {
-    // walkers=3, flyers=1, total=4 → rand*4 < 3 이면 러셔
-    expect(pickBurstType(3, 1, r(0.7))).toBe("rusher"); // 2.8 < 3
-    expect(pickBurstType(3, 1, r(0.8))).toBe("kiter"); // 3.2 ≥ 3
+  it("반반 구성은 50:50", () => {
+    expect(pickBurstType("even", r(0.49))).toBe("rusher");
+    expect(pickBurstType("even", r(0.51))).toBe("kiter");
   });
-  it("플레이어 없음 → 50:50", () => {
-    expect(pickBurstType(0, 0, r(0.4))).toBe("rusher");
-    expect(pickBurstType(0, 0, r(0.6))).toBe("kiter");
+});
+
+describe("mixShares / mixLeapChanceMul — 구성 파생값", () => {
+  it("비중 합은 항상 1", () => {
+    for (const m of ["kiter", "rusher", "even"] as const) {
+      const w = mixShares(m);
+      expect(w.kiter + w.rusher).toBeCloseTo(1, 9);
+    }
+  });
+  it("카이터 단독만 도약 빈도를 낮춘다 — 워커가 추격 불가라 제한시간을 위협", () => {
+    expect(mixLeapChanceMul("kiter")).toBe(0.5);
+    expect(mixLeapChanceMul("rusher")).toBe(1);
+    expect(mixLeapChanceMul("even")).toBe(1);
   });
 });
 

@@ -151,6 +151,11 @@ describe("v2 런타임 부속 — duration/runnable/로더 정규화", () => {
       deploy: { model: "roster", units: [{ role: "marker", count: 4, hp: 1500 }], spawnRadius: 800 },
     })).toBe(true); // 훅 ① — roster
     expect(runnableV2({ ...DEFAULT_MISSIONS_V2[0], deploy: { model: "phased", phases: [] } })).toBe(false); // 빈 페이즈
+    // 스폰 구성(§6.8) — 유효 3종은 통과, 오타는 제외(조용히 "even" 으로 흡수돼 난이도가 바뀌는 것 방지)
+    for (const mix of ["kiter", "rusher", "even"] as const) {
+      expect(runnableV2({ ...DEFAULT_MISSIONS_V2[0], spawnMix: mix })).toBe(true);
+    }
+    expect(runnableV2({ ...DEFAULT_MISSIONS_V2[0], spawnMix: "kitre" as never })).toBe(false);
     expect(runnableV2({ ...DEFAULT_MISSIONS_V2[0], modifiers: { aggro: "landmark" } })).toBe(true); // 훅 ④
     expect(runnableV2({ ...DEFAULT_MISSIONS_V2[0], modifiers: { sweepPeriodMul: 0.7 } })).toBe(true); // 훅 ⑥
     expect(runnableV2({ ...DEFAULT_MISSIONS_V2[0], modifiers: { aggro: "building", freqRegenMul: 0.5 } })).toBe(true); // 혼합 가능

@@ -45,6 +45,7 @@ import {
   driftConvergence, revealed, sutureReadout, sortieLinkReport, REVELATION_LINES, type MissionReport,
 } from "../game/campaign";
 import { droneGrowth, levelFromXp, xpForKill, CLEAR_XP } from "../player/progression";
+import { mixLeapChanceMul } from "../enemies/PlasmoidSpec";
 import {
   validateDirectorActions, baseMod, setMod, stepMod,
   type Director, type DirectorAction, type DirectorSnapshot, type TimedMod,
@@ -115,6 +116,10 @@ export class Game {
   // 입력과 무관하게 상시 소모하므로 회복이 절반이면 소모가 회복을 추월한다. 만료 시 미션 기준값으로 복귀.
   private freqRegenBase = 1; // 미션 변조(옅은 장 등)가 정한 기준값 — 감독 변조 만료 시 여기로 되돌린다
   private freqRegenMod: TimedMod = baseMod(1); // 감독 변조 + 잔여시간(director.ts 순수 상태)
+  // 차원도약(§6.7) 빈도 — 같은 한시 규약. 쿨다운 배수는 미션 전용(감독 봉투 밖).
+  private leapChanceBase = 1;
+  private leapCdBase = 1;
+  private leapChanceMod: TimedMod = baseMod(1);
   private hitstopLeft = 0; // 히트스톱 잔여(s) — 수동 명중/처치 순간 시뮬레이션을 1~3프레임 정지(타격감)
   // 구역 축소(미션 변조 zoneShrink — 훅 ⑥): 주기마다 반경 축소, 에너지 벽 재생성. null = 비활성
   private zoneShrink: { everySec: number; step: number; minRadius: number; timer: number; radius: number } | null = null;
@@ -396,6 +401,16 @@ export class Game {
     this.freqRegenBase = m.modifiers?.freqRegenMul ?? 1; // 옅은 장 — 이 출격의 기준값
     this.freqRegenMod = baseMod(this.freqRegenBase); // 이전 출격의 감독 변조가 새 출격으로 새지 않게
     s.player.freqRegenMul = this.freqRegenBase;
+    // 전장 스폰 구성(§6.8) — 드론과 무관하게 미션이 선언. pyramid/horde/웨이브 경로에만 적용된다.
+    const mix = m.spawnMix ?? "even";
+    s.enemies.setSpawnMix(mix);
+    // 차원도약 난이도 — 배틀필드(미션) 기준값. 감독이 올려도 만료되면 여기로 돌아온다.
+    // 구성별 기본값(mixLeapChanceMul)은 미션이 명시하지 않았을 때만 — 카이터 단독 전장은 도약을 줄인다
+    // (워커가 추격 불가 + 조준 콘 13° 라 잦은 원거리 도약이 제한시간을 위협한다).
+    this.leapChanceBase = m.modifiers?.leapChanceMul ?? mixLeapChanceMul(mix);
+    this.leapCdBase = m.modifiers?.leapCdMul ?? 1;
+    this.leapChanceMod = baseMod(this.leapChanceBase);
+    s.enemies.setLeapMuls(this.leapChanceBase, this.leapCdBase);
     // 구역 축소(zoneShrink) — 주기마다 작전구역 반경을 줄인다(에너지 벽 재생성 포함)
     const shrink = m.modifiers?.zoneShrink;
     this.zoneShrink = !this.peaceful && shrink && m.zoneRadius > 0
@@ -725,6 +740,7 @@ export class Game {
         if (a.modifiers.aggro) s.enemies.setAggro(a.modifiers.aggro);
         if (a.modifiers.sweepPeriodMul) s.enemies.setSweepPeriodMul(a.modifiers.sweepPeriodMul);
         if (a.modifiers.freqRegenMul) this.setDirectorFreqRegen(s, a.modifiers.freqRegenMul);
+        if (a.modifiers.leapChanceMul) this.setDirectorLeapChance(s, a.modifiers.leapChanceMul);
         return;
       case "reinforce":
         runDeploy(s.enemies, a.deploy, false); // 카운터 유지 증원 — 파문/증원 경계 문법과 동일
@@ -748,12 +764,28 @@ export class Game {
     this.hud.showBroadcast(mul < this.freqRegenBase ? "장이 옅어진다 — 게이지 회복 저하" : "장이 짙어진다 — 게이지 회복 상승", 6);
   }
 
+  /** 감독의 차원도약 빈도 변조 — 게이지와 같은 한시 규약(만료 시 배틀필드 기준값 복귀). */
+  private setDirectorLeapChance(s: Session, mul: number) {
+    const { next, changed } = setMod(this.leapChanceMod, mul, DIRECTOR_MOD_SEC);
+    this.leapChanceMod = next;
+    s.enemies.setLeapMuls(next.mul, this.leapCdBase);
+    if (!changed) return;
+    this.hud.showBroadcast(mul > this.leapChanceBase ? "장이 흔들린다 — 개체 도약 증가" : "장이 가라앉는다 — 개체 도약 감소", 6);
+  }
+
   /** 감독 변조 만료 → 미션 기준값 복귀(+ 복귀 고지). 기준값과 이미 같았으면 조용히 해제. */
   private tickDirectorMods(s: Session, dt: number) {
-    const { next, expired } = stepMod(this.freqRegenMod, this.freqRegenBase, dt);
-    this.freqRegenMod = next;
-    s.player.freqRegenMul = next.mul;
-    if (expired) this.hud.showBroadcast("장이 안정된다 — 게이지 회복 정상", 6);
+    const fr = stepMod(this.freqRegenMod, this.freqRegenBase, dt);
+    this.freqRegenMod = fr.next;
+    s.player.freqRegenMul = fr.next.mul;
+    if (fr.expired) this.hud.showBroadcast("장이 안정된다 — 게이지 회복 정상", 6);
+
+    const lp = stepMod(this.leapChanceMod, this.leapChanceBase, dt);
+    this.leapChanceMod = lp.next;
+    if (lp.expired) {
+      s.enemies.setLeapMuls(this.leapChanceBase, this.leapCdBase);
+      this.hud.showBroadcast("장이 안정된다 — 개체 도약 정상", 6);
+    }
   }
 
   private tickZoneShrink(s: Session, dt: number) {
