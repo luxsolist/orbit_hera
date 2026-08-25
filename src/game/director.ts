@@ -61,6 +61,35 @@ export const DIRECTOR_LIMITS = {
   briefMaxLen: 200, //                        통신 메시지 길이 상한
 } as const;
 
+/**
+ * 감독의 **한시 변조** 상태(순수). 감독이 건 배수를 영구 적용하면 복구 경로가 없다 — 출격 시작만이
+ * 유일한 재설정 지점이라 한 번 걸리면 그 출격 내내 풀리지 않는다. freqRegenMul 0.5 에서는 오토파이어
+ * (입력 무관 상시 소모)가 회복을 추월해 게이지가 0 에 고착됐다(2026-08-25 버그). "가만히 두면 기준값으로
+ * 돌아간다"를 자료구조로 강제해, 감독이 유지를 원하면 매 주기 재선언하도록 뒤집는다.
+ */
+export interface TimedMod {
+  mul: number; // 현재 적용 배수
+  left: number; // 잔여(s). 0 이하 = 기준값 적용 중
+}
+
+/** 변조 없음(= 미션 기준값 그대로). */
+export function baseMod(base: number): TimedMod {
+  return { mul: base, left: 0 };
+}
+
+/** 변조 적용/갱신 — 같은 값 재선언은 시계만 갱신(changed=false → 호출부가 고지를 생략해 배너 도배 방지). */
+export function setMod(cur: TimedMod, mul: number, durationSec: number): { next: TimedMod; changed: boolean } {
+  return { next: { mul, left: durationSec }, changed: cur.mul !== mul };
+}
+
+/** 1프레임 감쇠 — 잔여가 0 이하로 떨어지면 기준값 복귀. expired=기준값과 달랐던 것이 실제로 되돌아감. */
+export function stepMod(cur: TimedMod, base: number, dt: number): { next: TimedMod; expired: boolean } {
+  if (cur.left <= 0) return { next: cur, expired: false };
+  const left = cur.left - dt;
+  if (left > 0) return { next: { mul: cur.mul, left }, expired: false };
+  return { next: { mul: base, left: 0 }, expired: cur.mul !== base };
+}
+
 export type DirectorVerdict =
   | { ok: true; action: DirectorAction }
   | { ok: false; reason: string };

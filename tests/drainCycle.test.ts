@@ -79,3 +79,38 @@ describe("DrainCycle 사용후 쿨다운", () => {
     expect(c.cooldownRemainingSec).toBe(0);
   });
 });
+
+// abort — 발동 중 사망(2026-08-25 회귀). 상태기계가 active 인 채 남으면 리스폰으로 가득 찬 게이지가
+// 입력 없이 그대로 다시 소진된다. 단 reset 과 달리 **쿨다운은 환급하지 않는다**(사망이 이득이 되면
+// "회복은 없고 리스폰만" 설계가 무너진다).
+describe("DrainCycle.abort — 쓰다 만 종료", () => {
+  it("활성 해제 + 쿨다운은 정상 시작(환급 없음)", () => {
+    const c = mk();
+    c.step(0.016, true, 100); // 발동
+    expect(c.isActive).toBe(true);
+    c.abort();
+    expect(c.isActive).toBe(false);
+    expect(c.cooldownRemainingSec).toBe(P.cooldown); // reset() 이었다면 0
+    expect(c.cooldownReady).toBe(0);
+  });
+
+  it("중단 후에는 트리거를 눌러도 쿨다운 동안 재발동 불가", () => {
+    const c = mk();
+    c.step(0.016, true, 100);
+    c.abort();
+    expect(c.step(0.016, true, 100).active).toBe(false);
+    for (let t = 0; t < P.cooldown; t += 0.1) c.step(0.1, false, 100); // 쿨다운 소진
+    expect(c.step(0.016, true, 100).active).toBe(true); // 다 돌면 정상 발동
+  });
+
+  it("비활성 상태에서 abort 는 무동작 — 진행 중이던 쿨다운을 되감지 않는다", () => {
+    const c = mk();
+    c.step(0.016, true, 100);
+    for (let i = 0; i < 200; i++) c.step(0.016, false, 100 - i * 0.8); // 게이지 소진 → 자연 종료
+    expect(c.isActive).toBe(false);
+    const before = c.cooldownRemainingSec;
+    c.step(1, false, 0); // 쿨다운 1초 진행
+    c.abort();
+    expect(c.cooldownRemainingSec).toBeCloseTo(before - 1, 6); // 되감기 없음
+  });
+});

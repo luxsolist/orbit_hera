@@ -44,6 +44,18 @@ export class DrainCycle {
   }
 
   /**
+   * 중단 — 활성만 끄고 **쿨다운은 정상 사용처럼 시작**한다(reset 과의 차이: reset 은 쿨다운도 0 으로
+   * 환급). 발동 중 사망 같은 "쓰다 만" 종료에 쓴다. 사망이 쿨다운을 되돌려주면 죽는 편이 이득이 되어
+   * "회복은 없고 리스폰만"(2026-08-25) 설계와 어긋난다. 비활성 상태에서 부르면 무해한 무동작.
+   */
+  abort(): void {
+    if (!this._active) return;
+    this._active = false;
+    this.cooldown = this.p.cooldown;
+    this.timer = 0;
+  }
+
+  /**
    * 한 프레임 진행. trigger=발동 입력, freq=현재 게이지.
    * 발동 즉시 첫 발사, 활성 중 drainRate 소진, freq 가 0 이 되는 프레임에 발사 후 종료+쿨다운 시작.
    */

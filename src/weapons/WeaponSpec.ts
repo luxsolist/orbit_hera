@@ -110,7 +110,8 @@ export function scaleWeaponDamage<T extends WeaponSpec>(spec: T, mul: number): T
 /** 특수무기 공통 인터페이스 — Game 이 타입에 무관하게 구동(barrage/stream). */
 export interface SpecialWeapon {
   update(dt: number, triggerPressed: boolean): void;
-  reset(): void;
+  reset(): void; // 출격 시작 — 활성/쿨다운 모두 초기화
+  abort(): void; // 발동 중 사망 — 활성만 해제, 쿨다운은 정상 소모(환급 없음)
   readonly cooldownReady: number; // 0..1 진행률
   readonly cooldownRemainingSec: number;
   readonly isActive: boolean;

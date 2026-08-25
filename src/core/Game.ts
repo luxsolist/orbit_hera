@@ -45,7 +45,10 @@ import {
   driftConvergence, revealed, sutureReadout, sortieLinkReport, REVELATION_LINES, type MissionReport,
 } from "../game/campaign";
 import { droneGrowth, levelFromXp, xpForKill, CLEAR_XP } from "../player/progression";
-import { validateDirectorActions, type Director, type DirectorAction, type DirectorSnapshot } from "../game/director";
+import {
+  validateDirectorActions, baseMod, setMod, stepMod,
+  type Director, type DirectorAction, type DirectorSnapshot, type TimedMod,
+} from "../game/director";
 import { RemoteDirector, resolveDirectorEndpoint, DIRECTOR_INTERVAL_SEC } from "../game/directorClient";
 
 type GameState = "intro" | "menu" | "loading" | "playing" | "paused" | "dead";
@@ -53,6 +56,10 @@ type GameState = "intro" | "menu" | "loading" | "playing" | "paused" | "dead";
 // 재시작(reload)으로 같은 전장/기체에 재출격하기 위한 sessionStorage 키.
 const DEPLOY_KEY = "core.deploy";
 const RETRY_KEY = "core.retry";
+
+// 감독 변조 유효시간 — 다음 판단 주기보다 약간 길게(경계에서 깜빡이지 않게). 감독이 유지를 원하면
+// 매 주기 재선언해야 한다: "가만히 두면 원래대로 돌아간다"가 기본값이라 폭주가 누적되지 않는다.
+const DIRECTOR_MOD_SEC = DIRECTOR_INTERVAL_SEC * 1.5;
 
 interface DeployInfo {
   id: string;
@@ -103,6 +110,11 @@ export class Game {
   private director: Director | null = null;
   private directorTimer = 0;
   private directorBusy = false;
+  // 감독 변조(set-modifiers)의 freqRegenMul 은 **한시적**이다. 영구 적용하면 복구 경로가 없어
+  // (출격 시작만이 유일한 재설정 지점) 게이지가 0 에 고정된 채 출격 내내 풀리지 않는다 — 오토파이어는
+  // 입력과 무관하게 상시 소모하므로 회복이 절반이면 소모가 회복을 추월한다. 만료 시 미션 기준값으로 복귀.
+  private freqRegenBase = 1; // 미션 변조(옅은 장 등)가 정한 기준값 — 감독 변조 만료 시 여기로 되돌린다
+  private freqRegenMod: TimedMod = baseMod(1); // 감독 변조 + 잔여시간(director.ts 순수 상태)
   private hitstopLeft = 0; // 히트스톱 잔여(s) — 수동 명중/처치 순간 시뮬레이션을 1~3프레임 정지(타격감)
   // 구역 축소(미션 변조 zoneShrink — 훅 ⑥): 주기마다 반경 축소, 에너지 벽 재생성. null = 비활성
   private zoneShrink: { everySec: number; step: number; minRadius: number; timer: number; radius: number } | null = null;
@@ -381,7 +393,9 @@ export class Game {
     const pairMul = this.peaceful || !this.currentCity ? 1 : pairAggravation(campaignStore.load(), this.currentCity.id);
     const sweepMul = (m.modifiers?.sweepPeriodMul ?? 1) * pairMul;
     if (sweepMul !== 1) s.enemies.setSweepPeriodMul(sweepMul);
-    s.player.freqRegenMul = m.modifiers?.freqRegenMul ?? 1; // 옅은 장
+    this.freqRegenBase = m.modifiers?.freqRegenMul ?? 1; // 옅은 장 — 이 출격의 기준값
+    this.freqRegenMod = baseMod(this.freqRegenBase); // 이전 출격의 감독 변조가 새 출격으로 새지 않게
+    s.player.freqRegenMul = this.freqRegenBase;
     // 구역 축소(zoneShrink) — 주기마다 작전구역 반경을 줄인다(에너지 벽 재생성 포함)
     const shrink = m.modifiers?.zoneShrink;
     this.zoneShrink = !this.peaceful && shrink && m.zoneRadius > 0
@@ -650,6 +664,7 @@ export class Game {
       // 인스턴스: 미션 평가(타이머/목표/종료). 종료 전이 시 onEnd→endMission 으로 state 가 바뀐다.
       s.instance.update(dt);
       this.tickDirector(s, dt); // LLM 감독 파일럿(§10 단계 1) — 주기 경계에서 스냅샷 → 행동 적용
+      this.tickDirectorMods(s, dt); // 감독 변조 만료 → 미션 기준값 복귀(영구 고착 방지)
       if (s.instance.mission.goal.type !== "free-roam") {
         const snap = s.instance.snapshot();
         this.hud.updateMission(snap.timeLeft, snap.detail, snap.respawnsLeft);
@@ -709,7 +724,7 @@ export class Game {
       case "set-modifiers":
         if (a.modifiers.aggro) s.enemies.setAggro(a.modifiers.aggro);
         if (a.modifiers.sweepPeriodMul) s.enemies.setSweepPeriodMul(a.modifiers.sweepPeriodMul);
-        if (a.modifiers.freqRegenMul) s.player.freqRegenMul = a.modifiers.freqRegenMul;
+        if (a.modifiers.freqRegenMul) this.setDirectorFreqRegen(s, a.modifiers.freqRegenMul);
         return;
       case "reinforce":
         runDeploy(s.enemies, a.deploy, false); // 카운터 유지 증원 — 파문/증원 경계 문법과 동일
@@ -718,6 +733,27 @@ export class Game {
         this.hud.showBroadcast(a.text, 8); // 표면 어휘 게이트 통과분만 여기 도달
         return;
     }
+  }
+
+  /**
+   * 감독의 게이지 회복 변조 — 한시 적용(DIRECTOR_MOD_SEC) + 고지. 값이 실제로 바뀔 때만 방송하므로
+   * 감독이 매 주기 같은 값을 재선언해도 배너가 도배되지 않는다(재선언은 만료 시계만 갱신).
+   */
+  private setDirectorFreqRegen(s: Session, mul: number) {
+    const { next, changed } = setMod(this.freqRegenMod, mul, DIRECTOR_MOD_SEC);
+    this.freqRegenMod = next;
+    s.player.freqRegenMul = next.mul;
+    if (!changed) return; // 같은 값 재선언 — 시계만 갱신하고 배너는 생략
+    // 표면 어휘: 플레이어에게 보이는 건 "장의 농도"지 배수가 아니다(감독 brief 와 같은 화법).
+    this.hud.showBroadcast(mul < this.freqRegenBase ? "장이 옅어진다 — 게이지 회복 저하" : "장이 짙어진다 — 게이지 회복 상승", 6);
+  }
+
+  /** 감독 변조 만료 → 미션 기준값 복귀(+ 복귀 고지). 기준값과 이미 같았으면 조용히 해제. */
+  private tickDirectorMods(s: Session, dt: number) {
+    const { next, expired } = stepMod(this.freqRegenMod, this.freqRegenBase, dt);
+    this.freqRegenMod = next;
+    s.player.freqRegenMul = next.mul;
+    if (expired) this.hud.showBroadcast("장이 안정된다 — 게이지 회복 정상", 6);
   }
 
   private tickZoneShrink(s: Session, dt: number) {
@@ -752,6 +788,10 @@ export class Game {
     this.hud.setLockOn(false);
     if (s.instance.registerDeath()) {
       s.player.respawn(); // 스폰 복귀 + 짧은 무적. 적/미션은 그대로 진행
+      // 특수무기 발동 중 사망하면 DrainCycle 이 active 인 채 남는다 → 리스폰으로 가득 찬 게이지가
+      // 입력 없이 그대로 다시 소진된다(배러지 60/s = 2초). reset 이 아니라 abort — 쿨다운은 정상
+      // 소모시켜 사망이 특수무기를 환급하지 않게 한다.
+      s.special.abort();
       this.hud.flashDamage();
       return;
     }

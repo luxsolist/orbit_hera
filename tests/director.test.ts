@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
-  validateDirectorAction, validateDirectorActions, DIRECTOR_LIMITS, type DirectorAction,
+  validateDirectorAction, validateDirectorActions, DIRECTOR_LIMITS, baseMod, setMod, stepMod,
+  type DirectorAction,
 } from "../src/game/director";
 import { surfaceClean } from "../src/game/surfaceVocab";
 
@@ -67,5 +68,63 @@ describe("surfaceClean — 공용 표면 어휘 필터", () => {
     expect(surfaceClean("관측 계류 — 심판 파문이 온다")).toBe(true);
     expect(surfaceClean("Tombstone 각인")).toBe(false);
     expect(surfaceClean("시뮬레이션 종료")).toBe(false);
+  });
+});
+
+// 한시 변조(2026-08-25 회귀) — 감독의 freqRegenMul 을 영구 적용하면 복구 경로가 없어(출격 시작만이
+// 유일한 재설정 지점) 게이지가 0 에 고착됐다. 오토파이어는 입력과 무관하게 상시 소모하므로 회복이
+// 절반이면 소모가 회복을 추월한다. "가만히 두면 기준값으로 돌아간다"가 이 자료구조의 계약.
+describe("TimedMod — 감독 변조의 한시성", () => {
+  const DUR = 67.5; // DIRECTOR_MOD_SEC(= 45 * 1.5)
+
+  it("변조 없음은 기준값 그대로, 감쇠해도 불변", () => {
+    const m = baseMod(0.5); // 옅은 장 미션 — 기준값 자체가 0.5
+    expect(m).toEqual({ mul: 0.5, left: 0 });
+    expect(stepMod(m, 0.5, 1)).toEqual({ next: m, expired: false });
+  });
+
+  it("적용 즉시 배수가 바뀌고 changed=true(고지 대상)", () => {
+    const { next, changed } = setMod(baseMod(1), 0.5, DUR);
+    expect(next).toEqual({ mul: 0.5, left: DUR });
+    expect(changed).toBe(true);
+  });
+
+  it("같은 값 재선언은 시계만 갱신 — changed=false(배너 도배 방지)", () => {
+    const applied = setMod(baseMod(1), 0.5, DUR).next;
+    const half = stepMod(applied, 1, 30).next;
+    expect(half.left).toBeCloseTo(DUR - 30);
+    const again = setMod(half, 0.5, DUR);
+    expect(again.changed).toBe(false);
+    expect(again.next.left).toBe(DUR); // 유지하려면 재선언 — 시계는 되감긴다
+  });
+
+  it("60fps 로 감쇠시켜도 만료 복귀 — expired 는 복귀 프레임에 **한 번만** true", () => {
+    let m = setMod(baseMod(1), 0.5, DUR).next;
+    let fired = 0;
+    for (let t = 0; t < DUR + 5; t += 1 / 60) {
+      const r = stepMod(m, 1, 1 / 60);
+      m = r.next;
+      if (r.expired) fired++;
+    }
+    expect(fired).toBe(1); // 고지는 1회 — 만료 후 프레임은 조용히 통과
+    expect(m).toEqual({ mul: 1, left: 0 }); // ← 고착 회귀 가드: 절대 0.5 로 남지 않는다
+  });
+
+  it("만료 복귀 지점은 기준값 — 옅은 장 미션이면 1 이 아니라 0.5 로 돌아간다", () => {
+    const m = setMod(baseMod(0.5), 1.5, DUR).next; // 감독이 완화해 준 경우
+    const { next, expired } = stepMod(m, 0.5, DUR + 1);
+    expect(next).toEqual({ mul: 0.5, left: 0 }); // 미션 설계값 복원(1 로 새지 않음)
+    expect(expired).toBe(true);
+  });
+
+  it("기준값과 같은 변조가 만료되면 조용히 해제(expired=false — 고지 없음)", () => {
+    const m = setMod(baseMod(1), 1, DUR).next;
+    expect(stepMod(m, 1, DUR + 1)).toEqual({ next: { mul: 1, left: 0 }, expired: false });
+  });
+
+  it("봉투 최소값(0.5)도 한시 — 감독이 걸 수 있는 최악값이 영구화되지 않는다", () => {
+    const worst = DIRECTOR_LIMITS.freqRegenMul.min;
+    const m = setMod(baseMod(1), worst, DUR).next;
+    expect(stepMod(m, 1, DUR).next.mul).toBe(1);
   });
 });

@@ -57,6 +57,12 @@ export class SpecialStream implements SpecialWeapon {
     this.player.freqRegenSuppressed = false;
   }
 
+  /** 발동 중 사망 등으로 중단 — 억제 해제 + 쿨다운은 정상 시작(reset 과 달리 환급 없음). */
+  abort(): void {
+    this.cycle.abort();
+    this.player.freqRegenSuppressed = false;
+  }
+
   update(dt: number, triggerPressed: boolean): void {
     const r = this.cycle.step(dt, triggerPressed, this.player.freq);
     this.player.freqRegenSuppressed = r.active;
