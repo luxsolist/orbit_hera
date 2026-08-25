@@ -111,6 +111,52 @@ describe("validateTacticalMission — 저작 무결성", () => {
     expect(errs.some((e) => e.includes("ghost"))).toBe(true);
     expect(errs.some((e) => e.includes("nowhere"))).toBe(true);
   });
+
+  it("빈 phases 검출 — 단계가 없으면 미션이 시작되자마자 끝난다", () => {
+    const empty: TacticalMissionSpec = {
+      id: "e", name: "e", kind: "tactical", respawns: 2, zoneRadius: 3000, phases: [],
+    };
+    expect(validateTacticalMission(empty).some((x) => x.includes("phases"))).toBe(true);
+  });
+
+  it("spawner 가 없는 그룹을 투입 대상으로 지목하면 검출", () => {
+    const broken: TacticalMissionSpec = {
+      id: "b", name: "b", kind: "tactical", respawns: 2, zoneRadius: 3000,
+      phases: [{
+        id: "p1", name: "p1",
+        spawns: [{ id: "mother", archetype: "rusher", count: 1, spawns: { group: "phantom", everySec: 5, count: 2 } }],
+        advance: { type: "kills", count: 1 },
+      }],
+    };
+    expect(validateTacticalMission(broken).some((e) => e.includes("phantom"))).toBe(true);
+  });
+
+  it("buffs 가 없는 그룹을 대상으로 지목하면 검출", () => {
+    const broken: TacticalMissionSpec = {
+      id: "b", name: "b", kind: "tactical", respawns: 2, zoneRadius: 3000,
+      phases: [{
+        id: "p1", name: "p1",
+        spawns: [{ id: "healer", archetype: "kiter", count: 1, buffs: { targets: ["nobody"], kind: "heal" } }],
+        advance: { type: "kills", count: 1 },
+      }],
+    };
+    expect(validateTacticalMission(broken).some((e) => e.includes("nobody"))).toBe(true);
+  });
+
+  it("killGroup 게이트가 없는 그룹을 참조하면 검출 — advance·fail 양쪽", () => {
+    const mk = (where: "advance" | "fail"): TacticalMissionSpec => ({
+      id: "b", name: "b", kind: "tactical", respawns: 2, zoneRadius: 3000,
+      phases: [{
+        id: "p1", name: "p1",
+        spawns: [{ id: "a", archetype: "rusher", count: 1 }],
+        advance: where === "advance" ? { type: "killGroup", group: "missing" } : { type: "kills", count: 1 },
+        ...(where === "fail" ? { fail: { type: "killGroup", group: "missing" } as never } : {}),
+      }],
+    });
+    for (const w of ["advance", "fail"] as const) {
+      expect(validateTacticalMission(mk(w)).some((e) => e.includes("missing"))).toBe(true);
+    }
+  });
 });
 
 // ─── 예시 택티컬 미션(설계 시연 + 무결성 가드) ─────────────────────────────────

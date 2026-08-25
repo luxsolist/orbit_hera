@@ -13,6 +13,15 @@ import { clamp } from "../core/math";
 /** 도약 스펙 — 아키타입별(plasmoid.json). 미지정 = 그 아키타입은 도약하지 않음(하위호환). */
 export interface PlasmoidLeapSpec {
   telegraphSec: number; // 텔레그래프(시전) 시간 — 이 동안 취소 가능
+  /**
+   * 착지점 **확정 시점**(발동까지 남은 시간, s). 그 전까지 착지점은 매 프레임 플레이어를 따라가고,
+   * 이 시점에 얼어붙는다 — 즉 착지점은 "발동 lockSec 초 전의 플레이어 위치"다.
+   *
+   * 왜 시전 시작 시점에 확정하지 않는가: 텔레그래프 3초 동안 플레이어가 40~50m 를 벗어나므로
+   * 도약이 늘 빗나가 위협이 성립하지 않는다. 반대로 0 으로 두면 회피 창이 사라진다. lockSec 이
+   * 곧 **회피 창의 길이**다 — 예고선이 멈추는 순간부터 그만큼이 플레이어의 시간이다.
+   */
+  lockSec: number;
   cd: number; //          도약 쿨다운(s)
   chance: number; //      쿨다운 도래 시 실제 개시 확률(0..1)
   minDist: number; //     착지 **수평** 거리 하한(m)
@@ -23,6 +32,16 @@ export interface PlasmoidLeapSpec {
   // 러셔 y 평균 300) 도약만 2D 이던 것이 시스템 내 예외였다. 호출부가 지면 하한으로 클램프한다.
   dyMin: number; //       착지 수직 오프셋 하한(플레이어 대비 m, 음수 = 아래)
   dyMax: number; //       착지 수직 오프셋 상한(플레이어 대비 m)
+  /**
+   * 발동 거리 창 — 현재 플레이어와의 거리가 이 범위 안일 때만 도약한다. 도약이 **상황을 실제로
+   * 바꿀 때만** 일어나게 하는 게이트다.
+   *
+   * 없으면 정반대 동작이 나온다(2026-08-25 실측): 리치는 이미 접촉 거리(평균 3m)에 붙어 있을 때
+   * 도약해 12~25m 링으로 **물러났다** — "회피 강제"가 아니라 후퇴였다. 리치는 멀 때만(triggerMin
+   * 이상) 도약해야 접근이 되고, 스키터는 가까울 때만(triggerMax 이하) 도약해야 이탈이 된다.
+   */
+  triggerMin: number; // 이 거리 **이상**일 때만 발동(0 = 하한 없음)
+  triggerMax: number; // 이 거리 **이하**일 때만 발동(0 = 상한 없음)
   recoverSec: number; //  착지 후 공격 불가 시간(s) — 0 이면 즉시 행동
   concurrentCap: number; // 같은 아키타입이 동시에 텔레그래프할 수 있는 최대 수(포위 폭주 방지)
 }
@@ -79,6 +98,13 @@ export function canBeginLeap(
   cooldownLeft: number, interrupted: boolean, castingNow: number, cap: number,
 ): boolean {
   return cooldownLeft <= 0 && !interrupted && castingNow < cap;
+}
+
+/** 발동 거리 창 안인가(순수) — 0 인 경계는 "제한 없음". */
+export function inLeapRange(spec: PlasmoidLeapSpec, dist: number): boolean {
+  if (spec.triggerMin > 0 && dist < spec.triggerMin) return false;
+  if (spec.triggerMax > 0 && dist > spec.triggerMax) return false;
+  return true;
 }
 
 /** 배틀필드 난이도 배수 적용 — 확률은 [0,1] 클램프, 쿨다운은 하한 1s(0 이하 = 매 프레임 도약 방지). */

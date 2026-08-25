@@ -13,7 +13,7 @@ import {
   type PlasmoidSpec, type PlasmoidKiterArchetype, type PlasmoidArchetype,
 } from "./PlasmoidSpec";
 import { clampToDisk, type Vec3 } from "../core/math";
-import { sampleLeapOffset, leapInterrupted, canBeginLeap, leapChanceWith, leapCooldownWith } from "./leap";
+import { sampleLeapOffset, leapInterrupted, canBeginLeap, inLeapRange, leapChanceWith, leapCooldownWith } from "./leap";
 
 const ATTACK_RANGE = 3.2; // 접촉 교전 거리(피해는 PlasmoidSpec.contact 로 산출)
 const RUSHER_DASH_MIN = 15; // 러셔 돌진 발동 밴드(m) — 너무 가까우면 불필요, 멀면 무의미(P3 안티카이팅)
@@ -37,6 +37,9 @@ const PROVOKE_HOLD = 10;
 const SPAWN_GROUND_CLEARANCE = 0.5; // 스폰 시 지면에서 띄우는 여유(m) — 지형에 박히지 않게
 const LEAP_TRIES = 6; //             착지점 재시도 횟수 — 전부 실패면 이번 주기는 도약 없음
 const LEAP_BLINK_HZ = 4; //          텔레그래프 깜빡임 주기(Hz) — 시간 기준(프레임률 무관)
+const LEAP_TRAIL_SEGMENTS = 3; //    도약 잔광 겹침 수 — 한 줄로는 순간이동이 눈에 안 걸린다
+const _leapFrom = new THREE.Vector3();
+const _leapTo = new THREE.Vector3();
 const LEAP_GROUND_CLEARANCE = 1.5; // 착지 시 지면에서 띄우는 여유(m) — 지형에 박히지 않게
 const PROVOKE_RADIUS_SQ = PROVOKE_RADIUS * PROVOKE_RADIUS;
 const AWARENESS_LOSE_SQ = AWARENESS_LOSE_RADIUS * AWARENESS_LOSE_RADIUS;
@@ -218,6 +221,8 @@ export class EnemyManager {
   private load: number[] = [];
 
   onKill?: (enemy?: CoreEnemy) => void; // 처치 통지 — enemy 로 XP(강함 비례)·채점 등 후처리
+  /** 차원도약 발동 — 출발/도착 지점. Game 이 파편·사운드로 "저기서 여기로 왔다"를 연출한다. */
+  onLeap?: (from: Vec3, to: Vec3, color: number, strength: number) => void;
   onPlayerHit?: (damage: number, source?: Vec3) => void; // source = 피해 발원 위치(방향 인디케이터용)
   onWaveChange?: (wave: number) => void;
   onSweepPass?: (branded: boolean) => void; // 심판 파문이 플레이어 위치를 통과(화면 펄스·저음)
@@ -1045,23 +1050,41 @@ export class EnemyManager {
     const interrupted = leapInterrupted(enemy.isZenoFrozen, enemy.isStaggered, enemy.isPinned, enemy.isPhased);
 
     if (enemy.leapCastLeft > 0) {
-      this.leapCasting[role]++;
       if (interrupted || !enemy.leapTarget) { // 취소 — 짧은 재정렬 후 재시도(완전 리셋은 과한 보상)
         enemy.leapCastLeft = 0;
         enemy.leapTarget = null;
+        enemy.leapLocked = false;
         enemy.leapCd = leapCooldownWith(spec, this.leapCdMul) * 0.6;
         return;
       }
       enemy.leapCastLeft -= dt;
+      // 착지점 추적 — 잠금 전까지는 플레이어를 따라간다. 시전 시작 시점에 굳히면 텔레그래프 3초 동안
+      // 플레이어가 40~50m 를 벗어나 도약이 늘 빗나간다. 잠금 시점(lockSec) 이 곧 회피 창의 길이다.
+      if (!enemy.leapLocked) {
+        const lock = enemy.leapCastLeft <= spec.lockSec;
+        if (lock || (this.frame & 3) === 0) { // 추적은 4프레임마다(15Hz) — 잠금 프레임만은 반드시
+          const next = this.pickLeapDest(spec, targetPos);
+          if (next) enemy.leapTarget = next; // 실패하면 직전 지점 유지(추적 중 한 프레임 놓쳐도 무해)
+        }
+        if (lock) enemy.leapLocked = true; // 예고선이 여기서 멈춘다 — "여기로 온다"
+      }
       // 깜빡임은 **시간** 기준(프레임률이 달라도 같은 속도로 보이게). "곧 사라진다"는 신호.
       enemy.coreBright = 4.5 + Math.sin(this.timeSec * Math.PI * 2 * LEAP_BLINK_HZ) * 1.5;
       const t = enemy.leapTarget;
       if ((this.frame & 3) === 0) this.drain.spawn(p, new THREE.Vector3(t.x, t.y, t.z), enemy.color); // 착지 예고선
       if (enemy.leapCastLeft <= 0) {
+        // 순간이동은 **한 프레임에 사라지고 나타난다** — 연출이 없으면 그냥 사라진 것으로 보인다.
+        // 출발점과 도착점을 잇는 잔광 + 양끝 파편으로 "저기서 여기로 왔다"를 읽히게 한다.
+        const from = _leapFrom.copy(p);
+        _leapTo.set(t.x, t.y, t.z);
+        for (let i = 0; i < LEAP_TRAIL_SEGMENTS; i++) this.drain.spawn(from, _leapTo, enemy.color); // 잔광(겹쳐 굵게)
+        this.onLeap?.({ x: from.x, y: from.y, z: from.z }, { x: t.x, y: t.y, z: t.z }, enemy.color, this.strengthOf(enemy));
         p.set(t.x, t.y, t.z); // 도약 — 위치만 옮긴다(HP·상태 불변)
+        enemy.coreBright = 7; // 착지 섬광 — 다음 프레임부터 박동으로 감쇠
         enemy.resetZenoExposure(); // 관측 파기: 도약의 본체. 붙들고 있던 노출이 끊긴다
         enemy.leapRecover = spec.recoverSec;
         enemy.leapTarget = null;
+        enemy.leapLocked = false;
         enemy.leapCd = leapCooldownWith(spec, this.leapCdMul);
       }
       return;
@@ -1069,6 +1092,8 @@ export class EnemyManager {
 
     enemy.leapCd -= dt;
     if (!canBeginLeap(enemy.leapCd, interrupted, this.leapCasting[role], spec.concurrentCap)) return;
+    // 거리 게이트 — 도약이 상황을 실제로 바꿀 때만. 리치는 멀 때만(접근), 스키터는 가까울 때만(이탈).
+    if (!inLeapRange(spec, p.distanceTo(targetPos))) return;
     if (this.rand() > leapChanceWith(spec, this.leapChanceMul)) {
       enemy.leapCd = leapCooldownWith(spec, this.leapCdMul); // 불발 — 다음 주기까지 대기
       return;
@@ -1079,6 +1104,7 @@ export class EnemyManager {
       return;
     }
     enemy.leapTarget = dest;
+    enemy.leapLocked = spec.lockSec >= spec.telegraphSec; // lockSec ≥ 시전시간 = 개시 즉시 확정
     enemy.leapCastLeft = spec.telegraphSec;
     this.leapCasting[role]++;
   }
@@ -1262,10 +1288,16 @@ export class EnemyManager {
   update(dt: number) {
     this.frame++;
     this.timeSec += dt; // patrol 등 시간 기반 진형 행동
-    // 동시 도약 상한은 **이번 프레임에 실제로 시전 중인 수**로 판정한다 — 누적 카운터로 두면
-    // 상한이 영구히 소진돼 도약이 한 번만 일어나고 끝난다. 매 프레임 0 에서 다시 센다.
+    // 동시 도약 상한 — 이번 프레임에 실제로 시전 중인 수를 **루프 전에 미리** 센다.
+    // 순회하며 증가시키면 순서 의존 버그가 생긴다: 이미 시전 중인 개체가 배열 뒤쪽에 있으면
+    // 앞쪽 개체가 카운트 0 을 보고 상한을 넘겨 개시한다(도약 빈도가 낮을 땐 드물어 가려진다).
     this.leapCasting.rusher = 0;
     this.leapCasting.kiter = 0;
+    for (const e of this.enemies) {
+      if (e.state !== "alive" || e.leapCastLeft <= 0) continue;
+      if (e.role === "kiter") this.leapCasting.kiter++;
+      else if (e.role === "rusher") this.leapCasting.rusher++;
+    }
     advanceGlobalPulse(dt); // 박동 동기화 — 전 개체 공유 위상(프레임당 1회)
     this.world.buildings?.update(dt); // 건물 피격 틴트/붕괴 연출 진행
     this.tickSpawns(dt);
@@ -1464,8 +1496,14 @@ export class EnemyManager {
     return n;
   }
 
+  /**
+   * 전장 소탕 — 살아있는 개체도, 대기 중인 투입도 없다. 미션 종료 판정(생존/사수 조기 성공)과
+   * phased 페이즈 전환이 공유한다. **역행 부활 대기(pendingRevive)도 세야 한다** — 되살아날 개체가
+   * 큐에 있는데 소탕으로 읽으면 미션이 한 프레임 차이로 먼저 끝나 버린다(§6.6).
+   */
   get fieldCleared(): boolean {
-    if (this.reinforceQueue.length > 0 || this.pendingRusher + this.pendingKiter + this.pendingMarker > 0) return false;
+    if (this.reinforceQueue.length > 0 || this.pendingRevive.length > 0) return false;
+    if (this.pendingRusher + this.pendingKiter + this.pendingMarker > 0) return false;
     for (const e of this.enemies) if (e.state === "alive") return false;
     return true;
   }

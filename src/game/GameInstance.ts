@@ -142,6 +142,7 @@ export class GameInstance {
       roleKills: this.enemies.roleKills, // 직무별 처치(훅 ③ purge-role)
       observeCount: this.enemies.observedCount, // 동시 조사(experiment)
       observeHold: this.observeHold,
+      cleared: this.enemies.fieldCleared && !this.hasMorePhases(),
     };
   }
 
@@ -161,6 +162,12 @@ export class GameInstance {
     const out = evaluateMissionV2(this.mission, this.runtime());
     this._outcome = out;
     if (out.status !== "active") this.onEnd?.(out);
+  }
+
+  /** 아직 투입되지 않은 페이즈가 남아 있는가 — 남았으면 지금 비어 있어도 소탕이 아니다. */
+  private hasMorePhases(): boolean {
+    const d = this.mission.deploy;
+    return d.model === "phased" && this.phaseIdx < d.phases.length - 1;
   }
 
   /** phased — 다음 페이즈 조건(afterSec 지정 시 그 시각, 아니면 현 전장 전멸) 충족 시 이어 투입. */

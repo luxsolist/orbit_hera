@@ -43,27 +43,27 @@ describe("EnemyManager — 강등 연출 구동", () => {
   it("정예(KK_MIN_HP 이상) — 경계 하향 통과 시 색 강등 + 경직, 잡몹은 무강등", () => {
     const em = makeManager();
     em.startRoster([
-      { role: "elite", count: 1, hp: 4000 },
-      { role: "rusher", count: 1, hp: 800 }, // KK_MIN_HP 미만 — 단일 준위
+      { role: "elite", count: 1, hp: 40000 },
+      { role: "rusher", count: 1, hp: 8000 }, // KK_MIN_HP 미만 — 단일 준위
     ], 500);
-    const elite = em.aliveEnemies.find((e) => e.maxHp === 4000)!;
-    const grunt = em.aliveEnemies.find((e) => e.maxHp === 800)!;
+    const elite = em.aliveEnemies.find((e) => e.maxHp === 40000)!;
+    const grunt = em.aliveEnemies.find((e) => e.maxHp === 8000)!;
     expect(elite.kkColors).not.toBeNull();
     expect(grunt.kkColors).toBeNull();
     const baseColor = elite.color;
-    elite.applyFrequencyHit(1100); // 4000→2900 = 72.5% — 준위 3 진입
+    elite.applyFrequencyHit(11000); // 40000→29000 = 72.5% — 준위 3 진입
     em.update(1 / 30);
     expect(elite.kkCur).toBe(3);
     expect(elite.color).not.toBe(baseColor); // 적색 쪽 강등
     expect(elite.isStaggered).toBe(true); //   준위 붕괴 경직
     // 25% 아래로 — 최하 준위(1)까지 연쇄 강등
-    elite.applyFrequencyHit(2000); // 900 = 22.5%
+    elite.applyFrequencyHit(20000); // 9000 = 22.5%
     em.update(1 / 30);
     expect(elite.kkCur).toBe(1);
     expect(elite.color).toBe(elite.kkColors![0]);
   });
 
   it("KK_MIN_HP 정본치 유지(정예·보스급 게이트)", () => {
-    expect(KK_MIN_HP).toBe(3000);
+    expect(KK_MIN_HP).toBe(30000); // HP 스케일 ×10 과 동반 상향(2026-08-25)
   });
 });

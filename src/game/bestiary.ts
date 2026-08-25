@@ -11,6 +11,8 @@ export interface BestiaryCard {
   name: string; // 표시명(스펙에서 파생 — 데이터 갱신에 자동 추종)
   brief: string; // 관측 기록 한 줄
   merged: boolean; // 병합 카드(계시 후 단일 항목)인가 — UI 접힘 연출 트리거
+  /** 삽화용 아키타입(SHELL_GEOS 키). 병합 카드는 null — 다섯 형태가 하나로 접힌 뒤엔 형상이 없다. */
+  shape: PlasmoidArchetype | null;
 }
 
 const ARCHETYPE_ORDER: readonly PlasmoidArchetype[] = ["rusher", "kiter", "marker", "cutter", "rewinder"];
@@ -28,6 +30,7 @@ const MERGED_CARD: BestiaryCard = {
   name: "그것 (투영체)",
   brief: "다섯이 아니었다. 하나가 다섯 자리에서 동시에 손을 뻗었을 뿐이다.",
   merged: true,
+  shape: null,
 };
 
 /**
@@ -40,7 +43,7 @@ export function bestiaryCards(spec: PlasmoidSpec, revealed: boolean): BestiaryCa
   for (const id of ARCHETYPE_ORDER) {
     const a = spec.archetypes[id];
     if (!a) continue;
-    out.push({ id, name: a.name, brief: ARCHETYPE_BRIEFS[id], merged: false });
+    out.push({ id, name: a.name, brief: ARCHETYPE_BRIEFS[id], merged: false, shape: id });
   }
   return out;
 }

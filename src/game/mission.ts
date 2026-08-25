@@ -43,6 +43,13 @@ export interface MissionRuntime {
   /** 동시 조사 실험(v2 experiment) — 지금 조사 중 개체 수 / 조건 유지 누적(s). 미지정 = 0 취급. */
   observeCount?: number;
   observeHold?: number;
+  /**
+   * 전장 소탕 — 살아있는 개체도, 대기 중인 투입(증원 큐·웨이브 예산·남은 페이즈)도 없다.
+   * 생존/사수 목표는 이때 **즉시 성공**한다: 위협이 남아 있지 않은데 타이머만 보고 서 있는 건
+   * 플레이가 아니다(개체 수를 줄인 뒤 빈 전장 대기가 길어져 드러난 문제 — 2026-08-26).
+   * 미지정 = false 취급(구 데이터·부분 런타임 호환).
+   */
+  cleared?: boolean;
 }
 
 export interface MissionOutcome {
@@ -134,8 +141,8 @@ export const FREE_ROAM: MissionSpec = {
 // 총 45기·체력 총합 7만(피라미드: 잡몹→중견→정예 순 증원, 중간보스 1만은 마지막). 일괄 100 스폰은
 // 도시 붕괴 속도·압력 곡선 문제로 폐기(플레이테스트 근거) — 수치는 계속 플레이테스트로 조정.
 export const DEFAULT_MISSIONS: MissionSpec[] = [
-  { id: "purge", name: "정화 작전 / PURGE", kind: "eradicate", duration: 300, killTarget: 45, maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: 3, zoneRadius: 5000, spawnCount: 45, spawnRadius: 1500, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5 },
-  { id: "hold-city", name: "도시 방어 / HOLD THE CITY", kind: "defend-buildings", duration: 300, killTarget: 0, maxBuildingLoss: 10, maxLandmarkLoss: 0, respawns: 3, zoneRadius: 5000, spawnCount: 45, spawnRadius: 1500, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5 },
-  { id: "guard-landmark", name: "랜드마크 사수 / GUARD", kind: "defend-landmark", duration: 300, killTarget: 0, maxBuildingLoss: 0, maxLandmarkLoss: 1, respawns: 3, zoneRadius: 5000, spawnCount: 45, spawnRadius: 1500, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5 },
-  { id: "survive", name: "지역 사수 / SURVIVE", kind: "survival", duration: 300, killTarget: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: 2, zoneRadius: 5000, spawnCount: 45, spawnRadius: 1500, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5 },
+  { id: "purge", name: "정화 작전 / PURGE", kind: "eradicate", duration: 570, killTarget: 6, maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: 3, zoneRadius: 5000, spawnCount: 6, spawnRadius: 1500, totalHp: 168182, bossHp: 100000, concurrentCap: 3, reinforceInterval: 1.5 },
+  { id: "hold-city", name: "도시 방어 / HOLD THE CITY", kind: "defend-buildings", duration: 300, killTarget: 0, maxBuildingLoss: 10, maxLandmarkLoss: 0, respawns: 3, zoneRadius: 5000, spawnCount: 6, spawnRadius: 1500, totalHp: 168182, bossHp: 100000, concurrentCap: 3, reinforceInterval: 1.5 },
+  { id: "guard-landmark", name: "랜드마크 사수 / GUARD", kind: "defend-landmark", duration: 300, killTarget: 0, maxBuildingLoss: 0, maxLandmarkLoss: 1, respawns: 3, zoneRadius: 5000, spawnCount: 6, spawnRadius: 1500, totalHp: 168182, bossHp: 100000, concurrentCap: 3, reinforceInterval: 1.5 },
+  { id: "survive", name: "지역 사수 / SURVIVE", kind: "survival", duration: 300, killTarget: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0, respawns: 2, zoneRadius: 5000, spawnCount: 6, spawnRadius: 1500, totalHp: 168182, bossHp: 100000, concurrentCap: 3, reinforceInterval: 1.5 },
 ];

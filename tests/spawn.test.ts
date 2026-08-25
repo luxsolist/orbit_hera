@@ -27,24 +27,24 @@ describe("spawnHeightAboveGround — 스폰 시 지면 대비 시작 높이", ()
 });
 
 describe("archetypeCount — 웨이브·인원·구성 비중 물량", () => {
-  const rusher = DEFAULT_PLASMOID.archetypes.rusher; // 거머리: countBase 6, cap 8
-  const kiter = DEFAULT_PLASMOID.archetypes.kiter; //  모기:   countBase 8, cap 10
+  const rusher = DEFAULT_PLASMOID.archetypes.rusher; // 거머리: countBase 2, cap 3
+  const kiter = DEFAULT_PLASMOID.archetypes.kiter; //  모기:   countBase 3, cap 4
   it("웨이브1·1인·비중1 = countBase", () => {
-    expect(archetypeCount(rusher, 1, 1)).toBe(6);
-    expect(archetypeCount(kiter, 1, 1)).toBe(8);
+    expect(archetypeCount(rusher, 1, 1)).toBe(2);
+    expect(archetypeCount(kiter, 1, 1)).toBe(3);
   });
   it("2웨이브당 +1", () => {
-    expect(archetypeCount(rusher, 3, 1)).toBe(7);
-    expect(archetypeCount(kiter, 3, 1)).toBe(9);
+    expect(archetypeCount(rusher, 3, 1)).toBe(3);
+    expect(archetypeCount(kiter, 3, 1)).toBe(4);
   });
   it("countCap 상한", () => {
-    expect(archetypeCount(rusher, 99, 1)).toBe(8);
-    expect(archetypeCount(kiter, 99, 1)).toBe(10);
+    expect(archetypeCount(rusher, 99, 1)).toBe(3);
+    expect(archetypeCount(kiter, 99, 1)).toBe(4);
   });
-  it("인원 비례(×N)", () => expect(archetypeCount(rusher, 1, 3)).toBe(18));
+  it("인원 비례(×N)", () => expect(archetypeCount(rusher, 1, 3)).toBe(6));
   it("구성 비중 비례 — 반반이면 절반(반올림)", () => {
-    expect(archetypeCount(rusher, 1, 1, 0.5)).toBe(3);
-    expect(archetypeCount(kiter, 1, 1, 0.5)).toBe(4);
+    expect(archetypeCount(rusher, 1, 1, 0.5)).toBe(1);
+    expect(archetypeCount(kiter, 1, 1, 0.5)).toBe(2);
   });
   it("비중 0 이면 0 — 단독 구성에서 상대 아키타입은 나오지 않는다", () => {
     expect(archetypeCount(rusher, 5, 1, 0)).toBe(0);

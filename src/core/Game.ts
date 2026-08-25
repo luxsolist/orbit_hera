@@ -455,6 +455,13 @@ export class Game {
     // 손맛 — 수동 사격 반동 킥 + 명중/처치 히트스톱(오토는 상시라 제외, 처치는 공통)
     s.beam.onManualFired = () => s.player.kick(0.006);
     s.beam.onManualHit = (killed) => this.hitstop(killed ? 0.06 : 0.025);
+    // 차원도약(§6.7) — 순간이동은 한 프레임에 끝나 연출이 없으면 "그냥 사라진 것"으로 읽힌다.
+    // 양 끝에 파편을 뿌려 출발/도착을 동시에 보이게 한다(EnemyManager 가 잔광 선은 이미 그린다).
+    s.enemies.onLeap = (from, to, color, strength) => {
+      const c = new THREE.Color(color);
+      s.killBurst.spawnShards(new THREE.Vector3(from.x, from.y, from.z), c, strength * 0.6); // 출발 — 흩어짐
+      s.killBurst.spawnShards(new THREE.Vector3(to.x, to.y, to.z), c, strength * 0.6); //     도착 — 맺힘
+    };
     s.enemies.onKill = (enemy) => {
       this.hud.setKills(s.enemies.killCount);
       // 타격감 ①②③④ — strength(0..1)에 비례해 히트스톱·처치음·화면 펄스·파편/환수가 함께 커진다.

@@ -6,6 +6,8 @@ import { buildWorldSvg, projectLatLon, clusterDots, zoomMapBox, projectInBox, dr
 import type { CampaignData } from "../core/progress";
 import { chapterMeta, driftConvergence, pairedCity, revealed } from "../game/campaign";
 import { bestiaryCards } from "../game/bestiary";
+import { SHELL_GEOS } from "../enemies/CoreEnemy";
+import { silhouetteSvg } from "./shapeSvg";
 import { fetchPlasmoid } from "../enemies/plasmoids";
 import { DEFAULT_PLASMOID } from "../enemies/PlasmoidSpec";
 
@@ -320,7 +322,10 @@ export class MenuScreen {
     for (const c of cards) {
       const el = document.createElement("div");
       el.className = c.merged ? "bestiary__card bestiary__card--merged" : "bestiary__card";
-      el.innerHTML = `<div class="bestiary__name">${c.name}</div><div class="bestiary__brief">${c.brief}</div>`;
+      // 삽화는 게임에서 쓰는 실루엣(SHELL_GEOS)을 그대로 투영한다 — 형태를 바꿔도 도감이 자동 추종.
+      const icon = c.shape ? `<div class="bestiary__icon">${silhouetteSvg(SHELL_GEOS[c.shape])}</div>` : "";
+      el.innerHTML = `${icon}<div class="bestiary__text">`
+        + `<div class="bestiary__name">${c.name}</div><div class="bestiary__brief">${c.brief}</div></div>`;
       this.storyList.appendChild(el);
     }
   }

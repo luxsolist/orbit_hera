@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  sampleLeapOffset, leapInterrupted, canBeginLeap, leapChanceWith, leapCooldownWith,
+  sampleLeapOffset, leapInterrupted, canBeginLeap, inLeapRange, leapChanceWith, leapCooldownWith,
   type PlasmoidLeapSpec,
 } from "../src/enemies/leap";
 import { DEFAULT_PLASMOID } from "../src/enemies/PlasmoidSpec";
@@ -160,8 +160,51 @@ describe("스펙 값 계약", () => {
     expect(DEFAULT_PLASMOID.archetypes.rusher.speed).toBeLessThan(19.44);
   });
 
+  it("lockSec 이 회피 창의 길이 — 텔레그래프보다 짧아야 예고가 성립한다", () => {
+    for (const spec of [SKEETER, LEECH]) {
+      expect(spec.lockSec).toBeGreaterThan(0); // 0 이면 예고 없이 정확히 덮친다
+      expect(spec.lockSec).toBeLessThan(spec.telegraphSec); // 같거나 크면 개시 즉시 확정 = 추적 없음
+    }
+  });
+
+  it("도약 주기가 텔레그래프보다 충분히 길다 — 시전이 끊이지 않는 상태가 되지 않게", () => {
+    for (const spec of [SKEETER, LEECH]) {
+      expect(spec.cd / spec.chance).toBeGreaterThan(spec.telegraphSec);
+    }
+  });
+
   it("동시 도약 상한이 유한 — 12기 포위가 나오지 않는다", () => {
     expect(LEECH.concurrentCap).toBeLessThan(DEFAULT_PLASMOID.archetypes.rusher.countCap);
     expect(SKEETER.concurrentCap).toBeGreaterThan(0);
+  });
+});
+
+// 발동 거리 창 — 도약이 **상황을 실제로 바꿀 때만** 일어나게 하는 게이트.
+// 없으면 정반대 동작이 나온다(2026-08-25 실측): 리치가 접촉 거리(평균 3m)에서 도약해 12~25m 링으로
+// 물러났다 — 접근이 아니라 후퇴였고, 그래서 "아무 일도 일어나지 않는" 느낌이 났다.
+describe("inLeapRange — 발동 거리 창", () => {
+  it("리치는 벌어졌을 때만 — 붙어 있으면 도약하지 않는다(후퇴 방지)", () => {
+    expect(LEECH.triggerMin).toBeGreaterThan(LEECH.maxDist); // 착지 링보다 멀어야 접근이 성립
+    expect(inLeapRange(LEECH, 3)).toBe(false); //  접촉 거리 — 도약할 이유가 없다
+    expect(inLeapRange(LEECH, 25)).toBe(false); // 링 안쪽 — 도약해도 제자리
+    expect(inLeapRange(LEECH, LEECH.triggerMin)).toBe(true);
+    expect(inLeapRange(LEECH, 300)).toBe(true); // 상한 없음(triggerMax 0)
+  });
+
+  it("스키터는 가까울 때만 — 이미 멀면 더 멀어질 이유가 없다", () => {
+    expect(inLeapRange(SKEETER, 35)).toBe(true); // keepDist 부근 = 붙들린 상태
+    expect(inLeapRange(SKEETER, SKEETER.triggerMax)).toBe(true);
+    expect(inLeapRange(SKEETER, SKEETER.triggerMax + 1)).toBe(false);
+    expect(inLeapRange(SKEETER, 0)).toBe(true); // 하한 없음(triggerMin 0)
+  });
+
+  it("스키터 도약 거리는 시야 안 — 완전히 사라지면 도약이 아니라 소멸로 읽힌다", () => {
+    expect(SKEETER.maxDist).toBeLessThanOrEqual(250);
+    expect(SKEETER.minDist).toBeGreaterThan(SKEETER.triggerMax * 0.5); // 발동 거리보다 확실히 멀리
+  });
+
+  it("경계값 0 은 '제한 없음'", () => {
+    const free = { ...LEECH, triggerMin: 0, triggerMax: 0 };
+    for (const d of [0, 50, 5000]) expect(inLeapRange(free, d)).toBe(true);
   });
 });

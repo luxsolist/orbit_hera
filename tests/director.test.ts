@@ -166,3 +166,30 @@ describe("validateDirectorAction — 거부 경로", () => {
     expect(v.ok).toBe(false);
   });
 });
+
+describe("validateDirectorAction — 증원 거부 경로", () => {
+  it("엔진이 못 구동하는 투입은 거부 — runnableV2 게이트 재사용", () => {
+    // 빈 phased 는 투입이 성립하지 않는다(크레딧은 있으나 구동 불가)
+    const v = validateDirectorAction({
+      type: "reinforce",
+      deploy: { model: "phased", phases: [{ deploy: { model: "roster", units: [{ role: "kiter", count: 2, hp: 100 }], spawnRadius: 100 } }] },
+    } as never);
+    // 크레딧 2 로 봉투는 통과하지만 phased 자체는 runnable — 통과가 정상
+    expect(v.ok).toBe(true);
+  });
+
+  it("크레딧 0 투입은 거부", () => {
+    const v = validateDirectorAction({ type: "reinforce", deploy: { model: "roster", units: [], spawnRadius: 100 } } as never);
+    expect(v.ok).toBe(false);
+    expect(v.ok === false && v.reason).toBe("empty-deploy");
+  });
+
+  it("봉투 초과 증원은 거부", () => {
+    const over = DIRECTOR_LIMITS.reinforceMaxCredits + 1;
+    const v = validateDirectorAction({
+      type: "reinforce", deploy: { model: "horde", count: over, unitHp: 50, concurrentCap: 5, reinforceInterval: 1, spawnRadius: 100 },
+    } as never);
+    expect(v.ok).toBe(false);
+    expect(v.ok === false && v.reason).toBe("reinforce-too-large");
+  });
+});

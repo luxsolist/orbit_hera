@@ -3,6 +3,11 @@
 //
 // "분리형" 모델(체력 ↔ 보이는 크기 디커플링):
 //  (1) 체력(밸런스)  HP = basePerArea × 지름² × 색가중치   — 표면적 기반이라 크기로 폭주하지 않음
+//
+//  ⚠ HP 스케일(2026-08-25 ×10): 개체가 너무 빨리 죽어 행동·이펙트가 드러나지 않았다(개당 TTK 0.6~3초).
+//  basePerArea 만 올리면 strength = log(hp/hpFloor)/log(hpCeil/hpFloor) 가 커져 **전 개체가 청백·거대·
+//  둔화**로 밀린다. 색·크기·속도 매핑을 그대로 두려면 hpFloor·hpCeil·anchorHp 를 같은 배수로 올려야
+//  한다(로그 비율과 visualDiameter 의 k 가 상쇄된다). 이 넷은 항상 같이 움직인다.
 //  (2) 렌더 크기(연출) dVis = clamp(minD + k·HP^p, minD, maxD) — 큰 HP 가 극적으로 거대해짐(드라마)
 //      여기서 hp 산정용 '지름'은 설계 노브(nominal)이고, 실제 화면/충돌 크기는 visualDiameter() 가 결정한다.
 
@@ -286,7 +291,7 @@ export function sampleTemp(tMin: number, tCap: number, alpha: number, u: number)
 
 export const KK_LEVELS = 4;
 export const KK_DEMOTE_STAGGER = 0.35; // 강등 경직(s) — 처치 동시 경직(KILL_STAGGER)과 같은 문법
-export const KK_MIN_HP = 3000; //         이 체력 이상만 계단화(정예·보스급)
+export const KK_MIN_HP = 30000; //        이 체력 이상만 계단화(정예·보스급) — HP 스케일 ×10 과 동반
 
 /** 현재 준위(1..KK_LEVELS) — HP 비율 계단. 순수. */
 export function kkLevelOf(hp: number, maxHp: number): number {
@@ -495,7 +500,7 @@ export function appearanceForHp(spec: PlasmoidSpec, hp: number): { temp: number;
 export const DEFAULT_PLASMOID: PlasmoidSpec = {
   id: "plasmoid",
   name: "플라즈모이드 / PLASMOID",
-  hp: { basePerArea: 100, minDiameter: 0.5, maxDiameter: 60 },
+  hp: { basePerArea: 1000, minDiameter: 0.5, maxDiameter: 60 },
   color: {
     stops: [
       { temp: 3000, color: "0xff3b30", weight: 1.0 },
@@ -505,32 +510,32 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
       { temp: 12000, color: "0x4aa6ff", weight: 5.0 },
     ],
   },
-  visual: { minDiameter: 2.0, maxDiameter: 600, anchorHp: 200000, anchorDiameter: 500, exponent: 0.82 },
-  spawn: { tempAlpha: 2, speedMax: 13.5, speedMin: 3.75, hpFloor: 100, hpCeil: 200000 },
+  visual: { minDiameter: 2.0, maxDiameter: 600, anchorHp: 2000000, anchorDiameter: 500, exponent: 0.82 },
+  spawn: { tempAlpha: 2, speedMax: 13.5, speedMin: 3.75, hpFloor: 1000, hpCeil: 2000000 },
   contact: { hpDamage: 10, strengthMul: 2.0 },
   archetypes: {
     rusher: {
       name: "거머리 플라즈모이드 / LEECH",
-      spawnAltMin: 0, spawnAltMax: 60, countBase: 6, countCap: 8, speed: 17, speedMin: 12,
+      spawnAltMin: 0, spawnAltMax: 60, countBase: 2, countCap: 3, speed: 17, speedMin: 12,
       // 근접 도약(회피 강제) — 유저 주변 12~25m **링** + 수직 ±10m. 구(球) 안이 아니라 링인 이유:
       // 10m 구면 균등이면 절반이 지하이고, 착지 즉시 접촉(10m·속도 17 = 0.59초)이라 회피 창이 없다.
       // 수직 오프셋이 플레이어 기준이라 비행 중에도 성립한다(러셔 이동은 원래 3D 추격이다).
-      leap: { telegraphSec: 3, cd: 18, chance: 0.45, minDist: 12, maxDist: 25, dyMin: -10, dyMax: 10, recoverSec: 0.8, concurrentCap: 3 },
+      leap: { telegraphSec: 3, lockSec: 1, cd: 9, chance: 0.7, minDist: 12, maxDist: 25, dyMin: -10, dyMax: 10, triggerMin: 45, triggerMax: 0, recoverSec: 0.8, concurrentCap: 2 },
     },
     kiter: {
       name: "모기 플라즈모이드 / SKEETER",
-      spawnAltMin: 80, spawnAltMax: 300, countBase: 8, countCap: 10, speed: 89, speedMin: 67,
+      spawnAltMin: 80, spawnAltMax: 300, countBase: 3, countCap: 4, speed: 89, speedMin: 67,
       turnRateDeg: 100, keepDist: 35, keepBand: 12, strafeMix: 0, orbitRef: 35, evadeGain: 0.85,
       attackRange: 95, drainDamage: 3.0, drainInterval: 1.5,
       // 원거리 도약(관측 파기) — 수평 150~450m + 플레이어보다 20~250m **위**(모기는 내려다본다).
       // 상한이 450 인 이유: 어그로 해제 반경 900m 의 절반이라
       // 교전이 끊기지 않고, 복귀 시간이 (450−95)/89 ≈ 4.0초로 무행동 구간이 짧다. 1000m 면 11%가
       // 900m 밖에 떨어져 표적이 해제되고(건물 공격 복귀) provoked 10초가 끝나면 돌아오지 않는다.
-      leap: { telegraphSec: 3, cd: 12, chance: 0.6, minDist: 150, maxDist: 450, dyMin: 20, dyMax: 250, recoverSec: 0, concurrentCap: 2 },
+      leap: { telegraphSec: 3, lockSec: 1, cd: 6, chance: 0.8, minDist: 90, maxDist: 220, dyMin: 20, dyMax: 140, triggerMin: 0, triggerMax: 120, recoverSec: 0, concurrentCap: 2 },
     },
     marker: {
       name: "소인체 플라즈모이드 / BRANDER",
-      spawnAltMin: 40, spawnAltMax: 160, countBase: 2, countCap: 4, speed: 30, speedMin: 22,
+      spawnAltMin: 40, spawnAltMax: 160, countBase: 1, countCap: 2, speed: 30, speedMin: 22,
       turnRateDeg: 90, keepDist: 70, keepBand: 18,
       tomb: { projSpeed: 22, projTurnRateDeg: 70, projTtl: 14, fireRange: 220, fireInterval: 7, sweepDamage: 18 },
     },

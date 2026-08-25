@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { projectLatLon, clusterDots, zoomMapBox, projectInBox, niceGridStep, buildWorldSvg } from "../src/ui/worldMapSvg";
+import { projectLatLon, clusterDots, zoomMapBox, projectInBox, niceGridStep, buildWorldSvg, driftOverlaySvg } from "../src/ui/worldMapSvg";
 
 describe("projectLatLon — equirectangular 백분율 투영", () => {
   it("원점(0,0) → 중앙(50,50)", () => {
@@ -172,5 +172,74 @@ describe("zoomMapBox — 최근접 쌍이 화면에서 겹치지 않는다", () 
       expect(p.x).toBeGreaterThan(0); expect(p.x).toBeLessThan(100);
       expect(p.y).toBeGreaterThan(0); expect(p.y).toBeLessThan(100);
     }
+  });
+});
+
+// 표류 오버레이(캠페인 §9.2-5) — 세계지도와 같은 viewBox(0 0 360 180) 위에 얹는 SVG 문자열.
+// 좌표 매핑(x = 경도+180 / y = 90−위도)이 깨지면 화살표가 엉뚱한 대륙에 찍히는데, 눈으로만 보면
+// 알아채기 어렵다(대륙 윤곽과 겹쳐 그럴듯해 보인다) — 그래서 숫자로 못 박는다.
+describe("driftOverlaySvg — 표류 벡터 오버레이", () => {
+  it("벡터도 교점도 없으면 빈 문자열 — 빈 <svg> 를 깔지 않는다", () => {
+    expect(driftOverlaySvg([], { show: false, lat: 0, lon: 0 })).toBe("");
+  });
+
+  it("교점만 있어도 렌더된다", () => {
+    const out = driftOverlaySvg([], { show: true, lat: 0, lon: 0 });
+    expect(out).toContain("drift-origin");
+    expect(out).toContain('viewBox="0 0 360 180"');
+  });
+
+  it("벡터 시작점 = (경도+180, 90−위도)", () => {
+    // x=경도, z=위도 규약(캠페인 driftVectorFor). 서울(37.5N, 127E) → (307, 52.5)
+    const out = driftOverlaySvg([{ x: 127, z: 37.5, dx: 0, dz: 0 }], { show: false, lat: 0, lon: 0 });
+    expect(out).toContain('x1="307.00"');
+    expect(out).toContain('y1="52.50"');
+  });
+
+  it("끝점 = 시작점 + 방향×7° (y 는 화면 아래가 +)", () => {
+    const out = driftOverlaySvg([{ x: 0, z: 0, dx: 1, dz: 0.5 }], { show: false, lat: 0, lon: 0 });
+    expect(out).toContain('x2="187.00"'); // 180 + 1×7
+    expect(out).toContain('y2="93.50"'); //  90 + 0.5×7
+  });
+
+  it("교점 마커 = (경도+180, 90−위도)", () => {
+    const out = driftOverlaySvg([], { show: true, lat: 37.5, lon: 127 });
+    expect(out).toContain('cx="307"');
+    expect(out).toContain('cy="52.5"');
+  });
+
+  it("벡터 수만큼 선이 그려진다", () => {
+    const v = [1, 2, 3].map((i) => ({ x: i * 10, z: 0, dx: 1, dz: 0 }));
+    const out = driftOverlaySvg(v, { show: false, lat: 0, lon: 0 });
+    expect((out.match(/<line /g) ?? []).length).toBe(3);
+  });
+});
+
+describe("zoomMapBox / niceGridStep — 종횡비·격자 경계", () => {
+  it("가로로 납작한 분포는 세로를 늘려 상자 비율을 맞춘다(반대도 성립)", () => {
+    const wide = zoomMapBox([{ lat: 0, lon: -60 }, { lat: 0, lon: 60 }], 2);
+    expect(wide.w / wide.h).toBeCloseTo(2, 3);
+    const tall = zoomMapBox([{ lat: -40, lon: 0 }, { lat: 40, lon: 0 }], 2);
+    expect(tall.w / tall.h).toBeCloseTo(2, 3);
+  });
+
+  it("모든 점이 상자 안에 남는다 — 최근접 쌍을 벌리려 좁혀도", () => {
+    const pts = [{ lat: 35, lon: 127 }, { lat: 35.1, lon: 127.1 }, { lat: 60, lon: 100 }];
+    const b = zoomMapBox(pts, 1.6);
+    for (const p of pts) {
+      const q = projectInBox(p.lat, p.lon, b);
+      expect(q.x).toBeGreaterThanOrEqual(-0.001);
+      expect(q.x).toBeLessThanOrEqual(100.001);
+      expect(q.y).toBeGreaterThanOrEqual(-0.001);
+      expect(q.y).toBeLessThanOrEqual(100.001);
+    }
+  });
+
+  it("niceGridStep — 1·2·5 계단, 상단 경계는 다음 자릿수로", () => {
+    expect(niceGridStep(4)).toBe(1); // raw 1 → 1
+    expect(niceGridStep(8)).toBe(2); // raw 2 → 2
+    expect(niceGridStep(20)).toBe(5); // raw 5 → 5
+    expect(niceGridStep(28)).toBe(10); // raw 7 → 1·5 초과 → 10
+    expect(niceGridStep(280)).toBe(100);
   });
 });

@@ -963,7 +963,16 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 .bestiary__card {
   padding: 9px 12px; margin-top: 6px;
   background: rgba(20, 40, 52, 0.5); border: 1px solid rgba(52, 245, 255, 0.24); border-radius: 7px;
+  display: flex; align-items: center; gap: 10px;
 }
+/* 형상 삽화 — 실루엣만 보여주므로 코어 발광색과 같은 시안으로 채운다(게임 안 인상과 연결). */
+.bestiary__icon {
+  flex: 0 0 auto; width: 46px; height: 46px; display: grid; place-items: center;
+  color: rgba(120, 235, 250, 0.85);
+  filter: drop-shadow(0 0 6px rgba(52, 245, 255, 0.45));
+}
+.bestiary__icon svg { width: 46px; height: 46px; display: block; }
+.bestiary__text { min-width: 0; }
 .bestiary__name { font-size: 12px; font-weight: 700; color: #cdeef5; letter-spacing: 0.03em; }
 .bestiary__brief { font-size: 11px; color: rgba(180, 230, 245, 0.7); margin-top: 3px; line-height: 1.4; }
 .bestiary__card--merged {

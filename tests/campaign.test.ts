@@ -4,7 +4,7 @@ import {
   driftVectorFor, driftConvergence, pairAggravation, pairedCity, pickCampaignMission,
   missionWeight, DRIFT_ORIGIN, EXPERIMENT_MISSION_ID, type MissionReport,
 } from "../src/game/campaign";
-import { CAMPAIGN_DEFAULTS, validateCampaign, type CampaignData } from "../src/core/progress";
+import { CAMPAIGN_DEFAULTS, DRIFT_VECTOR_CAP, validateCampaign, type CampaignData } from "../src/core/progress";
 import type { MissionSpecV2 } from "../src/game/missionV2";
 
 // 캠페인 전이(P0-2, TODO §9) — 순수 전이의 계약: 증거로만 챕터가 열리고(클리어 수 아님),
@@ -152,5 +152,55 @@ describe("챕터 가중 미션 선택기(규칙 기반 감독 — §10 단계 0)
     expect(CHAPTERS).toHaveLength(7);
     expect(CHAPTERS.filter((ch) => ch.track !== null).map((ch) => ch.track))
       .toEqual(["heatmap", "pulse", "drift", "immortal"]);
+  });
+});
+
+// 경계 조건 — 무한 성장 방지와 부동소수 폴백. 둘 다 "평소엔 안 보이지만 깨지면 치명적"인 자리다.
+describe("표류 벡터 상한 — 무한 누적 방지", () => {
+  it("격멸 성공이 반복돼도 DRIFT_VECTOR_CAP 을 넘지 않는다(오래된 것부터 밀려남)", () => {
+    let c: CampaignData = CAMPAIGN_DEFAULTS();
+    for (let i = 0; i < DRIFT_VECTOR_CAP + 25; i++) {
+      c = applyMissionResult(c, report({ cityLat: i % 80, cityLon: i % 170 }), 0.5);
+    }
+    expect(c.driftVectors.length).toBe(DRIFT_VECTOR_CAP);
+    expect(validateCampaign(c)).toBe(true); // 저장 스키마 상한과 일치해야 로드가 깨지지 않는다
+  });
+
+  it("실패한 격멸은 벡터를 남기지 않는다", () => {
+    const c = applyMissionResult(CAMPAIGN_DEFAULTS(), report({ success: false }), 0.5);
+    expect(c.driftVectors.length).toBe(0);
+  });
+});
+
+describe("pickCampaignMission — 경계", () => {
+  const pool = [mission("a", "purge"), mission("b", "guard"), mission("c", "survive")];
+
+  it("u=1 이면 마지막 항목으로 폴백 — 부동소수 잔차로 루프를 빠져나가도 null 이 아니다", () => {
+    expect(pickCampaignMission(pool, CAMPAIGN_DEFAULTS(), 1)).toBe(pool[pool.length - 1]);
+  });
+
+  it("u=0 이면 첫 가중 항목", () => {
+    expect(pickCampaignMission(pool, CAMPAIGN_DEFAULTS(), 0)).toBe(pool[0]);
+  });
+
+  it("빈 풀은 null", () => {
+    expect(pickCampaignMission([], CAMPAIGN_DEFAULTS(), 0.5)).toBeNull();
+  });
+});
+
+describe("missionWeight — 장별 가중(전 챕터)", () => {
+  it("3장은 격멸 우대, 5~6장은 앵커 외 균등", () => {
+    expect(missionWeight(mission("p", "purge-all"), 3)).toBe(3);
+    expect(missionWeight(mission("g", "guard"), 3)).toBe(1);
+    for (const ch of [5, 6]) {
+      expect(missionWeight(mission("p", "purge-all"), ch)).toBe(1);
+      expect(missionWeight(mission("g", "guard"), ch)).toBe(1);
+    }
+  });
+
+  it("4장은 생존 > 방어 > 그 외", () => {
+    expect(missionWeight(mission("s", "survive"), 4)).toBe(2.5);
+    expect(missionWeight(mission("g", "guard"), 4)).toBe(2);
+    expect(missionWeight(mission("p", "purge"), 4)).toBe(1);
   });
 });

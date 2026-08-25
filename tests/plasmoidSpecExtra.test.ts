@@ -108,26 +108,28 @@ describe("distributeHp — 합산 정확성 (대 count)", () => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 describe("archetypeCount — 웨이브 경계값", () => {
-  const arche = spec.archetypes.rusher; // countBase=6, countCap=12
+  const arche = spec.archetypes.rusher;
+  // 웨이브 증가분은 countCap 에서 잘린다 — 상수로 박으면 물량 재조정 때마다 깨진다.
+  const at = (w: number) => Math.min(arche.countCap, arche.countBase + Math.floor((w - 1) / 2));
 
   it("wave=1: floor((1-1)/2)=0 → countBase 그대로", () => {
-    expect(archetypeCount(arche, 1, 1)).toBe(arche.countBase);
+    expect(archetypeCount(arche, 1, 1)).toBe(at(1));
   });
 
   it("wave=2: floor((2-1)/2)=0 → 여전히 countBase", () => {
-    expect(archetypeCount(arche, 2, 1)).toBe(arche.countBase);
+    expect(archetypeCount(arche, 2, 1)).toBe(at(2));
   });
 
   it("wave=3: floor((3-1)/2)=1 → countBase+1", () => {
-    expect(archetypeCount(arche, 3, 1)).toBe(arche.countBase + 1);
+    expect(archetypeCount(arche, 3, 1)).toBe(at(3));
   });
 
   it("wave=4: floor((4-1)/2)=1 → countBase+1", () => {
-    expect(archetypeCount(arche, 4, 1)).toBe(arche.countBase + 1);
+    expect(archetypeCount(arche, 4, 1)).toBe(at(4));
   });
 
   it("wave=5: floor((5-1)/2)=2 → countBase+2", () => {
-    expect(archetypeCount(arche, 5, 1)).toBe(arche.countBase + 2);
+    expect(archetypeCount(arche, 5, 1)).toBe(at(5));
   });
 });
 

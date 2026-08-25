@@ -2,7 +2,7 @@
  "id": "plasmoid",
  "name": "플라즈모이드 / PLASMOID",
  "hp": {
-  "basePerArea": 100,
+  "basePerArea": 1000,
   "minDiameter": 0.5,
   "maxDiameter": 60
  },
@@ -38,7 +38,7 @@
  "visual": {
   "minDiameter": 2.0,
   "maxDiameter": 600,
-  "anchorHp": 200000,
+  "anchorHp": 2000000,
   "anchorDiameter": 500,
   "exponent": 0.82
  },
@@ -46,8 +46,8 @@
   "tempAlpha": 2,
   "speedMax": 13.5,
   "speedMin": 3.75,
-  "hpFloor": 100,
-  "hpCeil": 200000
+  "hpFloor": 1000,
+  "hpCeil": 2000000
  },
  "contact": {
   "hpDamage": 10,
@@ -58,28 +58,31 @@
    "name": "거머리 플라즈모이드 / LEECH",
    "spawnAltMin": 0,
    "spawnAltMax": 60,
-   "countBase": 6,
-   "countCap": 8,
+   "countBase": 2,
+   "countCap": 3,
    "speed": 17,
    "speedMin": 12,
    "leap": {
     "telegraphSec": 3.0,
-    "cd": 18,
-    "chance": 0.45,
+    "lockSec": 1,
+    "cd": 9,
+    "chance": 0.7,
     "minDist": 12,
     "maxDist": 25,
     "dyMin": -10,
     "dyMax": 10,
+    "triggerMin": 45,
+    "triggerMax": 0,
     "recoverSec": 0.8,
-    "concurrentCap": 3
+    "concurrentCap": 2
    }
   },
   "kiter": {
    "name": "모기 플라즈모이드 / SKEETER",
    "spawnAltMin": 80,
    "spawnAltMax": 300,
-   "countBase": 8,
-   "countCap": 10,
+   "countBase": 3,
+   "countCap": 4,
    "speed": 89,
    "speedMin": 67,
    "turnRateDeg": 100,
@@ -93,12 +96,15 @@
    "drainInterval": 1.5,
    "leap": {
     "telegraphSec": 3.0,
-    "cd": 12,
-    "chance": 0.6,
-    "minDist": 150,
-    "maxDist": 450,
+    "lockSec": 1,
+    "cd": 6,
+    "chance": 0.8,
+    "minDist": 90,
+    "maxDist": 220,
     "dyMin": 20,
-    "dyMax": 250,
+    "dyMax": 140,
+    "triggerMin": 0,
+    "triggerMax": 120,
     "recoverSec": 0,
     "concurrentCap": 2
    }
@@ -107,8 +113,8 @@
    "name": "소인체 플라즈모이드 / BRANDER",
    "spawnAltMin": 40,
    "spawnAltMax": 160,
-   "countBase": 2,
-   "countCap": 4,
+   "countBase": 1,
+   "countCap": 2,
    "speed": 30,
    "speedMin": 22,
    "turnRateDeg": 90,

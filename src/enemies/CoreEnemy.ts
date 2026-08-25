@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { createDissolveMaterial, type DissolveMaterial } from "../fx/dissolve";
 import type { Vec3 } from "../core/math";
 import type { ZenoSpec } from "../weapons/WeaponSpec";
@@ -9,16 +10,31 @@ export const CORE_GEO = new THREE.IcosahedronGeometry(0.42, 1); // 발광 코어
 
 // 역할 실루엣(P3 — §6.7 형태 언어): 색=강함 · **형태=직무** 채널 분리. 직무마다 다른 지오메트리로
 // 인스턴싱(EnemyManager 가 역할별 InstancedMesh 운용). 디졸브 개별 메시도 같은 형태(applySilhouette).
-const _kiterGeo = new THREE.TetrahedronGeometry(1.15, 0);
-_kiterGeo.scale(0.75, 1.65, 0.75); // 길쭉한 사면체 — 빠른 원거리 흡혈의 바늘 인상
-const _cutterGeo = new THREE.ConeGeometry(0.95, 2.1, 4);
-_cutterGeo.rotateX(Math.PI); // 날끝이 아래로 — 건물에 꽂히는 절단 쐐기
+//
+// 형태 축 = **실루엣 종횡비**(2026-08-25 개편). 코어가 강하게 발광(coreBright × CORE_BLOOM)해서 면·각은
+// 원거리에서 뭉개진다 — 정이십면체(20면)든 정팔면체(8면)든 같은 빛덩어리다. 빠른 화면에서 살아남는
+// 채널은 **총 비례**와 **구멍** 둘뿐이라, 다섯 직무를 종횡비 축에 넓게 흩어 놓는다.
+// 시선 ±35°(플레이어 실사용 범위) 중앙값: 모기 0.16 · 절단체 0.51 · 역행체 0.94 · 소인체 1.22 · 거머리 2.45.
+// 개편 전에는 다섯이 0.29~1.15 에 몰려 있었고 거머리(1.04)와 소인체(0.98)는 사실상 같은 실루엣이었다.
+// 읽는 규칙: **세로로 길수록 빠르고 원거리, 가로로 넓을수록 느리고 접촉. 구멍이 있으면 역행체.**
+const _kiterGeo = new THREE.OctahedronGeometry(1, 0);
+_kiterGeo.scale(0.42, 2.6, 0.42); // 가늘고 긴 방추 — 빠른 원거리 흡혈의 바늘(종횡비 0.16)
+const _cutterGeo = new THREE.ConeGeometry(0.72, 2.6, 4);
+_cutterGeo.rotateX(Math.PI); // 날끝이 아래로 — 건물에 꽂히는 절단 쐐기(0.51). 방향이 곧 정체
+const _markerGeo = new THREE.OctahedronGeometry(1, 0);
+_markerGeo.scale(1.25, 1.0, 1.25); // 가로로 넓은 마름모 결정 — 낙인탄 글리프와 같은 형태 언어(1.22)
+// 역행체는 고리가 정체인데 단일 토러스는 옆에서 보면 막대라 종횡비가 0.29~1.14 로 요동친다
+// (= 회전만으로 정체가 무너진다). 직교로 하나 더 겹쳐 어느 각도에서도 링이 남게 한다(0.79~1.01).
+const _ringA = new THREE.TorusGeometry(1.15, 0.2, 6, 12);
+const _ringB = _ringA.clone();
+_ringB.rotateY(Math.PI / 2);
+const _rewinderGeo = mergeGeometries([_ringA.clone(), _ringB])!;
 export const SHELL_GEOS: Record<PlasmoidArchetype, THREE.BufferGeometry> = {
-  rusher: new THREE.IcosahedronGeometry(1, 0), // 각진 가시 구 — 접촉 압박
+  rusher: new THREE.CylinderGeometry(1.5, 1.5, 0.42, 8), // 납작한 팔각 원반 — 들러붙는 접촉체(2.45)
   kiter: _kiterGeo,
-  marker: new THREE.OctahedronGeometry(1, 0), // 글리프 결정 — 낙인탄(BrandSystem 글리프)과 같은 형태 언어
+  marker: _markerGeo,
   cutter: _cutterGeo,
-  rewinder: new THREE.TorusGeometry(0.85, 0.3, 6, 10), // 시간 고리 — 역행 시전자(미니보스 슬롯)
+  rewinder: _rewinderGeo, // 시간 고리 — 역행 시전자(미니보스 슬롯)
 };
 
 const PULSE_RATE = 4; // 박동 위상 속도(rad/s)
@@ -399,11 +415,13 @@ export class CoreEnemy {
   markerAimLeft = 0; //              낙인탄 텔레그래프 잔여(s) — 장전 조준선(P3 §6.7, 매니저 구동)
   rewCastLeft = 0; //                역행체 시전 잔여(s) — 예지 HUD 카운트다운(매니저 구동)
   rewCd = 6; //                      역행 시전 쿨다운(s) — 스폰 직후 즉시 시전 방지 초기값
-  // 차원도약(leap.ts) — 매니저가 구동. 착지점은 **텔레그래프 개시 시점에 확정**한다: 예고선을
-  // 그 지점으로 그려야 플레이어가 "어디로 가는지" 읽고 대응할 수 있다(회피 강제의 전제).
+  // 차원도약(leap.ts) — 매니저가 구동. 착지점은 텔레그래프 동안 플레이어를 **따라가다가** 발동
+  // lockSec 초 전에 확정된다. 예고선이 멈추는 순간이 곧 "여기로 온다"는 신호이고, 그때부터
+  // lockSec 만큼이 플레이어의 회피 시간이다(회피 강제의 전제 = 읽을 수 있음).
   leapCastLeft = 0; //               도약 텔레그래프 잔여(s). >0 = 시전 중
   leapCd = 0; //                     도약 쿨다운(s) — 매니저가 스폰 시 스펙으로 초기화
-  leapTarget: Vec3 | null = null; // 확정된 착지점(월드) — 텔레그래프 예고선의 끝점
+  leapTarget: Vec3 | null = null; // 착지점(월드) — 텔레그래프 예고선의 끝점
+  leapLocked = false; //             착지점 확정 여부. false 면 매 프레임 플레이어를 따라간다
   leapRecover = 0; //                착지 후 공격 불가 잔여(s) — 회피 창
   private dashLeft = 0; //           러셔 돌진 잔여(s) — 카이팅 파훼(안티카이팅)
   private dashCd = 0;

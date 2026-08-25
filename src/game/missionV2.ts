@@ -306,6 +306,9 @@ export function evaluateMissionV2(spec: MissionSpecV2, rt: MissionRuntime): Miss
       const progress = count > 0 ? clamp01(rt.kills / count) : 1;
       if (count > 0 && rt.kills >= count) return { status: "success", progress: 1, reason: "격멸 완료 / CLEARED" }; // 동시 충족 시 성공 우선(v1 동일)
       if (failReason) return { status: "failed", progress, reason: failReason };
+      // 소탕했는데 목표치 미달 = 목표가 투입보다 크다(데이터 불일치). 도달 불가이므로 즉시 종료한다 —
+      // 안 그러면 빈 전장에서 제한시간이 끝날 때까지 아무 일도 일어나지 않는다.
+      if (rt.cleared) return { status: "failed", progress, reason: "표적 소진 / NO TARGETS" };
       if (f.timeLimit > 0 && rt.elapsed >= f.timeLimit) return { status: "failed", progress, reason: "시간 초과 / TIME OUT" };
       return { status: "active", progress, reason: "" };
     }
@@ -316,22 +319,28 @@ export function evaluateMissionV2(spec: MissionSpecV2, rt: MissionRuntime): Miss
       const progress = target > 0 ? clamp01(roleKills / target) : 1;
       if (target > 0 && roleKills >= target) return { status: "success", progress: 1, reason: "표적 격멸 완료 / HUNTED" };
       if (failReason) return { status: "failed", progress, reason: failReason };
+      if (rt.cleared) return { status: "failed", progress, reason: "표적 소진 / NO TARGETS" }; // 도달 불가 확정
       // 비표적 처치 비용 — 전체 처치에서 표적분을 뺀 수만큼 시간이 앞당겨진다(런타임 추가 입력 불요).
       if (f.timeLimit > 0 && offTargetElapsed(spec, rt) >= f.timeLimit) {
         return { status: "failed", progress, reason: "시간 초과 / TIME OUT" };
       }
       return { status: "active", progress, reason: "" };
     }
+    // 생존/사수는 **전장 소탕으로도 성공**한다(2026-08-26). 위협이 하나도 남지 않았고 더 나올 것도
+    // 없는데 타이머만 보며 서 있는 건 플레이가 아니다 — 개체 수를 줄인 뒤 빈 전장 대기가 길어져
+    // 드러났다. 실패 판정은 그대로 우선(마감 동시 충족은 실패 — v1 동일 정책).
     case "survive": {
       const progress = clamp01(rt.elapsed / g.seconds);
-      if (failReason) return { status: "failed", progress, reason: failReason }; // 마감 동시 충족은 실패 우선(v1 동일)
+      if (failReason) return { status: "failed", progress, reason: failReason };
       if (rt.elapsed >= g.seconds) return { status: "success", progress: 1, reason: "사수 성공 / HELD" };
+      if (rt.cleared) return { status: "success", progress: 1, reason: "전장 소탕 / CLEARED" };
       return { status: "active", progress, reason: "" };
     }
     case "guard": {
       const progress = clamp01(rt.elapsed / g.hold);
       if (failReason) return { status: "failed", progress, reason: failReason };
       if (rt.elapsed >= g.hold) return { status: "success", progress: 1, reason: "방어 성공 / DEFENDED" };
+      if (rt.cleared) return { status: "success", progress: 1, reason: "전장 소탕 / CLEARED" };
       return { status: "active", progress, reason: "" };
     }
     case "experiment": {
@@ -340,6 +349,8 @@ export function evaluateMissionV2(spec: MissionSpecV2, rt: MissionRuntime): Miss
       const progress = g.hold > 0 ? clamp01(hold / g.hold) : 1;
       if (hold >= g.hold) return { status: "success", progress: 1, reason: "동시 조사 성립 / COHERENT" };
       if (failReason) return { status: "failed", progress, reason: failReason };
+      // 소탕 = 조사할 대상이 없다 → 달성 불가가 확정. 남은 제한시간을 빈 전장에서 세지 않는다.
+      if (rt.cleared) return { status: "failed", progress, reason: "표적 소진 / NO TARGETS" };
       if (f.timeLimit > 0 && rt.elapsed >= f.timeLimit) return { status: "failed", progress, reason: "시간 초과 / TIME OUT" };
       return { status: "active", progress, reason: "" };
     }
@@ -491,9 +502,9 @@ export function fromLegacy(v1: MissionSpec): MissionSpecV2 {
 export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
   {
     id: "purge", name: "정화 작전 / PURGE",
-    goal: { type: "purge", count: 45 },
-    fail: { respawns: 3, timeLimit: 300, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
-    deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
+    goal: { type: "purge", count: 6 },
+    fail: { respawns: 3, timeLimit: 570, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    deploy: { model: "pyramid", count: 6, totalHp: 168182, bossHp: 100000, concurrentCap: 3, reinforceInterval: 1.5, spawnRadius: 1500 },
     zoneRadius: 5000,
   },
   {
@@ -501,7 +512,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     spawnMix: "rusher", // 건물 손실 10채가 실패 조건 — 리치 접촉 피해(10~30dps)가 목표를 실제로 위협한다
     goal: { type: "guard", target: "buildings", hold: 300 },
     fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 10, maxLandmarkLoss: 0 },
-    deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
+    deploy: { model: "pyramid", count: 6, totalHp: 168182, bossHp: 100000, concurrentCap: 3, reinforceInterval: 1.5, spawnRadius: 1500 },
     zoneRadius: 5000,
     modifiers: { aggro: "building" }, // 적이 건물로 직행 — 사수 미션이 실제로 '지키러 가는' 미션이 되도록
   },
@@ -510,7 +521,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     spawnMix: "kiter", // 랜드마크는 접촉 피해가 큰 리치보다 공중 압박이 어울린다
     goal: { type: "guard", target: "landmarks", hold: 300 },
     fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 1 },
-    deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
+    deploy: { model: "pyramid", count: 6, totalHp: 168182, bossHp: 100000, concurrentCap: 3, reinforceInterval: 1.5, spawnRadius: 1500 },
     zoneRadius: 5000,
     modifiers: { aggro: "landmark" }, // 적이 랜드마크로 직행 — 없으면 잃을 대상이 없어 사실상 생존전이었다
   },
@@ -519,7 +530,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     spawnMix: "kiter", // 지속 압박형 — 300초 버티기라 끊김 없는 드레인이 맞는다
     goal: { type: "survive", seconds: 300 },
     fail: { respawns: 2, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
-    deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
+    deploy: { model: "pyramid", count: 6, totalHp: 168182, bossHp: 100000, concurrentCap: 3, reinforceInterval: 1.5, spawnRadius: 1500 },
     zoneRadius: 5000,
   },
   {
@@ -528,9 +539,9 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     // 도입 후 하향 예정) — 플레이테스트로 조정.
     id: "surgical", name: "정밀 정화 / SURGICAL",
     brief: "얽힘이 짙은 구역이다. 무너뜨리지 말고 걷어내라.",
-    goal: { type: "purge", count: 40 },
-    fail: { respawns: 2, timeLimit: 300, maxBuildingLoss: 15, maxLandmarkLoss: 0 },
-    deploy: { model: "pyramid", count: 40, totalHp: 60000, bossHp: 10000, concurrentCap: 22, reinforceInterval: 1.5, spawnRadius: 1200 },
+    goal: { type: "purge", count: 5 },
+    fail: { respawns: 2, timeLimit: 510, maxBuildingLoss: 15, maxLandmarkLoss: 0 },
+    deploy: { model: "pyramid", count: 5, totalHp: 151282, bossHp: 100000, concurrentCap: 3, reinforceInterval: 1.5, spawnRadius: 1200 },
     zoneRadius: 4000,
     modifiers: { aggro: "building" }, // 훅 ④ — 적이 도시만 노린다: 때려서 어그로를 끌어와야 한도가 버틴다
   },
@@ -541,7 +552,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     brief: "오래 머문 자리일수록 얽힘이 짙다 — 그들이 먼저 노린다.",
     goal: { type: "guard", target: "landmarks", hold: 300 },
     fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 1 },
-    deploy: { model: "pyramid", count: 45, totalHp: 70000, bossHp: 10000, concurrentCap: 26, reinforceInterval: 1.5, spawnRadius: 1500 },
+    deploy: { model: "pyramid", count: 6, totalHp: 168182, bossHp: 100000, concurrentCap: 3, reinforceInterval: 1.5, spawnRadius: 1500 },
     zoneRadius: 5000,
     modifiers: { aggro: "landmark" },
   },
@@ -552,7 +563,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     brief: "오늘은 세는 날이 아니다 — 쓸어내는 날이다.",
     goal: { type: "purge-all" },
     fail: { respawns: 3, timeLimit: 360, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
-    deploy: { model: "horde", count: 150, unitHp: 350, concurrentCap: 55, reinforceInterval: 0.4, spawnRadius: 1500 },
+    deploy: { model: "horde", count: 19, unitHp: 3500, concurrentCap: 7, reinforceInterval: 0.4, spawnRadius: 1500 },
     zoneRadius: 5000,
     modifiers: { sweepPeriodMul: 0.7 }, // 파문 잦게 — 군집전의 전장 박자 강화
   },
@@ -561,13 +572,13 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     id: "disband", name: "편대 해체 / DISBAND",
     brief: "저들은 편대를 이뤘다 — 축 하나를 고르면, 나머지가 무너진다.",
     goal: { type: "purge-all" },
-    fail: { respawns: 2, timeLimit: 300, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    fail: { respawns: 2, timeLimit: 360, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
     deploy: {
       model: "roster",
       units: [
-        { role: "marker", count: 4, hp: 1500, behavior: "hold" },
-        { role: "elite", count: 6, hp: 3500, formation: "ring", behavior: "patrol" },
-        { role: "kiter", count: 8, hp: 900, behavior: "escort", anchor: 1 },
+        { role: "marker", count: 1, hp: 15000, behavior: "hold" },
+        { role: "elite", count: 2, hp: 35000, formation: "ring", behavior: "patrol" },
+        { role: "kiter", count: 2, hp: 9000, behavior: "escort", anchor: 1 },
       ],
       spawnRadius: 1000,
     },
@@ -583,9 +594,9 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     deploy: {
       model: "roster",
       units: [
-        { role: "marker", count: 6, hp: 1200, behavior: "hold" },
-        { role: "rusher", count: 10, hp: 400, behavior: "escort", anchor: 0 },
-        { role: "kiter", count: 6, hp: 500, behavior: "escort", anchor: 0 },
+        { role: "marker", count: 2, hp: 12000, behavior: "hold" },
+        { role: "rusher", count: 2, hp: 4000, behavior: "escort", anchor: 0 },
+        { role: "kiter", count: 2, hp: 5000, behavior: "escort", anchor: 0 },
       ],
       spawnRadius: 1000,
     },
@@ -610,13 +621,13 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     id: "bodyguard", name: "호위 붕괴 / BODYGUARD",
     brief: "저 하나를 지키려 전부가 모였다 — 호위를 걷어내면 벽은 유리가 된다.",
     goal: { type: "purge-role", role: "elite" },
-    fail: { respawns: 2, timeLimit: 300, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    fail: { respawns: 2, timeLimit: 420, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
     deploy: {
       model: "roster",
       units: [
-        { role: "elite", count: 1, hp: 12000, shield: 0.3, behavior: "hold" },
-        { role: "rusher", count: 12, hp: 400, behavior: "escort", anchor: 0 },
-        { role: "kiter", count: 6, hp: 500, behavior: "escort", anchor: 0 },
+        { role: "elite", count: 1, hp: 120000, shield: 0.3, behavior: "hold" },
+        { role: "rusher", count: 3, hp: 4000, behavior: "escort", anchor: 0 },
+        { role: "kiter", count: 2, hp: 5000, behavior: "escort", anchor: 0 },
       ],
       spawnRadius: 900,
     },
@@ -656,7 +667,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     fail: { respawns: 2, timeLimit: 300, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
     deploy: {
       model: "roster",
-      units: [{ role: "elite", count: 7, hp: 4000, formation: "ring", behavior: "patrol" }],
+      units: [{ role: "elite", count: 2, hp: 40000, formation: "ring", behavior: "patrol" }],
       spawnRadius: 900,
     },
     zoneRadius: 3000,
@@ -671,10 +682,10 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     deploy: {
       model: "roster",
       units: [
-        { role: "marker", count: 4, hp: 1200, formation: "line", behavior: "hold" },
-        { role: "kiter", count: 8, hp: 900, behavior: "escort", anchor: 0 },
-        { role: "elite", count: 4, hp: 3000, formation: "line", behavior: "hold" },
-        { role: "rusher", count: 8, hp: 400, behavior: "escort", anchor: 2 },
+        { role: "marker", count: 1, hp: 12000, formation: "line", behavior: "hold" },
+        { role: "kiter", count: 2, hp: 9000, behavior: "escort", anchor: 0 },
+        { role: "elite", count: 1, hp: 30000, formation: "line", behavior: "hold" },
+        { role: "rusher", count: 2, hp: 4000, behavior: "escort", anchor: 2 },
       ],
       spawnRadius: 1400,
     },
@@ -687,7 +698,7 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     brief: "물러설 자리가 줄어든다 — 경계가 닫히기 전에 버텨라.",
     goal: { type: "survive", seconds: 240 },
     fail: { respawns: 2, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
-    deploy: { model: "horde", count: 130, unitHp: 300, concurrentCap: 45, reinforceInterval: 0.5, spawnRadius: 1400 },
+    deploy: { model: "horde", count: 16, unitHp: 3000, concurrentCap: 6, reinforceInterval: 0.5, spawnRadius: 1400 },
     zoneRadius: 4000,
     modifiers: { zoneShrink: { everySec: 45, step: 800, minRadius: 1200 } },
   },
@@ -716,9 +727,9 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     deploy: {
       model: "roster",
       units: [
-        { role: "elite", count: 5, hp: 3000 },
-        { role: "marker", count: 4, hp: 1200 },
-        { role: "kiter", count: 6, hp: 700 },
+        { role: "elite", count: 1, hp: 30000 },
+        { role: "marker", count: 1, hp: 12000 },
+        { role: "kiter", count: 2, hp: 7000 },
       ],
       spawnRadius: 900,
     },
@@ -736,9 +747,9 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     deploy: {
       model: "roster",
       units: [
-        { role: "cutter", count: 6, hp: 2200 },
-        { role: "marker", count: 3, hp: 1200 },
-        { role: "rusher", count: 6, hp: 900 },
+        { role: "cutter", count: 2, hp: 22000 },
+        { role: "marker", count: 1, hp: 12000 },
+        { role: "rusher", count: 2, hp: 9000 },
       ],
       spawnRadius: 1200,
     },
@@ -755,8 +766,8 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     deploy: {
       model: "roster",
       units: [
-        { role: "marker", count: 10, hp: 1100 },
-        { role: "rusher", count: 5, hp: 900 },
+        { role: "marker", count: 2, hp: 11000 },
+        { role: "rusher", count: 1, hp: 9000 },
       ],
       spawnRadius: 1300,
     },
@@ -774,9 +785,9 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
       model: "roster",
       units: [
         // hunt(접근 유영) — hold 배치는 시전 사거리(360m) 밖에 정박해 역행이 발동하지 않는다(e2e 검증)
-        { role: "rewinder", count: 2, hp: 7000 },
-        { role: "rusher", count: 8, hp: 1000 },
-        { role: "marker", count: 2, hp: 1200 },
+        { role: "rewinder", count: 1, hp: 70000 },
+        { role: "rusher", count: 2, hp: 10000 },
+        { role: "marker", count: 1, hp: 12000 },
       ],
       spawnRadius: 900,
     },
@@ -793,8 +804,8 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     deploy: {
       model: "roster",
       units: [
-        { role: "rusher", count: 8, hp: 1400, formation: "ring", behavior: "patrol" },
-        { role: "kiter", count: 6, hp: 1000, behavior: "hold" },
+        { role: "rusher", count: 2, hp: 14000, formation: "ring", behavior: "patrol" },
+        { role: "kiter", count: 2, hp: 10000, behavior: "hold" },
       ],
       spawnRadius: 700,
     },

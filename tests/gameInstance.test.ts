@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { GameInstance } from "../src/game/GameInstance";
+import { GameInstance, runDeploy } from "../src/game/GameInstance";
 import type { MissionSpec } from "../src/game/mission";
 import { FREE_ROAM_V2 as FREE_ROAM, DEFAULT_MISSIONS_V2, fromLegacy } from "../src/game/missionV2";
 
@@ -270,5 +270,133 @@ describe("GameInstance.playerCount — MP 인원", () => {
   it("players 배열 길이 반환", () => {
     const inst = new GameInstance({ mission: FREE_ROAM, players: makePlayers(3), enemies: makeEnemies() });
     expect(inst.playerCount).toBe(3);
+  });
+});
+
+// runDeploy — 미션 투입 디스패치. 미션 데이터(deploy 모델)를 실제 스폰 호출로 옮기는 유일한 지점이라
+// 잘못 라우팅되면 미션이 통째로 다른 전투가 된다. 퇴화 스펙(count 0 등)은 웨이브 폴백으로 흘러야 한다.
+describe("runDeploy — 투입 모델 디스패치", () => {
+  /** 호출된 메서드 이름과 인자를 기록하는 EnemyManager 스텁. */
+  const spy = () => {
+    const calls: { fn: string; args: unknown[] }[] = [];
+    const rec = (fn: string) => (...args: unknown[]) => { calls.push({ fn, args }); };
+    return {
+      calls,
+      em: {
+        startBurst: rec("startBurst"), startHorde: rec("startHorde"), startRoster: rec("startRoster"),
+        startBossDeploy: rec("startBossDeploy"), start: rec("start"),
+      } as any,
+    };
+  };
+  const only = (s: ReturnType<typeof spy>) => s.calls.map((c) => c.fn);
+
+  it("pyramid → startBurst", () => {
+    const s = spy();
+    runDeploy(s.em, { model: "pyramid", count: 20, totalHp: 1000, bossHp: 0, concurrentCap: 6, reinforceInterval: 1.5, spawnRadius: 400 }, true);
+    expect(only(s)).toEqual(["startBurst"]);
+  });
+
+  it("horde → startHorde", () => {
+    const s = spy();
+    runDeploy(s.em, { model: "horde", count: 40, unitHp: 200, concurrentCap: 10, reinforceInterval: 0.5, spawnRadius: 400 }, true);
+    expect(only(s)).toEqual(["startHorde"]);
+  });
+
+  it("roster → startRoster", () => {
+    const s = spy();
+    runDeploy(s.em, { model: "roster", units: [{ role: "elite", count: 3, hp: 900 }], spawnRadius: 400 }, true);
+    expect(only(s)).toEqual(["startRoster"]);
+  });
+
+  it("boss → startBossDeploy (count 게이트 없음 — 보스는 항상 투입)", () => {
+    const s = spy();
+    runDeploy(s.em, { model: "boss", groups: 1, groupHp: 5000, spawnRadius: 400 } as never, true);
+    expect(only(s)).toEqual(["startBossDeploy"]);
+  });
+
+  it("phased → 첫 페이즈를 재귀 투입", () => {
+    const s = spy();
+    runDeploy(s.em, {
+      model: "phased",
+      phases: [
+        { deploy: { model: "horde", count: 12, unitHp: 100, concurrentCap: 4, reinforceInterval: 1, spawnRadius: 300 } },
+        { deploy: { model: "roster", units: [{ role: "kiter", count: 2, hp: 500 }], spawnRadius: 300 } },
+      ],
+    } as never, true);
+    expect(only(s)).toEqual(["startHorde"]); // 2단계는 아직 투입되지 않는다
+  });
+
+  it("fresh 플래그가 그대로 전달된다", () => {
+    const s = spy();
+    runDeploy(s.em, { model: "roster", units: [{ role: "kiter", count: 1, hp: 100 }], spawnRadius: 100 }, false);
+    expect(s.calls[0].args[3]).toBe(false); // startRoster(units, radius, projections, fresh)
+  });
+
+  it("퇴화 스펙은 웨이브 폴백 — 미션이 조용히 빈 전장이 되지 않는다", () => {
+    for (const d of [
+      { model: "pyramid", count: 0, totalHp: 0, bossHp: 0, concurrentCap: 0, reinforceInterval: 1, spawnRadius: 100 },
+      { model: "horde", count: 0, unitHp: 1, concurrentCap: 1, reinforceInterval: 1, spawnRadius: 100 },
+      { model: "roster", units: [], spawnRadius: 100 },
+      { model: "phased", phases: [] },
+      { model: "none" },
+    ] as never[]) {
+      const s = spy();
+      runDeploy(s.em, d, true);
+      expect(only(s)).toEqual(["start"]);
+    }
+  });
+});
+
+// 전장 소탕 주입(2026-08-26) — evaluateMissionV2 는 rt.cleared 를 보고 생존/사수를 조기 성공시킨다.
+// GameInstance 가 그 값을 언제 true 로 넘기는지가 계약: **남은 페이즈가 있으면 지금 비어 있어도 아니다**.
+describe("GameInstance — cleared 주입", () => {
+  /** 투입이 일어나면 전장이 다시 채워진다 — 실제 EnemyManager 와 같게 fieldCleared 를 되돌린다. */
+  const enemies = (fieldCleared: boolean) => {
+    const em: any = { killCount: 0, roleKills: {}, observedCount: 0, fieldCleared };
+    const fill = () => { em.fieldCleared = false; };
+    em.startRoster = fill; em.startBurst = fill; em.startHorde = fill;
+    em.startBossDeploy = fill; em.start = fill;
+    return em;
+  };
+  const players = [{ isDead: false, spec: { move: { mode: "walk" } } } as any];
+  const mk = (mission: any, fieldCleared: boolean) =>
+    new GameInstance({ mission, enemies: enemies(fieldCleared), players } as any);
+
+  const survive = (deploy: any) => ({
+    id: "s", name: "s", goal: { type: "survive", seconds: 300 },
+    fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    deploy, zoneRadius: 1000,
+  });
+  const roster = { model: "roster", units: [{ role: "kiter", count: 2, hp: 100 }], spawnRadius: 100 };
+
+  it("전장이 비면 생존 미션이 즉시 성공한다", () => {
+    const inst = mk(survive(roster), true);
+    inst.start();
+    inst.update(1 / 60);
+    expect(inst.outcome.status).toBe("success");
+  });
+
+  it("적이 남아 있으면 계속 진행", () => {
+    const inst = mk(survive(roster), false);
+    inst.start();
+    inst.update(1 / 60);
+    expect(inst.outcome.status).toBe("active");
+  });
+
+  it("phased — 비었을 때 다음 페이즈가 투입되므로 미션이 끝나지 않는다", () => {
+    const phased = { model: "phased", phases: [{ deploy: roster }, { deploy: roster }] };
+    // advancePhase 가 평가 **직전**에 돌아 다음 페이즈를 투입한다 → 전장이 다시 차서 소탕이 아니다.
+    const inst = mk(survive(phased), true);
+    inst.start();
+    inst.update(1 / 60);
+    expect(inst.outcome.status).toBe("active");
+  });
+
+  it("phased — 마지막 페이즈까지 소진되면 소탕으로 종료", () => {
+    const phased = { model: "phased", phases: [{ deploy: roster }] }; // 페이즈 1개뿐
+    const inst = mk(survive(phased), true);
+    inst.start();
+    inst.update(1 / 60);
+    expect(inst.outcome.status).toBe("success");
   });
 });

@@ -80,13 +80,41 @@ describe("차원도약 — 실제 이동", () => {
   });
 
   it("리치가 12~25m 링 안으로 옮겨진다 — 플레이어 위에 겹치지 않는다", () => {
-    const em = makeManager(5);
+    // 리치 도약은 **거리가 벌어졌을 때만**(triggerMin) 발동한다 — 붙어 있으면 도약할 이유가 없고,
+    // 실제로 그때 도약시키면 링 바깥으로 물러나는 역효과가 난다(2026-08-25 실측: 3m → 20m).
+    // 따라서 도주하는 플레이어로 검증한다.
+    const pos = new THREE.Vector3(0, 2, 0);
+    const world = {
+      heightAt: () => 0, bounds: 100000, topAt: () => -Infinity,
+      resolveCollision: (x: number, z: number) => ({ x, z }),
+      segmentHitsBuilding: () => Infinity, buildings: null, update: () => {},
+    } as any;
+    const player = {
+      worldPosition: pos, isDead: false, spec: { move: { mode: "walk" } },
+      takeDamage: () => false, heal: () => {},
+    } as any;
+    const em = new EnemyManager(new THREE.Scene(), world, [player], NO_PHASE, lcg(5));
+    em.setSpawnMix("even");
     em.start(true);
-    const landed = captureLeaps(em, "rusher", 60 * 200, 5); // 정상 이동은 돌진 포함 프레임당 0.74m
-    expect(landed.length).toBeGreaterThan(0);
-    for (const { d } of landed) {
-      expect(d).toBeGreaterThanOrEqual(LEECH.minDist - 1); // 0m(플레이어 위)에 착지하지 않는다
-      expect(d).toBeLessThanOrEqual(LEECH.maxDist + 1);
+    // 링 판정은 **잠금 시점의 플레이어 위치** 기준이다. 착지 시점 기준으로 재면 안 된다: 잠금 후
+    // 1초 동안 플레이어가 19.44m 를 더 가므로, 링이 진행 방향 앞쪽에 잡히면 플레이어가 착지점으로
+    // 달려들어 거리가 0 에 가까워지고(= 매복 성공), 반대쪽이면 링 상한보다 멀어진다.
+    const wasLocked = new Map<any, boolean>();
+    const rings: number[] = [];
+    for (let i = 0; i < 60 * 200; i++) {
+      pos.x += 19.44 / 60; // 전력 도주 — 리치가 뒤처지며 도약 조건이 성립한다
+      em.update(1 / 60);
+      for (const e of alive(em, "rusher")) {
+        if (e.leapLocked && !wasLocked.get(e) && e.leapTarget) {
+          rings.push(Math.hypot(e.leapTarget.x - pos.x, e.leapTarget.z - pos.z));
+        }
+        wasLocked.set(e, e.leapLocked);
+      }
+    }
+    expect(rings.length).toBeGreaterThan(0);
+    for (const r of rings) {
+      expect(r).toBeGreaterThanOrEqual(LEECH.minDist - 1); // 플레이어 위에 겹치지 않는다
+      expect(r).toBeLessThanOrEqual(LEECH.maxDist + 1);
     }
   });
 
@@ -275,6 +303,102 @@ describe("차원도약 — 기각·취소 경로", () => {
         if (!e.leapTarget) continue;
         expect(Math.hypot(e.leapTarget.x, e.leapTarget.z)).toBeLessThanOrEqual(120);
       }
+    }
+  });
+});
+
+// 착지점 추적/잠금 — 시전 시작 시점에 굳히면 텔레그래프 3초 동안 플레이어가 40~50m 를 벗어나
+// 도약이 늘 빗나간다. 잠금 시점(lockSec)이 곧 회피 창의 길이다.
+describe("차원도약 — 착지점 추적과 잠금", () => {
+  /** 플레이어가 speed 로 직선 도주하는 매니저. */
+  const moving = (seed: number, speed: number) => {
+    const pos = new THREE.Vector3(0, 2, 0);
+    const world = {
+      heightAt: () => 0, bounds: 100000, topAt: () => -Infinity,
+      resolveCollision: (x: number, z: number) => ({ x, z }),
+      segmentHitsBuilding: () => Infinity, buildings: null, update: () => {},
+    } as any;
+    const player = {
+      worldPosition: pos, isDead: false, spec: { move: { mode: "walk" } },
+      takeDamage: () => false, heal: () => {},
+    } as any;
+    const em = new EnemyManager(new THREE.Scene(), world, [player], NO_PHASE, lcg(seed));
+    em.setSpawnMix("rusher");
+    return { em, pos, step: (dt = 1 / 60) => { pos.x += speed * dt; em.update(dt); } };
+  };
+
+  it("잠금 전에는 착지점이 플레이어를 따라간다", () => {
+    const { em, pos, step } = moving(5, 19.44);
+    em.start(true);
+    let moved = false;
+    for (let i = 0; i < 60 * 120 && !moved; i++) {
+      step();
+      for (const e of alive(em, "rusher")) {
+        if (e.leapCastLeft <= LEECH.lockSec || !e.leapTarget || e.leapLocked) continue;
+        const before = { x: e.leapTarget.x, z: e.leapTarget.z };
+        const px = pos.x;
+        for (let k = 0; k < 12; k++) step(); // 0.2초 진행 — 추적 주기(4프레임)를 여러 번 넘긴다
+        if (e.leapCastLeft > LEECH.lockSec && e.leapTarget) {
+          expect(pos.x).toBeGreaterThan(px); // 플레이어가 실제로 이동했고
+          moved = e.leapTarget.x !== before.x; // 착지점도 따라 움직였다
+        }
+        break;
+      }
+    }
+    expect(moved).toBe(true);
+  });
+
+  it("잠금 후에는 착지점이 고정된다 — 예고선이 멈추는 것이 신호", () => {
+    const { em, step } = moving(5, 19.44);
+    em.start(true);
+    let checked = false;
+    for (let i = 0; i < 60 * 120 && !checked; i++) {
+      step();
+      for (const e of alive(em, "rusher")) {
+        if (!e.leapLocked || !e.leapTarget || e.leapCastLeft <= 0) continue;
+        const fixed = { x: e.leapTarget.x, y: e.leapTarget.y, z: e.leapTarget.z };
+        while (e.leapCastLeft > 0) { // 발동 직전까지
+          step();
+          if (!e.leapTarget) break;
+          expect(e.leapTarget.x).toBe(fixed.x);
+          expect(e.leapTarget.y).toBe(fixed.y);
+          expect(e.leapTarget.z).toBe(fixed.z);
+        }
+        checked = true;
+        break;
+      }
+    }
+    expect(checked).toBe(true);
+  });
+
+  it("도주 중에도 착지가 링 안쪽으로 따라온다 — 확정 방식이면 40m 넘게 빗나간다", () => {
+    const { em, pos, step } = moving(5, 19.44);
+    em.start(true);
+    const prev = new Map<any, THREE.Vector3>();
+    const gaps: number[] = [];
+    for (let i = 0; i < 60 * 200; i++) {
+      step();
+      for (const e of alive(em, "rusher")) {
+        const p = e.group.position, b = prev.get(e);
+        if (b && b.distanceTo(p) > 5) gaps.push(Math.hypot(p.x - pos.x, p.z - pos.z));
+        prev.set(e, p.clone());
+      }
+    }
+    expect(gaps.length).toBeGreaterThan(0);
+    const avg = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+    // 1초분 변위(워커 12.7m)만 벗어나므로 링 상한 + 그 정도에 머문다
+    expect(avg).toBeLessThan(LEECH.maxDist + 15);
+  });
+
+  it("동시 상한은 순회 순서와 무관 — 이미 시전 중인 개체를 루프 전에 센다", () => {
+    // 배열 뒤쪽 개체가 먼저 시전 중이어도 앞쪽 개체가 상한을 넘겨 개시하면 안 된다.
+    const em = makeManager(29);
+    em.start(true);
+    for (let i = 0; i < 60 * 200; i++) {
+      em.update(1 / 60);
+      const cast = (em as any).enemies.filter((e: any) => e.state === "alive" && e.leapCastLeft > 0);
+      expect(cast.filter((e: any) => e.role === "kiter").length).toBeLessThanOrEqual(SKEETER.concurrentCap);
+      expect(cast.filter((e: any) => e.role === "rusher").length).toBeLessThanOrEqual(LEECH.concurrentCap);
     }
   });
 });

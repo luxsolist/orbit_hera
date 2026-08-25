@@ -4,20 +4,20 @@
   "name": "정화 작전 / PURGE",
   "goal": {
    "type": "purge",
-   "count": 45
+   "count": 6
   },
   "fail": {
    "respawns": 3,
-   "timeLimit": 300,
+   "timeLimit": 570,
    "maxBuildingLoss": 0,
    "maxLandmarkLoss": 0
   },
   "deploy": {
    "model": "pyramid",
-   "count": 45,
-   "totalHp": 70000,
-   "bossHp": 10000,
-   "concurrentCap": 26,
+   "count": 6,
+   "totalHp": 168182,
+   "bossHp": 100000,
+   "concurrentCap": 3,
    "reinforceInterval": 1.5,
    "spawnRadius": 1500
   },
@@ -40,10 +40,10 @@
   },
   "deploy": {
    "model": "pyramid",
-   "count": 45,
-   "totalHp": 70000,
-   "bossHp": 10000,
-   "concurrentCap": 26,
+   "count": 6,
+   "totalHp": 168182,
+   "bossHp": 100000,
+   "concurrentCap": 3,
    "reinforceInterval": 1.5,
    "spawnRadius": 1500
   },
@@ -69,10 +69,10 @@
   },
   "deploy": {
    "model": "pyramid",
-   "count": 45,
-   "totalHp": 70000,
-   "bossHp": 10000,
-   "concurrentCap": 26,
+   "count": 6,
+   "totalHp": 168182,
+   "bossHp": 100000,
+   "concurrentCap": 3,
    "reinforceInterval": 1.5,
    "spawnRadius": 1500
   },
@@ -97,10 +97,10 @@
   },
   "deploy": {
    "model": "pyramid",
-   "count": 45,
-   "totalHp": 70000,
-   "bossHp": 10000,
-   "concurrentCap": 26,
+   "count": 6,
+   "totalHp": 168182,
+   "bossHp": 100000,
+   "concurrentCap": 3,
    "reinforceInterval": 1.5,
    "spawnRadius": 1500
   },
@@ -112,20 +112,20 @@
   "brief": "얽힘이 짙은 구역이다. 무너뜨리지 말고 걷어내라.",
   "goal": {
    "type": "purge",
-   "count": 40
+   "count": 5
   },
   "fail": {
    "respawns": 2,
-   "timeLimit": 300,
+   "timeLimit": 510,
    "maxBuildingLoss": 15,
    "maxLandmarkLoss": 0
   },
   "deploy": {
    "model": "pyramid",
-   "count": 40,
-   "totalHp": 60000,
-   "bossHp": 10000,
-   "concurrentCap": 22,
+   "count": 5,
+   "totalHp": 151282,
+   "bossHp": 100000,
+   "concurrentCap": 3,
    "reinforceInterval": 1.5,
    "spawnRadius": 1200
   },
@@ -151,10 +151,10 @@
   },
   "deploy": {
    "model": "pyramid",
-   "count": 45,
-   "totalHp": 70000,
-   "bossHp": 10000,
-   "concurrentCap": 26,
+   "count": 6,
+   "totalHp": 168182,
+   "bossHp": 100000,
+   "concurrentCap": 3,
    "reinforceInterval": 1.5,
    "spawnRadius": 1500
   },
@@ -179,9 +179,9 @@
   },
   "deploy": {
    "model": "horde",
-   "count": 150,
-   "unitHp": 350,
-   "concurrentCap": 55,
+   "count": 19,
+   "unitHp": 3500,
+   "concurrentCap": 7,
    "reinforceInterval": 0.4,
    "spawnRadius": 1500
   },
@@ -199,7 +199,7 @@
   },
   "fail": {
    "respawns": 2,
-   "timeLimit": 300,
+   "timeLimit": 360,
    "maxBuildingLoss": 0,
    "maxLandmarkLoss": 0
   },
@@ -208,21 +208,21 @@
    "units": [
     {
      "role": "marker",
-     "count": 4,
-     "hp": 1500,
+     "count": 1,
+     "hp": 15000,
      "behavior": "hold"
     },
     {
      "role": "elite",
-     "count": 6,
-     "hp": 3500,
+     "count": 2,
+     "hp": 35000,
      "formation": "ring",
      "behavior": "patrol"
     },
     {
      "role": "kiter",
-     "count": 8,
-     "hp": 900,
+     "count": 2,
+     "hp": 9000,
      "behavior": "escort",
      "anchor": 1
     }
@@ -250,21 +250,21 @@
    "units": [
     {
      "role": "marker",
-     "count": 6,
-     "hp": 1200,
+     "count": 2,
+     "hp": 12000,
      "behavior": "hold"
     },
     {
      "role": "rusher",
-     "count": 10,
-     "hp": 400,
+     "count": 2,
+     "hp": 4000,
      "behavior": "escort",
      "anchor": 0
     },
     {
      "role": "kiter",
-     "count": 6,
-     "hp": 500,
+     "count": 2,
+     "hp": 5000,
      "behavior": "escort",
      "anchor": 0
     }
@@ -315,7 +315,7 @@
   },
   "fail": {
    "respawns": 2,
-   "timeLimit": 300,
+   "timeLimit": 420,
    "maxBuildingLoss": 0,
    "maxLandmarkLoss": 0
   },
@@ -325,21 +325,21 @@
     {
      "role": "elite",
      "count": 1,
-     "hp": 12000,
+     "hp": 120000,
      "shield": 0.3,
      "behavior": "hold"
     },
     {
      "role": "rusher",
-     "count": 12,
-     "hp": 400,
+     "count": 3,
+     "hp": 4000,
      "behavior": "escort",
      "anchor": 0
     },
     {
      "role": "kiter",
-     "count": 6,
-     "hp": 500,
+     "count": 2,
+     "hp": 5000,
      "behavior": "escort",
      "anchor": 0
     }
@@ -424,8 +424,8 @@
    "units": [
     {
      "role": "elite",
-     "count": 7,
-     "hp": 4000,
+     "count": 2,
+     "hp": 40000,
      "formation": "ring",
      "behavior": "patrol"
     }
@@ -452,29 +452,29 @@
    "units": [
     {
      "role": "marker",
-     "count": 4,
-     "hp": 1200,
+     "count": 1,
+     "hp": 12000,
      "formation": "line",
      "behavior": "hold"
     },
     {
      "role": "kiter",
-     "count": 8,
-     "hp": 900,
+     "count": 2,
+     "hp": 9000,
      "behavior": "escort",
      "anchor": 0
     },
     {
      "role": "elite",
-     "count": 4,
-     "hp": 3000,
+     "count": 1,
+     "hp": 30000,
      "formation": "line",
      "behavior": "hold"
     },
     {
      "role": "rusher",
-     "count": 8,
-     "hp": 400,
+     "count": 2,
+     "hp": 4000,
      "behavior": "escort",
      "anchor": 2
     }
@@ -500,9 +500,9 @@
   },
   "deploy": {
    "model": "horde",
-   "count": 130,
-   "unitHp": 300,
-   "concurrentCap": 45,
+   "count": 16,
+   "unitHp": 3000,
+   "concurrentCap": 6,
    "reinforceInterval": 0.5,
    "spawnRadius": 1400
   },
@@ -586,18 +586,18 @@
    "units": [
     {
      "role": "elite",
-     "count": 5,
-     "hp": 3000
+     "count": 1,
+     "hp": 30000
     },
     {
      "role": "marker",
-     "count": 4,
-     "hp": 1200
+     "count": 1,
+     "hp": 12000
     },
     {
      "role": "kiter",
-     "count": 6,
-     "hp": 700
+     "count": 2,
+     "hp": 7000
     }
    ],
    "spawnRadius": 900
@@ -627,18 +627,18 @@
    "units": [
     {
      "role": "cutter",
-     "count": 6,
-     "hp": 2200
+     "count": 2,
+     "hp": 22000
     },
     {
      "role": "marker",
-     "count": 3,
-     "hp": 1200
+     "count": 1,
+     "hp": 12000
     },
     {
      "role": "rusher",
-     "count": 6,
-     "hp": 900
+     "count": 2,
+     "hp": 9000
     }
    ],
    "spawnRadius": 1200
@@ -668,13 +668,13 @@
    "units": [
     {
      "role": "marker",
-     "count": 10,
-     "hp": 1100
+     "count": 2,
+     "hp": 11000
     },
     {
      "role": "rusher",
-     "count": 5,
-     "hp": 900
+     "count": 1,
+     "hp": 9000
     }
    ],
    "spawnRadius": 1300
@@ -704,18 +704,18 @@
    "units": [
     {
      "role": "rewinder",
-     "count": 2,
-     "hp": 7000
+     "count": 1,
+     "hp": 70000
     },
     {
      "role": "rusher",
-     "count": 8,
-     "hp": 1000
+     "count": 2,
+     "hp": 10000
     },
     {
      "role": "marker",
-     "count": 2,
-     "hp": 1200
+     "count": 1,
+     "hp": 12000
     }
    ],
    "spawnRadius": 900
@@ -745,15 +745,15 @@
    "units": [
     {
      "role": "rusher",
-     "count": 8,
-     "hp": 1400,
+     "count": 2,
+     "hp": 14000,
      "formation": "ring",
      "behavior": "patrol"
     },
     {
      "role": "kiter",
-     "count": 6,
-     "hp": 1000,
+     "count": 2,
+     "hp": 10000,
      "behavior": "hold"
     }
    ],

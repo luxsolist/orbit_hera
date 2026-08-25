@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import {
   toLegacy, fromLegacy, evaluateMissionV2, runnableV2, missionDurationV2, deployKillCredits,
   deployRoleCredits, deployRoleName, missionObjectiveTextV2, missionProgressTextV2, resonanceScore,
-  DEFAULT_MISSIONS_V2, FREE_ROAM_V2, offTargetElapsed, type MissionSpecV2,
+  DEFAULT_MISSIONS_V2, FREE_ROAM_V2, offTargetElapsed, pickMissionV2, type MissionSpecV2,
 } from "../src/game/missionV2";
 import { DEFAULT_MISSIONS, type MissionRuntime } from "../src/game/mission";
 import { normalizeMissionPool } from "../src/game/missions";
@@ -97,8 +97,10 @@ describe("evaluateMissionV2 — 복합 실패 조건(훅 ②)", () => {
   const surgical = DEFAULT_MISSIONS_V2.find((m) => m.id === "surgical")!;
 
   it("격멸 + 건물 한도 — 격멸 진행 중 건물 한도 도달이면 실패(패턴 19 성립)", () => {
-    expect(evaluateMissionV2(surgical, rt({ kills: 20, buildingsDestroyed: 14 })).status).toBe("active");
-    const o = evaluateMissionV2(surgical, rt({ kills: 20, buildingsDestroyed: 15 }));
+    // 목표치는 스펙에서 파생한다 — 물량 재조정(2026-08-25 HP×10·수 감축) 때마다 깨지지 않게.
+    const half = Math.floor((surgical.goal as { count: number }).count / 2);
+    expect(evaluateMissionV2(surgical, rt({ kills: half, buildingsDestroyed: 14 })).status).toBe("active");
+    const o = evaluateMissionV2(surgical, rt({ kills: half, buildingsDestroyed: 15 }));
     expect(o.status).toBe("failed");
     expect(o.reason).toContain("도시 함락");
   });
@@ -138,8 +140,8 @@ describe("evaluateMissionV2 — 복합 실패 조건(훅 ②)", () => {
 describe("v2 런타임 부속 — duration/runnable/로더 정규화", () => {
   it("missionDurationV2 — 격멸형=실패 타이머, 생존/사수형=승리 타이머, 탐방=0", () => {
     const byId = (id: string) => DEFAULT_MISSIONS_V2.find((m) => m.id === id)!;
-    expect(missionDurationV2(byId("purge"))).toBe(300);
-    expect(missionDurationV2(byId("hold-city"))).toBe(300);
+    expect(missionDurationV2(byId("purge"))).toBe(byId("purge").fail.timeLimit); //   격멸형 = 실패 타이머
+    expect(missionDurationV2(byId("hold-city"))).toBe(300); //                          사수형 = 승리 타이머(hold)
     expect(missionDurationV2(byId("survive"))).toBe(300);
     expect(missionDurationV2(FREE_ROAM_V2)).toBe(0);
   });
@@ -174,8 +176,10 @@ describe("v2 런타임 부속 — duration/runnable/로더 정규화", () => {
 
   it("deployRoleCredits — 직무별 목표치(roster/boss 만 결정적, 그 외 0)", () => {
     const roster = DEFAULT_MISSIONS_V2.find((m) => m.id === "brand-hunt")!.deploy;
-    expect(deployRoleCredits(roster, "marker")).toBe(6);
-    expect(deployRoleCredits(roster, "rusher")).toBe(10);
+    const cnt = (r: string) => (roster as { units: { role: string; count: number }[] }).units
+      .filter((u) => u.role === r).reduce((a, u) => a + u.count, 0);
+    expect(deployRoleCredits(roster, "marker")).toBe(cnt("marker"));
+    expect(deployRoleCredits(roster, "rusher")).toBe(cnt("rusher"));
     expect(deployRoleCredits(roster, "elite")).toBe(0);
     const boss = DEFAULT_MISSIONS_V2.find((m) => m.id === "triple-projection")!.deploy;
     expect(deployRoleCredits(boss, "boss")).toBe(1);
@@ -185,28 +189,34 @@ describe("v2 런타임 부속 — duration/runnable/로더 정규화", () => {
 
   it("purge-role 평가(훅 ③) — 대상 직무 처치만 목표에 잡히고, 잡몹 처치는 무시된다", () => {
     const hunt = DEFAULT_MISSIONS_V2.find((m) => m.id === "brand-hunt")!;
-    // 잡몹 16기를 다 잡아도(총 kills 16) 소인체 0 이면 진행 0
-    const trashOnly = rt({ kills: 16, roleKills: { rusher: 10, kiter: 6 } });
+    const N = deployRoleCredits(hunt.deploy, "marker"); // 목표치 = 투입 소인체 수(스펙 파생)
+    // 잡몹만 다 잡아도 소인체 0 이면 진행 0
+    // 잡몹만 잡은 상태. 비표적 처치는 offTargetPenalty 로 시간을 깎으므로 투입 수만큼만 센다
+    // (99 처럼 과장하면 깎인 시간이 제한을 넘겨 '실패'가 나온다 — 그건 다른 계약이다).
+    const trash = deployKillCredits(hunt.deploy) - N;
+    const trashOnly = rt({ kills: trash, roleKills: { rusher: trash } });
     expect(evaluateMissionV2(hunt, trashOnly).status).toBe("active");
     expect(evaluateMissionV2(hunt, trashOnly).progress).toBe(0);
-    // 소인체 6기 전멸 → 잡몹이 남아 있어도 승리
-    const hunted = rt({ kills: 6, roleKills: { marker: 6 } });
+    // 소인체 전멸 → 잡몹이 남아 있어도 승리
+    const hunted = rt({ kills: N, roleKills: { marker: N } });
     expect(evaluateMissionV2(hunt, hunted).status).toBe("success");
-    expect(evaluateMissionV2(hunt, rt({ roleKills: { marker: 5 } })).progress).toBeCloseTo(5 / 6, 6);
+    expect(evaluateMissionV2(hunt, rt({ roleKills: { marker: N - 1 } })).progress).toBeCloseTo((N - 1) / N, 6);
     // 복합 실패도 그대로 적용
-    expect(evaluateMissionV2(hunt, rt({ roleKills: { marker: 5 }, deaths: 3 })).status).toBe("failed");
+    expect(evaluateMissionV2(hunt, rt({ roleKills: { marker: N - 1 }, deaths: 3 })).status).toBe("failed");
   });
 
   it("purge-role 표면 문구 — 직무 표시명(§8.2 허용 어휘), 인식 Ⅰ 기본값(revealed 생략)", () => {
     const hunt = DEFAULT_MISSIONS_V2.find((m) => m.id === "brand-hunt")!;
-    expect(missionObjectiveTextV2(hunt)).toBe("소인체 전멸 — 6기 / HUNT");
-    expect(missionProgressTextV2(hunt, rt({ roleKills: { marker: 2 } }))).toBe("소인체 2 / 6");
+    const N = deployRoleCredits(hunt.deploy, "marker");
+    expect(missionObjectiveTextV2(hunt)).toBe(`소인체 전멸 — ${N}기 / HUNT`);
+    expect(missionProgressTextV2(hunt, rt({ roleKills: { marker: 2 } }))).toBe(`소인체 2 / ${N}`);
   });
 
   it("명칭 갱신(§8.3) — revealed=true 면 직무명이 '투영체'로 합쳐진다(근원=boss 만 구분 유지)", () => {
     const hunt = DEFAULT_MISSIONS_V2.find((m) => m.id === "brand-hunt")!;
-    expect(missionObjectiveTextV2(hunt, true)).toBe("투영체 전멸 — 6기 / HUNT");
-    expect(missionProgressTextV2(hunt, rt({ roleKills: { marker: 2 } }), true)).toBe("투영체 2 / 6");
+    const N = deployRoleCredits(hunt.deploy, "marker");
+    expect(missionObjectiveTextV2(hunt, true)).toBe(`투영체 전멸 — ${N}기 / HUNT`);
+    expect(missionProgressTextV2(hunt, rt({ roleKills: { marker: 2 } }), true)).toBe(`투영체 2 / ${N}`);
     expect(deployRoleName("rewinder", true)).toBe("투영체");
     expect(deployRoleName("cutter", false)).toBe("절단체");
     expect(deployRoleName("boss", true)).toBe("근원 투영체"); // 근원은 계시 후에도 구분 유지
@@ -222,12 +232,13 @@ describe("v2 런타임 부속 — duration/runnable/로더 정규화", () => {
     })).toBe(false); // 확률 혼합 투입 — 목표치 도출 불가
   });
 
-  it("purge-all 평가 — 스펙 도출 목표치로 성공/진행(편대 해체 = 18기)", () => {
+  it("purge-all 평가 — 목표치는 투입 스펙에서 도출(편대 해체)", () => {
     const disband = DEFAULT_MISSIONS_V2.find((m) => m.id === "disband")!;
-    expect(evaluateMissionV2(disband, rt({ kills: 17 })).status).toBe("active");
-    expect(evaluateMissionV2(disband, rt({ kills: 17 })).progress).toBeCloseTo(17 / 18, 6);
-    expect(evaluateMissionV2(disband, rt({ kills: 18 })).status).toBe("success");
-    expect(evaluateMissionV2(disband, rt({ kills: 0, elapsed: 300 })).status).toBe("failed"); // 시간 초과
+    const N = deployKillCredits(disband.deploy); // 별도 목표 수치 없이 투입에서 파생
+    expect(evaluateMissionV2(disband, rt({ kills: N - 1 })).status).toBe("active");
+    expect(evaluateMissionV2(disband, rt({ kills: N - 1 })).progress).toBeCloseTo((N - 1) / N, 6);
+    expect(evaluateMissionV2(disband, rt({ kills: N })).status).toBe("success");
+    expect(evaluateMissionV2(disband, rt({ kills: 0, elapsed: disband.fail.timeLimit })).status).toBe("failed"); // 시간 초과
   });
 
   it("훅 ⑤⑥ 크레딧 — boss groups·phased 합산", () => {
@@ -345,5 +356,208 @@ describe("runnableV2 — 신규 변조 지원", () => {
   });
   it("미지 변조는 여전히 제외", () => {
     expect(runnableV2({ ...base, modifiers: { bogus: 1 } as never })).toBe(false);
+  });
+});
+
+// HUD 문자열·평가 분기 — 목표 유형마다 갈리는 순수 분기라 조용히 깨져도 테스트 없이는 안 보인다
+// (화면엔 뭔가 뜨긴 하므로). guard 는 성공/실패 양쪽 전이가 모두 미검증이었다.
+describe("evaluateMissionV2 — guard 전이", () => {
+  const RT = (o: Partial<MissionRuntime> = {}): MissionRuntime =>
+    ({ elapsed: 0, kills: 0, buildingsDestroyed: 0, landmarksDestroyed: 0, deaths: 0, ...o });
+  const guard = (over: Partial<MissionSpecV2> = {}): MissionSpecV2 => ({
+    id: "g", name: "g",
+    goal: { type: "guard", target: "buildings", hold: 100 },
+    fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 5, maxLandmarkLoss: 0 },
+    deploy: { model: "none" }, zoneRadius: 1000, ...over,
+  });
+
+  it("hold 도달 = 성공", () => {
+    const r = evaluateMissionV2(guard(), RT({ elapsed: 100 }));
+    expect(r.status).toBe("success");
+    expect(r.progress).toBe(1);
+  });
+
+  it("진행률은 elapsed/hold", () => {
+    expect(evaluateMissionV2(guard(), RT({ elapsed: 25 })).progress).toBeCloseTo(0.25, 6);
+  });
+
+  it("손실 한도 도달 = 실패 — 시간이 남아 있어도", () => {
+    const r = evaluateMissionV2(guard(), RT({ elapsed: 10, buildingsDestroyed: 5 }));
+    expect(r.status).toBe("failed");
+  });
+
+  it("한도 미만이면 계속 진행", () => {
+    expect(evaluateMissionV2(guard(), RT({ elapsed: 10, buildingsDestroyed: 4 })).status).toBe("active");
+  });
+});
+
+describe("missionObjectiveTextV2 — 목표 유형별 문안", () => {
+  const base: MissionSpecV2 = {
+    id: "t", name: "t", goal: { type: "purge", count: 5 },
+    fail: { respawns: 1, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    deploy: { model: "none" }, zoneRadius: 0,
+  };
+  const withGoal = (goal: MissionSpecV2["goal"], over: Partial<MissionSpecV2> = {}) =>
+    missionObjectiveTextV2({ ...base, goal, ...over });
+
+  it("survive / free-roam", () => {
+    expect(withGoal({ type: "survive", seconds: 300 })).toContain("SURVIVE");
+    expect(withGoal({ type: "free-roam" })).toContain("EXPLORE");
+  });
+
+  it("guard — 건물은 손실 한도, 랜드마크는 허용 파괴 수를 명시", () => {
+    expect(withGoal({ type: "guard", target: "buildings", hold: 300 },
+      { fail: { ...base.fail, maxBuildingLoss: 10 } })).toContain("10채 미만");
+    // 랜드마크 한도 1 = 1채 잃으면 실패 → 허용 파괴 0
+    expect(withGoal({ type: "guard", target: "landmarks", hold: 300 },
+      { fail: { ...base.fail, maxLandmarkLoss: 1 } })).toContain("파괴 0");
+    expect(withGoal({ type: "guard", target: "landmarks", hold: 300 },
+      { fail: { ...base.fail, maxLandmarkLoss: 3 } })).toContain("≤2");
+  });
+
+  it("suture / score / experiment — 대기 콘텐츠도 문안은 존재", () => {
+    expect(withGoal({ type: "suture" } as never)).toContain("SUTURE");
+    expect(withGoal({ type: "score", target: 1000 } as never)).toContain("RESONATE");
+    expect(withGoal({ type: "experiment", targets: 2, hold: 3 } as never)).toContain("OBSERVE");
+  });
+});
+
+describe("missionProgressTextV2 — 손실 병기", () => {
+  const RT = (o: Partial<MissionRuntime> = {}): MissionRuntime =>
+    ({ elapsed: 0, kills: 0, buildingsDestroyed: 0, landmarksDestroyed: 0, deaths: 0, ...o });
+  const spec = (over: Partial<MissionSpecV2>): MissionSpecV2 => ({
+    id: "t", name: "t", goal: { type: "purge", count: 10 },
+    fail: { respawns: 1, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    deploy: { model: "none" }, zoneRadius: 0, ...over,
+  });
+
+  it("건물 손실 한도가 있으면 진행 문자열에 병기", () => {
+    const s = spec({ fail: { respawns: 1, timeLimit: 0, maxBuildingLoss: 8, maxLandmarkLoss: 0 } });
+    expect(missionProgressTextV2(s, RT({ kills: 3, buildingsDestroyed: 2 }))).toContain("손실 2 / 8");
+  });
+
+  it("랜드마크 상실은 guard 에서 중복되지 않는다 — 본문이 이미 말하므로 병기를 뺀다", () => {
+    const f = { respawns: 1, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 2 };
+    // 비-guard: 진행 본문 뒤에 한도 병기로 붙는다
+    expect(missionProgressTextV2(spec({ fail: f }), RT({ kills: 3, landmarksDestroyed: 1 }))).toBe("3 / 10 · 상실 1");
+    // guard(랜드마크): "상실 N" 자체가 본문 — 한 번만 나온다
+    const g = spec({ goal: { type: "guard", target: "landmarks", hold: 100 }, fail: f });
+    expect(missionProgressTextV2(g, RT({ landmarksDestroyed: 1 }))).toBe("상실 1");
+    expect(missionProgressTextV2(g, RT({ landmarksDestroyed: 0 }))).toBe("사수 중");
+  });
+
+  it("guard(건물)은 손실/한도를 본문으로 — 병기 없이", () => {
+    const g = spec({
+      goal: { type: "guard", target: "buildings", hold: 100 },
+      fail: { respawns: 1, timeLimit: 0, maxBuildingLoss: 8, maxLandmarkLoss: 0 },
+    });
+    expect(missionProgressTextV2(g, RT({ buildingsDestroyed: 2 }))).toBe("손실 2 / 8");
+  });
+
+  it("한도가 없으면 병기하지 않는다", () => {
+    expect(missionProgressTextV2(spec({}), RT({ kills: 3 }))).toBe("3 / 10");
+  });
+});
+
+// pickMissionV2 — 캠페인 선택기(pickCampaignMission)가 null 일 때의 폴백 경로. 전장 진입을 막지
+// 않는 것이 계약이라 빈 풀에서도 반드시 무언가를 돌려줘야 한다.
+describe("pickMissionV2 — 비례 선택 + 폴백", () => {
+  const pool = DEFAULT_MISSIONS_V2.slice(0, 4);
+
+  it("빈 풀은 탐방으로 폴백 — 전투 진입이 막히지 않는다", () => {
+    expect(pickMissionV2([], 0.5)).toBe(FREE_ROAM_V2);
+  });
+
+  it("u∈[0,1) 를 인덱스에 비례 배분", () => {
+    expect(pickMissionV2(pool, 0)).toBe(pool[0]);
+    expect(pickMissionV2(pool, 0.26)).toBe(pool[1]);
+    expect(pickMissionV2(pool, 0.99)).toBe(pool[3]);
+  });
+
+  it("u 가 범위를 벗어나도 클램프 — 인덱스 밖 접근 없음", () => {
+    expect(pickMissionV2(pool, 1)).toBe(pool[pool.length - 1]);
+    expect(pickMissionV2(pool, 1.5)).toBe(pool[pool.length - 1]);
+    expect(pickMissionV2(pool, -1)).toBe(pool[0]);
+  });
+});
+
+// phased 투입의 재귀 집계 — 페이즈 안에 다시 투입 스펙이 들어가므로, 재귀를 빼먹으면 목표 개체수가
+// 0 으로 잡혀 purge-all 이 즉시 성공해 버린다.
+describe("투입 집계 — phased 재귀", () => {
+  const inner = { model: "roster", units: [{ role: "kiter", count: 3, hp: 100 }, { role: "marker", count: 2, hp: 100 }], spawnRadius: 100 } as never;
+  const phased = { model: "phased", phases: [{ deploy: inner }, { deploy: inner }] } as never;
+
+  it("deployKillCredits — 전 페이즈 합산", () => {
+    expect(deployKillCredits(inner)).toBe(5);
+    expect(deployKillCredits(phased)).toBe(10);
+  });
+
+  it("deployRoleCredits — 직무별로 전 페이즈 합산", () => {
+    expect(deployRoleCredits(phased, "kiter")).toBe(6);
+    expect(deployRoleCredits(phased, "marker")).toBe(4);
+    expect(deployRoleCredits(phased, "rusher")).toBe(0);
+  });
+
+  it("알 수 없는 모델은 0 — 방어적 기본값", () => {
+    expect(deployKillCredits({ model: "none" } as never)).toBe(0);
+  });
+});
+
+// 전장 소탕(2026-08-26) — 살아있는 개체도 대기 투입도 없으면 미션이 즉시 끝난다.
+// 개체 수를 줄인 뒤 "다 잡았는데 제한시간까지 빈 전장에서 대기" 가 드러나 넣은 계약이다.
+describe("evaluateMissionV2 — 전장 소탕 종료", () => {
+  const RT = (o: Partial<MissionRuntime> = {}): MissionRuntime =>
+    ({ elapsed: 0, kills: 0, buildingsDestroyed: 0, landmarksDestroyed: 0, deaths: 0, ...o });
+  const spec = (goal: MissionSpecV2["goal"], over: Partial<MissionSpecV2> = {}): MissionSpecV2 => ({
+    id: "t", name: "t", goal,
+    fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
+    deploy: { model: "roster", units: [{ role: "kiter", count: 4, hp: 100 }], spawnRadius: 100 },
+    zoneRadius: 1000, ...over,
+  });
+
+  it("생존 — 소탕이면 타이머를 다 채우지 않아도 성공", () => {
+    const s = spec({ type: "survive", seconds: 300 });
+    expect(evaluateMissionV2(s, RT({ elapsed: 10 })).status).toBe("active");
+    const o = evaluateMissionV2(s, RT({ elapsed: 10, cleared: true }));
+    expect(o.status).toBe("success");
+    expect(o.reason).toContain("소탕");
+  });
+
+  it("사수 — 소탕이면 즉시 성공", () => {
+    const s = spec({ type: "guard", target: "buildings", hold: 300 });
+    expect(evaluateMissionV2(s, RT({ elapsed: 10 })).status).toBe("active");
+    expect(evaluateMissionV2(s, RT({ elapsed: 10, cleared: true })).status).toBe("success");
+  });
+
+  it("실패 조건이 소탕보다 우선 — 마지막 적을 잡는 순간 리스폰이 소진돼도 실패", () => {
+    const s = spec({ type: "survive", seconds: 300 });
+    expect(evaluateMissionV2(s, RT({ elapsed: 10, cleared: true, deaths: 4 })).status).toBe("failed");
+  });
+
+  it("격멸 — 소탕했는데 목표 미달이면 도달 불가로 즉시 실패(빈 전장 대기 방지)", () => {
+    const s = spec({ type: "purge", count: 99 }, { fail: { respawns: 3, timeLimit: 300, maxBuildingLoss: 0, maxLandmarkLoss: 0 } });
+    expect(evaluateMissionV2(s, RT({ kills: 4 })).status).toBe("active");
+    const o = evaluateMissionV2(s, RT({ kills: 4, cleared: true }));
+    expect(o.status).toBe("failed");
+    expect(o.reason).toContain("표적 소진");
+  });
+
+  it("격멸 — 목표를 채웠으면 소탕 여부와 무관하게 성공(성공 우선)", () => {
+    const s = spec({ type: "purge", count: 4 });
+    expect(evaluateMissionV2(s, RT({ kills: 4, cleared: true })).status).toBe("success");
+  });
+
+  it("동시 조사 — 소탕은 달성 불가 확정이므로 즉시 실패", () => {
+    const s = spec({ type: "experiment", targets: 2, hold: 3 } as never,
+      { fail: { respawns: 3, timeLimit: 420, maxBuildingLoss: 0, maxLandmarkLoss: 0 } });
+    expect(evaluateMissionV2(s, RT({ elapsed: 10 })).status).toBe("active");
+    const o = evaluateMissionV2(s, RT({ elapsed: 10, cleared: true }));
+    expect(o.status).toBe("failed");
+    expect(o.reason).toContain("표적 소진");
+  });
+
+  it("cleared 미지정은 종전 동작 — 구 런타임 호환", () => {
+    const s = spec({ type: "survive", seconds: 300 });
+    expect(evaluateMissionV2(s, RT({ elapsed: 10 })).status).toBe("active");
   });
 });
