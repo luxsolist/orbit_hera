@@ -44,10 +44,12 @@ v1 은 `kind` 하나에 승리·실패·투입이 뭉쳐 있어 패턴 확장이
 | `goal` | 승리 조건 1개. `purge{count}` / `purge-role{role}` / `purge-all` / `survive{seconds}` / `guard{target: "landmarks"\|"buildings", hold}` / `suture{gauge}` / `score{target}` |
 | `fail.respawns` | 리스폰 예산(<0 무한). 초과 시 실패 |
 | `fail.timeLimit` | 격멸형 시간 초과 실패(초). 0 = 무제한. `survive`/`guard` 는 goal 의 `seconds`/`hold` 가 승리 타이머 |
+| *(전장 소탕)* | 런타임 입력 `cleared`(살아있는 개체 0 + 대기 투입 0 + 남은 페이즈 0) — **생존/사수는 즉시 성공**, 격멸계는 목표 미달이면 도달 불가로 즉시 실패, `experiment` 는 조사 대상이 없으므로 즉시 실패. 2026-08-26 추가 |
 | `fail.maxBuildingLoss` / `maxLandmarkLoss` | 손실 한도(도달 시 실패). 0 = 미사용 — **모든 goal 과 조합 가능**(복합 제약) |
 | `deploy` | 투입 모델(§1 표). `roster.units[] = { role, count, hp, shield?, formation?, behavior?, anchor? }` — **진형** cluster(밀집)/ring(중심 포위)/line(전선) · **행동** hunt/hold(거점 고수)/patrol(배치점 순회)/escort(anchor 유닛 추종). hunt 외 행동도 사거리 내 기회 공격은 수행하며 **피격 시 진형을 버리고 hunt 전환** |
+| `spawnMix` | 전장 스폰 구성 — `"kiter"`/`"rusher"`/`"even"`(기본). **드론 종류와 무관**하게 적 구성을 미션이 선언한다(2026-08-25). pyramid·horde·웨이브 경로에만 적용(로스터/보스는 `role` 직접 지정) |
 | `zoneRadius` | 작전구역(m). 0 = 무제한 |
-| `modifiers` | `sweepPeriodMul` · `zoneShrink{everySec, step, minRadius}` · `freqRegenMul` · `aggro` · `buildingBrands` · `offTargetPenalty` — 전부 선택 |
+| `modifiers` | `sweepPeriodMul` · `zoneShrink{everySec, step, minRadius}` · `freqRegenMul` · `leapChanceMul`/`leapCdMul`(차원도약 빈도·간격) · `aggro` · `buildingBrands` · `offTargetPenalty` — 전부 선택 |
 
 ### 체감 분화 — 승리 조건만으로는 미션이 갈리지 않는다
 
@@ -60,6 +62,7 @@ v1 은 `kind` 하나에 승리·실패·투입이 뭉쳐 있어 패턴 확장이
 | 사수형(`guard`) | `aggro: landmark/building` | 적이 플레이어만 쫓아 표적이 안 깎인다 = 생존전과 동일 |
 | 표적 사냥(`purge-role`) | `offTargetPenalty` — 비표적 1기당 시간 차감 | 잡몹 처치가 공짜라 "전부 죽인다"가 늘 최적 = 격멸전과 동일 |
 | 생존형(`survive`) | (구 `killHealMul: 0`) | 2026-08-25 회복 전면 폐지로 **전 미션 공통** — 이 변조 자체가 제거됐다 |
+| 전 미션 | *(엔진)* 전장 소탕 종료 | 없으면 다 잡고도 제한시간까지 **빈 전장에서 대기**한다. 개체 수를 줄인 뒤(2026-08-25) 드러나 2026-08-26 도입 |
 
 전제 조건 둘(엔진 쪽): **유발(`provoked`)은 감쇠 타이머**여야 하고(영구 래치면 첫 교전 뒤 전장 전체가
 플레이어만 쫓는다 — 360° 자동사격이라 유발을 피할 수도 없다), **인식 해제 반경도 어그로 변조를 따라야**
@@ -70,6 +73,15 @@ v1 `MissionSpec` 으로 변환한다. 불가하면 `null` — 엔진 훅(§5) �
 v1 과 동치임을 테스트가 고정한다([tests/missionV2.test.ts](../../tests/missionV2.test.ts)).
 
 ## 3. 패턴 카탈로그 (20종)
+
+> ⚠ **표의 개체 수·HP 는 설계 당시 값**이다. 실제 수치는 [`public/missions/index.json`](../../public/missions/index.json)
+> 이 정본이며 2026-08-25 에 재조정됐다 — **HP ×10**(개당 TTK 0.6~3초 → 6~86초, 개체의 행동·이펙트가
+> 드러나도록) + **개체 수 감축**(pyramid·horde ÷8 · roster ÷4). 전량 격멸형 4개는 제한시간도 함께
+> 올렸다(purge 570 · surgical 510 · disband 360 · bodyguard 420 — 보스 1기가 100,000 HP = 215초라
+> 300초로는 감당이 안 된다). 표는 **조합의 의도**(어떤 직무를 어떤 비율로)를 읽는 용도로 본다.
+>
+> 카탈로그 밖 미션이던 **절단 공성(`severance`)·역행 추적(`retro-hunt`)** 은 절단체·역행체 폐지와 함께
+> 삭제됐다(2026-08-26). 배송 미션 **22개 → 20개**.
 
 상태: ✅ 현 엔진 표현 가능 · △ 소규모 확장 · 🔭 신규 훅 필요(§5 번호).
 
@@ -113,7 +125,7 @@ v1 과 동치임을 테스트가 고정한다([tests/missionV2.test.ts](../../te
 | :--- | :--- | :--- | :--- | :--- |
 | 15 | 오래 선 자리 / DEEP ROOTS | guard(landmarks, 300s) / 랜드마크 0 손실 | pyramid + **aggro: landmark**(플레이어 무시 직행 — 때려야 어그로) — ✅ **풀 편입** | ✅ |
 | 16 | 순례길 / PILGRIMAGE | guard(landmarks, 3곳 순차) / 랜드마크 한도 | phased(전조 콘솔 예고 → 표적 이동) — 기동 방어 | 🔭④⑥ |
-| 17 | 공성 낙인 / SIEGE BRAND | guard(landmarks) / 랜드마크 파괴 | pyramid(소인체 비중↑) + **buildingBrands**(랜드마크 낙인 → 파문 피해) | 🔭④(+커터 단계) |
+| 17 | 공성 낙인 / SIEGE BRAND | guard(landmarks) / 랜드마크 파괴 | roster(소인체 비중↑) + **buildingBrands**(랜드마크 낙인 → 파문 피해) — ✅ **풀 편입** | ✅ |
 | 18 | 마지막 등불 / LAST LIGHT | guard(landmarks, 장기) / 랜드마크 0 | phased 강도 상승 + 함락 권역 연출(와이어프레임) 선행 도입 | 🔭④⑥ |
 
 **F. 복합 제약전 (modifier 중심)**

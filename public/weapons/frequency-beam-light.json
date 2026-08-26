@@ -15,8 +15,7 @@
     "freqCost": 7,
     "fireInterval": 0.085,
     "assistConeDeg": 28,
-    "pinSec": 1.5,
-    "mend": 9
+    "pinSec": 1.5
   },
   "auto": {
     "damage": 15,

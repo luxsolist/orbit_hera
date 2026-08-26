@@ -155,7 +155,7 @@ mesh/group 없으면 조용히 반환해 추가 분기가 거의 필요 없었�
 | **P0** ✅ | 캠페인 골격 1차 | **완료(2026-08)** — 저장 인프라(StorageBackend 교체 가능 계층) → CampaignState → 표류 벡터 오버레이+도시 상태 지도 → 챕터 가중 선택기(=Director 단계 0) → 사건 파일/브리핑 UI (§9.3) | — |
 | **P1** ✅ | 계시 세트 (= §9 앵커 미션) | **완료** — 자매 2연전 관측 보고·삼각측량 교점·**동시 타격 실험**(v2 experiment 골 — 계시·전 투영 회수)·재독 점수판·명칭 갱신·도감 병합. 잔여: 타임랩스 컷씬·tactical 다단계 풀 배선 (§9.4) | 잔여 소 |
 | **P2** ✅ | 대위상 세트 + 진행 MVP | **완료** — 위상 이탈·관측 펄스·W2 계류(§8 Phase 3) ∥ 진행 MVP(§7.4 — XP/레벨/성장/재생) ∥ LLM Director 파일럿 클라 훅(§10 단계 1 — 서버 API 는 별도) | — |
-| **P3** ✅ | 전투 재정립 2단계 | **완료** — 커터 건물 납치+W4 복구 사격 → 준위 강등 → 역할 실루엣(+낙인탄 텔레그래프·러셔 돌진) → 역행체+예지 HUD → buildingBrands(공성 낙인)·중력 렌즈·링크 리와인드(자가 시전). 잔여: 씨앗 장 그리드(구 아키타입 퇴역 병행) (§8 Phase 5) | 잔여 소 |
+| **P3** ✅ | 전투 재정립 2단계 | **완료** — 준위 강등 → 역할 실루엣(+낙인탄 텔레그래프·러셔 돌진) → buildingBrands(공성 낙인)·중력 렌즈·링크 리와인드(자가 시전). ⚠ **커터 건물 납치+W4 복구 사격·역행체+예지 HUD 는 구현 철회**(2026-08-26 — 설계는 [implements/05-enemies §폐지](implements/05-enemies.md) 에 보존). 잔여: 씨앗 장 그리드(구 아키타입 퇴역 병행) (§8 Phase 5) | 잔여 소 |
 | **P4** | 1막 클라이맥스 | 균열 스폰(2.4) → 봉합전(suture 골) → W5 공명 각인(score 골) → 사고 로그 파편 (§8 Phase 2 잔여+Phase 6) | ~3주 |
 | **P5** | 성능·스케일 | sleep/컬링(§1 잔여 — P4 보스전 규모 전 권장) → 멀티셀 스트리밍(§5) → 동적 가시거리(§3) → 도시 대량 배치(§9.7) | 수요 시점 |
 | **P6** | 멀티플레이 + AI 감독 상주 | §6 전체 + **인스턴스/세계 감독 상주**(§10 단계 2 — 사고 로그 파이프라인 개통) — 공명 파티·W4 가 MP 문법이므로 P3 이후 | 장기 |
@@ -738,8 +738,9 @@ Free Roam 샤드 (1,000명): ~$20/월
   공격 불가·오토/어시스트/브래킷 제외. 미니맵은 방향만(2026-08-24, 아래 참조). [tests/phase.test.ts](../tests/phase.test.ts)
 - [x] **관측 펄스** ✅ — `manual.decohere`(중주파 수동만): 이탈 개체 강제 실체화+피해+쿨 재시작.
   워커=대위상 앵커 / 플라이어=실체화 타이밍 타격.
-- [x] **W2 관측 계류** ✅ — `manual.pinSec`(중주파 4s 하드 핀/경주파 1.5s 소프트 핀): 재이탈 봉쇄 +
-  **계류 중 격파는 역행 불능**(§9.2 "측정만이 비가역" — 역행체 카운터).
+- [x] **W2 관측 계류** ✅ — `manual.pinSec`(중주파 4s 하드 핀/경주파 1.5s 소프트 핀): 재이탈 봉쇄.
+  ⚠ **계류 중 격파 = 역행 불능**(§9.2 "측정만이 비가역")은 역행체 폐지(2026-08-26)로 **미구현** —
+  정본 규칙을 실증할 장치가 사라졌다. 재도입하려면 역행체 복원이 전제.
 - [x] **중력 렌즈 왜곡** ✅ 완료(2026-08, §2.7.1) — [lensDistort.ts](../src/fx/lensDistort.ts)(순수
   화면공간 투영) + [LensDistortPass.ts](../src/fx/LensDistortPass.ts)(ShaderPass, 최대 6점 동시).
   위상 이탈 개체 위치가 배경을 렌즈처럼 왜곡 — 미니맵이 위치를 안 주는 지금 **정확한 위치를
@@ -760,26 +761,27 @@ Free Roam 샤드 (1,000명): ~$20/월
 
 ### Phase 5 — 워커 로스터 완성 + 시간축
 
-- [x] **절단체(`cutter`) 건물 납치 + W4 복구 사격** ✅ 1차 (2026-08) — 부착→절단 채널(severSec,
-  W1 동결·경직이 인터럽트)→부양 납치(BuildingCombat abducting 상태: 상승·창백 틴트·고도 200 도달 시
-  잔해 없는 소거)→격추 시 재안착(완전 복원). W4 `manual.mend`: 수동 빔이 납치 건물 명중 시 부양
-  고도 감쇄(재안착 가속). 미션 "절단 공성"·"공성 낙인"(패턴 17 buildingBrands ✅ — BrandSystem 건물
-  대상 낙인 일반화, EnemyManager.markerFireBuilding). [tests/abduct.test.ts](../tests/abduct.test.ts)·
-  [tests/buildingBrands.test.ts](../tests/buildingBrands.test.ts). 잔여: 아군 mend(MP).
+- [ ] ~~**절단체(`cutter`) 건물 납치 + W4 복구 사격**~~ — **구현 철회(2026-08-26).** 설계(부착→절단
+  채널→부양 납치→격추 재안착, `manual.mend` 복구 사격)는
+  [implements/05-enemies §폐지](implements/05-enemies.md) 에 보존. 미션 "절단 공성"(`severance`)도 함께 삭제.
+- [x] **공성 낙인**(패턴 17 `buildingBrands`) ✅ — BrandSystem 건물 대상 낙인 일반화,
+  EnemyManager.markerFireBuilding. 커터와 독립이라 **유지**된다.
+  [tests/buildingBrands.test.ts](../tests/buildingBrands.test.ts).
 - [x] **준위 강등 브레이크포인트** ✅ — kkLevelOf(75/50/25% 계단)·kkLevelColors(최저온→본색 보간),
   KK_MIN_HP(3000)+ 이상 정예·보스만. 하향 통과 시 색 강등+0.35s 경직+전이 방출 펄스. 다중 투영은
   공유 풀 미러로 전 투영 동시 강등. [tests/kkDemote.test.ts](../tests/kkDemote.test.ts)
-- [x] **역할 실루엣 분리** ✅ — 직무별 InstancedMesh 4+1종(러셔=각진 가시 구/모기=길쭉한 사면체/
-  소인체=글리프 결정/절단체=절단 쐐기/역행체=시간 고리), 디졸브 개별 메시도 동형(applySilhouette).
+- [x] **역할 실루엣 분리** ✅ — 직무별 InstancedMesh 3종(거머리=납작한 원반/모기=가늘고 긴 방추/
+  소인체=가로로 넓은 마름모 결정), 디졸브 개별 메시도 동형(applySilhouette). 형태 축 = **실루엣
+  종횡비**(2026-08-25 개편 — 발광으로 면·각이 뭉개지므로 총 비례만 남는다): 0.16 / 1.22 / 2.45.
   낙인탄 **장전 조준선 텔레그래프**(0.7s — 동결·경직 캔슬) + **러셔 짧은 돌진**(15~60m 밴드, 4.5s 쿨) 포함.
-- [x] **역행체(`rewinder`) + 예지 HUD** ✅ 1차 — 후방 시전(castSec 4)→반경 내 최근 격파 부활(상한 8·
-  killLog 링버퍼)+처치 집계 되감김+플레이어 위치 역행(PlayerController posHistory 링). 카운터 3종:
-  시전 중 격파/W1 동결·경직/W2 계류(확정 기록 — 되감기지 않음). 예지 HUD(setRewindWarn 카운트다운).
-  미션 "역행 사냥"(purge-role). **링크 리와인드(§2.8.3, 자가 시전)** ✅ — DroneSpec.linkRewind(KeyR):
-  위치·HP 복원 + BuildingCombat.undoDestructionNear(반경 내 최근 파괴 완전 원복 — CollisionWorld
-  closeBuildingAt 포함). 표면 명칭 "위상 소급"(§8.1 — "리와인드/롤백" 누설 회피).
-  [tests/rewinder.test.ts](../tests/rewinder.test.ts) · [tests/PlayerController.test.ts](../tests/PlayerController.test.ts)
-  · [tests/abduct.test.ts](../tests/abduct.test.ts). 잔여: 시전 이펙트(링 FX)·모바일 바인딩.
+- [ ] ~~**역행체(`rewinder`) + 예지 HUD**~~ — **구현 철회(2026-08-26).** 설계는
+  [implements/05-enemies §폐지](implements/05-enemies.md) 에 보존. 절단체(커터)·건물 납치·W4 복구
+  사격(`manual.mend`)도 같은 시점에 함께 철회 — 둘 다 웨이브 미출현(countBase 0)에 전용 미션 1개씩
+  (`severance`·`retro-hunt`)뿐이라 대부분의 플레이어가 만나지 못하면서 13개 파일에 걸쳐 있었다.
+  **링크 리와인드(§2.8.3, 자가 시전)** ✅ 는 유지 — DroneSpec.linkRewind(KeyR): 위치·HP 복원 +
+  BuildingCombat.undoDestructionNear(반경 내 최근 파괴 완전 원복 — CollisionWorld closeBuildingAt
+  포함). 표면 명칭 "위상 소급"(§8.1 — "리와인드/롤백" 누설 회피). posHistory 링버퍼는 이제
+  플레이어 전용. [tests/PlayerController.test.ts](../tests/PlayerController.test.ts)
 - [ ] 씨앗 장 그리드(2.5) + 공허/열화 지대 — 구 아키타입(거머리/모기) 퇴역(서사편 §6.8 승계 완료). 1주
 
 ### Phase 6 — 1막 클라이맥스와 엔딩 경로
@@ -887,7 +889,7 @@ Free Roam 샤드 (1,000명): ~$20/월
 
 ### 9.7 도시 대량 배치 (P5 — 파이프라인)
 
-- [x] **⭐⭐ 도시 100선 큐레이션** ✅ (2026-08-21) — [spec/09-city-catalog.md](../spec/09-city-catalog.md):
+- [x] **⭐⭐ 도시 100선 큐레이션** ✅ (2026-08-21) — [spec/09-city-catalog.md](spec/09-city-catalog.md):
   이름·국가·장 소속·택소노미 힌트까지 확정(위경도 등 정밀 메타는 미착수). 서울/부산/오사카 기완료 +
   신규 97곳(1장 열지도 25·2장 자매쌍 10쌍·3장 태평양 연안 20·4~6장 확장 33).
 - [x] **⭐⭐ 랜드마크 카탈로그 큐레이션 + 실측 좌표** ✅ (2026-08-21 큐레이션, 2026-08-22 좌표) —

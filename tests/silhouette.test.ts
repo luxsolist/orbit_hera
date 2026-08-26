@@ -7,6 +7,7 @@ import type { PlasmoidArchetype } from "../src/enemies/PlasmoidSpec";
 // 형태 언어(§6.7) — 색=강함 / **형태=직무**. 코어가 강하게 발광해 원거리에서는 면·각이 뭉개지므로,
 // 빠른 화면에서 살아남는 채널은 **실루엣 종횡비**와 **구멍** 둘뿐이다. 다섯 직무가 종횡비 축에
 // 충분히 흩어져 있는지가 이 스위트의 계약이다(개편 전엔 거머리 1.04 / 소인체 0.98 로 겹쳤다).
+// 절단체·역행체는 폐지(2026-08-26) — 남은 3종으로 축을 다시 벌렸다.
 
 /** 시선 dir 에서 본 실루엣 종횡비(가로/세로). 직교 투영 — 원근 왜곡 없이 비례만 본다. */
 function aspect(geo: THREE.BufferGeometry, dir: THREE.Vector3): number {
@@ -48,31 +49,23 @@ const band = (role: PlasmoidArchetype) => {
 };
 
 describe("실루엣 종횡비 — 직무 구분 채널", () => {
-  it("설계 의도대로 정렬된다: 모기 < 절단체 < 역행체 < 소인체 < 거머리", () => {
-    const order: PlasmoidArchetype[] = ["kiter", "cutter", "rewinder", "marker", "rusher"];
+  it("설계 의도대로 정렬된다: 모기 < 소인체 < 거머리", () => {
+    const order: PlasmoidArchetype[] = ["kiter", "marker", "rusher"];
     const mds = order.map((r) => band(r).md);
     for (let i = 1; i < mds.length; i++) expect(mds[i]).toBeGreaterThan(mds[i - 1]);
   });
 
   it("인접 직무 간 종횡비가 최소 1.25배 벌어진다 — 개편 전 최악은 1.01배(구분 불가)였다", () => {
-    const mds = (["kiter", "cutter", "rewinder", "marker", "rusher"] as PlasmoidArchetype[])
+    const mds = (["kiter", "marker", "rusher"] as PlasmoidArchetype[])
       .map((r) => band(r).md).sort((a, b) => a - b);
     for (let i = 1; i < mds.length; i++) expect(mds[i] / mds[i - 1]).toBeGreaterThan(1.25);
   });
 
   it("세로형/가로형이 시선과 무관하게 유지된다 — 회전으로 정체가 뒤집히지 않게", () => {
     expect(band("kiter").hi).toBeLessThan(0.4); //   항상 세로로 길다(바늘)
-    expect(band("cutter").hi).toBeLessThan(0.8); //  항상 세로로 길다(쐐기)
     expect(band("rusher").lo).toBeGreaterThan(1.2); // 항상 가로로 넓다(원반)
   });
 
-  it("역행체 고리는 회전에 흔들리지 않는다 — 단일 토러스면 0.29~1.14 로 정체가 무너진다", () => {
-    const b = band("rewinder");
-    expect(b.hi / b.lo).toBeLessThan(1.5); // 직교 이중 고리라 어느 각도에서도 링이 남는다
-    const single = new THREE.TorusGeometry(1.15, 0.2, 6, 12); // 대조군
-    const s = DIRS.map((d) => aspect(single, d));
-    expect(pct(s, 0.95) / pct(s, 0.05)).toBeGreaterThan(3); // 단일은 3배 이상 요동
-  });
 });
 
 // ── 도감 삽화 ───────────────────────────────────────────────────────────────
@@ -135,17 +128,10 @@ describe("silhouetteSvg — 도감 삽화", () => {
     }
   });
 
-  it("역행체 삽화는 가운데가 비어 있다 — 구멍이 곧 정체", () => {
-    const N = 32;
-    const g = raster(silhouetteSvg(SHELL_GEOS.rewinder), N);
-    let center = 0;
-    for (let j = N / 2 - 2; j < N / 2 + 2; j++) for (let i = N / 2 - 2; i < N / 2 + 2; i++) if (g[j * N + i]) center++;
-    expect(center).toBe(0);
-  });
 
-  it("다른 직무 삽화는 속이 차 있다 — 구멍이 역행체 전용 신호로 남게", () => {
+  it("모든 직무 삽화는 속이 차 있다", () => {
     const N = 32;
-    for (const r of ["rusher", "kiter", "marker", "cutter"] as PlasmoidArchetype[]) {
+    for (const r of ["rusher", "kiter", "marker"] as PlasmoidArchetype[]) {
       const g = raster(silhouetteSvg(SHELL_GEOS[r]), N);
       expect(g[(N / 2) * N + N / 2]).toBe(true); // 중심 픽셀이 채워져 있다
     }

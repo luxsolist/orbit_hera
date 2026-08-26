@@ -93,15 +93,6 @@ export interface PlasmoidRusherArchetype extends PlasmoidArchetypeBase {
   leap?: LeapSpec; // 차원도약 — 근접(회피 강제). 미지정 시 미도약
 }
 
-/**
- * 커터(내부 id: cutter, 표시명 절단체 — 서사편 §6.3/§6.7) — 건물 상단 부착 → 절단 채널 →
- * 부양 납치. 방어 미션의 주적. 채널은 관측 고정(W1)·경직이 인터럽트, 격추 시 건물 재안착.
- */
-export interface PlasmoidCutterArchetype extends PlasmoidArchetypeBase {
-  attachRange: number; // 부착 판정 거리(m — 건물 상단 기준)
-  severSec: number; //   절단 채널 시간(s) — 완료 시 납치 개시
-  seekRange: number; //  표적 건물 탐색 반경(m)
-}
 
 /**
  * 낙인탄(내부 id: tomb — 서사편 §6.1 ① MARK) 파라미터. 낙인 자체는 무피해 —
@@ -167,31 +158,12 @@ export function phaseTimings(phase: PhaseSpec, s: number): { cooldown: number; d
   };
 }
 
-/**
- * 리와인더(내부 id: rewinder, 표시명 역행체 — 서사편 §6.6/§6.7) — 후방에서 역행 시전(미니보스 슬롯).
- * 시전 완료 시 반경 내 최근 격파가 되살아나고 플레이어 위치가 되감긴다. 카운터: 시전 중 격파,
- * W1 동결(시전 인터럽트), W2 관측 계류(계류로 잠근 대상에서 일어난 사건은 되감기지 않는다 — §9.2).
- */
-export interface PlasmoidRewinderArchetype extends PlasmoidArchetypeBase {
-  turnRateDeg: number; // 유영 선회 상한(°/s) — 후방 유지
-  keepDist: number; //   유지 거리(m)
-  keepBand: number;
-  rollback: {
-    castSec: number; //   시전 시간(s) — 예지 HUD 카운트다운
-    castCd: number; //    시전 쿨다운(s)
-    castRange: number; // 시전 개시 거리(m)
-    radius: number; //    역행 반경(m) — 이 안의 격파·플레이어만 되감김
-    rewindSec: number; // 몇 초 전으로 되감는가
-  };
-}
 
 /** 개체 고유 아키타입 묶음 — 어느 드론이 플레이하든 무관(MP 혼합 전장 대응). */
 export interface PlasmoidArchetypesSpec {
   rusher: PlasmoidRusherArchetype;
   kiter: PlasmoidKiterArchetype;
   marker: PlasmoidMarkerArchetype;
-  cutter?: PlasmoidCutterArchetype; //     P3 — 미지정 시 커터 미출현(구 JSON 하위호환)
-  rewinder?: PlasmoidRewinderArchetype; // P3 — 미지정 시 역행체 미출현
 }
 
 /** 플라즈모이드 1종 스펙. */
@@ -209,7 +181,7 @@ export interface PlasmoidSpec {
 }
 
 /** 플라즈모이드 아키타입 식별자. */
-export type PlasmoidArchetype = "rusher" | "kiter" | "marker" | "cutter" | "rewinder";
+export type PlasmoidArchetype = "rusher" | "kiter" | "marker";
 
 // ─────────────────────────── 순수 산출 유틸(테스트 분리) ───────────────────────────
 
@@ -538,19 +510,6 @@ export const DEFAULT_PLASMOID: PlasmoidSpec = {
       spawnAltMin: 40, spawnAltMax: 160, countBase: 1, countCap: 2, speed: 30, speedMin: 22,
       turnRateDeg: 90, keepDist: 70, keepBand: 18,
       tomb: { projSpeed: 22, projTurnRateDeg: 70, projTtl: 14, fireRange: 220, fireInterval: 7, sweepDamage: 18 },
-    },
-    cutter: {
-      // 절단체(§6.3) — 웨이브 물량 0(로스터/미션 전용). 방어 미션의 주적 — 격추 시 건물 재안착.
-      name: "절단체 플라즈모이드 / SEVERER",
-      spawnAltMin: 30, spawnAltMax: 120, countBase: 0, countCap: 0, speed: 26, speedMin: 18,
-      attachRange: 22, severSec: 5, seekRange: 900,
-    },
-    rewinder: {
-      // 역행체(§6.6) — 웨이브 물량 0(미니보스 슬롯). 최우선 표적 — 시전을 끊지 못하면 전과가 되감긴다.
-      name: "역행체 플라즈모이드 / RETROGRADE",
-      spawnAltMin: 60, spawnAltMax: 200, countBase: 0, countCap: 0, speed: 24, speedMin: 16,
-      turnRateDeg: 70, keepDist: 160, keepBand: 30,
-      rollback: { castSec: 4, castCd: 14, castRange: 360, radius: 300, rewindSec: 5 },
     },
   },
   sweep: { period: 30, speed: 250, warnSec: 5, maxRadius: 1600 },

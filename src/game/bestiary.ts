@@ -15,14 +15,12 @@ export interface BestiaryCard {
   shape: PlasmoidArchetype | null;
 }
 
-const ARCHETYPE_ORDER: readonly PlasmoidArchetype[] = ["rusher", "kiter", "marker", "cutter", "rewinder"];
+const ARCHETYPE_ORDER: readonly PlasmoidArchetype[] = ["rusher", "kiter", "marker"];
 
 const ARCHETYPE_BRIEFS: Record<PlasmoidArchetype, string> = {
   rusher: "접촉으로 흡수한다. 밀도 높은 것이면 무엇이든 파고든다.",
   kiter: "원거리에서 끌어당긴다. 붙잡으려 하면 먼저 멀어진다.",
   marker: "낙인을 남긴다. 낙인 자체는 무해하나, 파문이 오면 이야기가 다르다.",
-  cutter: "결합을 끊는다. 끊어낸 것은 뿌리째 들려 어딘가로 향한다.",
-  rewinder: "붙든 자리의 시간을 되돌린다. 잡은 것도, 부순 것도, 없었던 일처럼.",
 };
 
 const MERGED_CARD: BestiaryCard = {

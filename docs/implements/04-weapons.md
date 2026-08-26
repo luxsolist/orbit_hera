@@ -14,9 +14,15 @@
 
 매 프레임 `update(dt, firing)` — 오토와 수동이 **독립 쿨다운**이라 같은 프레임에 둘 다 발사 가능:
 1. 두 쿨다운(`cooldown`=수동, `autoCooldown`=오토) 감쇠.
-2. **오토파이어** — `autoCooldown ≤ 0`이면 `acquireAutoFireTarget`로 `auto.range` 안 **360° 최근접 적**
-   (`nearestInCone`에 콘 cos −1, max 1) 방향을 잡아 저비용 연사. 정면을 안 봐도 추격자를 소프트락.
-   `auto.range`(light 100 m / heavy 32 m) 안의 적을 자동 처치. 값은 [spec/02](../spec/02-drones-weapons.md).
+2. **오토파이어** — `autoCooldown ≤ 0` **그리고 게이지가 바닥 위**(`autoFireAllowed`)이면
+   `acquireAutoFireTarget`로 `auto.range`(공통 1000 m) 안 **360° 최근접 적**(`nearestInCone`에 콘 cos −1,
+   max 1) 방향을 잡아 저비용 연사. 정면을 안 봐도 추격자를 소프트락. 값은 [spec/02](../spec/02-drones-weapons.md).
+   - **게이지 바닥**(`auto.freqFloor`, 기본 `DEFAULT_AUTO_FREQ_FLOOR = 0.25` — maxFreq 대비) — 오토는
+     발사 입력과 무관하게 사거리 내 적이 있으면 **상시 소모**하므로, 바닥이 없으면 회복이 소모를 못
+     이기는 구간에서 게이지가 **0 에 고착**된다(옅은 장 = `freqRegenMul 0.5` 에서 재현: 0 → 24% 회복이
+     300초 내 불가 → 바닥 도입 후 2.0초). 바닥 아래면 오토가 쉬어 회복이 항상 이긴다. 수동 사격은 이
+     게이트를 받지 않는다 — 게이지를 0 까지 쓰는 건 플레이어의 선택이고 손을 떼면 돌아온다.
+     평시(배수 1)에는 게이지가 늘 바닥 위라 오토 발사 횟수가 **변하지 않는다**(실측 동일).
    **모바일 보정**: 터치 조준 난도를 감안해 `Game`이 `withAutoBoost(spec, 2)`로 기본 빔의 `auto.range`·`manual.assistConeDeg`를 추가 ×2 한 **복제 스펙**을 주입(`mobile.enabled`이면 워커 32→64 m·플라이어 100→200 m; 캐시 원본 불변). ([tests/WeaponSpec.test.ts](../../tests/WeaponSpec.test.ts))
 3. `firing`이고 `cooldown ≤ 0`이면 **수동 사격**(`fireManual`) — `acquireAssistTarget`(어시스트 콘
    `manual.assistConeDeg`, `bestAlignedDir`)로 가장 정렬된 적으로 조준 보정 후 풀데미지.

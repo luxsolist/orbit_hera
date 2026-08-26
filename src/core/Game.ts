@@ -527,17 +527,6 @@ export class Game {
       s.player.shake(revived > 0 ? 0.03 : 0.015);
       this.sfx.reckoning(revived > 0);
     };
-    // 역행체(P3 §6.6) — 시전 예지 카운트다운 + 발동 시 처치 수 되감김·연출
-    s.enemies.onRewindCast = (left) => this.hud.setRewindWarn(left);
-    s.enemies.onRewound = (revived) => {
-      this.hud.setKills(s.enemies.killCount); // 전과가 되감겼다 — 즉시 반영
-      this.hud.showBroadcast(
-        revived > 0 ? `역행 파동 — 소산 ${revived}체가 되돌아왔다. 시전자를 끊어라.` : "역행 파동 통과 — 위치가 되감겼다.",
-        5,
-      );
-      s.player.shake(0.02);
-      this.sfx.reckoning(true);
-    };
     // 미션 종료(성공/실패) → 결과 패널(재시작은 reload)
     s.instance.onEnd = (outcome) => this.endMission(outcome);
   }

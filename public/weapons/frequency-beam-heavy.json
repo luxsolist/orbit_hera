@@ -12,8 +12,7 @@
     "fireInterval": 0.15,
     "assistConeDeg": 13,
     "decohere": true,
-    "pinSec": 4.0,
-    "mend": 24
+    "pinSec": 4.0
   },
   "auto": {
     "damage": 45,

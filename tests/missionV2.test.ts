@@ -217,8 +217,8 @@ describe("v2 런타임 부속 — duration/runnable/로더 정규화", () => {
     const N = deployRoleCredits(hunt.deploy, "marker");
     expect(missionObjectiveTextV2(hunt, true)).toBe(`투영체 전멸 — ${N}기 / HUNT`);
     expect(missionProgressTextV2(hunt, rt({ roleKills: { marker: 2 } }), true)).toBe(`투영체 2 / ${N}`);
-    expect(deployRoleName("rewinder", true)).toBe("투영체");
-    expect(deployRoleName("cutter", false)).toBe("절단체");
+    expect(deployRoleName("kiter", true)).toBe("투영체");
+    expect(deployRoleName("kiter", false)).toBe("모기");
     expect(deployRoleName("boss", true)).toBe("근원 투영체"); // 근원은 계시 후에도 구분 유지
   });
 

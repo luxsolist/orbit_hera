@@ -76,7 +76,7 @@ export function sampleLeapOffset(spec: PlasmoidLeapSpec, rand: () => number): Le
 }
 
 /**
- * 텔레그래프 인터럽트(순수) — 역행체 시전과 **같은 목록**이다(EnemyManager.rewinderCast).
+ * 텔레그래프 인터럽트(순수) — 낙인탄 장전·절단 채널이 쓰던 것과 같은 문법이다.
  *
  * "피해를 입으면 취소"가 아닌 이유: 360° 오토파이어가 발사 입력과 무관하게 사거리 안의 적을
  * 0.13~0.2초마다 자동 타격한다. 3초 창이면 오토만으로 15~23 발이 들어가 **플레이어가 아무것도

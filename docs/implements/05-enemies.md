@@ -17,9 +17,9 @@
 스펙 구조(`PlasmoidSpec`): `hp`(`PlasmoidHpSpec`), `color.stops`(`ColorStop[]`), `visual`(`PlasmoidVisualSpec`), `spawn`(`PlasmoidSpawnSpec`), `contact`(`PlasmoidContactSpec`), `archetypes`(`PlasmoidArchetypesSpec` = `{rusher, kiter, marker}`), `sweep`(`SweepSpec` — 심판 파문 전장 이벤트).
 
 ### 아키타입 — 행동을 드론에서 분리
-- **카이터 = "모기 플라즈모이드 / SKEETER"**(공중형, `PlasmoidKiterArchetype`): `keepDist` 거리를 유지하되 **keepDist 구(球) 위 개체 고유 방위(`homeDir`)** 로 향해 무리가 xy·z 모두 고르게 분산하고, 사거리에서 **드레인 빔**(`drainDamage`/`drainInterval`)으로 원거리 공격. `homeDir`은 매 프레임 **구면 랜덤워크로 표류**해 한 마리도 죽기 전까지 xyz 전 방향으로 자유 유영(`HOME_WANDER`). 너무 가까우면 직접 도주(`KITER_FLEE_LEAD` 예측 리드), 플레이어 원돌기엔 **수직 회피**(개체별 위/아래 무작위 = `homeDir.y` 부호; `orbitRef`/`evadeGain`). 상공(`spawnAlt` 80–300m)에 소수(`countBase 3`, `countCap 5`) 등장. 튜닝: 속도 `speed 89`↔`speedMin 67`(플라이어 최고속 −20%~−40%), `turnRateDeg 100`, `keepDist 60`, `keepBand 12`, `attackRange 95`, `drainDamage 1.4`, `drainInterval 1.5`.
-- **러셔 = "거머리 플라즈모이드 / LEECH"**(지상형, `PlasmoidRusherArchetype`): 적극 **접근**해 **접촉**으로 흡수(`spec.contact`). 속도 `speed 17`↔`speedMin 12`(워커 최고속 19.44보다 약간 느려 공격할 틈을 줌). 지표(`spawnAlt` 0–60m)에 떼(`countBase 6`, `countCap 12`)로 등장.
-- **마커 = "소인체 플라즈모이드 / BRANDER"**(중공형, `PlasmoidMarkerArchetype` — 서사편 §6.1 ① MARK): 카이터형 유영(`turnRateDeg 90`/`keepDist 70`/`keepBand 18`, 회피 옵션 없음)으로 중거리를 맴돌며 **낙인 유도탄**(`tomb`: `projSpeed 22`, `projTurnRateDeg 70`, `projTtl 14`, `fireRange 220`, `fireInterval 7`)을 발사. 명중해도 무피해 — **낙인**만 부착되고(표적당 상한 5), 주기적 **심판 파문**이 지나갈 때 낙인 1개당 `sweepDamage 18` 피해(최대 90 — 워커는 만피에서 생존, 플라이어는 방치 시 치명). 카운터: 느린 유도탄 회피(선회 캡이라 스트레이프로 흘림) / **근원 마커 격파**(그 개체의 낙인·유도탄 소산) / 관측 고정(W1)으로 장전 동결. 물량은 드론 종류 무관 전원 비례(`countBase 2`, `countCap 4`), 중고도(`spawnAlt` 40–160m). 접촉·드레인 없음. 건물 낙인은 커터(§6.10-2) 단계에서 도입 예정 🔭.
+- **카이터 = "모기 플라즈모이드 / SKEETER"**(공중형, `PlasmoidKiterArchetype`): `keepDist` 거리를 유지하되 **keepDist 구(球) 위 개체 고유 방위(`homeDir`)** 로 향해 무리가 xy·z 모두 고르게 분산하고, 사거리에서 **드레인 빔**(`drainDamage`/`drainInterval`)으로 원거리 공격. `homeDir`은 매 프레임 **구면 랜덤워크로 표류**해 한 마리도 죽기 전까지 xyz 전 방향으로 자유 유영(`HOME_WANDER`). 너무 가까우면 직접 도주(`KITER_FLEE_LEAD` 예측 리드), 플레이어 원돌기엔 **수직 회피**(개체별 위/아래 무작위 = `homeDir.y` 부호; `orbitRef`/`evadeGain`). 상공(`spawnAlt` 80–300m)에 소수(`countBase 3`, `countCap 4`) 등장. 튜닝: 속도 `speed 89`↔`speedMin 67`(플라이어 최고속 −20%~−40%), `turnRateDeg 100`, `keepDist 35`, `keepBand 12`, `attackRange 95`, `drainDamage 3.0`, `drainInterval 1.5`. **차원도약**(원거리 — 관측 파기) 보유: 아래 참조.
+- **러셔 = "거머리 플라즈모이드 / LEECH"**(지상형, `PlasmoidRusherArchetype`): 적극 **접근**해 **접촉**으로 흡수(`spec.contact`). 속도 `speed 17`↔`speedMin 12`(워커 최고속 19.44보다 약간 느려 공격할 틈을 줌). 지표(`spawnAlt` 0–60m)에 `countBase 2`, `countCap 3` 등장. **차원도약**(근접 — 회피 강제) 보유: 아래 참조.
+- **마커 = "소인체 플라즈모이드 / BRANDER"**(중공형, `PlasmoidMarkerArchetype` — 서사편 §6.1 ① MARK): 카이터형 유영(`turnRateDeg 90`/`keepDist 70`/`keepBand 18`, 회피 옵션 없음)으로 중거리를 맴돌며 **낙인 유도탄**(`tomb`: `projSpeed 22`, `projTurnRateDeg 70`, `projTtl 14`, `fireRange 220`, `fireInterval 7`)을 발사. 명중해도 무피해 — **낙인**만 부착되고(표적당 상한 5), 주기적 **심판 파문**이 지나갈 때 낙인 1개당 `sweepDamage 18` 피해(최대 90 — 워커는 만피에서 생존, 플라이어는 방치 시 치명). 카운터: 느린 유도탄 회피(선회 캡이라 스트레이프로 흘림) / **근원 마커 격파**(그 개체의 낙인·유도탄 소산) / 관측 고정(W1)으로 장전 동결. 물량은 전원 비례(`countBase 1`, `countCap 2`), 중고도(`spawnAlt` 40–160m). 차원도약 없음(구성 축과 직교). 접촉·드레인 없음. 건물 낙인은 `modifiers.buildingBrands`(공성 낙인)로 구현돼 있다.
 - 공통 베이스(`PlasmoidArchetypeBase`): `name`(표시명 "국문 / ENGLISH"), `spawnAltMin/spawnAltMax`, `countBase/countCap`. 스폰 시 각 개체에 `archetypeName`·`targetIndex`·`role`(직무 — 공격 경로 분기)이 실린다.
 
 ### "분리형" 모델 — 체력 ↔ 보이는 크기 디커플링
@@ -56,12 +56,14 @@
 - `speed = …`(레거시 필드, 현재 미사용). 러셔·카이터 **둘 다** 개체 속도를 `arche.speed↔speedMin`를 `colorStrength01`로 보간해 산출한다(아래 `EnemyManager.spawnOne`).
 
 ### 아키타입별 물량 + 스폰 타입 선택 (순수)
-- `archetypeCount(arche, wave, matchingPlayers)` — `per = min(countCap, countBase + floor((wave−1)/2))`, × `matchingPlayers`. `matchingPlayers ≤ 0`이면 0. 러셔는 워커 수, 카이터는 플라이어 수에 비례 — **구성 기반 자기정렬**(단일 드론 세션은 매칭 아키타입만 스폰 → 이길 수 없는 미스매치 없음).
+- `archetypeCount(arche, wave, players, share)` — `per = min(countCap, countBase + floor((wave−1)/2))`, × `players` × **전장 구성 비중**(`share`). `players ≤ 0` 또는 `share ≤ 0`이면 0.
+  ⚠ **드론 상성 결합 폐지**(2026-08-26) — 종전엔 러셔=워커 수/카이터=플라이어 수에 비례하는 자기정렬이었다. 차원도약이 두 아키타입 모두를 두 드론에 유효하게 만들면서 근거를 잃었고, 이제 **전장이 스스로 구성을 선언**한다(`SpawnMix`).
 - `pickSpawnType(pendingRusher, pendingKiter, rand)` — 두 잔여 예산을 잔여 비율로 가중 추첨해 이번에 스폰할 타입 반환(한 종 0이면 다른 종, 둘 다 0이면 null). 웨이브 내내 두 예산이 섞여 투입된다.
 
 ### 기본 스펙 / 로더
 - `DEFAULT_PLASMOID` — `public/enemies/plasmoid.json`과 동일(테스트 동치 검증). 비동기 로드가 어려운 곳(인트로 연출, `EnemyManager` 기본값)이 동기적으로 사용.
-- 현 데이터(`plasmoid.json`): `hp{ basePerArea 100, minDiameter 0.5, maxDiameter 60 }`; `color.stops` 5단계(3000K `0xff3b30` w1.0 → 12000K `0x4aa6ff` w5.0); `visual{ minDiameter 2, maxDiameter 600, anchorHp 200000, anchorDiameter 500, exponent 0.82 }`(렌더 크기 ×2); `spawn{ tempAlpha 2, speedMax 13.5, speedMin 3.75, hpFloor 100, hpCeil 200000 }`; `contact{ hpDamage 10, strengthMul 2.0 }`; `archetypes.rusher{ name "거머리 플라즈모이드 / LEECH", spawnAltMin 0, spawnAltMax 60, countBase 6, countCap 12, speed 17, speedMin 12 }`; `archetypes.kiter{ name "모기 플라즈모이드 / SKEETER", spawnAltMin 80, spawnAltMax 300, countBase 3, countCap 5, speed 89, speedMin 67, turnRateDeg 100, keepDist 60, keepBand 12, strafeMix 0, orbitRef 35, evadeGain 0.85, attackRange 95, drainDamage 1.4, drainInterval 1.5 }`. (`speed`/`speedMin`은 아키타입 공통 base 필드.)
+- 현 데이터(`plasmoid.json`, 2026-08-26 기준): `hp{ basePerArea 1000, minDiameter 0.5, maxDiameter 60 }`; `color.stops` 5단계(3000K `0xff3b30` w1.0 → 12000K `0x4aa6ff` w5.0); `visual{ minDiameter 2, maxDiameter 600, anchorHp 2000000, anchorDiameter 500, exponent 0.82 }`; `spawn{ tempAlpha 2, speedMax 13.5, speedMin 3.75, hpFloor 1000, hpCeil 2000000 }`; `contact{ hpDamage 10, strengthMul 2.0 }`; `archetypes.rusher{ spawnAlt 0–60, countBase 2, countCap 3, speed 17, speedMin 12 }`; `archetypes.kiter{ spawnAlt 80–300, countBase 3, countCap 4, speed 89, speedMin 67, turnRateDeg 100, keepDist 35, keepBand 12, strafeMix 0, orbitRef 35, evadeGain 0.85, attackRange 95, drainDamage 3.0, drainInterval 1.5 }`; `archetypes.marker{ spawnAlt 40–160, countBase 1, countCap 2, speed 30, speedMin 22, turnRateDeg 90, keepDist 70, keepBand 18, tomb{ … sweepDamage 18 } }`.
+  ⚠ **HP 스케일 ×10**(2026-08-25) — 개체가 너무 빨리 죽어 행동·이펙트가 드러나지 않아 올렸다. `basePerArea` 만 올리면 `strength` 가 커져 전 개체가 청백·거대·둔화로 밀리므로 `hpFloor`·`hpCeil`·`anchorHp` 를 **같은 배수로** 함께 올려 색·크기·속도 매핑을 보존한다(실측 오차 0). `KK_MIN_HP` 도 3,000→30,000 동반. 이 넷은 항상 같이 움직인다.
 - [plasmoids.ts](../../src/enemies/plasmoids.ts) — `makeLoader("enemies","적")` 기반. `fetchPlasmoidCatalog()`(`public/enemies/index.json`) + `fetchPlasmoid(id)`(`<id>.json`).
 - 테스트: [tests/plasmoidSpec.test.ts](../../tests/plasmoidSpec.test.ts).
 
@@ -109,16 +111,16 @@
 
 생성자 `(scene, world, players[], spec=DEFAULT_PLASMOID)` — **플레이어 배열**을 받는다(MP 대응; Game은 현재 `[player]`). `DrainBeams` 풀과 카이터 공격 파라미터(`spec.archetypes.kiter`)를 보유.
 
-### 멀티타깃 표적 선택 (어그로 분산 + 상성 가중 — MP)
+### 멀티타깃 표적 선택 (어그로 분산 — MP)
 - `buildTargets(dt)` — 매 프레임 플레이어별 스냅샷(위치·생존·**속도 EMA** `dt·8`·**비행 여부** `playerIsFlyer`) 갱신.
 - 각 적은 `pickTarget`(→ `chooseTarget`)으로 표적 점수 = **거리 × (1+`AGGRO_PENALTY=0.4`·부하) × 상성가중**의 최소를 고른다. **히스테리시스(`TARGET_HYSTERESIS=1.2`)**로 깜빡임 방지, **어그로 부하**로 도그파일 회피.
-- **상성 가중(`matchupMul`, MP 혼합팀)** — 카이터↔플라이어 / 러셔↔워커가 상성. 상성이면 ×1, 비상성이면 ×`MISMATCH_PENALTY=3.0`로 점수를 불리하게 줘 **적이 자기 상성 드론을 우선 표적**으로 삼는다(절대 배제 아닌 가중 — 비상성이 충분히 가까우면 노린다). 혼합팀에서 각 플레이어가 자기 레인을 맡고, 솔로의 자기정렬이 인원수만큼 확장된다.
-- **미스매치 폴백(`engageKeepDist`)** — 카이터가 어쩔 수 없이 **비상성(워커=지상)**을 노릴 때 `keepDist`를 `KITER_CLOSE_MUL=0.45`로 좁혀(60→27 m) 워커 자동조준 안으로 진입 → "못 잡는 적" 제거(여전히 드레인하되 처치 가능). 상성(플라이어) 표적이면 기본 keepDist 복원. (러셔가 플라이어를 노리면 속도 17≪111로 못 잡아 자연히 2순위 건물로.)
+- ~~**상성 가중(`matchupMul`)**~~ — **폐지**(2026-08-26). 전장 구성이 드론과 분리되면서, 단일 아키타입 전장에서는 모든 개체가 같은 가중을 받아 **한 플레이어에게 몰린다**(카이터만 있는 전장 = 전원이 플라이어에게). 지금은 거리 + 어그로 부하만 본다 — 혼합팀에서 더 고르게 분산된다. `engageKeepDist`/`KITER_CLOSE_MUL`(비상성 표적에 카이터가 접근하던 폴백)도 함께 제거.
+- ~~**미스매치 폴백(`engageKeepDist`)**~~ — **폐지**(2026-08-26, 상성 결합 제거와 한 세트). 워커가 장거리 빔(사거리 2000m·감쇠 없음)을 갖게 되면서 이미 `KITER_CLOSE_MUL = 1.0`(무동작)이었다 — 모기는 거리를 유지하고 워커가 지상에서 격추한다.
 - 재입장(`clear`) 시 속도 추정 리셋(순간이동 스파이크 방지).
 
 ### 스폰 (`spawnOne` / `tickSpawns` / `startBurst`)
-- **일괄 스폰(`startBurst`, 현행 미션):** 시작 위치(플레이어 무게중심) 중심 **반경 `spawnRadius`(미션값, 기본 1.5km) 원판에 면적 균등 분포**(`rr = √rand·radius`)로 `spawnCount`(기본 100)마리를 **한 번에** 투입. 아키타입은 `pickBurstType`(워커↔러셔/플라이어↔카이터 비례, 자기정렬). 클리어해도 웨이브 자동 재시작 없음(종료는 미션 인스턴스, [08](08-game-instance-mission.md)).
-  - **MP 1인당 스케일**: `count`·`totalHp`를 **살아있는 플레이어 수 N배**(보스는 팀당 1기 유지)로 키워 1인당 체감 난이도를 일정하게. 아키타입 비율은 `pickBurstType`이 팀 구성대로 → 워커 a명·플라이어 b명이면 러셔:카이터 ≈ a:b(고아 적 없음).
+- **일괄 스폰(`startBurst`, 현행 미션):** 시작 위치(플레이어 무게중심) 중심 **반경 `spawnRadius`(미션값, 기본 1.5km) 원판에 면적 균등 분포**(`rr = √rand·radius`)로 `spawnCount`(기본 100)마리를 **한 번에** 투입. 아키타입은 `pickBurstType(mix, rand)` — 전장 구성이 결정(드론 무관). 클리어해도 웨이브 자동 재시작 없음(종료는 미션 인스턴스, [08](08-game-instance-mission.md)).
+  - **MP 1인당 스케일**: `count`·`totalHp`를 **살아있는 플레이어 수 N배**(보스는 팀당 1기 유지)로 키워 1인당 체감 난이도를 일정하게. 아키타입 비율은 전장 구성(`SpawnMix`)이 정하므로 팀 구성과 무관하다.
   - **체력 총합 예산(`totalHp`)**: HP를 온도 롤이 아니라 **예산으로 배분**한다 — `distributeHp(totalHp, bossHp, count, rand)`가 합계 = `totalHp`(기본 7만)로, **index 0 = 중간보스(`bossHp` 기본 1만)** + 나머지 `count−1`기가 `totalHp−bossHp`(6만)를 무작위(0.5~1.5 가중)로 나눠 갖는다. 개체 외형은 **HP에서 산출**(`appearanceForHp`): HP↑ → 고온(청백)·대형(`visualDiameter`)·발광↑·속도↓ → 보스가 가장 크고 푸르게. (`hpFloor`~`hpCeil` 로그 정규화 `strength`로 온도 매핑.)
 - 레거시 점진 스폰(`spawnOne`/`tickSpawns`)은 플레이어 무게중심 주변 근거리 밴드(반경 55~205 m, `TERRAIN_HALF` 클램프)에 배치.
 - 고도는 **아키타입 고도 밴드**: `alt = spawnAltMin + rand×(spawnAltMax−spawnAltMin)`(러셔 0–60m 지표 / 카이터 80–300m 상공). 최종 y = `world.heightAt(x,z) + alt`. ([tests/spawn.test.ts](../../tests/spawn.test.ts))
@@ -133,10 +135,10 @@
 - 드레인 빔은 [DrainBeams](../../src/fx/DrainBeams.ts)(가산발광 풀, 적→표적)로 분리. `update`에서 페이드/정리.
 
 ### 웨이브 (`startNextWave`)
-- 워커·플라이어 수를 세어 `pendingRusher = archetypeCount(rusher, wave, walkers)`, `pendingKiter = archetypeCount(kiter, wave, flyers)`로 **아키타입별 독립 예산** 산정 — 구성 기반 자기정렬(단일 구성은 자기 타입만, 이길 수 없는 미스매치 없음).
+- 인원 × 전장 구성 비중(`mixShares`)으로 `pendingRusher`/`pendingKiter` 예산 산정. 마커는 구성 축과 **직교** — 어느 구성에서도 전원 비례로 따로 얹힌다(낙인탄은 지상·공중 모두를 위협).
 - 화면 적이 모두 정화(`enemies.length === 0` + 두 예산 0)되면 다음 웨이브 — 무한 증식.
 - 집계: `killCount`(`registerKill(enemy?)`→`onKill`), `wave`(`onWaveChange`). `onPlayerHit`로 피격 통지.
-- `registerKill(enemy?)` — `killCount++` + 역행 후보 기록·마커 소산·직무별 집계. **HP 환수는 없다**(2026-08-25 폐지 — 아래 "회복 없음" 참조).
+- `registerKill(enemy?)` — `killCount++` + 마커 소산·직무별 집계. **HP 환수는 없다**(2026-08-25 폐지 — 아래 "회복 없음" 참조).
 
 ### 집계 게터
 - `hitMeshes` — 레이캐스트 대상 = **셸 InstancedMesh 1개**(`[shellInst]`). 매 프레임 `boundingSphere`를 무효화해 이동한 인스턴스도 광역검사에 잡힘.
@@ -186,7 +188,7 @@
 
 - **낙인 유도탄** — 마커가 발사(`launch`). 느린 호밍(순수 `homingStep` — `turnToward` 재사용, 선회 캡이라 회피 가능). 명중 시 표적 드론에 **낙인 부착(무피해)**, 붉은 팔면체 글리프 결정(§6.1 "붉은 글리프 결정화" — 캔버스 텍스처 없는 헤드리스 안전 메시)이 맥동·자전하며 날아온다.
 - **심판 파문**(내부 id `sweep`) — 개체가 아닌 **전장 이벤트**. `SweepSpec{period 30, speed 250, warnSec 5, maxRadius 1600}` 주기로 균열 앵커(`riftAnchor` — 일괄 스폰 중심 또는 전투 개시 지점)에서 붉은 원통 파면이 확장. **낙인 붙은 표적만** 파면 교차([prevR, curR) 반개구간 — 진앙 포함, 균열 중심 면제 없음) 시 낙인 1개당 `sweepDamage` 피해(순수 `sweepCrossed`/`brandDamage`), 통과와 함께 낙인 소모(머시 무적이어도 소모). 낙인 없으면 무해한 전장 박자.
-- **카운터 연동** — `notifyDead(enemy)`(`registerKill` 에서 호출): 격파된 마커의 유도탄·낙인 일괄 소산("마커 우선 격파"). 관측 고정(W1) 동결은 `tryAttack` 게이트로 장전 자체를 인터럽트. 빔 조사로 낙인 소각(W4 복구 사격)·건물 낙인(커터)은 후속 단계 🔭.
+- **카운터 연동** — `notifyDead(enemy)`(`registerKill` 에서 호출): 격파된 마커의 유도탄·낙인 일괄 소산("마커 우선 격파"). 관측 고정(W1) 동결은 `tryAttack` 게이트로 장전 자체를 인터럽트. 빔 조사로 낙인 소각(W4 복구 사격)은 미구현 🔭(커터 폐지와 함께 보류 — 아래 "폐지" 절).
 - **HUD** — `warnLeft`(예고 잔여 s / 파면 중 0 / 그 외 null)·`brandCount(idx)` 를 `EnemyManager.sweepWarnLeft`/`brandCount()` 로 노출, `Game` 이 매 프레임 폴링해 `HUD.setReckoning` 표시("낙인 ×n — 근원을 격파하라" / "심판 파문 도래 Ns"). 표면 어휘는 §8.2 준수(sweep/tomb/marker 는 코드 전용).
 - 테스트: [tests/reckoning.test.ts](../../tests/reckoning.test.ts) (호밍 선회 캡·파면 교차·낙인 무피해/소모·근원 소산·예고), [tests/zeno.test.ts](../../tests/zeno.test.ts) (관측 고정).
 
@@ -197,14 +199,9 @@
   불가·오토/어시스트/브래킷 제외. 카운터: `manual.decohere`(관측 펄스 — 강제 실체화) ·
   `manual.pinSec`(W2 관측 계류 — 재이탈 봉쇄). [tests/phase.test.ts](../../tests/phase.test.ts)
   🔭 미니맵은 **방향만**(2026-08-24 개정 — 아래 참조), 화면은 중력 렌즈 왜곡으로 정확한 위치를 준다.
-- **커터(절단체)** — cutterStep: 건물 상단 부착 → 절단 채널(W1 동결·경직 인터럽트) → 납치
-  (BuildingCombat `abducting`: 부양·창백 틴트·고도 200 소거(잔해 없음)·격추/W4 `manual.mend` 재안착).
-  [tests/abduct.test.ts](../../tests/abduct.test.ts)
-- **역행체(리와인더)** — rewinderCast(시전 4s → performRewind: killLog 반경 내 부활(계류 확정 제외,
-  상한 8, 스폰은 다음 프레임 서두 — 순회 정합)·killCount 되감김·플레이어 위치 역행(posHistory)).
-  예지 HUD = onRewindCast 카운트다운. [tests/rewinder.test.ts](../../tests/rewinder.test.ts)
+- ~~**커터(절단체)**~~ · ~~**역행체(리와인더)**~~ — **구현 철회(2026-08-26).** 아래 "폐지" 절 참조.
 - **준위 강등** — kkLevelOf(75/50/25% 계단)·kkLevelColors, KK_MIN_HP 이상만. 색 강등+경직+방출 펄스.
-- **역할 실루엣** — 직무별 셸 InstancedMesh 5종(가시 구/사면체/글리프 결정/절단 쐐기/시간 고리) +
+- **역할 실루엣** — 직무별 셸 InstancedMesh 3종(원반/방추/마름모 결정) +
   디졸브 동형(applySilhouette) + 낙인탄 장전 조준선(0.7s) + 러셔 돌진(15~60m, 4.5s 쿨).
 - **동시 조사 판정** — 모든 피격이 `observedLeft`(0.6s 창)를 갱신 → `observedCount`(experiment 골 입력).
 
@@ -216,13 +213,13 @@
   damage — BuildingCombat 이 구조적으로 만족) 을 생성자 4번째 인자로 주입. `EnemyManager.markerFireBuilding`
   이 `buildingStep` 에서 marker 역할·`buildingBrandsEnabled`(setBuildingBrands, clear 가 리셋) 일 때
   호출. [tests/buildingBrands.test.ts](../../tests/buildingBrands.test.ts).
-- **링크 리와인드**(§2.8.3, 자가 시전) — PlayerController 가 `posHistory`(위치+HP, 0.1s/8s 링버퍼)를
-  적측 역행체(`rewindPosition`)와 공유. `historyLookup`/`canCastLinkRewind` 순수 함수 + KeyR 트리거.
+- **링크 리와인드**(§2.8.3, 자가 시전) — PlayerController 의 `posHistory`(위치+HP, 0.1s/8s 링버퍼).
+  원래 적측 역행체(`rewindPosition`)와 공유했으나 역행체 폐지 후 **플레이어 전용**이 됐다.
+  `historyLookup`/`canCastLinkRewind` 순수 함수 + KeyR 트리거.
   `BuildingCombat.undoDestructionNear`(recentlyDestroyed 15s 보존창 — beginDestroy 의 완전한 역, 붕괴
   애니메이션 중이어도 즉시 스냅 복원) + `CollisionWorld.closeBuildingAt`(openBuildingAt 의 역 —
   savedTop 1회 보존). 표면 명칭 "위상 소급"(§8.1 — "리와인드/롤백" 금지어 회피).
-  [tests/PlayerController.test.ts](../../tests/PlayerController.test.ts)·
-  [tests/abduct.test.ts](../../tests/abduct.test.ts).
+  [tests/PlayerController.test.ts](../../tests/PlayerController.test.ts).
 - **중력 렌즈 왜곡**(§2.7.1) — [lensDistort.ts](../../src/fx/lensDistort.ts)(`projectLensPoints` 순수
   — 카메라 프로젝션 행렬곱만이라 노드 테스트 가능) + [LensDistortPass.ts](../../src/fx/LensDistortPass.ts)
   (ShaderPass, 최대 6점 고정 유니폼 배열). `EnemyManager.phasedMarkers`(카메라 근접순) → `Game.frame()`
@@ -232,7 +229,106 @@
   (DEPLOY_ROLE_NAMES) → 계시 후 "투영체"(근원=boss 만 구분 유지), `missionObjectiveTextV2`/
   `missionProgressTextV2` 에 `revealed` 파라미터 추가(기본 false — 하위호환). GameInstance 가
   `InstanceOpts.revealed`(Game.ts 가 출격 시점에 `revealed(campaignStore.load())` 주입)로 보관.
-  [bestiary.ts](../../src/game/bestiary.ts): `bestiaryCards(spec, revealed)` — 계시 전 아키타입 5카드
+  [bestiary.ts](../../src/game/bestiary.ts): `bestiaryCards(spec, revealed)` — 계시 전 아키타입 3카드
   (스펙에서 이름 파생), 계시 후 "그것(투영체)" 단일 카드. MenuScreen 스토리 팝업 내 "도감/CODEX"
   항목이 같은 패널에서 카드 목록으로 교체 렌더(CSS `bestiary-merge` 접힘 애니메이션).
   [tests/bestiary.test.ts](../../tests/bestiary.test.ts)·spoilerGuard 스캔 포함.
+
+## 차원도약 (§6.7 확장 — 2026-08-25)
+
+[leap.ts](../../src/enemies/leap.ts)(순수 — 표본 추출·게이트) + `EnemyManager.leapStep`(구동).
+**플레이어를 인식 중인**(engagesPlayer 통과) 거머리·모기만. 텔레그래프 → 인터럽트 없으면 순간이동.
+
+- **정반대 목적**: 모기 = **원거리 도약**(관측 고정 W1 의 노출 누적을 끊는다 — 붙들고만 있으면 이기는
+  고정 교전을 깬다) / 거머리 = **근접 도약**(속도 17 대 워커 19.44 라 뒷걸음질만으로 성립하던 영구
+  회피를 깬다).
+- **착지점은 발동 `lockSec`(1s) 전에 확정**된다. 그 전까지는 매 프레임 플레이어를 따라가고, 예고선이
+  멈추는 순간이 신호이며 그때부터 lockSec 이 회피 창이다. 시전 시작 시점에 굳히면 텔레그래프 3초
+  동안 플레이어가 40~50m 를 벗어나 **늘 빗나간다**(실측).
+- **표본**: 방위각 균등 + 수평거리 **면적 균등** 도넛(`minDist`~`maxDist`) + 수직 오프셋은
+  **플레이어 기준**(`dyMin`~`dyMax`, 지면 하한 클램프). 구면 균등을 쓰지 않는 이유 — y 가 [−r,+r]
+  균등이라(아르키메데스) 절반이 플레이어보다 아래로 간다. 지면 기준 고도도 안 된다: 비행 중인
+  플레이어 발밑 수백 m 에 떨어진다(실측 — 300m 상공일 때 거머리가 299m 아래).
+- **발동 거리 창**(`triggerMin`/`triggerMax`) — 도약이 **상황을 실제로 바꿀 때만**. 없으면 정반대
+  동작이 난다: 거머리가 접촉 거리(평균 3m)에서 도약해 12~25m 링으로 **물러났다**(접근이 아니라 후퇴).
+  거머리는 45m 이상일 때만, 모기는 120m 이하일 때만.
+- **인터럽트**(`leapInterrupted`) — `isZenoFrozen`·`isStaggered`·`isPinned`·`isPhased`. **피해가 아니다**:
+  360° 오토파이어가 3초에 15~23발을 입력 없이 넣으므로 "맞으면 취소"면 플레이어 개입 없이 100%
+  취소돼 메커닉이 죽는다. 취소의 실체는 **수동 조준 사격**(pin 은 manual 전용).
+- **동시 상한**(`concurrentCap`) — 루프 **전에** 시전 중인 수를 미리 센다. 순회하며 증가시키면
+  순서 의존 버그가 난다(뒤쪽 개체가 이미 시전 중인데 앞쪽이 0 을 보고 상한 초과 개시).
+- **연출** — 순간이동은 한 프레임에 끝나 연출이 없으면 그냥 사라진 것으로 보인다. 출발↔도착 잔광 선
+  (`DrainBeams` 3겹) + 양 끝 파편(`onLeap` → `KillBurst.spawnShards`) + 착지 코어 섬광.
+- **난이도 3층**: `plasmoid.json`(기본값) → `MissionModifiers.leapChanceMul`/`leapCdMul`(배틀필드) →
+  `DIRECTOR_LIMITS.leapChanceMul`(감독 — `TimedMod` 한시 적용).
+  [tests/leap.test.ts](../../tests/leap.test.ts) · [tests/leapManager.test.ts](../../tests/leapManager.test.ts)
+
+## 전장 스폰 구성 (§6.8 — 2026-08-25)
+
+`SpawnMix = "kiter" | "rusher" | "even"` — **미션이 선언**하고 드론 종류는 관여하지 않는다.
+`mixShares(mix)` 가 아키타입 비중을, `mixLeapChanceMul(mix)` 가 구성별 기본 도약 빈도를 준다
+(카이터 단독만 0.5 — 워커는 추격 불가 + 조준 보정 콘 13°라 잦은 원거리 도약이 제한시간을 위협).
+
+- 적용 경로는 **웨이브·pyramid·horde 뿐**. 로스터/보스 투입은 `role` 을 직접 지정하므로 무관하다.
+- `runnableV2` 가 `spawnMix` 오타를 풀에서 걸러낸다 — 잘못된 값이 조용히 `"even"` 으로 흡수되면
+  의도한 난이도가 말없이 바뀐다(변조 키와 같은 취급).
+  [tests/spawnMix.test.ts](../../tests/spawnMix.test.ts)
+
+## 형태 언어 — 실루엣 종횡비 (2026-08-25 개편)
+
+색 = 강함 / **형태 = 직무**. 코어가 강하게 발광(`coreBright × CORE_BLOOM`)해 원거리에서 면·각은
+뭉개진다 — 정이십면체(20면)든 정팔면체(8면)든 같은 빛덩어리다. 살아남는 채널은 **총 비례**뿐이라
+직무를 종횡비 축에 넓게 흩어 놓는다.
+
+| 직무 | 형태 | 종횡비(시선 ±35° 중앙값) |
+|---|---|---|
+| 모기 | 가늘고 긴 방추 | **0.16** |
+| 소인체 | 가로로 넓은 마름모 결정 | **1.22** |
+| 거머리 | 납작한 팔각 원반 | **2.45** |
+
+개편 전에는 다섯이 0.29~1.15 에 몰려 있었고 거머리(1.04)와 소인체(0.98)는 사실상 같은 실루엣이었다.
+읽는 규칙: **세로로 길수록 빠르고 원거리, 가로로 넓을수록 느리고 접촉.**
+도감 삽화는 [shapeSvg.ts](../../src/ui/shapeSvg.ts) 가 **같은 `SHELL_GEOS` 를 그대로 투영**한다 —
+형태를 바꾸면 도감이 자동 추종한다. [tests/silhouette.test.ts](../../tests/silhouette.test.ts)
+
+## 폐지 — 절단체·역행체 (2026-08-26)
+
+**설계는 유효하나 구현은 제거했다.** 사유는 플레이 단순화 — 둘 다 `countBase 0`/`countCap 0` 이라
+웨이브에 나오지 않고 각각 **전용 미션 1개**(`severance`·`retro-hunt`)에서만 등장해, 대부분의 플레이어가
+한 번도 만나지 못하면서 코드는 13개 파일에 걸쳐 있었다. 되살릴 때 참조할 수 있도록 설계를 남긴다.
+
+### 절단체(커터 / SEVERER) — 서사편 §6.3 의존성 절단
+
+- **행동**: 건물 상단 접근 → 부착(`attachRange 22`) → 절단 채널(`severSec 5`) → 납치 개시 → 부양 동반.
+  채널은 관측 고정(W1)·경직·위상 이탈이 정지시킨다("붙들면 인터럽트"). 탐색 반경 `seekRange 900`.
+- **납치**(BuildingCombat `abducting` 상태): 부양 + 창백한 틴트, 고도 200 도달 시 **소거**(잔해 없는
+  반출 — 붕괴가 아니다). 병합 메시는 정점 이동, Group 랜드마크는 변환으로 부양.
+- **카운터 2종**: 격추 시 **재안착**(하강 전환 → intact 복원) / **W4 복구 사격**(`manual.mend` — 수동 빔이
+  납치 중 건물에 닿으면 부양 고도를 깎아 재안착 가속). "쏘는 것과 되돌리는 것이 같은 무기"인 유일한 사례.
+- **함께 제거된 것**: `BuildingCombat` 의 `beginAbduct`/`releaseAbduct`/`abductAnchor`/`mendAt`/
+  `tickAbduct`/`liftBuilding`/`reanchor`/`finishAbduct`, `BState "abducting"`, `lift`/`liftDir` 필드,
+  `ABDUCT_*` 상수 4종, 빔 스펙의 `manual.mend`.
+
+### 역행체(리와인더 / RETROGRADE) — 서사편 §6.6 미니보스 슬롯
+
+- **행동**: 후방 유지(`keepDist 160`)하며 사거리 내 표적에 시전(`castSec 4`) → 발동 시 반경 300m 안에서
+  최근 `rewindSec 5` 초를 되감는다 — 그 사이 격파한 개체 부활(상한 8), 처치 집계 되감김, 플레이어 위치
+  역행(HP 는 불변). 예지 HUD 가 시전 잔여를 카운트다운.
+- **카운터 3종**(정본): 시전 중 격파 / W1 동결·경직(인터럽트) / **W2 관측 계류**.
+- **⚠ 서사 결합**: 파생 규칙 [§9.2-2](../private/05x-narrative-truth.md) *"관측 계류 = 롤백 면역 —
+  계류부터 걸어라"* 를 게임 안에서 보여주던 **유일한 장치**였다. 폐지로 그 규칙은 문서 전용 설정이 됐고,
+  W2 참조 핀(`manual.pinSec`)은 **위상 이탈 봉쇄** 역할만 남는다. 정본 규칙을 다시 실증하려면 역행체
+  복원이 가장 직접적이다.
+- **함께 제거된 것**: `killLog`(역행 후보 기록)·`pendingRevive`·`REWIND_REVIVE_CAP`·`onRewindCast`/
+  `onRewound` 콜백·HUD 예지 표시·`PlayerController.rewindPosition`.
+  `posHistory`/`historyLookup` 은 **남는다** — 플레이어 자가 시전(링크 리와인드 §2.8.3)이 계속 쓴다.
+
+### 함께 삭제된 미션
+
+| 미션 | 목표 | 사유 |
+|---|---|---|
+| `severance` (차단 작전) | guard(landmarks) | 절단체 전용 조합 — 주적이 사라지면 성립 불가 |
+| `retro-hunt` (역행 추적) | purge-role(rewinder) | 표적 직무가 없어 목표 도달 불가 |
+
+미션 22개 → 20개. 실루엣도 5종 → 3종으로 줄면서 종횡비 축을 다시 벌렸다(모기 0.16 / 소인체 1.22 /
+거머리 2.45).

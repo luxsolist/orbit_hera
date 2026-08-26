@@ -4,7 +4,7 @@ import type { EnemyManager } from "../enemies/EnemyManager";
 import type { Sfx } from "../core/Sfx";
 import { DamageNumbers } from "../fx/damageNumbers";
 import type { BeamSpec } from "./WeaponSpec";
-import { makeGlowTexture, BeamPool, fireEmitters, type BeamStyle } from "./beamFx";
+import { makeGlowTexture, makeRadialTexture, BeamPool, fireEmitters, type BeamStyle } from "./beamFx";
 import { autoFireAllowed } from "./WeaponSpec";
 import { parseHexColor } from "../core/math";
 import { bestAlignedDir, nearestVisibleInCone } from "./targeting";
@@ -236,7 +236,6 @@ export class FrequencyBeam {
         zeno: this.spec.zeno, // 관측 고정(W1) — 수동·오토 공통(오토 = 백그라운드 관측 스레드)
         // 관측 펄스(§2.2)·관측 계류(W2)는 **수동 조준 사격만** — 오토는 위상 이탈을 못 붙잡는다
         observe: manual ? { decohere: this.spec.manual.decohere, pinSec: this.spec.manual.pinSec } : undefined,
-        mend: manual ? this.spec.manual.mend : undefined, // W4 — 수동 조준 사격만 복구 도구
 
         onHit: (endPoint, hit, d) => this.spawnImpact(endPoint, hit.face?.normal, d), // 임팩트/스파크는 기본빔만
         onEnemyHit: manual ? (killed) => this.onManualHit?.(killed) : undefined, // 히트스톱은 수동만
@@ -272,38 +271,22 @@ export class FrequencyBeam {
   }
 }
 
-/** 중화 링용: 가운데가 비고 가장자리 근처가 밝은 환형(annulus) 텍스처 */
+/** 중화 링 — 속이 빈 밝은 환형(적중부 충격파). 가운데가 비어야 "링"으로 읽힌다. */
 function makeRingTexture(): THREE.Texture {
-  const size = 64;
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  grad.addColorStop(0.0, "rgba(155,255,255,0)"); // 속은 투명
-  grad.addColorStop(0.55, "rgba(155,255,255,0)");
-  grad.addColorStop(0.74, "rgba(200,255,255,0.95)"); // 밝은 링
-  grad.addColorStop(0.9, "rgba(140,245,255,0)");
-  grad.addColorStop(1.0, "rgba(0,0,0,0)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.needsUpdate = true;
-  return tex;
+  return makeRadialTexture([
+    [0.0, "rgba(155,255,255,0)"], // 속은 투명
+    [0.55, "rgba(155,255,255,0)"],
+    [0.74, "rgba(200,255,255,0.95)"], // 밝은 링
+    [0.9, "rgba(140,245,255,0)"],
+    [1.0, "rgba(0,0,0,0)"],
+  ]);
 }
 
-/** 스파크 파편용: 중심이 날카롭게 밝은 작은 점 텍스처 */
+/** 스파크 파편 — 중심이 날카롭게 밝은 작은 점. */
 function makeSparkTexture(): THREE.Texture {
-  const size = 32;
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  grad.addColorStop(0, "rgba(255,255,255,1)");
-  grad.addColorStop(0.45, "rgba(180,252,255,0.9)");
-  grad.addColorStop(1, "rgba(120,240,255,0)");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.needsUpdate = true;
-  return tex;
+  return makeRadialTexture([
+    [0, "rgba(255,255,255,1)"],
+    [0.45, "rgba(180,252,255,0.9)"],
+    [1, "rgba(120,240,255,0)"],
+  ], 32);
 }

@@ -10,5 +10,4 @@ export interface PlasmoidCatalogEntry {
 
 const loader = makeLoader<PlasmoidCatalogEntry, PlasmoidSpec>("enemies", "적");
 
-export const fetchPlasmoidCatalog = (): Promise<PlasmoidCatalogEntry[]> => loader.catalog();
 export const fetchPlasmoid = (id: string): Promise<PlasmoidSpec> => loader.one(id);

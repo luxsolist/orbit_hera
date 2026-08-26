@@ -8,20 +8,26 @@ import { damageForDistance, type DamageFalloff, type ZenoSpec } from "./WeaponSp
 // FrequencyBeam(시안)·SpecialBarrage(호박색)가 색/반경만 달리해 공유한다.
 
 /** 방사형 그라데이션 글로우 텍스처(중앙 흰색 → mid → outer 투명). */
-export function makeGlowTexture(mid: string, outer: string): THREE.Texture {
-  const size = 64;
+/**
+ * 방사 그라디언트 스프라이트 텍스처 — 캔버스 생성·그라디언트·CanvasTexture 조립의 공통부.
+ * `stops` 는 `[offset(0..1), css색]` 목록. 빔 글로우·충격 링·스파크가 정지점만 달리해 공유한다.
+ */
+export function makeRadialTexture(stops: readonly [number, string][], size = 64): THREE.Texture {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext("2d")!;
   const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  grad.addColorStop(0, "rgba(255,255,255,1)");
-  grad.addColorStop(0.3, mid);
-  grad.addColorStop(1, outer);
+  for (const [at, color] of stops) grad.addColorStop(at, color);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
   return tex;
+}
+
+/** 빔 글로우 — 중심 흰색에서 mid 를 거쳐 outer 로 사라지는 기본형. */
+export function makeGlowTexture(mid: string, outer: string): THREE.Texture {
+  return makeRadialTexture([[0, "rgba(255,255,255,1)"], [0.3, mid], [1, outer]]);
 }
 
 const _up = new THREE.Vector3(0, 1, 0);
@@ -123,7 +129,6 @@ export interface EmitterShot {
   style: BeamStyle;
   zeno?: ZenoSpec; // 관측 고정(W1) — 적중마다 대상 노출 갱신(지속 조사 감속→동결)
   observe?: { decohere?: boolean; pinSec?: number }; // 수동 관측 사격(W2/§2.2) — 실체화 강제·관측 계류
-  mend?: number; // W4 복구 사격 — 납치 중 건물에 명중 시 부양 고도를 이만큼 깎는다(재안착 가속)
   onHit?: (endPoint: THREE.Vector3, hit: THREE.Intersection, dir: THREE.Vector3) => void;
   onEnemyHit?: (killed: boolean) => void; // 적 명중 확정 후(처치 여부 포함) — 히트스톱 등 손맛 훅
 }
@@ -148,7 +153,6 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
     // 건물에 막힘 — 빔은 건물 표면에서 멈추고 뒤 적은 피해 없음
     endPoint = o.clone().addScaledVector(d, buildDist);
     // W4 복구 사격 — 납치(부양) 중 건물이면 관측이 존재를 막 위에 다시 고정한다(재안착 가속)
-    if (shot.mend) ctx.world.buildings?.mendAt(endPoint.x, endPoint.z, shot.mend);
   } else {
     endPoint = beamEnd(hit, o, d, R);
     const enemy = hit && ctx.enemies.enemyFromHit(hit); // 셸 InstancedMesh → instanceId → 적

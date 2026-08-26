@@ -18,7 +18,6 @@ import { sampleLeapOffset, leapInterrupted, canBeginLeap, inLeapRange, leapChanc
 const ATTACK_RANGE = 3.2; // 접촉 교전 거리(피해는 PlasmoidSpec.contact 로 산출)
 const RUSHER_DASH_MIN = 15; // 러셔 돌진 발동 밴드(m) — 너무 가까우면 불필요, 멀면 무의미(P3 안티카이팅)
 const RUSHER_DASH_MAX = 60;
-const REWIND_REVIVE_CAP = 8; // 역행 1회 부활 상한(§6.6) — 폭주 방지
 const SPAWN_INTERVAL = 0.35; // 개체 점진 스폰 간격(s)
 const BURST_ROLL_WAVE = 12; // 일괄 스폰 외형 롤의 가상 웨이브 — 전 온도(색) 스펙트럼 해금(크기 다양성은 개체 rand 유지)
 const KITER_GROUND_CLEARANCE = 1.5; // 도주형이 가라앉지 않는 지면 위 최소 높이(m)
@@ -230,17 +229,13 @@ export class EnemyManager {
   // 전투 채점 집계(결과 화면) — 표면 어휘만(§8.2): 근원 격파·파문 무상 통과·관측 고정
   readonly stats = { markerKills: 0, zenoFreezes: 0, sweepHits: 0, sweepCleanPasses: 0, buildingBrandHits: 0 };
   // 역행체(P3 §6.6) — 최근 격파 기록(역행 시 부활 후보). W2 계류 중 격파는 확정 — 역행 불능(§9.2).
-  private killLog: { t: number; x: number; z: number; maxHp: number; role: PlasmoidArchetype; deployRole: CoreEnemy["deployRole"]; pinned: boolean }[] = [];
   // 역행 부활 대기열 — 시전 완료가 update 순회 중 일어나므로 스폰은 다음 프레임 서두로 지연
   // (순회 중 push 는 boids/steer 인덱스 정합을 깨뜨린다).
-  private pendingRevive: { x: number; z: number; maxHp: number; role: PlasmoidArchetype; deployRole: CoreEnemy["deployRole"] }[] = [];
   /** 예지 HUD(2.8.1) — 역행 시전 잔여(s). null = 시전 종료/취소. */
-  onRewindCast?: (secLeft: number | null) => void;
   /** 역행 발동 통지 — revived = 되살아난 격파 수(HUD 처치 수 갱신·연출). */
-  onRewound?: (revived: number) => void;
   // 투입 직무별 처치 집계(훅 ③ purge-role) — 보스는 그룹당 1(처치 크레딧과 동일 계약)
   readonly roleKills: Record<PlasmoidArchetype | "elite" | "boss", number> = {
-    rusher: 0, kiter: 0, marker: 0, cutter: 0, rewinder: 0, elite: 0, boss: 0,
+    rusher: 0, kiter: 0, marker: 0, elite: 0, boss: 0,
   };
   // 어그로 성향(훅 ④ — 미션 변조 `modifiers.aggro`): player = 현행(인식 반경 내 플레이어 전환),
   // building/landmark = 표적 직행 — 플레이어는 **때려야만**(provoked) 어그로가 끌린다.
@@ -306,8 +301,6 @@ export class EnemyManager {
       rusher: makeShell(SHELL_GEOS.rusher),
       kiter: makeShell(SHELL_GEOS.kiter),
       marker: makeShell(SHELL_GEOS.marker),
-      cutter: makeShell(SHELL_GEOS.cutter),
-      rewinder: makeShell(SHELL_GEOS.rewinder),
     };
   }
 
@@ -318,7 +311,7 @@ export class EnemyManager {
    */
   private updateInstances() {
     let ci = 0;
-    const counts: Record<PlasmoidArchetype, number> = { rusher: 0, kiter: 0, marker: 0, cutter: 0, rewinder: 0 };
+    const counts: Record<PlasmoidArchetype, number> = { rusher: 0, kiter: 0, marker: 0 };
     for (const list of this.instanceEnemiesBy.values()) list.length = 0;
     for (const e of this.enemies) {
       if (e.state === "dead") continue;
@@ -753,8 +746,6 @@ export class EnemyManager {
     const arche =
       type === "kiter" ? a.kiter :
       type === "marker" ? a.marker :
-      type === "cutter" ? (a.cutter ?? a.rusher) : //     스펙 없는 구 데이터 — 러셔 폴백
-      type === "rewinder" ? (a.rewinder ?? a.rusher) :
       a.rusher;
 
     // 위치: 명시(일괄 스폰) 또는 플레이어 무게중심 주변 근거리 밴드.
@@ -823,20 +814,7 @@ export class EnemyManager {
         keepBand: mk.keepBand,
         homeDir: { x: rr * Math.cos(th), y: cz, z: rr * Math.sin(th) },
       });
-    } else if (type === "rewinder" && a.rewinder) {
-      // 역행체(§6.6) — 후방 원거리 유영(카이터 이동 재사용) + 역행 시전(rewinderCast 가 구동).
-      const rw = a.rewinder;
-      enemy = new CoreEnemy(new THREE.Vector3(x, y, z), app);
-      const cz = this.rand() * 2 - 1, th = this.rand() * Math.PI * 2, rr = Math.sqrt(Math.max(0, 1 - cz * cz));
-      enemy.setKiter({
-        speed: spd,
-        turnRate: THREE.MathUtils.degToRad(rw.turnRateDeg),
-        keepDist: rw.keepDist,
-        keepBand: rw.keepBand,
-        homeDir: { x: rr * Math.cos(th), y: cz, z: rr * Math.sin(th) },
-      });
-      enemy.rewCd = rw.rollback.castCd * 0.5; // 첫 시전은 반 쿨다운 후(등장 인지 시간)
-    } else {
+        } else {
       // 러셔 — 추격+접촉(setKiter 미호출 → isKiter false).
       enemy = new CoreEnemy(new THREE.Vector3(x, y, z), app, spd);
     }
@@ -903,52 +881,6 @@ export class EnemyManager {
     return destroyed;
   }
 
-  /**
-   * 커터(절단체) 행동 — 표적 건물 상단으로 접근 → 부착 → 절단 채널(severSec) → 납치 개시 →
-   * 부양 동반(riding). 채널은 관측 고정(W1)·경직·위상 이탈이 일시정지시킨다("붙들면 인터럽트").
-   * 격추 시 재안착은 update 루프의 사망 분기(releaseAbduct)가 담당.
-   */
-  private cutterStep(enemy: CoreEnemy, p: THREE.Vector3, dt: number): void {
-    const bc = this.world.buildings;
-    const cu = this.spec.archetypes.cutter;
-    if (!bc || !cu) { enemy.update(dt, p, 1); return; } // 스펙/건물 없음 — 부유 대기
-    // 납치 동반 — 부양하는 건물 상단에 얹혀 함께 상승. anchor 소멸 = 소거 완료(다음 표적) 또는 해제.
-    if (enemy.cutterRide) {
-      const top = bc.abductAnchor(enemy.cutterRide);
-      if (top) {
-        p.set(top.x, top.y + enemy.group.scale.x * 1.4, top.z);
-        enemy.update(dt, p, 0); // 이동 없음 — 비주얼만 진행
-        return;
-      }
-      enemy.cutterRide = null;
-      enemy.buildingId = null;
-      enemy.cutterSever = 0;
-    }
-    // 표적 확보 — 어그로 변조(landmark)면 랜드마크 직행, 아니면 탐색 반경 내 최근접 건물.
-    if (enemy.buildingId == null || !bc.targetTop(enemy.buildingId, _btarget)) {
-      enemy.cutterSever = 0;
-      const found = this.aggro === "landmark"
-        ? bc.nearestLandmark(p.x, p.z)
-        : bc.nearestTarget(p.x, p.z, cu.seekRange);
-      if (!found) { enemy.update(dt, p, 1); return; }
-      enemy.buildingId = found.id;
-      if (!bc.targetTop(found.id, _btarget)) return;
-    }
-    if (p.distanceTo(_btarget) > cu.attachRange) { // 접근(건물 상단으로)
-      enemy.update(dt, _btarget, 1);
-      return;
-    }
-    // 부착 — 상단에 정착해 절단 채널. 붙들리면(동결/경직/이탈) 채널 정지.
-    p.lerp(_btarget, Math.min(1, dt * 4));
-    enemy.update(dt, p, 0);
-    if (enemy.isZenoFrozen || enemy.isStaggered || enemy.isPhased) return;
-    enemy.cutterSever += dt;
-    if (enemy.cutterSever >= cu.severSec) {
-      if (bc.beginAbduct(enemy.buildingId!)) enemy.cutterRide = enemy.buildingId;
-      else { enemy.buildingId = null; } // 이미 파괴/납치됨 — 재탐색
-      enemy.cutterSever = 0;
-    }
-  }
 
   /**
    * 2순위 표적 — 플레이어가 사거리 밖일 때 주변 건물을 자동 공격(흡수=성장).
@@ -1132,59 +1064,7 @@ export class EnemyManager {
     return null;
   }
 
-  /**
-   * 역행체(§6.6) 시전 — 사거리 내 표적에 castSec 시전 후 역행(performRewind). 카운터 3종이 정본:
-   * 시전 중 격파 / W1 동결·경직(인터럽트) / W2 계류(관측된 회로는 되감을 수 없다). 예지 HUD 는
-   * onRewindCast 콜백으로 카운트다운을 받는다.
-   */
-  private rewinderCast(enemy: CoreEnemy, p: THREE.Vector3, targetPos: THREE.Vector3, dt: number): void {
-    const rw = this.spec.archetypes.rewinder;
-    if (!rw) return;
-    const rb = rw.rollback;
-    if (enemy.rewCastLeft > 0) {
-      if (enemy.isZenoFrozen || enemy.isStaggered || enemy.isPinned || enemy.isPhased) {
-        enemy.rewCastLeft = 0;
-        enemy.rewCd = rb.castCd * 0.6; // 끊긴 시전 — 짧은 재정렬 후 재시도
-        this.onRewindCast?.(null);
-        return;
-      }
-      enemy.rewCastLeft -= dt;
-      enemy.coreBright = 5.5; // 시전 발광 — 최우선 표적 텔레그래프
-      if ((this.frame & 7) === 0) this.drain.spawn(p, targetPos, enemy.color); // 표적과 이어진 역행선
-      if (enemy.rewCastLeft <= 0) {
-        this.performRewind(p, rb);
-        enemy.rewCd = rb.castCd;
-        this.onRewindCast?.(null);
-      } else {
-        this.onRewindCast?.(enemy.rewCastLeft);
-      }
-      return;
-    }
-    enemy.rewCd -= dt;
-    if (enemy.rewCd <= 0 && p.distanceToSquared(targetPos) <= rb.castRange * rb.castRange) {
-      enemy.rewCastLeft = rb.castSec;
-    }
-  }
 
-  /** 역행 발동 — 반경 내 최근 격파 부활(계류 확정분 제외) + 처치 집계 되감기 + 플레이어 위치 역행. */
-  private performRewind(center: THREE.Vector3, rb: NonNullable<PlasmoidSpec["archetypes"]["rewinder"]>["rollback"]): void {
-    const rsq = rb.radius * rb.radius;
-    let revived = 0;
-    for (const k of this.killLog) {
-      if (this.timeSec - k.t > rb.rewindSec || k.pinned) continue;
-      if ((k.x - center.x) ** 2 + (k.z - center.z) ** 2 > rsq) continue;
-      if (revived >= REWIND_REVIVE_CAP) break;
-      this.pendingRevive.push({ x: k.x, z: k.z, maxHp: k.maxHp, role: k.role, deployRole: k.deployRole });
-      k.t = -Infinity; // 소모 — 중복 부활 방지
-      revived++;
-      if (this.roleKills[k.deployRole] > 0) this.roleKills[k.deployRole]--;
-    }
-    if (revived > 0) this.killCount = Math.max(0, this.killCount - revived); // 전과가 되감긴다
-    for (const pl of this.players) {
-      if (!pl.isDead && pl.worldPosition.distanceToSquared(center) <= rsq) pl.rewindPosition(rb.rewindSec);
-    }
-    this.onRewound?.(revived);
-  }
 
   /** 최근접 생존 표적 인덱스(진형 행동의 기회 공격용). 없으면 -1. */
   private nearestAliveTargetIdx(p: THREE.Vector3): number {
@@ -1228,7 +1108,6 @@ export class EnemyManager {
     if (idx >= 0) {
       const t = this.targets[idx];
       if (enemy.role === "marker") this.markerFire(enemy, p, t.pos, idx, dt);
-      else if (enemy.role === "rewinder") this.rewinderCast(enemy, p, t.pos, dt); // hold 진형의 후방 시전자
       else this.attack(enemy, t.pos, p, t.player, null);
     }
   }
@@ -1285,6 +1164,33 @@ export class EnemyManager {
     this.spawnTimer = SPAWN_INTERVAL;
   }
 
+  /**
+   * 살아있는 개체 1기의 **프레임 상태 유지** — 행동(이동·공격)과 무관한 세 가지를 한자리에 모은다:
+   * 공유 풀 동기 · 관측 고정 집계 래치 · 준위 강등 전이. update 루프 본문에서 분리한 이유는
+   * 그 루프가 "이 프레임에 개체가 무엇을 하는가"만 읽히도록 하기 위함이다(순수 추출 — 동작 불변).
+   */
+  private tickEnemyState(enemy: CoreEnemy): void {
+    // 다중 투영 동기 — 풀 소진 시 동반 소산, 생존 중엔 표시 HP 를 풀로 미러(브래킷·수축 동기)
+    if (enemy.sharedPool) {
+      if (enemy.sharedPool.hp <= 0) enemy.forceDissolve();
+      else enemy.hp = enemy.sharedPool.hp;
+    }
+    // 관측 고정 집계 — 동결 진입 1회만(래치). 결과 화면 "관측 고정 n" 채점.
+    if (enemy.isZenoFrozen) {
+      if (!enemy.zenoLatch) { enemy.zenoLatch = true; this.stats.zenoFreezes++; }
+    } else enemy.zenoLatch = false;
+    // 준위 강등(P3 §2.3) — HP 경계 하향 통과: 색 강등(적색 쪽) + 짧은 경직 + 전이 방출 펄스
+    if (enemy.kkColors) {
+      const lv = kkLevelOf(enemy.hp, enemy.maxHp);
+      if (lv < enemy.kkCur) {
+        enemy.kkCur = lv;
+        enemy.color = enemy.kkColors[lv - 1];
+        enemy.stagger(KK_DEMOTE_STAGGER);
+        enemy.coreBright = 7; // 준위 전이 복사 — 잡음 위로 올라오는 선 스펙트럼(§overview 그래픽 규칙)
+      }
+    }
+  }
+
   update(dt: number) {
     this.frame++;
     this.timeSec += dt; // patrol 등 시간 기반 진형 행동
@@ -1302,14 +1208,6 @@ export class EnemyManager {
     this.world.buildings?.update(dt); // 건물 피격 틴트/붕괴 연출 진행
     this.tickSpawns(dt);
     this.tickReinforce(dt); // 미션 점진 투입(균열 증원) — 웨이브 모드에선 무동작
-    // 역행 부활(§6.6) — 지난 프레임 시전 완료분을 순회 밖에서 스폰(인덱스 정합 보전)
-    if (this.pendingRevive.length) {
-      for (const k of this.pendingRevive) {
-        const e = this.spawnOne(k.role, k.x, k.z, this.wave, k.maxHp);
-        e.deployRole = k.deployRole;
-      }
-      this.pendingRevive.length = 0;
-    }
     this.buildTargets(dt);
     const targets = this.targets;
 
@@ -1332,33 +1230,8 @@ export class EnemyManager {
     let bi = 0; // boids 인덱스(alive 순회 동기)
     for (const enemy of this.enemies) {
       const p = enemy.group.position;
-      if (enemy.state === "alive") {
-        // 다중 투영 동기 — 풀 소진 시 동반 소산, 생존 중엔 표시 HP 를 풀로 미러(브래킷·수축 동기)
-        if (enemy.sharedPool) {
-          if (enemy.sharedPool.hp <= 0) enemy.forceDissolve();
-          else enemy.hp = enemy.sharedPool.hp;
-        }
-        // 관측 고정 집계 — 동결 진입 1회만(래치). 결과 화면 "관측 고정 n" 채점.
-        if (enemy.isZenoFrozen) {
-          if (!enemy.zenoLatch) { enemy.zenoLatch = true; this.stats.zenoFreezes++; }
-        } else enemy.zenoLatch = false;
-        // 준위 강등(P3 §2.3) — HP 경계 하향 통과: 색 강등(적색 쪽) + 짧은 경직 + 전이 방출 펄스
-        if (enemy.kkColors) {
-          const lv = kkLevelOf(enemy.hp, enemy.maxHp);
-          if (lv < enemy.kkCur) {
-            enemy.kkCur = lv;
-            enemy.color = enemy.kkColors[lv - 1];
-            enemy.stagger(KK_DEMOTE_STAGGER);
-            enemy.coreBright = 7; // 준위 전이 복사 — 잡음 위로 올라오는 선 스펙트럼(§overview 그래픽 규칙)
-          }
-        }
-      }
+      if (enemy.state === "alive") this.tickEnemyState(enemy);
       if (enemy.state !== "alive") {
-        // 커터 격추 — 납치 중이던 건물 재안착(하강 전환). 모든 사망 경로(격파·동반 소산)를 커버.
-        if (enemy.cutterRide) {
-          this.world.buildings?.releaseAbduct(enemy.cutterRide);
-          enemy.cutterRide = null;
-        }
         // 디졸브 시작 → 개별 메시(디졸브 셰이더)로 렌더하도록 씬에 추가(살아있을 땐 인스턴스드라 씬 밖).
         if (enemy.state === "dissolving" && enemy.group.parent === null) this.scene.add(enemy.group);
         enemy.update(dt, p, 1); // 디졸브 비주얼만 진행(이동/공격 없음)
@@ -1366,11 +1239,6 @@ export class EnemyManager {
       }
       const myIdx = bi++;
       enemy.decayProvoke(dt); // 유발 감쇠 — 분기 전에 1회(모든 행동 경로가 같은 시계를 본다)
-      // 커터(절단체 — §6.3) — 플레이어 무시, 건물 부착→절단→납치 전용(방어 미션의 주적)
-      if (enemy.role === "cutter") {
-        this.cutterStep(enemy, p, dt);
-        continue;
-      }
       // 진형 행동(hold/patrol/escort) — 피격(provoked) 전까지 어그로 대신 진형 유지 + 기회 공격
       if (enemy.behavior !== "hunt" && !enemy.provoked) {
         this.formationStep(enemy, p, dt, boids, grid, myIdx);
@@ -1413,7 +1281,6 @@ export class EnemyManager {
       // 차원도약 — 이 분기에 도달했다는 건 engagesPlayer 통과, 즉 **플레이어를 인식 중**이라는 뜻이다.
       if (t.player && (enemy.role === "kiter" || enemy.role === "rusher")) this.leapStep(enemy, p, t.pos, dt);
       if (enemy.role === "marker") this.markerFire(enemy, p, t.pos, idx, dt);
-      else if (enemy.role === "rewinder") this.rewinderCast(enemy, p, t.pos, dt);
       else this.attack(enemy, t.pos, p, t.player, null);
     }
 
@@ -1502,7 +1369,7 @@ export class EnemyManager {
    * 큐에 있는데 소탕으로 읽으면 미션이 한 프레임 차이로 먼저 끝나 버린다(§6.6).
    */
   get fieldCleared(): boolean {
-    if (this.reinforceQueue.length > 0 || this.pendingRevive.length > 0) return false;
+    if (this.reinforceQueue.length > 0) return false;
     if (this.pendingRusher + this.pendingKiter + this.pendingMarker > 0) return false;
     for (const e of this.enemies) if (e.state === "alive") return false;
     return true;
@@ -1604,14 +1471,6 @@ export class EnemyManager {
     // 회복 수단이 리스폰뿐이면 피격 하나하나가 되돌릴 수 없는 손실이 되고, "적을 잡아 회복한다"는
     // 안전판이 사라져 교전 자체가 위험 부담이 된다. 자연 재생(progression.droneGrowth.hpRegen)도
     // 같은 이유로 0 — 회복 경로는 게임 전체에 존재하지 않는다.
-    // 역행 후보 기록(§6.6) — 계류(W2) 중 격파는 확정으로 표기(되감기지 않는다). 상한 64.
-    if (enemy) {
-      this.killLog.push({
-        t: this.timeSec, x: enemy.group.position.x, z: enemy.group.position.z,
-        maxHp: enemy.maxHp, role: enemy.role, deployRole: enemy.deployRole, pinned: enemy.isPinned,
-      });
-      if (this.killLog.length > 64) this.killLog.shift();
-    }
     // 마커 격파 — 그 개체의 유도탄·낙인 소산("마커 우선 격파" 카운터, §6.1) + 채점·직무별 집계
     if (enemy) {
       this.brand.notifyDead(enemy);
@@ -1642,8 +1501,6 @@ export class EnemyManager {
     this.enemies = [];
     this.drain.clear();
     this.brand.clear(); // 유도탄·낙인·파면 정리 + 파문 주기 재무장
-    this.killLog.length = 0; // 역행 후보 기록 초기화
-    this.pendingRevive.length = 0;
     for (const list of this.instanceEnemiesBy.values()) list.length = 0; // 인스턴스 비우기(재입장 시 잔상 방지)
     this.coreInst.count = 0;
     this.coreInst.instanceMatrix.needsUpdate = true;

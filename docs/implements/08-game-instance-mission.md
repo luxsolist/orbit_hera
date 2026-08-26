@@ -53,7 +53,17 @@ end      → 결과 패널 → 재시작(reload 재출격)
     **중간보스(`bossHp`)가 마지막**에 등장(클라이맥스). HP가 클수록 크고 푸른 개체(보스가 최대) —
     상세는 [05-enemies](05-enemies.md#스폰-spawnone--tickspawns--startburst). *(일괄 100기 모델은 도시 붕괴
     속도·역삼각 압력 곡선 문제로 폐기 — 플레이테스트 근거, [tests/reinforce.test.ts](../../tests/reinforce.test.ts).)*
-- **평가 입력(`MissionRuntime`)**: `elapsed`·`kills`·`buildingsDestroyed`·`landmarksDestroyed`·`deaths`.
+- **평가 입력(`MissionRuntime`)**: `elapsed`·`kills`·`buildingsDestroyed`·`landmarksDestroyed`·`deaths`
+  ·`roleKills`(purge-role)·`observeCount`/`observeHold`(experiment)·**`cleared`**(전장 소탕).
+- **전장 소탕 종료(2026-08-26)** — `cleared = enemies.fieldCleared && !hasMorePhases()`.
+  `fieldCleared` 는 살아있는 개체 0 + 증원 큐 0 + 웨이브 예산 0. 남은 페이즈가 있으면 소탕이 아니다
+  (`advancePhase` 가 평가 **직전**에 다음 페이즈를 투입하므로 전장이 다시 찬다).
+  - **생존/사수 = 즉시 성공** — 위협이 하나도 없는데 타이머만 보고 서 있는 건 플레이가 아니다.
+  - **격멸계 = 목표 미달이면 즉시 실패**("표적 소진") — 도달 불가가 확정된 상태로 제한시간을 세지 않는다.
+  - **`experiment` = 즉시 실패** — 조사할 대상이 없으면 달성 불가.
+  - 실패 판정이 소탕보다 우선(마지막 적을 잡는 순간 리스폰이 소진돼도 실패 — 기존 정책).
+  개체 수를 줄인 뒤(2026-08-25) 빈 전장 대기가 길어져 드러났다. 실측: 20개 미션이 240~420초 대기 →
+  **3~8초 종료**(phased 인 `tide` 만 페이즈 소진 후 193초).
 - **v2 런타임(훅 ② 복합 실패 조건)** — `GameInstance` 는 `MissionSpecV2`([missionV2.ts](../../src/game/missionV2.ts))를
   구동한다: 승리(goal)와 무관하게 **fail 4종(리스폰·시간·건물 한도·랜드마크 한도)을 동시 평가**
   (`evaluateMissionV2` — v1 의 마감 프레임 의미론 유지: 격멸형은 성공 우선, 생존/사수형은 실패 우선;
@@ -158,8 +168,8 @@ reload" 모델([01-architecture](01-architecture.md#상태-머신))과 일치하
 - **구성 비례 스폰(자기정렬)** — `pickBurstType(walkers, flyers)`/`archetypeCount(..., matchingPlayers)`가
   팀의 워커:플라이어 비율대로 러셔:카이터를 뽑는다 → **고아 적이 없음**(플라이어 0명이면 카이터 0).
 - **1인당 스케일** — `startBurst`가 `count`·`totalHp`·`concurrentCap`을 살아있는 인원 N배로(보스 1기 공유) → 1인당 체감 일정.
-- **상성 타깃팅** — 적은 자기 상성 드론을 우선 표적(카이터→플라이어/러셔→워커, `matchupMul`+`MISMATCH_PENALTY`).
-  혼합팀에서 각자 자기 레인을 맡고, **미스매치 폴백**(`engageKeepDist`)으로 어쩔 수 없는 매칭도 처치 가능.
+- ~~**상성 타깃팅**~~ — **폐지**(2026-08-26). 표적 선택은 거리 + 어그로 부하만 본다. 적 구성은 미션의 `spawnMix` 가 선언하며 드론 종류와 무관하다.
+  혼합팀에서 한 명에게 몰리지 않게 분배한다(상성 가중·미스매치 폴백은 2026-08-26 폐지).
   상세: [05-enemies](05-enemies.md#멀티타깃-표적-선택-어그로-분산--상성-가중--mp).
 - **팀 집계** — 인스턴스가 처치/건물손실/사망을 팀 단위로 모은다(`killCount`·`deathCount`·`playerCount`).
   리스폰은 현재 팀 공유 예산(필요 시 1인당으로 분리 가능).

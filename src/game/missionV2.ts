@@ -235,7 +235,7 @@ export function deployHasEmit(d: MissionDeploy): boolean {
 
 /** purge-role 대상 직무의 표면 표시명(§8.2 허용 어휘) — 단계 Ⅰ(계시 전) 명칭. 목표/진행 문구용. */
 export const DEPLOY_ROLE_NAMES: Record<RosterUnit["role"], string> = {
-  rusher: "거머리", kiter: "모기", marker: "소인체", cutter: "절단체", rewinder: "역행체", elite: "정예", boss: "거대 투영",
+  rusher: "거머리", kiter: "모기", marker: "소인체", elite: "정예", boss: "거대 투영",
 };
 
 /**
@@ -737,26 +737,6 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     modifiers: { freqRegenMul: 0.5 },
   },
   {
-    // 커터 콘텐츠(P3 — §6.3 의존성 절단, 20종 카탈로그 밖 신규). 절단체가 건물을 뿌리째 들어올린다:
-    // 격추하면 재안착(W4 복구 사격으로 가속) — "쏘는 것"과 "되돌리는 것"이 같은 무기. (패턴 17 공성
-    // 낙인/SIEGE BRAND — buildingBrands 변조 — 는 별도 미션 siege-brand.)
-    id: "severance", name: "절단 공성 / SEVERANCE",
-    brief: "그들이 건물을 뿌리째 들어올린다 — 떨어뜨려라. 떨어지면 다시 붙는다.",
-    goal: { type: "guard", target: "landmarks", hold: 240 },
-    fail: { respawns: 3, timeLimit: 0, maxBuildingLoss: 25, maxLandmarkLoss: 1 },
-    deploy: {
-      model: "roster",
-      units: [
-        { role: "cutter", count: 2, hp: 22000 },
-        { role: "marker", count: 1, hp: 12000 },
-        { role: "rusher", count: 2, hp: 9000 },
-      ],
-      spawnRadius: 1200,
-    },
-    zoneRadius: 3500,
-    modifiers: { aggro: "landmark" },
-  },
-  {
     // 패턴 17 공성 낙인 / SIEGE BRAND(06-missions §7 — P3 buildingBrands 편입). 소인체가 랜드마크에
     // 낙인탄을 발사 — 심판 파문이 오기 전에 마커를 끊거나(마커 우선 격파) 랜드마크에서 떼어놔야 한다.
     id: "siege-brand", name: "공성 낙인 / SIEGE BRAND",
@@ -773,26 +753,6 @@ export const DEFAULT_MISSIONS_V2: MissionSpecV2[] = [
     },
     zoneRadius: 4200,
     modifiers: { aggro: "landmark", buildingBrands: true },
-  },
-  {
-    // 역행체 사냥(P3 §6.6) — 미니보스 슬롯 우선순위 표적 플레이. 시전을 못 끊으면 전과가 되감긴다:
-    // 잡몹을 아무리 잡아도 역행체가 살아있는 한 처치 수가 줄어드는 미션(purge-role 이 정답 구조).
-    id: "retro-hunt", name: "역행 사냥 / RETROGRADE HUNT",
-    brief: "잡은 것이 되돌아온다 — 세지 말고, 시전자를 끊어라.",
-    goal: { type: "purge-role", role: "rewinder" },
-    fail: { respawns: 2, timeLimit: 420, maxBuildingLoss: 0, maxLandmarkLoss: 0 },
-    deploy: {
-      model: "roster",
-      units: [
-        // hunt(접근 유영) — hold 배치는 시전 사거리(360m) 밖에 정박해 역행이 발동하지 않는다(e2e 검증)
-        { role: "rewinder", count: 1, hp: 70000 },
-        { role: "rusher", count: 2, hp: 10000 },
-        { role: "marker", count: 1, hp: 12000 },
-      ],
-      spawnRadius: 900,
-    },
-    zoneRadius: 3000,
-    modifiers: { offTargetPenalty: 8 }, // 되살아나는 잡몹을 세지 말고 시전자를 끊도록
   },
   {
     // 캠페인 5장 앵커(§9.1) — 동시 조사 실험. 격멸이 아니라 "동시에 붙들기"가 목표(관측이 무기).

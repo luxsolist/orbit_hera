@@ -132,15 +132,22 @@ export function spawnHeightAboveGround(move: DroneMove, eye: number): number {
   return move.mode === "fly" ? Math.min(move.spawnHeight, move.ceiling) : eye;
 }
 
-export const MERCY_INVULN = 0.6; // 피격 후 무적 시간(s) — 연속 흡수 데미지 완화
-
 /**
- * 피해 적용 순수 전이 — 머시 무적(invuln>0) 또는 사망(hp<=0) 중이면 무시(applied:false, 상태 불변).
- * 적용 시 hp 를 0 하한으로 차감하고 무적을 MERCY_INVULN 으로 충전. applied 는 적 회복·HUD 게이트.
+ * 피해 적용 순수 전이 — 무적(invuln>0) 또는 사망(hp<=0) 중이면 무시(applied:false, 상태 불변).
+ * 적용해도 **무적을 충전하지 않는다**. applied 는 적 성장·연출·HUD 게이트를 함께 연다.
+ *
+ * ⚠ 머시 무적(피격 후 0.6초) 폐지(2026-08-26). 그 창이 있으면 **개체 수가 난이도 레버로 작동하지
+ * 않았다**: 초당 최대 1/0.6 = 1.67 대만 맞으므로 들어오는 피해가 `한 대 / 0.6` 으로 고정된다.
+ * 실측 — 모기를 2기에서 32기로 16배 늘려도 3.31 → 4.94 dps(흡수율 45%→92%). 게다가 작은 피해가
+ * 큰 피해를 막아 줬다(드레인 3 을 맞으면 직후의 파문 18 이 통째로 흡수). 흡수된 피격은 연출까지
+ * 함께 사라져("공격을 안 하는 것 같다"의 직접 원인) 무슨 일이 일어나는지도 읽히지 않았다.
+ *
+ * invuln 자체는 남는다 — **리스폰 보호**(respawn(protectSec))가 같은 필드를 쓴다. 부활 직후
+ * 적에 둘러싸여 즉사하는 것만은 막아야 한다.
  */
 export function applyDamage(hp: number, invuln: number, amount: number): { hp: number; invuln: number; applied: boolean } {
   if (invuln > 0 || hp <= 0) return { hp, invuln, applied: false };
-  return { hp: Math.max(0, hp - amount), invuln: MERCY_INVULN, applied: true };
+  return { hp: Math.max(0, hp - amount), invuln, applied: true };
 }
 
 /**
@@ -152,7 +159,7 @@ export function applyHeal(hp: number, maxHp: number, amount: number): number {
   return Math.min(maxHp, hp + amount);
 }
 
-/** 위치·HP 이력 1표본 — rewindPosition(적측 §6.6)·linkRewind(자가 §2.8.3)가 공유하는 링버퍼 표본. */
+/** 위치·HP 이력 1표본 — 링크 리와인드(자가 §2.8.3)의 링버퍼 표본. */
 export interface PosHpSample { t: number; x: number; y: number; z: number; hp: number }
 
 /**
@@ -619,12 +626,6 @@ export class PlayerController {
   respawn(protectSec = 1.5) {
     this.reset();
     this.invuln = protectSec;
-  }
-
-  /** 역행(적측 §6.6 역행체) — sec 초 전 위치로 되돌려진다(이력 없으면 무시). 위치만(HP 불변 — §6.6 정본). */
-  rewindPosition(sec: number): void {
-    const at = historyLookup(this.posHistory, this.posClock, sec);
-    if (at) this.position.set(at.x, at.y, at.z);
   }
 
   /** 교전 구역 설정(미션 인스턴스). radius≤0 이면 제한 해제. 중심 미지정 시 현재 위치(=스폰) 기준. */

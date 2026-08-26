@@ -137,7 +137,7 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 | 필드 | 타입 | 의미 |
 | :--- | :--- | :--- |
 | `id`, `name` | string | 카탈로그 id / 표시명 |
-| `hp.basePerArea` | number | 가장 낮은 색·지름 1m 기준 HP (`HP = basePerArea × 지름² × 색가중치`) |
+| `hp.basePerArea` | number | 가장 낮은 색·지름 1m 기준 HP (`HP = basePerArea × 지름² × 색가중치`). ⚠ 이 값을 바꿀 땐 `spawn.hpFloor`/`spawn.hpCeil`/`visual.anchorHp` 를 **같은 배수로** 함께 움직여야 색·크기·속도 매핑이 보존된다(2026-08-25 ×10 스케일링) |
 | `hp.minDiameter` / `hp.maxDiameter` | number | 체력 산정용 지름 하한/상한 m |
 | `color.stops[]` | `ColorStop[]` | 온도-색-가중치 기준점(저온 적색·최약 → 고온 청백·최강) |
 | `visual.minDiameter` / `visual.maxDiameter` | number | 렌더 지름 하한 / 소프트캡 m |
@@ -158,11 +158,19 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 이동 난이도는 더 이상 고도에 의존하지 않는다 — 과거 `altitude` 블록과 `contact.altWeakRef/altWeakMin`는
 제거됐다. 개체 행동은 드론과 무관한 **고유 아키타입**(`archetypes`)으로 정의한다.
 
-**공통 베이스**(rusher·kiter 모두): `name`("국문 / ENGLISH" 표시명),
-`spawnAltMin`/`spawnAltMax`(지면 대비 스폰 고도 밴드 m), `countBase`(웨이브1 동시 수, 매칭 드론 1인 기준),
-`countCap`(웨이브 증가분 상한, 1인 기준),
+**공통 베이스**(rusher·kiter·marker 공통): `name`("국문 / ENGLISH" 표시명),
+`spawnAltMin`/`spawnAltMax`(**플레이어 고도 대비** 스폰 밴드 m — 지면 하한 클램프. 2026-08-26 이전엔
+지면 기준이었으나, 인식 반경 500m 와 겹쳐 비행 중인 플레이어를 아무도 못 만나는 구멍이 있었다),
+`countBase`(웨이브1 동시 수, 1인 기준), `countCap`(웨이브 증가분 상한),
 `speed`(가장 빠른=적색·약체 속도), `speedMin`(가장 느린=청백·강체 속도). 개체 속도 = `speed↔speedMin`를
-색 강도 `colorStrength01`로 보간(적색=`speed`, 청백=`speedMin`). 물량은 매칭 드론 수에 비례(러셔=워커, 카이터=플라이어).
+색 강도 `colorStrength01`로 보간(적색=`speed`, 청백=`speedMin`).
+물량 = `countBase..countCap` × 인원 × **전장 구성 비중**(미션 `spawnMix`) — 드론 종류와 무관하다
+(드론 상성 자기정렬은 2026-08-26 폐지). 마커는 구성 축과 직교해 전원 비례로 따로 얹힌다.
+
+**`leap`**(rusher·kiter 선택 — 차원도약 §6.7): `telegraphSec`(시전), `lockSec`(발동 몇 초 전에 착지점
+확정 — 그 전까지는 플레이어를 추적), `cd`/`chance`(빈도), `minDist`/`maxDist`(착지 수평 도넛),
+`dyMin`/`dyMax`(**플레이어 기준** 수직 오프셋), `triggerMin`/`triggerMax`(발동 거리 창 — 0 = 제한 없음),
+`recoverSec`(착지 후 공격 불가), `concurrentCap`(동시 시전 상한). 미지정 = 그 아키타입 미도약.
 
 **`RusherArchetype`** = 베이스(추가 필드 없음 — 접근+접촉 흡수).
 
@@ -176,6 +184,7 @@ cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(
 `keepBand`(히스테리시스 반폭 m), `strafeMix`(`homeDir` 없을 때 폴백 거동: 1=접선 선회 / 0=도주), `orbitRef`(이 접선속도 m/s에서
 선회 회피 최대), `evadeGain`(선회 감지 시 궤도면 이탈 강도), `attackRange`(원거리 드레인 사거리 m),
 `drainDamage`(1틱 흡수량=플레이어 HP 피해=적 성장량), `drainInterval`(드레인 틱 간격 s). 개체별 무작위 `homeDir`(keepDist 구 위 방위)는 런타임 주입(스펙 아님).
+드레인은 **시야가 필요**하다 — 플레이어와의 사이가 건물로 막히면 불발(쿨다운 미소모, 시야 확보 시 재시도).
 
 순수 산출식(체력·색·렌더크기·속도·온도 샘플·아키타입 물량)은 [`PlasmoidSpec.ts`](../../src/enemies/PlasmoidSpec.ts)에
 모듈로 분리되어 있고, 내장 `DEFAULT_PLASMOID`가 JSON과 동치임을 테스트가 검증한다.

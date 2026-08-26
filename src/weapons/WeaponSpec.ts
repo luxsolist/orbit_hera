@@ -36,7 +36,6 @@ export interface BeamSpec {
     damage: number; freqCost: number; fireInterval: number; assistConeDeg: number;
     decohere?: boolean; // 관측 펄스(§2.2) — 수동 명중이 위상 이탈 개체를 강제 실체화(중주파=대위상 앵커)
     pinSec?: number; //    W2 관측 계류 — 수동 명중 후 이 시간 동안 재이탈 봉쇄(중주파=하드 핀/경주파=소프트 핀)
-    mend?: number; //      W4 복구 사격 — 납치 중 건물 명중 시 부양 고도 감쇄(m). 무기가 공격이자 복구 도구
   };
   auto: {
     damage: number; freqCost: number; fireInterval: number; range: number; // coneDeg 제거(360° 오토 전환으로 미사용)

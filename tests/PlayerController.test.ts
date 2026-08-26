@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  stepVerticalVelocity, dirSpeedMult, maxRiseAltitude, HARD_CEILING, applyDamage, applyHeal, MERCY_INVULN,
+  stepVerticalVelocity, dirSpeedMult, maxRiseAltitude, HARD_CEILING, applyDamage, applyHeal,
   historyLookup, canCastLinkRewind, type PosHpSample,
 } from "../src/player/PlayerController";
 import type { JumpSpec } from "../src/player/DroneSpec";
@@ -94,14 +94,34 @@ describe("maxRiseAltitude — 지표 상대 천장(보행 점프·비행 공통)
   });
 });
 
-describe("applyDamage — 피해 전이(머시 무적·사망 게이트)", () => {
-  it("정상 피격: hp 차감 + 무적 충전 + applied true", () => {
+describe("applyDamage — 피해 전이(무적·사망 게이트)", () => {
+  it("정상 피격: hp 차감 + applied true", () => {
     const r = applyDamage(100, 0, 30);
-    expect(r).toEqual({ hp: 70, invuln: MERCY_INVULN, applied: true });
+    expect(r).toEqual({ hp: 70, invuln: 0, applied: true });
   });
-  it("무적 중(invuln>0)이면 무시 — 상태 불변, applied false", () => {
+
+  // 머시 무적(피격 후 0.6초) 폐지(2026-08-26) — 그 창이 있으면 초당 1.67대로 상한이 걸려
+  // **개체 수가 난이도 레버로 작동하지 않았다**(모기 2→32기에 3.31→4.94 dps).
+  it("피격해도 무적을 충전하지 않는다 — 연속 피격이 그대로 들어온다", () => {
+    let hp = 100, invuln = 0;
+    for (let i = 0; i < 5; i++) {
+      const r = applyDamage(hp, invuln, 10);
+      expect(r.applied).toBe(true); // 다섯 대 모두 적중
+      hp = r.hp; invuln = r.invuln;
+    }
+    expect(hp).toBe(50);
+    expect(invuln).toBe(0);
+  });
+
+  it("무적 중(invuln>0)이면 무시 — 리스폰 보호가 쓰는 경로", () => {
     const r = applyDamage(70, 0.3, 30);
     expect(r).toEqual({ hp: 70, invuln: 0.3, applied: false });
+  });
+
+  it("리스폰 보호는 소모되지 않는다 — 흡수해도 남은 시간이 줄지 않는다(감쇠는 update 몫)", () => {
+    const r = applyDamage(70, 1.5, 30);
+    expect(r.invuln).toBe(1.5);
+    expect(r.applied).toBe(false);
   });
   it("이미 사망(hp<=0)이면 무시 — 죽은 뒤엔 적 회복 안 됨", () => {
     expect(applyDamage(0, 0, 30)).toEqual({ hp: 0, invuln: 0, applied: false });
@@ -159,5 +179,24 @@ describe("canCastLinkRewind — 시전 게이트(순수)", () => {
     expect(canCastLinkRewind(50, 100, 5, 50)).toBe(false); // 쿨다운 중
     expect(canCastLinkRewind(50, 30, 0, 50)).toBe(false); // 게이지 부족
     expect(canCastLinkRewind(50, 55, 0, 50)).toBe(true);
+  });
+});
+
+// 리스폰 보호 — 머시 무적을 없앤 뒤에도 **이것만은 남아야 한다**. 부활 직후 적에 둘러싸여
+// 즉사하면 리스폰 예산이 순식간에 증발한다(회복 수단이 없어 되돌릴 방법도 없다).
+describe("리스폰 보호 — 부활 직후 무적", () => {
+  it("보호 중에는 연속 피격이 전부 무시된다", () => {
+    let hp = 100, invuln = 1.5; // respawn(protectSec = 1.5) 직후
+    for (let i = 0; i < 10; i++) {
+      const r = applyDamage(hp, invuln, 20);
+      expect(r.applied).toBe(false);
+      hp = r.hp; invuln = r.invuln;
+    }
+    expect(hp).toBe(100); // 한 대도 안 맞았다
+  });
+
+  it("보호가 끝나면 곧바로 피해가 들어온다", () => {
+    expect(applyDamage(100, 0.001, 20).applied).toBe(false);
+    expect(applyDamage(100, 0, 20).applied).toBe(true);
   });
 });

@@ -31,9 +31,14 @@
   ([tests/PlayerController.test.ts](../../tests/PlayerController.test.ts))
 - `spawnHeightAboveGround(move, eye)` — 스폰 시 지면 대비 높이: 비행 `min(spawnHeight, ceiling)`,
   보행 `eye`. ([tests/spawn.test.ts](../../tests/spawn.test.ts))
-- `applyDamage(hp, invuln, amount)` — 피해 적용 순수 전이: **머시 무적(`invuln>0`) 또는 사망(`hp≤0`)
-  중이면 무시**(`applied:false`, 상태 불변). 적용 시 hp를 0 하한으로 차감하고 `MERCY_INVULN(0.6s)` 무적 충전.
-  반환값 `{hp, invuln, applied}` — `applied`가 적 회복·HUD 피격 연출 게이트. (`MERCY_INVULN = 0.6` export)
+- `applyDamage(hp, invuln, amount)` — 피해 적용 순수 전이: **무적(`invuln>0`) 또는 사망(`hp≤0`)
+  중이면 무시**(`applied:false`, 상태 불변). 적용해도 **무적을 충전하지 않는다**.
+  반환값 `{hp, invuln, applied}` — `applied`가 적 성장·연출·HUD 게이트를 함께 연다.
+  ⚠ **머시 무적(피격 후 0.6s) 폐지**(2026-08-26). 그 창이 있으면 초당 최대 `1/0.6 = 1.67`대만 맞으므로
+  들어오는 피해가 `한 대 ÷ 0.6`으로 **상한 고정**돼 개체 수가 난이도 레버로 작동하지 않았다(실측 —
+  모기를 2기→32기로 16배 늘려도 3.31→4.94 dps, 흡수율 45%→92%). 작은 피해가 큰 피해를 막아 주고
+  (드레인 3 을 맞으면 직후 파문 18 이 통째로 흡수), 흡수된 피격은 **연출까지 함께 사라졌다**.
+  `invuln` 필드 자체는 남는다 — **리스폰 보호**(`respawn(protectSec=1.5)`)가 같은 경로를 쓴다.
 - `applyHeal(hp, maxHp, amount)` — 회복 순수 전이: **사망(hp≤0) 또는 비양수 회복이면 불변**(부활 불가),
   그 외엔 `min(maxHp, hp+amount)`로 가산(최대치 한도 클램프).
 

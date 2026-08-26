@@ -128,37 +128,6 @@
     "fireInterval": 7,
     "sweepDamage": 18
    }
-  },
-  "cutter": {
-   "name": "절단체 플라즈모이드 / SEVERER",
-   "spawnAltMin": 30,
-   "spawnAltMax": 120,
-   "countBase": 0,
-   "countCap": 0,
-   "speed": 26,
-   "speedMin": 18,
-   "attachRange": 22,
-   "severSec": 5,
-   "seekRange": 900
-  },
-  "rewinder": {
-   "name": "역행체 플라즈모이드 / RETROGRADE",
-   "spawnAltMin": 60,
-   "spawnAltMax": 200,
-   "countBase": 0,
-   "countCap": 0,
-   "speed": 24,
-   "speedMin": 16,
-   "turnRateDeg": 70,
-   "keepDist": 160,
-   "keepBand": 30,
-   "rollback": {
-    "castSec": 4,
-    "castCd": 14,
-    "castRange": 360,
-    "radius": 300,
-    "rewindSec": 5
-   }
   }
  },
  "sweep": {

@@ -35,14 +35,10 @@ const MAX_RUBBLE = 2048; // 잔해 더미 인스턴스 상한
 const SITE_RUBBLE_MAX = 40; // site 랜드마크 잔해 더미 반경 상한(m) — 해변 반경(수백 m)을 그대로 쓰면 전장을 덮는다
 
 export type DamageResult = "none" | "hit" | "destroyed";
-type BState = "intact" | "flash" | "collapsing" | "rubble" | "abducting";
+type BState = "intact" | "flash" | "collapsing" | "rubble";
 
 // 의존성 절단(건물 납치 — 서사편 §6.3, P3 커터): 커터가 막 결합을 끊으면 건물이 뿌리째 부양해
 // 균열로 떠오른다. 도달 시 소거(잔해 없음 — 소거 전 휴지통 이동), 상승 중 커터 격추 시 재안착.
-const ABDUCT_LIFT_SPEED = 12; //   부양 속도(m/s)
-const ABDUCT_RELEASE_MUL = 2.5; // 재안착(하강)은 부양보다 빠르게 — 격추 보상이 즉각 읽히게
-const ABDUCT_HEIGHT = 200; //      이 고도 도달 시 소거
-const ABDUCT_TINT = new THREE.Color(0x9fd8ff); // 막 결합이 끊긴 창백한 청백(와이어프레임화의 톤 근사)
 
 // 링크 리와인드(물리편 §2.8.3): 발동 시 반경 내 "최근 파괴"를 되돌린다. 파괴된 항목의 전체 참조를
 // 짧은 시간창 동안만 보존(무한 성장 방지) — 그보다 오래된 파괴는 잊혀 되돌릴 수 없다(정본 "수 초 전"의
@@ -71,8 +67,6 @@ interface BEntry {
   name?: string; //          표시명(랜드마크만) — 브리핑/HUD
   state: BState;
   anim: number; // 애니메이션 누적 시간
-  lift?: number; //      납치 부양 고도(m) — abducting 전용
-  liftDir?: 1 | -1; //   1=상승(납치 진행) / -1=재안착(커터 격추·W4 복구)
   // ── 일반 건물(병합 메시 정점 범위) ──
   mesh?: THREE.Mesh;
   vStart?: number;
@@ -152,7 +146,6 @@ export class BuildingCombat {
   private byOwner = new Map<string, BEntry[]>(); //  site 랜드마크의 청크별 소유(언로드 시 일괄 해제 — 메시가 없어 byMesh 를 못 쓴다)
   private grid = new Map<string, BEntry[]>(); // intact 건물 공간 격자(최근접 탐색)
   private active: BEntry[] = []; // 연출 진행 중(flash/collapsing)
-  private abducting = new Map<string, BEntry>(); // 납치(부양) 진행 중 — 표적/피해 대상에서 제외
   private destroyed = new Map<string, { cx: number; cz: number; isLandmark: boolean }>(); // 파괴 이력(재로드 복원)
   private collision: CollisionWorld | null = null;
   private clock = 0; // 링크 리와인드(§2.8.3) 기준 시계 — update(dt) 가 누적
@@ -290,7 +283,6 @@ export class BuildingCombat {
       this.removeIntact(e);
       const ai = this.active.indexOf(e);
       if (ai >= 0) this.active.splice(ai, 1);
-      this.abducting.delete(e.id);
       this.recentlyDestroyed = this.recentlyDestroyed.filter((r) => r.entry !== e);
     }
     this.byOwner.delete(owner);
@@ -327,7 +319,6 @@ export class BuildingCombat {
       this.removeIntact(e);
       const ai = this.active.indexOf(e);
       if (ai >= 0) this.active.splice(ai, 1);
-      this.abducting.delete(e.id); // 언로드된 청크의 납치 진행분 정리(커터는 anchor null 로 해제 인지)
     }
     // 언로드된 청크 소속 파괴 이력은 되돌림 후보에서 제외(지오메트리 참조가 더 이상 유효하지 않음)
     this.recentlyDestroyed = this.recentlyDestroyed.filter((r) => r.entry.mesh !== mesh);
@@ -401,115 +392,14 @@ export class BuildingCombat {
     return true;
   }
 
-  /** 납치 개시 — 표적/피해 대상에서 제외되고 부양 시작. 커터의 절단 채널 완료가 호출. */
-  beginAbduct(id: string): boolean {
-    const e = this.byId.get(id);
-    if (!e || e.state !== "intact") return false;
-    this.removeIntact(e);
-    e.state = "abducting";
-    e.lift = 0;
-    e.liftDir = 1;
-    if (e.mesh) this.snapshotPositions(e); // 병합 메시 바인딩만 정점 스냅샷 필요(Group 은 변환으로 처리)
-    this.abducting.set(id, e);
-    return true;
-  }
 
-  /** 납치 해제(커터 격추) — 재안착 하강으로 전환. lift 0 도달 시 intact 복원. */
-  releaseAbduct(id: string): void {
-    const e = this.abducting.get(id);
-    if (e) e.liftDir = -1;
-  }
 
-  /** 납치 중 건물의 현재 상단 좌표 — 커터가 얹혀 상승을 동반하는 기준점. 없으면 null(소거/복원됨). */
-  abductAnchor(id: string): { x: number; y: number; z: number } | null {
-    const e = this.abducting.get(id);
-    if (!e) return null;
-    return { x: e.cx, y: (e.topY ?? e.aimY) + (e.lift ?? 0), z: e.cz };
-  }
 
-  /**
-   * W4 복구 사격(mend) — 수동 빔이 납치 중 건물에 닿으면 부양 고도를 깎는다(재안착 가속).
-   * "관측이 존재를 막 위에 다시 고정한다". 적중한 납치 건물이 있으면 true.
-   */
-  mendAt(x: number, z: number, power: number): boolean {
-    for (const e of this.abducting.values()) {
-      const r = Math.max(e.rx, e.rz) + 6;
-      if ((e.cx - x) ** 2 + (e.cz - z) ** 2 <= r * r) {
-        e.lift = Math.max(0, (e.lift ?? 0) - power);
-        if (e.lift <= 0) e.liftDir = -1; // 바닥 도달 — 다음 update 가 intact 복원
-        return true;
-      }
-    }
-    return false;
-  }
 
-  /** 납치 진행 수(HUD/미션/테스트). */
-  get abductingCount(): number {
-    return this.abducting.size;
-  }
 
-  /** 납치 부양 1프레임 — 상승/재안착, 소거·복원 전이. update() 에서 호출. */
-  private tickAbduct(dt: number): void {
-    if (this.abducting.size === 0) return;
-    for (const e of [...this.abducting.values()]) {
-      e.lift = (e.lift ?? 0) + (e.liftDir === -1 ? -ABDUCT_LIFT_SPEED * ABDUCT_RELEASE_MUL : ABDUCT_LIFT_SPEED) * dt;
-      if (e.liftDir === -1 && e.lift <= 0) { this.reanchor(e); continue; }
-      if (e.lift >= ABDUCT_HEIGHT) { this.finishAbduct(e); continue; }
-      const t01 = clamp01(e.lift / ABDUCT_HEIGHT);
-      if (e.group) {
-        e.group.position.y = (e.baseGroupY ?? 0) + e.lift;
-        this.tintLandmark(e, 0.2 + t01 * 0.6, ABDUCT_TINT);
-      } else {
-        this.liftBuilding(e, t01); // 승격 랜드마크 포함 — 병합 메시는 정점 이동으로 부양
-      }
-    }
-  }
 
-  /** 병합 메시 정점 범위를 lift 만큼 수직 이동 + 창백한 틴트(막 결합이 끊긴 빛). */
-  private liftBuilding(e: BEntry, t01: number): void {
-    if (!e.mesh || !e.origPos) return;
-    const pos = e.mesh.geometry.getAttribute("position") as THREE.BufferAttribute;
-    const o = e.origPos, v = e.vStart!, n = e.vCount!;
-    const lift = e.lift ?? 0;
-    for (let k = 0; k < n; k++) pos.setXYZ(v + k, o[k * 3], o[k * 3 + 1] + lift, o[k * 3 + 2]);
-    pos.needsUpdate = true;
-    this.tint(e, 0.2 + t01 * 0.65, ABDUCT_TINT);
-  }
 
-  /** 재안착 — 원위치·원색 복원 후 intact 재등록(표적/피해 대상 복귀). */
-  private reanchor(e: BEntry): void {
-    this.abducting.delete(e.id);
-    if (e.group) {
-      e.group.position.y = e.baseGroupY ?? 0;
-      this.tintLandmark(e, clamp01(1 - e.hp / e.maxHp) * 0.9);
-    } else if (e.mesh && e.origPos) {
-      const pos = e.mesh.geometry.getAttribute("position") as THREE.BufferAttribute;
-      const o = e.origPos, v = e.vStart!, n = e.vCount!;
-      for (let k = 0; k < n; k++) pos.setXYZ(v + k, o[k * 3], o[k * 3 + 1], o[k * 3 + 2]);
-      pos.needsUpdate = true;
-      this.tint(e, clamp01(1 - e.hp / e.maxHp) * 0.9);
-    }
-    e.state = "intact";
-    e.lift = 0;
-    this.byId.set(e.id, e);
-    const key = cellKey(e.cx, e.cz);
-    const cell = this.grid.get(key);
-    if (cell) cell.push(e);
-    else this.grid.set(key, [e]);
-  }
 
-  /** 소거 — 균열 도달. 잔해 없음(붕괴가 아니라 반출) — 셸만 매장하고 파괴 집계·이력 기록. */
-  private finishAbduct(e: BEntry): void {
-    this.abducting.delete(e.id);
-    e.state = "rubble";
-    this.destroyed.set(e.id, { cx: e.cx, cz: e.cz, isLandmark: e.isLandmark });
-    if (e.group) e.group.visible = false;
-    else this.buryShell(e); // 병합 메시(승격 랜드마크 포함) — 셸 매장
-    if (e.isLandmark) this.destroyedLandmarks++;
-    else this.destroyedBuildings++;
-    this.collision?.openBuildingAt(e.cx, e.cz);
-    this.onDestroyed?.(e.isLandmark, e.cx, e.aimY, e.cz);
-  }
 
   // ─────────────────────────── 피해/파괴 ───────────────────────────
 
@@ -762,7 +652,6 @@ export class BuildingCombat {
     while (this.recentlyDestroyed.length && this.clock - this.recentlyDestroyed[0].at > LINK_REWIND_RETAIN) {
       this.recentlyDestroyed.shift();
     }
-    this.tickAbduct(dt); // 납치 부양/재안착(커터·W4)
     for (let i = this.active.length - 1; i >= 0; i--) {
       const e = this.active[i];
       e.anim += dt;

@@ -34,7 +34,6 @@ export class HUD {
   private reckoning!: HTMLDivElement; // 낙인/심판 파문 경고(동적 생성)
   private cast!: HTMLDivElement; //      통신 라인(브리핑/감독 방송, 동적 생성)
   private castTimer: ReturnType<typeof setTimeout> | null = null;
-  private foresight!: HTMLDivElement; // 예지 — 역행 시전 카운트다운(동적 생성)
   private sweepPulse!: HTMLDivElement; // 파문 통과 전면 펄스(동적 생성)
   private observePulse!: HTMLDivElement; // 위상 소급 시전 펄스(동적 생성)
   private killPulse!: HTMLDivElement; //  강체 처치 전면 펄스(동적 생성)
@@ -102,13 +101,6 @@ export class HUD {
     this.root.appendChild(this.arrowLayer);
 
     // 예지(2.8.1 — 역행체 시전 감지) — 크로스헤어 위 붉은 카운트다운. 시전을 끊으라는 최우선 지시.
-    this.foresight = document.createElement("div");
-    this.foresight.className = "hud__foresight";
-    this.foresight.style.cssText =
-      "position:fixed;left:50%;top:38%;transform:translateX(-50%);display:none;" +
-      "font:700 15px/1.4 monospace;letter-spacing:0.1em;color:#ff5a6a;text-align:center;" +
-      "pointer-events:none;z-index:5;text-shadow:0 0 10px currentColor";
-    this.root.appendChild(this.foresight);
 
     // 통신 라인(캠페인 브리핑·감독 brief 방송) — 미션바 아래 한 줄, 표면 어휘만(§8.2·director 검증 통과분)
     this.cast = document.createElement("div");
@@ -173,15 +165,6 @@ export class HUD {
     this.unitName.textContent = name;
   }
 
-  /** 예지(역행 시전 감지) — 잔여 초 표시, null 이면 숨김. 표면 어휘만("역행" — §8.2). */
-  setRewindWarn(secLeft: number | null) {
-    if (secLeft === null) {
-      this.foresight.style.display = "none";
-      return;
-    }
-    this.foresight.style.display = "block";
-    this.foresight.textContent = `⟲ 역행 시전 감지 — ${secLeft.toFixed(1)}s · 시전자를 끊어라`;
-  }
 
   /** 통신 라인 방송 — 브리핑/감독(brief) 문구를 잠시 띄운다(연속 호출 시 갱신·연장). */
   showBroadcast(text: string, sec = 7) {
