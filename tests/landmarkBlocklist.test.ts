@@ -120,3 +120,47 @@ describe("승격 → 차단 왕복 — 실제 회귀 재현", () => {
     expect(b.lm).toBeUndefined();
   });
 });
+
+describe("항목별 반경(radiusM) — 경내 전체가 대상인 경우", () => {
+  const proj = projFns(0, 0);
+  const sq = (cx: number, cz: number, s = 20) => ({
+    p: [cx - s / 2, cz - s / 2, cx + s / 2, cz - s / 2, cx + s / 2, cz + s / 2, cx - s / 2, cz + s / 2],
+    lm: "archive", n: "X",
+  });
+
+  it("기본 반경 밖은 못 막고, radiusM 을 주면 막는다", () => {
+    const far = () => sq(0, 113); // 좌표에서 113m — 유슈칸과 같은 거리
+    const a = far(); applyBlocklist([a], [{ name: "t", lat: 0, lon: 0 }], proj, 0, BLOCK_MATCH_M);
+    expect(a.lm, "기본 40m 로는 안 잡혀야 한다(전제 확인)").toBe("archive");
+    const b = far(); applyBlocklist([b], [{ name: "t", lat: 0, lon: 0, radiusM: 200 }], proj, 0, BLOCK_MATCH_M);
+    expect(b.lm).toBeUndefined();
+  });
+
+  it("radiusM 은 그 항목에만 적용된다 — 다른 항목이 덩달아 넓어지지 않게", () => {
+    const wide = sq(0, 113), narrow = sq(500, 113);
+    applyBlocklist([wide, narrow], [
+      { name: "wide", lat: 0, lon: 0, radiusM: 200 },
+      { name: "narrow", lat: 0, lon: -0.0045 }, // ≈500m 동쪽, 기본 반경
+    ], proj, 0, BLOCK_MATCH_M);
+    expect(wide.lm).toBeUndefined();
+    expect(narrow.lm, "기본 반경 항목은 113m 를 못 잡는다").toBe("archive");
+  });
+});
+
+// 야스쿠니는 **좌표만 넣었으면 아무것도 못 막았을** 사례다 — 본전 40m 안에 승격 건물이 없고,
+// 실제 승격은 76m 노가쿠도와 113m 유슈칸(신사 부속 전쟁박물관)이다. 도쿄 추출 실측으로 확인했고
+// (승격 407 → 405, 미적중 0), 400m 안에 야스쿠니 소속이 아닌 승격 건물은 없어 과잉 차단도 없다.
+describe("야스쿠니 — 경내 반경 차단", () => {
+  const item = CATALOG.blockedLandmarks.items.find((i: { name: string }) => i.name.includes("야스쿠니"));
+
+  it("차단 목록에 있고 excludedLandmarks 와 짝이 맞는다", () => {
+    expect(item, "blockedLandmarks 에 야스쿠니가 없다").toBeTruthy();
+    expect(CATALOG.excludedLandmarks.some((e: { name: string }) => e.name.includes("야스쿠니"))).toBe(true);
+    expect(item.category).toBe("war-perpetrator");
+  });
+
+  it("반경이 유슈칸(113m)을 덮는다 — 기본 40m 로는 못 막는다", () => {
+    expect(item.radiusM, "radiusM 이 없으면 기본 40m 라 아무것도 안 막힌다").toBeGreaterThanOrEqual(120);
+    expect(item.radiusM, "400m 밖까지 넓히면 남의 건물을 삼킬 수 있다").toBeLessThanOrEqual(400);
+  });
+});

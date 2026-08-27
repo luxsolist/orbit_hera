@@ -1,63 +1,10 @@
 // OSM → 로컬 미터 가공의 순수 헬퍼(부수효과 없음). build-maps.mjs 와 테스트가 공유.
 
-/**
- * 큰 bbox 를 ≤maxDeg(위·경도) 타일 격자로 분할 — 대면적 Overpass 단일 쿼리 타임아웃/메모리 한계 회피(타일별 수집·캐시·재개).
- * bbox=[s,w,n,e]. 반환: 동일 포맷 sub-bbox 배열(행=남→북, 열=서→동). 순수.
- */
-export function bboxTiles(bbox, maxDeg = 0.03) {
-  const [s, w, n, e] = bbox;
-  const rows = Math.max(1, Math.ceil((n - s) / maxDeg - 1e-9)); // -eps: 부동소수 ceil 과대 방지
-  const cols = Math.max(1, Math.ceil((e - w) / maxDeg - 1e-9));
-  const dz = (n - s) / rows, dx = (e - w) / cols;
-  const tiles = [];
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
-    tiles.push([s + r * dz, w + c * dx, s + (r + 1) * dz, w + (c + 1) * dx]);
-  }
-  return tiles;
-}
-
-/** 여러 OSM 응답({elements})을 type+id 로 중복 제거해 병합. 순수. */
-export function mergeOSM(responses) {
-  const seen = new Set();
-  const elements = [];
-  for (const res of responses) {
-    for (const el of res?.elements ?? []) {
-      const k = `${el.type}/${el.id}`;
-      if (seen.has(k)) continue;
-      seen.add(k);
-      elements.push(el);
-    }
-  }
-  return { elements };
-}
-
-/**
- * Overpass 수집 쿼리 — 가능한 모든 구성요소(건물+관계, 전체 highway, barrier(담장), 수역(+관계+하천),
- * 자연/공원/녹지 면(+관계), 주차장). opts.date(ISO) 지정 시 [date:] 스냅샷으로 **재현 가능**한 결과.
- */
-export function overpassQuery(bbox, opts = {}) {
-  const b = bbox.join(",");
-  const date = opts.date ? `[date:"${opts.date}"]` : "";
-  return `[out:json][timeout:180]${date};
-(
-  way["building"](${b});
-  relation["building"](${b});
-  way["highway"](${b});
-  way["barrier"](${b});
-  way["natural"="water"](${b});
-  relation["natural"="water"](${b});
-  way["water"](${b});
-  way["waterway"~"^(river|stream|canal|riverbank)$"](${b});
-  way["natural"~"^(wood|tree_row|scrub|grassland|heath|sand|beach|rock|bare_rock|scree|stone)$"](${b});
-  way["leisure"~"^(park|garden|pitch|playground|recreation_ground|golf_course)$"](${b});
-  way["landuse"~"^(grass|meadow|forest|recreation_ground|village_green|cemetery|parking)$"](${b});
-  way["amenity"="parking"](${b});
-  relation["leisure"~"^(park|garden|recreation_ground)$"](${b});
-  relation["landuse"~"^(grass|meadow|forest|cemetery)$"](${b});
-  relation["natural"~"^(wood|scrub|grassland|sand|rock)$"](${b});
-);
-out geom;`;
-}
+// Overpass 수집 경로(bboxTiles · mergeOSM · overpassQuery)는 제거했다(2026-08-27).
+// build-maps 는 Geofabrik 추출 캐시만 읽는다 — 근거는 build-maps.mjs 의 fetchOSM 주석 참조
+// (핵심: overpass.osm.ch 가 bbox 와 무관한 고정 응답을 돌려주는데 수집기가 그걸 채택해 **조용한
+// 오염**이 가능했고, 속도도 추출 대비 70배 느렸다). 수역 수리 도구 refetch-water.mjs 는 자체
+// Overpass 경로를 갖고 있어 영향받지 않는다.
 
 /** lat0/lon0 원점의 등거 투영기 — (lat,lon) → [x,z] 미터(북=-Z), cm 정밀도 반올림. */
 export function projFns(lat0, lon0) {
@@ -654,6 +601,11 @@ export function blockedBuildingIndices(buildings, x, z, radiusM = BLOCK_MATCH_M)
  * lm 과 n 을 **함께** 지운다 — lm 만 지우면 이름이 남아 청크에 표시명이 실린다.
  * 승격되지 않은 건물에 걸려도 무해하다(이미 lm 이 없으니 지울 것이 없다) — 그래서 커버리지 안
  * 항목은 조건 없이 전부 훑는다.
+ *
+ * 항목이 `radiusM` 을 가지면 그 값을 쓴다(기본 40m 대신). **경내 전체가 대상**인 경우가 있기
+ * 때문이다: 야스쿠니는 좌표(본전)에서 40m 안에 승격 건물이 **하나도 없고**, 실제로 승격되는 것은
+ * 76m 의 노가쿠도와 113m 의 유슈칸(전쟁박물관)이다 — 기본 반경으로 넣었다면 **아무것도 못 막는다**.
+ * 넓힐 때는 그 반경 안에 남의 승격 건물이 없는지 먼저 실측하고 넣을 것(과잉 차단은 조용하다).
  */
 export function applyBlocklist(buildings, items, proj, cover = 0, radiusM = BLOCK_MATCH_M) {
   let blocked = 0;
@@ -662,7 +614,7 @@ export function applyBlocklist(buildings, items, proj, cover = 0, radiusM = BLOC
     if (typeof it.lat !== "number" || typeof it.lon !== "number") continue;
     const [x, z] = proj(it.lat, it.lon);
     if (cover && (Math.abs(x) > cover / 2 || Math.abs(z) > cover / 2)) continue; // 이 맵 밖 — 조용히 건너뜀
-    const hits = blockedBuildingIndices(buildings, x, z, radiusM);
+    const hits = blockedBuildingIndices(buildings, x, z, it.radiusM ?? radiusM);
     if (!hits.length) { misses.push(it.name ?? it.osmName ?? "?"); continue; }
     for (const i of hits) {
       if (buildings[i].lm === undefined && buildings[i].n === undefined) continue;

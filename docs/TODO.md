@@ -429,7 +429,7 @@ interface SubLayer {
   - **기존 `maps/<id>.json` 모놀리식 보존**(레거시, 향후 삭제). 직전 per-id 청크 레이아웃은 이 타일 월드로 대체(build-chunks 제거).
 - [x] **⭐⭐ ChunkStreamer ↔ 타일 월드 배선** ([StreamingWorld.ts](../src/world/StreamingWorld.ts) · [chunkMesh.ts](../src/world/chunkMesh.ts)) ✅ — `ChunkIO` 구현(fetch=`tiles.json` 게이트 + `<cx>_<cz>.json`, build=청크→메시(지형 격자 색칠 + 건물 압출·표고 안착 + 도로 리본 + 수역), dispose=해제+레지스트리 정리). `heightAt` 바이리니어 샘플 + 오브젝트 청크 집합 변경 시 `CollisionWorld` 재구축 + `queryMinimap`. 게임 진입은 카탈로그 `stream:true` 분기로 `StreamingWorld.create(lat,lon)`(스폰 주변 지형 프리로드). `World`/`StreamingWorld` 공통 표면 = [GameWorld](../src/world/GameWorld.ts). e2e 스모크 PASS(playing·미니맵·비블랙·에러0). **레거시 `maps/<id>.json` 은 데이터로 보존**(카탈로그 비노출).
 - [x] **⭐⭐⭐ 광역 전장 (반경 20km) + 무제한 로밍** ✅ — 경복궁 중심 **반경 20km(58×58km, 1,952 청크, 건물 133k·도로 48k)** 실측 수집. `StreamingWorld.bounds=1e7`(사실상 무제한, 데이터 없는 곳은 평지). 40km DEM(2048²). build-world 가 heightmap 을 `maps.config` 에서 직접 읽어 **DEM↔OSM 분리**.
-  - **1km 타일 순차·재개 수집** ([osm.bboxTiles/mergeOSM](../scripts/osm.mjs) · [build-maps.mjs](../scripts/build-maps.mjs)) — 큰 타일은 도심에서 Overpass 타임아웃 → ~1km(0.0095°) 분할, 중심→외곽, 좌표 키 캐시(재개), 다중 미러 폴백, 실패 건너뜀. `OSM_PARTIAL=1` 중간 빌드. **모든 광역 맵 공통 규약**([03-maps.md](spec/03-maps.md) 명기).
+  - ~~**1km 타일 순차·재개 수집**~~ **제거됨(2026-08-27)** — Overpass 수집 경로를 통째로 걷어냈다(`bboxTiles`/`mergeOSM`/`overpassQuery`/`OSM_PARTIAL` 동반 삭제). 조용한 오염 위험(osm.ch 가 bbox 무관 고정 응답 → 수집기가 채택)과 70배 속도 차가 이유다. 지금은 **Geofabrik 추출이 유일 경로**이고 캐시가 없으면 즉시 실패한다([03-maps.md](spec/03-maps.md) §OSM 수집).
   - 검증기 `cellOOB` 광역 대응(±250km, 셀 경계 횡단 단일프레임 허용) + `terrain-steep`(DSM 스파이크 가드).
   - **남은 작업**: 셀 경계(경도 127 등) 횡단 = **멀티셀 스트리밍**(build-world 다중 셀 출력 + StreamingWorld 인접 셀 로드)으로 진정한 전지구 로밍.
 - [ ] **⭐⭐ 지하·수중 레이어** — 4번과 연동, Y축 멀티레이어(`underground` 섹션).

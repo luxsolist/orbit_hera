@@ -10,7 +10,7 @@ import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
 import { MAPS } from "./maps.config.mjs";
 import { RECIPES } from "./landmarks.mjs";
-import { projFns, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius, buildNameIndex, matchCuratedByName, applyBlocklist, BLOCK_MATCH_M } from "./osm.mjs";
+import { projFns, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius, buildNameIndex, matchCuratedByName, applyBlocklist, BLOCK_MATCH_M } from "./osm.mjs";
 
 // 레시피가 있는 랜드마크는 부품 목록(structure)으로 베이킹, 나머지는 그대로(타입별 빌더).
 function bakeLandmarks(landmarks) {
@@ -33,20 +33,6 @@ function bakeLandmarks(landmarks) {
   });
 }
 
-// 순서 = 시도 우선순위. ⚠ 2026-08-22 진단: 이 개발 샌드박스에서 overpass-api.de/kumi.systems 는
-// TCP 단에서 막혀있고(방화벽 REFUSED/DROP), overpass.osm.ch 는 더 나쁘게도 **요청 bbox 와 무관하게
-// 항상 같은 스위스 지역 고정 응답을 돌려줌**(예: way 42230983, 47.49°N 6.88°E — 로마·경복궁 쿼리
-// 양쪽 다 이 값 반환). fetchOverpass() 는 elements.length>0 이면 "데이터 있음"으로 채택하므로, osm.ch
-// 를 앞순위에 두면 클린 실패보다 위험한 무음 오염(엉뚱한 지역 데이터 혼입)이 난다 — 절대 앞에 두지
-// 말 것. 이 4개 미러 모두 현재 샌드박스에서 신뢰 불가(전체는 scripts/data/geocode-* 류 네트워크
-// 진단 참고). 실사용 환경(방화벽 제약 없는 머신)에서는 정상 동작할 가능성이 높음 — 원래 순서 유지.
-const ENDPOINTS = [
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.osm.ch/api/interpreter",
-  "https://overpass.private.coffee/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter",
-];
-
 // 대상 맵 — **id 지정 필수**. maps.config 가 도시 100선을 자동 포함하게 된 뒤로 인자 없는 실행은
 // 101개 도시를 통째로 수집하려 든다(공개 Overpass 폭격 + 수 시간). 전량 빌드는 --all 로만 허용.
 const only = process.argv[2] && !process.argv[2].startsWith("--") ? process.argv[2] : null;
@@ -62,40 +48,23 @@ mkdirSync(OUT_DIR, { recursive: true });
 mkdirSync(BUILD_DIR, { recursive: true });
 
 /**
- * 단일 bbox Overpass 수집(엔드포인트 폴백). **데이터 있는 응답을 우선** — 과부하 시 빈 200 을
- * 반환하는 엔드포인트가 있어, 빈 응답이면 다른 엔드포인트도 시도하고 모두 빈일 때만 빈으로 확정.
- * 선택한 결과를 cacheFile 에 기록 후 반환. 모두 실패면 throw.
+ * OSM 수집 — **Geofabrik 추출 캐시를 읽기만 한다**(네트워크 수집 없음).
+ *
+ * Overpass 타일 폭격 경로를 제거했다(2026-08-27). 근거 넷:
+ *   ① spec/03-maps.md 가 이미 "광역은 Geofabrik 추출 우선"을 **모든 광역 맵 공통 규약**으로 명시 —
+ *      Overpass 는 문서상 이미 비정본인데 코드에만 폴백으로 남아 있었다.
+ *   ② **조용한 오염 위험**: overpass.osm.ch 는 요청 bbox 와 무관하게 늘 같은 스위스 지역 응답을
+ *      돌려주는데(2026-08-22 진단), 수집기는 elements.length>0 이면 채택했다. 앞 엔드포인트가
+ *      실패하면 도쿄 맵에 스위스 지형이 조용히 구워진다 — 순서로만 막고 있었으니 방어가 아니라 운이었다.
+ *   ③ **속도**: 실측 루앙프라방 1,558타일 · 약 8타일/분 → 3시간+ 대 추출 경로 **2분 26초**.
+ *   ④ **폴백이 진짜 문제를 가린다**: 캐시가 없을 때 필요한 건 "추출을 먼저 돌려라"는 즉각적인
+ *      실패다. 조용히 3시간짜리 우회로로 빠지면 원인을 못 본다(실제로 한 번 빠졌다).
+ * 단일 쿼리 분기(bbox ≤ 0.06°)도 함께 사라졌다 — 등록된 104개 맵 중 해당하는 것이 0개인 죽은 코드였다.
+ *
+ * 수역만 다시 받는 일회성 수리 도구(refetch-water.mjs)는 자체 Overpass 경로를 갖고 있고 여기 영향받지
+ * 않는다. 다만 같은 불안정성을 안고 있으니 동작하지 않을 수 있다.
  */
-function fetchOverpass(bbox, qf, cacheFile) {
-  writeFileSync(qf, overpassQuery(bbox, { date: process.env.OSM_DATE }));
-  const tmp = `${cacheFile}.tmp`;
-  let lastErr, emptyResult = null;
-  for (const ep of ENDPOINTS) {
-    try {
-      execFileSync(
-        "curl",
-        ["-sS", "-m", "70", "-A", "SeedGame/0.4 (map builder; contact luxsolist@gmail.com)",
-          "-G", ep, "--data-urlencode", `data@${qf}`, "-o", tmp],
-        { stdio: ["ignore", "ignore", "inherit"] }
-      );
-      const txt = readFileSync(tmp, "utf8");
-      if (!txt.trim().startsWith("{")) throw new Error("non-JSON(XML 에러/타임아웃?)");
-      const j = JSON.parse(txt);
-      if (!Array.isArray(j.elements)) throw new Error("elements 누락");
-      if (j.elements.length) { writeFileSync(cacheFile, txt); try { rmSync(tmp); } catch {} return j; } // 데이터 있음 → 채택
-      emptyResult = txt; // 빈 응답 — 다른 엔드포인트도 확인(과부하 빈 200 회피)
-    } catch (e) { lastErr = e; }
-  }
-  try { rmSync(tmp); } catch {}
-  if (emptyResult != null) { writeFileSync(cacheFile, emptyResult); return JSON.parse(emptyResult); } // 모든 엔드포인트가 빈 → 진짜 빈으로 확정
-  throw lastErr || new Error("fetch failed");
-}
-
-/**
- * OSM 수집 — bbox 가 크면(>~0.06°) 타일 격자로 분할해 타일별 수집·캐시·병합(단일 쿼리 타임아웃 회피·재개 가능).
- * 작은 bbox 는 단일 쿼리. 타일 캐시 /tmp/osm-<id>-t<r>_<c>.json 로 중단 후 재실행 시 이어받음.
- */
-async function fetchOSM(id, bbox) {
+async function fetchOSM(id, _bbox) {
   // NDJSON 우선(import-extract 산출) — 단일 JSON 은 Node 문자열 한계(≈512MB)에 걸려 대도시가 못 읽힌다.
   const nd = `/tmp/osm-${id}.ndjson`;
   if (existsSync(nd) && statSync(nd).size > 1000) {
@@ -109,49 +78,22 @@ async function fetchOSM(id, bbox) {
     });
     return { elements };
   }
-  // 레거시 단일 JSON(구 import-extract 산출 · Overpass 타일 병합 캐시).
+  // 레거시 단일 JSON(구 import-extract 산출 · 옛 Overpass 타일 병합 캐시).
   const cache = `/tmp/osm-${id}.json`;
   if (existsSync(cache) && statSync(cache).size > 1000) {
     console.error(`  using cached ${cache}`);
     return JSON.parse(readFileSync(cache, "utf8"));
   }
-  // 대면적은 ~1km(0.0095°≈1024m) 타일로 순차 수집 — 도심 밀집 타일도 타임아웃 없이 처리(작은 쿼리).
-  const tiles = (bbox[2] - bbox[0] > 0.06 || bbox[3] - bbox[1] > 0.06) ? bboxTiles(bbox, 0.0095) : [bbox];
-  if (tiles.length === 1) {
-    const j = fetchOverpass(bbox, `/tmp/q-${id}.overpassql`, cache);
-    if (!j.elements.length) throw new Error("empty response");
-    return j;
-  }
-  // 중심(스폰 일대)에서 가까운 타일부터 — 부분 수집이어도 플레이 영역이 먼저 채워짐. 캐시 키=타일 좌표(순서 무관 재개).
-  const ctrLat = (bbox[0] + bbox[2]) / 2, ctrLon = (bbox[1] + bbox[3]) / 2;
-  tiles.sort((a, b) => Math.hypot((a[0] + a[2]) / 2 - ctrLat, (a[1] + a[3]) / 2 - ctrLon) - Math.hypot((b[0] + b[2]) / 2 - ctrLat, (b[1] + b[3]) / 2 - ctrLon));
-  const partial = process.env.OSM_PARTIAL === "1"; // 중간 빌드 — 캐시된 타일만 병합, 네트워크 수집 생략(수집 프로세스와 병행).
-  console.error(`  tiled ${partial ? "PARTIAL(캐시만)" : "fetch"}: ${tiles.length} tiles (≈1km each, 중심→외곽 순차·재개)`);
-  const parts = [];
-  const failed = [];
-  const tkey = (t) => `${Math.round(t[0] * 1e4)}_${Math.round(t[1] * 1e4)}`;
-  for (let i = 0; i < tiles.length; i++) {
-    const tf = `/tmp/osm-${id}-t${tkey(tiles[i])}.json`;
-    if (existsSync(tf) && statSync(tf).size > 100) {
-      try { const j = JSON.parse(readFileSync(tf, "utf8")); if (Array.isArray(j.elements)) { parts.push(j); continue; } } catch {}
-      if (!partial) try { rmSync(tf); } catch {} // 손상 캐시 제거 후 재수집(부분 모드는 수집 프로세스 캐시 건드리지 않음)
-    }
-    if (partial) { failed.push(i); continue; } // 미수집 타일은 건너뜀(네트워크 X)
-    if (i % 25 === 0) console.error(`  [${i + 1}/${tiles.length}] ${tiles[i].map((v) => v.toFixed(3)).join(",")}`);
-    let ok = false;
-    for (let attempt = 0; attempt < 2 && !ok; attempt++) {
-      try { parts.push(fetchOverpass(tiles[i], `/tmp/q-${id}-tmp.overpassql`, tf)); ok = true; }
-      catch (e) { if (attempt) console.error(`   tile ${tkey(tiles[i])} 실패: ${e.message}`); }
-    }
-    if (!ok) failed.push(i); // 캐시 미기록 → 재실행 시 재시도(중단 없이 계속)
-  }
-  if (failed.length) console.error(`  ${partial ? "미수집" : "⚠ 실패"} ${failed.length}/${tiles.length} 타일${partial ? "(수집 진행 중)" : "(재실행 시 재시도)"}`);
-  if (partial && !parts.length) throw new Error("캐시된 타일 없음 — 수집이 먼저 진행돼야 함");
-  const merged = mergeOSM(parts);
-  if (failed.length === 0) writeFileSync(cache, JSON.stringify(merged)); // 전 타일 성공 시에만 병합 캐시(부분 수집은 캐시 안 함 → 다음 실행서 누락분 채움)
-  console.error(`  merged ${merged.elements.length} elements from ${tiles.length - failed.length}/${tiles.length} tiles`);
-  return merged;
+  // 캐시가 없다 — **조용히 우회하지 않고 여기서 멈춘다**. 무엇을 해야 하는지 함께 알려준다.
+  throw new Error(
+    `OSM 추출 캐시 없음: ${nd}\n` +
+    `  Geofabrik 추출을 먼저 돌릴 것(광역 맵 공통 규약 — docs/spec/03-maps.md):\n` +
+    `    curl -L -o /tmp/<region>-latest.osm.pbf https://download.geofabrik.de/<대륙>/<region>-latest.osm.pbf\n` +
+    `    node --max-old-space-size=8192 scripts/import-extract.mjs ${id} /tmp/<region>-latest.osm.pbf /tmp/osmconvert\n` +
+    `  그 다음 이 명령을 다시 실행한다.`
+  );
 }
+
 
 function processOSM(osm, proj) {
   const buildings = [];
