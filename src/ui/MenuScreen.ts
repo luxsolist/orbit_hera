@@ -2,7 +2,7 @@ import { fetchDrone, fetchDroneCatalog } from "../player/drones";
 import type { DroneCatalogEntry, DroneSpec } from "../player/DroneSpec";
 import { fetchCatalog } from "../world/maps";
 import type { MapCatalogEntry } from "../world/MapData";
-import { buildWorldSvg, projectLatLon, clusterDots, zoomMapBox, projectInBox, driftOverlaySvg } from "./worldMapSvg";
+import { buildWorldSvg, clusterDots, zoomToSplit, projectInBox, driftOverlaySvg, niceGridStep, estLabelPx, labelSide, FULL_VIEW, type ViewBox } from "./worldMapSvg";
 import type { CampaignData } from "../core/progress";
 import { chapterMeta, driftConvergence, pairedCity, revealed } from "../game/campaign";
 import { bestiaryCards } from "../game/bestiary";
@@ -10,8 +10,6 @@ import { SHELL_GEOS } from "../enemies/CoreEnemy";
 import { silhouetteSvg } from "./shapeSvg";
 import { fetchPlasmoid } from "../enemies/plasmoids";
 import { DEFAULT_PLASMOID } from "../enemies/PlasmoidSpec";
-
-const WORLD_SVG = buildWorldSvg();
 
 /** Game 이 주입하는 콜백 — 메뉴는 UI만 담당하고 출격/인트로 재생은 Game 이 처리. */
 interface MenuCallbacks {
@@ -50,12 +48,20 @@ export class MenuScreen {
   private storyList: HTMLElement;
   private plasmoidSpecCache: import("../enemies/PlasmoidSpec").PlasmoidSpec | null = null; // 도감 로드 캐시
   private helpPopup: HTMLElement;
-  private clusterPopup: HTMLElement;
-  private clusterMap: HTMLElement;
+  private mapZoomBar: HTMLElement;
   private hintMoveMouse: HTMLElement;
   private hintMoveTouch: HTMLElement;
 
   private catalog: MapCatalogEntry[] = [];
+  /**
+   * 확대 이력 — 비어 있으면 전체 지도. 마지막 원소가 현재 뷰다.
+   *
+   * 팝업 확대창(clusterpop)을 대체한다. 확대창은 306×225 한 장에 군집 전원을 지리적으로 정확히
+   * 배치해야 했는데, 그게 원리적으로 불가능했다(실측: 한일 5도시가 최근접 11px·양 끝이 0%/100% 에
+   * 박혀 잘렸고, 100도시 확장 시 한 군집이 **25개**·최근접 2px). 지도 자체를 파고들면 한 화면에
+   * 다 담을 이유가 사라진다 — 겹치면 한 단계 더 들어가면 되고, 각 단계는 군집을 반드시 쪼갠다.
+   */
+  private viewStack: ViewBox[] = [];
   private invadedIds = new Set<string>(); // 침공 중(붉은 깜빡임) 지역 — 진입마다 랜덤 2개
   private droneCatalog: DroneCatalogEntry[] = [];
   private droneSpecs = new Map<string, DroneSpec>(); // 조작 안내/팝업용 로드 캐시
@@ -74,30 +80,35 @@ export class MenuScreen {
     this.storyHead = byId("storyHead");
     this.storyList = byId("storyList");
     this.helpPopup = byId("helpPopup");
-    this.clusterPopup = byId("clusterPopup");
-    this.clusterMap = byId("clusterMap");
+    this.mapZoomBar = byId("mapZoomBar");
     this.hintMoveMouse = byId("hintMoveMouse");
     this.hintMoveTouch = byId("hintMoveTouch");
     this.selectedDroneId = new URLSearchParams(window.location.search).get("drone") || "walker";
 
-    // 지도 점 클릭 → 단일 점=지역 팝업 / 클러스터=확대창. 배경 클릭 → 모든 팝업 닫기.
+    // 지도 점 클릭 → 단일 점=출격 팝업 / 군집=그 지역으로 **확대**. 배경 클릭 → 팝업 닫기.
     this.worldMap.addEventListener("click", (e) => {
       const el = (e.target as HTMLElement).closest("[data-map],[data-cluster]") as HTMLElement | null;
       if (el?.dataset.cluster) {
-        this.storyPopup.hidden = true; this.helpPopup.hidden = true;
-        this.openClusterZoom(el.dataset.cluster.split(","), parseFloat(el.style.left), parseFloat(el.style.top));
+        this.storyPopup.hidden = true; this.helpPopup.hidden = true; this.zonePopup.hidden = true;
+        this.zoomIntoCluster(el.dataset.cluster.split(","));
       } else if (el?.dataset.map) {
         this.storyPopup.hidden = true; this.helpPopup.hidden = true;
-        this.clusterPopup.hidden = true;
         this.openPopup(el.dataset.map);
       } else this.closeAllPopups();
     });
-    // 확대창 안의 세부 점 클릭 → 기존 출격 팝업(확대창은 닫지 않고 유지).
-    this.clusterMap.addEventListener("click", (e) => {
-      const dot = (e.target as HTMLElement).closest("[data-map]") as HTMLElement | null;
-      if (dot?.dataset.map) this.openPopup(dot.dataset.map);
+    // 확대 바 — 한 단계 축소 / 전체 보기.
+    this.mapZoomBar.addEventListener("click", (e) => {
+      const act = ((e.target as HTMLElement).closest("[data-zoom]") as HTMLElement | null)?.dataset.zoom;
+      if (act === "out") this.zoomOut();
+      else if (act === "reset") this.resetZoom();
     });
-    byId("clusterPopClose").addEventListener("click", () => (this.clusterPopup.hidden = true));
+    // Esc — 팝업이 열려 있으면 팝업부터, 아니면 한 단계 축소. 확대 상태로 갇히지 않게.
+    window.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape" || this.menuLayout.hidden) return;
+      const anyPop = !this.zonePopup.hidden || !this.storyPopup.hidden || !this.helpPopup.hidden;
+      if (anyPop) this.closeAllPopups();
+      else if (this.viewStack.length) this.zoomOut();
+    });
     byId("zonePopClose").addEventListener("click", () => (this.zonePopup.hidden = true));
     byId("storyBtn").addEventListener("click", () => {
       if (this.storyPopup.hidden) this.renderStoryList(); // 재오픈 시 항상 목록부터(도감 잔류 방지)
@@ -135,7 +146,6 @@ export class MenuScreen {
     this.zonePopup.hidden = true;
     this.storyPopup.hidden = true;
     this.helpPopup.hidden = true;
-    this.clusterPopup.hidden = true;
   }
 
   /** 침공 중(붉은 깜빡임) 지역을 랜덤 2개 선택. 나머지 등록 지역은 흰색 점. */
@@ -161,29 +171,108 @@ export class MenuScreen {
     return "zone-dot--reg";
   }
 
-  /** 세계지도에 등록 지역을 점으로. 가까운 점은 **대표 점(클러스터)** 으로 묶고(하나라도 침공이면 붉음), 단일은 그대로. */
+  /** 현재 뷰 박스 — 확대 이력의 마지막, 비었으면 전체 지도. */
+  private get view(): ViewBox {
+    return this.viewStack[this.viewStack.length - 1] ?? FULL_VIEW;
+  }
+
+  /**
+   * 세계지도 렌더 — **현재 뷰 박스 기준**으로 지도·표류 오버레이·점을 모두 다시 그린다.
+   * 가까운 점은 대표 점(군집)으로 묶이고(하나라도 침공이면 붉음), 군집 클릭은 그 지역으로 확대한다.
+   *
+   * 군집 임계값은 화면 백분율이라 **배율과 무관하게** 같은 시각 밀도를 유지한다 — 확대하면 도시들이
+   * 화면에서 멀어지므로 군집이 자연히 풀린다. 이게 재귀 확대가 성립하는 근거다.
+   */
   private renderWorldMap(): void {
     const camp = this.cb.campaign();
+    const box = this.view;
     const rank = (cls: string) => (cls === "zone-dot--fallen" ? 2 : cls === "zone-dot--invaded" ? 1 : 0);
     const pts = this.catalog
       .filter((r) => r.lat != null && r.lon != null)
-      .map((r) => ({ id: r.id, ...projectLatLon(r.lat!, r.lon!), cls: this.dotStateClass(r.id, camp) }));
+      .map((r) => ({ id: r.id, ...projectInBox(r.lat!, r.lon!, box), cls: this.dotStateClass(r.id, camp) }))
+      // 뷰 밖은 버린다 — 안 버리면 확대 시 화면 밖 좌표(수천 %)의 버튼이 쌓이고, 군집 계산도 오염된다.
+      // 여백을 조금 둬서 경계에 걸친 점이 갑자기 사라지지 않게 한다.
+      .filter((p) => p.x >= -6 && p.x <= 106 && p.y >= -6 && p.y <= 106);
+    // 확대 중에는 단일 점에 **이름을 붙인다**. 전체 지도에서는 붙이지 않는다 — 27~100개가 한 화면에
+    // 있어 라벨끼리 뒤엉킨다. 반대로 확대하면 배경(110m 해안선)이 뭉개져 위치만으로는 식별이 안 되므로
+    // 이름이 유일한 단서가 된다(실측 ×323 에서 오사카·교토·나라가 구분 불가였다).
+    const mapPx = this.worldMap.clientWidth || 900;
+    const showLabels = this.viewStack.length > 0;
     const dots = clusterDots(pts, 2.6)
       .map((c) => {
         // 대표 점 상태 = 멤버 중 최악(함락 > 침공 > 방어)
         const cls = c.members.reduce((a, m) => (rank(m.cls) > rank(a) ? m.cls : a), "zone-dot--reg");
         const pos = `left:${c.x.toFixed(2)}%;top:${c.y.toFixed(2)}%`;
         if (c.members.length === 1) {
-          return `<button type="button" class="zone-dot ${cls}" data-map="${c.members[0].id}" style="${pos}"><i></i></button>`;
+          const id = c.members[0].id;
+          let lbl = "";
+          if (showLabels) {
+            // 한글 표기만 — `"루앙프라방 · Luang Prabang"` 전체는 폭이 2배가 넘어 잘 넘친다.
+            const nm = (this.catalog.find((r) => r.id === id)?.name ?? "").split(" · ")[0];
+            if (nm) lbl = `<span class="zone-dot__lbl zone-dot__lbl--${labelSide(c.x, estLabelPx(nm), mapPx)}">${nm}</span>`;
+          }
+          return `<button type="button" class="zone-dot ${cls}" data-map="${id}" style="${pos}"><i></i>${lbl}</button>`;
         }
-        // 대표 점(클러스터) — 클릭 시 확대창. 멤버 수 배지.
+        // 대표 점(군집) — 클릭 시 그 지역으로 확대. 멤버 수 배지.
         const ids = c.members.map((m) => m.id).join(",");
         return `<button type="button" class="zone-dot zone-dot--cluster ${cls}" data-cluster="${ids}" style="${pos}"><i></i><b class="zone-dot__n">${c.members.length}</b></button>`;
       })
       .join("");
+    // 확대할수록 대륙 윤곽이 두꺼워 보이므로 배율만큼 얇게, 그리드는 폭에 맞는 간격으로 다시 잡는다.
+    const k = box.w / FULL_VIEW.w;
+    const svg = buildWorldSvg(box, niceGridStep(box.w), 0.3 * k);
     // 표류 벡터 오버레이(§9.2-5) — 점 아래 깔리도록 세계지도 바로 뒤에 삽입.
-    this.worldMap.innerHTML = WORLD_SVG + driftOverlaySvg(camp.driftVectors, driftConvergence(camp)) + dots;
+    this.worldMap.innerHTML = svg + driftOverlaySvg(camp.driftVectors, driftConvergence(camp), box) + dots;
+    this.renderZoomBar();
     this.renderCaseFile(camp);
+  }
+
+  /** 확대 바 — 확대 중일 때만 보인다(축소·전체 + 현재 배율). 좌하단 오버레이는 확대 중 숨긴다. */
+  private renderZoomBar(): void {
+    const depth = this.viewStack.length;
+    // 확대하면 점이 지도 어디로든 갈 수 있어 좌하단 고정 오버레이(사건 파일·스토리 버튼)가 전장을
+    // 가린다. 전체 지도에서는 점이 대륙 위에만 있어 겹치지 않으므로 그때만 보인다.
+    this.menuLayout.classList.toggle("menu--zoomed", depth > 0);
+    if (depth > 0) this.storyPopup.hidden = true; // 버튼이 사라지므로 열린 목록도 함께 닫는다
+    if (!depth) { this.mapZoomBar.hidden = true; this.mapZoomBar.innerHTML = ""; return; }
+    const zoom = FULL_VIEW.w / this.view.w;
+    this.mapZoomBar.innerHTML =
+      `<button type="button" class="mapzoom__btn" data-zoom="out">◀ 축소 / BACK</button>` +
+      `<button type="button" class="mapzoom__btn" data-zoom="reset">전체 / WORLD</button>` +
+      `<span class="mapzoom__lv">×${zoom < 10 ? zoom.toFixed(1) : Math.round(zoom)}</span>`;
+    this.mapZoomBar.hidden = false;
+  }
+
+  /**
+   * 군집 클릭 → 그 지역으로 확대. **매번 군집이 쪼개지도록** 전진을 보장한다.
+   *
+   * 판정은 zoomToSplit 이 한다 — "박스가 줄었나"가 아니라 **"군집이 실제로 쪼개졌나"** 를 본다.
+   * 자세한 근거는 그 함수 주석 참조(등간격 다수는 확대해도 상대 간격이 그대로라 안 쪼개진다).
+   */
+  private zoomIntoCluster(ids: string[]): void {
+    const members = ids
+      .map((id) => this.catalog.find((c) => c.id === id))
+      .filter((m): m is MapCatalogEntry => !!m && m.lat != null && m.lon != null);
+    if (members.length < 2) { if (members[0]) this.openPopup(members[0].id); return; }
+    const aspect = (this.worldMap.clientWidth || 900) / (this.worldMap.clientHeight || 450);
+    this.viewStack.push(zoomToSplit(members.map((m) => ({ lat: m.lat!, lon: m.lon! })), this.view, aspect));
+    this.renderWorldMap();
+  }
+
+  /** 한 단계 축소. */
+  private zoomOut(): void {
+    if (!this.viewStack.length) return;
+    this.viewStack.pop();
+    this.zonePopup.hidden = true; // 팝업은 확대 좌표에 고정돼 있다 — 뷰가 바뀌면 자리가 틀어진다
+    this.renderWorldMap();
+  }
+
+  /** 전체 지도로. */
+  private resetZoom(): void {
+    if (!this.viewStack.length) return;
+    this.viewStack.length = 0;
+    this.zonePopup.hidden = true;
+    this.renderWorldMap();
   }
 
   /** 사건 파일 패널(전조 콘솔) — 현재 장·질문·수사 방향 + 증거 게이지 4종. */
@@ -207,39 +296,11 @@ export class MenuScreen {
     panel.hidden = false;
   }
 
-  /**
-   * 클러스터(대표 점) 클릭 → 그 지역을 **확대한 지도 위에** 세부 점들을 **정확한 위치**로 표시. 세부 점 클릭은 출격 팝업.
-   * 확대 지도(viewBox 크롭)·점 배치는 worldMapSvg 공통 로직(zoomMapBox/projectInBox/buildWorldSvg) — 모든 확대창이 공유.
-   */
-  private openClusterZoom(ids: string[], anchorX: number, anchorY: number): void {
-    const members = ids.map((id) => this.catalog.find((c) => c.id === id)).filter((m): m is MapCatalogEntry => !!m && m.lat != null && m.lon != null);
-    if (members.length < 2) { if (members[0]) this.openPopup(members[0].id); return; }
-    // 확대창을 대표 점 근처에 띄우고(좌우 보정), 레이아웃된 박스 종횡비로 확대 지도 생성.
-    this.clusterPopup.style.left = `${Math.min(72, Math.max(2, anchorX)).toFixed(1)}%`;
-    this.clusterPopup.style.top = `${Math.min(60, Math.max(4, anchorY + 4)).toFixed(1)}%`;
-    this.clusterPopup.hidden = false;
-    const zw = this.clusterMap.clientWidth || 300, zh = this.clusterMap.clientHeight || 220;
-    const box = zoomMapBox(members.map((m) => ({ lat: m.lat!, lon: m.lon! })), zw / zh);
-    // 해안선 두께 = 기본 세계지도 해안선 픽셀의 2배(렌더 크기·확대율 보정). 그리드는 생략(step 0).
-    const baseStrokePx = 0.3 * ((this.worldMap.clientWidth || 860) / 360);
-    const svg = buildWorldSvg(box, 0, (2 * baseStrokePx * box.w) / zw);
-    const camp = this.cb.campaign();
-    const dots = members
-      .map((m) => {
-        const { x, y } = projectInBox(m.lat!, m.lon!, box); // 지도상 정확한 위치
-        const cls = this.dotStateClass(m.id, camp);
-        const lblCls = x > 55 ? "zone-dot__lbl zone-dot__lbl--l" : "zone-dot__lbl"; // 오른쪽 점은 라벨 왼쪽(창 밖 넘침 방지)
-        return `<button type="button" class="zone-dot ${cls}" data-map="${m.id}" style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"><i></i><span class="${lblCls}">${m.name}</span></button>`;
-      })
-      .join("");
-    this.clusterMap.innerHTML = svg + dots;
-  }
-
   /** 점 클릭 → 그 위치 위에 지역 정보 + 기체 선택(출격) 팝업. 기체 선택 시 즉시 출격. */
   private openPopup(id: string): void {
     const m = this.catalog.find((c) => c.id === id);
     if (!m || m.lat == null || m.lon == null) return;
-    const { x, y } = projectLatLon(m.lat, m.lon);
+    const { x, y } = projectInBox(m.lat, m.lon, this.view); // 확대 중이면 확대 좌표 — 점 위에 정확히 뜬다
     const mb = m.bytes ? (m.bytes / 1024 / 1024).toFixed(1) + "MB" : "";
     this.zonePopName.textContent = m.name;
     this.zonePopSub.textContent = m.subtitle;

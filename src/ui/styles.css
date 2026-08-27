@@ -739,32 +739,46 @@ body.is-touch.is-portrait .mc-rotate { display: flex; }
 }
 .zone-dot--invaded .zone-dot__n { background: var(--core-red); color: #fff; }
 
-/* 클러스터 확대창 — 지역 확대 후 세부 점 펼침 */
-.clusterpop {
-  position: absolute; transform: translate(-50%, 0); z-index: 6;
-  width: 330px; padding: 12px 12px 14px; /* 기존 220px 의 1.5배 */
-  background: rgba(8, 18, 28, 0.97); border: 1px solid rgba(52, 245, 255, 0.5);
-  border-radius: 10px; box-shadow: 0 8px 26px rgba(0, 0, 0, 0.6), 0 0 16px rgba(52, 245, 255, 0.18);
+/* 확대 바 — 군집을 파고들어 확대 중일 때만(축소 / 전체 / 배율).
+   옛 clusterpop(확대 팝업)을 대체한다: 팝업 한 장에 군집 전원을 배치하려다 점이 테두리에 잘리고
+   서로 클릭을 가로막았다(실측: 한일 5도시 최근접 11px · 양 끝 0%/100%). 이제 지도 자체를 확대한다. */
+.mapzoom {
+  position: absolute; top: 10px; left: 10px; z-index: 6;
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 8px;
+  background: rgba(8, 18, 28, 0.88); border: 1px solid rgba(52, 245, 255, 0.4);
+  border-radius: 8px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
-.clusterpop[hidden] { display: none; }
-.clusterpop__close { position: absolute; top: 5px; right: 8px; z-index: 2; background: none; border: none; color: var(--core-cyan); font-size: 18px; line-height: 1; cursor: pointer; }
-.clusterpop__map { position: relative; width: 100%; height: 225px; background: rgba(4, 14, 22, 0.6); border: 1px solid rgba(52, 245, 255, 0.25); border-radius: 6px; overflow: hidden; } /* 150px → 225px(1.5배) */
-.clusterpop__map > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; } /* 확대된 세계지도(크롭) 배경 */
-.clusterpop__map .zone-dot { position: absolute; z-index: 1; } /* 점은 지도 위 */
-.clusterpop__map .zone-dot__lbl {
-  position: absolute; left: 10px; top: -4px; white-space: nowrap;
-  font: 600 10px/1 ui-monospace, monospace; color: #cfeef5; text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
-  /* 라벨은 장식 — 클릭 대상이 아니다. 점 바깥으로 뻗은 nowrap 텍스트(70px 남짓)가 **옆 점을 덮어
-     클릭을 가로막았다**(간사이 3도시가 가까워 확대창에서 겹쳤다 · e2e 실측). */
-  pointer-events: none;
+.mapzoom[hidden] { display: none; }
+.mapzoom__btn {
+  background: none; border: 1px solid rgba(52, 245, 255, 0.35); border-radius: 5px;
+  padding: 3px 8px; cursor: pointer;
+  font: 600 10px/1.4 ui-monospace, monospace; color: var(--core-cyan);
 }
-.clusterpop__map .zone-dot__lbl--l { left: auto; right: 10px; } /* 오른쪽 점 — 라벨 왼쪽 정렬 */
+.mapzoom__btn:hover { background: rgba(52, 245, 255, 0.14); border-color: rgba(52, 245, 255, 0.7); }
+/* 확대 중에는 좌하단 고정 오버레이를 숨긴다 — 확대하면 점이 지도 어디로든 가므로 전장을 가린다.
+   (사건 파일은 pointer-events:none 이라 클릭은 통과했지만 시야를 덮는 건 그대로였다.) */
+.menu--zoomed #caseFile,
+.menu--zoomed .map-btn--story,
+.menu--zoomed #storyPopup { display: none; }
+
+/* 확대 중 단일 점 이름표 — 배경(110m 해안선)이 뭉개지는 배율에서 유일한 식별 단서.
+   장식이라 pointer-events:none — nowrap 텍스트가 옆 점을 덮어 클릭을 가로막던 회귀가 있었다. */
+.worldmap .zone-dot__lbl {
+  position: absolute; top: -5px; white-space: nowrap; pointer-events: none;
+  font: 600 10px/1 ui-monospace, monospace; color: #cfeef5;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.8);
+}
+.worldmap .zone-dot__lbl--r { left: 10px; }
+.worldmap .zone-dot__lbl--l { right: 10px; }
+
+.mapzoom__lv { font: 700 10px/1.4 ui-monospace, monospace; color: rgba(207, 238, 245, 0.75); padding-left: 2px; }
 
 /* 점 클릭 팝업(그 위치 위) — 지역 정보 + 기체 선택(출격) */
 .zonepop {
   position: absolute;
   transform: translate(-50%, calc(-100% - 14px));
-  z-index: 8; /* 확대창(6) 위 — 확대창 유지 중에도 출격창이 가려지지 않게 */
+  z-index: 8; /* 확대 바(6) 위 — 확대 중에도 출격창이 가려지지 않게 */
   width: 232px;
   padding: 12px 14px 14px;
   text-align: left;

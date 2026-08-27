@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { projectLatLon, clusterDots, zoomMapBox, projectInBox, niceGridStep, buildWorldSvg, driftOverlaySvg } from "../src/ui/worldMapSvg";
+import { projectLatLon, clusterDots, fitViewBox, clampToWorld, zoomAt, zoomToSplit, projectInBox, niceGridStep, estLabelPx, labelSide, buildWorldSvg, driftOverlaySvg, FULL_VIEW } from "../src/ui/worldMapSvg";
 
 describe("projectLatLon — equirectangular 백분율 투영", () => {
   it("원점(0,0) → 중앙(50,50)", () => {
@@ -43,10 +43,10 @@ describe("clusterDots — 근접 점 클러스터링(2:1 종횡비)", () => {
   });
 });
 
-describe("zoomMapBox / projectInBox — 확대창 공통 로직(확대 지도 + 정확 점 배치)", () => {
+describe("fitViewBox / projectInBox — 확대 뷰 공통 로직(확대 지도 + 정확 점 배치)", () => {
   it("박스 종횡비에 맞춰 확장(왜곡 방지) + 점들 포함", () => {
     const items = [{ lat: 37.58, lon: 126.98 }, { lat: 35.16, lon: 129.07 }];
-    const box = zoomMapBox(items, 2); // 너비/높이 = 2
+    const box = fitViewBox(items, 2); // 너비/높이 = 2
     expect(box.w / box.h).toBeCloseTo(2, 5);
     // 두 점 모두 박스 내부
     for (const it of items) {
@@ -79,7 +79,7 @@ describe("buildWorldSvg — 전체/확대(viewBox 크롭) 공통 렌더", () => 
     expect(svg).toContain('viewBox="300 50 20 20"');
     expect(svg).toContain('<rect x="300" y="50" width="20" height="20"');
   });
-  it("step≤0 → 그리드 생략(확대창)", () => {
+  it("step≤0 → 그리드 생략", () => {
     expect(buildWorldSvg({ x: 300, y: 50, w: 20, h: 20 }, 0)).not.toContain("<line");
     expect(buildWorldSvg({ x: 300, y: 50, w: 20, h: 20 }, 5)).toContain("<line"); // step>0 면 존재
   });
@@ -94,7 +94,7 @@ describe("buildWorldSvg — 전체/확대(viewBox 크롭) 공통 렌더", () => 
   });
 });
 
-describe("clusterDots / zoomMapBox — 엣지 케이스", () => {
+describe("clusterDots / fitViewBox — 엣지 케이스", () => {
   it("빈 배열 → 빈 결과", () => {
     expect(clusterDots([], 2.6)).toEqual([]);
   });
@@ -109,8 +109,8 @@ describe("clusterDots / zoomMapBox — 엣지 케이스", () => {
     expect(g[0].x).toBeCloseTo(11, 6);
     expect(g[0].y).toBeCloseTo(23, 6);
   });
-  it("zoomMapBox 단일 점 → minSpan 으로 적당히 확대(폭/높이>0, 종횡비 일치)", () => {
-    const box = zoomMapBox([{ lat: 35, lon: 129 }], 1.5, 0.5, 1.2);
+  it("fitViewBox 단일 점 → minSpan 으로 적당히 확대(폭/높이>0, 종횡비 일치)", () => {
+    const box = fitViewBox([{ lat: 35, lon: 129 }], 1.5, 0.5, 1.2);
     expect(box.w).toBeGreaterThan(0);
     expect(box.w / box.h).toBeCloseTo(1.5, 5);
     // 점이 박스 중앙 부근
@@ -119,59 +119,125 @@ describe("clusterDots / zoomMapBox — 엣지 케이스", () => {
   });
   it("세로로 긴 군집도 박스 종횡비에 맞춰 가로 확장(점은 내부)", () => {
     const items = [{ lat: 30, lon: 100 }, { lat: 40, lon: 100.5 }]; // 위도 폭≫경도 폭
-    const box = zoomMapBox(items, 2);
+    const box = fitViewBox(items, 2);
     expect(box.w / box.h).toBeCloseTo(2, 5);
     for (const it of items) { const p = projectInBox(it.lat, it.lon, box); expect(p.x).toBeGreaterThan(2); expect(p.x).toBeLessThan(98); }
   });
 });
 
-// ── 확대창 최소 간격 ──
-// 한 셀에 두 도시를 담게 된 뒤(오사카+나라 34/135) 간사이 3도시가 지도상 0.36° 안에 모였고,
-// 확대창에서 점 간격이 40px 남짓이 되어 **클릭이 서로 가로막혔다**(e2e 실측: 나라 점이 오사카를 인터셉트).
-// minSpan 하한만 있으면 가까울수록 더 뭉치는 역설이 생긴다 — 실제 간격이 좁으면 더 당겨야 한다.
-describe("zoomMapBox — 최근접 쌍이 화면에서 겹치지 않는다", () => {
-  const KANSAI = [
+// ── 여백 붕괴 회귀(2026-08-27) ──
+// 옛 zoomMapBox 는 "최근접 쌍을 화면에서 13% 이상 벌린다"는 목표를 함께 지려고 상자를 좁혔는데,
+// 그 축소 하한이 `exW/w`(상자 폭 = 점 분포 폭)라 **여백이 정확히 0 이 되는 지점**까지 당겨졌다.
+// 결과: 양 끝 도시가 0%·100% 에 박혀 점 반지름이 통째로 잘렸다(실측: 서울 0.0% · 나라 100.0%,
+// 최근접 11px 로 클릭도 서로 가로막힘). 재귀 확대로 바뀌며 그 목표는 폐기됐다 — 이제 담기만 한다.
+describe("fitViewBox — 점이 테두리에 잘리지 않는다", () => {
+  // 그 회귀를 만들었던 실제 조합: 축척이 크게 다른 도시가 한 군집에 섞여 있다
+  // (서울↔부산 325km 와 교토↔나라 30km 가 같은 군집).
+  const KR_JP = [
+    { lat: 37.5796, lon: 126.977 },  // 서울
+    { lat: 35.1379, lon: 129.0756 }, // 부산
     { lat: 34.6937, lon: 135.5015 }, // 오사카
     { lat: 35.0116, lon: 135.7681 }, // 교토
-    { lat: 34.6845, lon: 135.86 },   //  나라
+    { lat: 34.6845, lon: 135.86 },   // 나라
   ];
-  const sepPct = (a: { lat: number; lon: number }, b: { lat: number; lon: number }, box: { x: number; y: number; w: number; h: number }) => {
-    const pa = projectInBox(a.lat, a.lon, box), pb = projectInBox(b.lat, b.lon, box);
-    return Math.hypot(pa.x - pb.x, pa.y - pb.y);
-  };
 
-  it("간사이 3도시가 확대창에서 13% 이상 떨어진다", () => {
-    const box = zoomMapBox(KANSAI, 300 / 220);
-    for (let i = 0; i < KANSAI.length; i++) for (let j = i + 1; j < KANSAI.length; j++) {
-      expect(sepPct(KANSAI[i], KANSAI[j], box)).toBeGreaterThan(13);
-    }
-  });
-
-  it("아주 가까운 두 도시도 벌어진다 — 가까울수록 더 당긴다", () => {
-    const near = [{ lat: 34.68, lon: 135.80 }, { lat: 34.69, lon: 135.81 }];
-    const box = zoomMapBox(near, 300 / 220);
-    expect(sepPct(near[0], near[1], box)).toBeGreaterThan(13);
-    expect(box.w).toBeLessThan(0.5); // 실제 범위(0.01°)에 맞춰 크게 당겨졌다
-  });
-
-  it("점이 하나면 최소 범위를 유지한다 — 무한 확대 방지", () => {
-    const box = zoomMapBox([{ lat: 34.68, lon: 135.80 }], 300 / 220);
-    expect(box.w).toBeGreaterThan(1);
-  });
-
-  it("멀리 떨어진 쌍은 종전대로 범위 기준 — 서울·부산", () => {
-    const box = zoomMapBox([{ lat: 37.5796, lon: 126.977 }, { lat: 35.1379, lon: 129.0756 }], 300 / 220);
-    expect(box.w).toBeGreaterThan(4); // 실제 범위(2.44°)+패딩이 지배
-    expect(sepPct({ lat: 37.5796, lon: 126.977 }, { lat: 35.1379, lon: 129.0756 }, box)).toBeGreaterThan(13);
-  });
-
-  it("모든 점이 확대 박스 안에 들어온다", () => {
-    const box = zoomMapBox(KANSAI, 300 / 220);
-    for (const c of KANSAI) {
+  it("모든 점이 여백 안 — 0%/100% 에 닿지 않는다", () => {
+    const box = fitViewBox(KR_JP, 2);
+    for (const c of KR_JP) {
       const p = projectInBox(c.lat, c.lon, box);
-      expect(p.x).toBeGreaterThan(0); expect(p.x).toBeLessThan(100);
-      expect(p.y).toBeGreaterThan(0); expect(p.y).toBeLessThan(100);
+      expect(p.x, `x=${p.x}`).toBeGreaterThan(3);
+      expect(p.x, `x=${p.x}`).toBeLessThan(97);
+      expect(p.y, `y=${p.y}`).toBeGreaterThan(3);
+      expect(p.y, `y=${p.y}`).toBeLessThan(97);
     }
+  });
+
+  it("패딩 비율이 실제로 지켜진다 — 분포 폭 < 상자 폭", () => {
+    const box = fitViewBox(KR_JP, 2, 0.35);
+    const lons = KR_JP.map((c) => c.lon);
+    const span = Math.max(...lons) - Math.min(...lons);
+    expect(box.w).toBeGreaterThan(span * 1.5); // 1 + 0.35·2 = 1.7 (종횡비 보정으로 더 커질 수 있다)
+  });
+
+  it("빈 입력 → 전체 뷰(호출부가 빈 군집을 넘겨도 깨지지 않게)", () => {
+    expect(fitViewBox([], 2)).toEqual(FULL_VIEW);
+  });
+});
+
+describe("clampToWorld — 뷰가 세계 밖으로 나가지 않는다", () => {
+  it("위치만 넘치면 **크기를 유지한 채** 밀어 넣는다", () => {
+    const b = clampToWorld({ x: -10, y: -5, w: 40, h: 20 });
+    expect(b).toEqual({ x: 0, y: 0, w: 40, h: 20 });
+    const c = clampToWorld({ x: 350, y: 175, w: 40, h: 20 });
+    expect(c).toEqual({ x: 320, y: 160, w: 40, h: 20 });
+  });
+
+  it("크기가 세계보다 크면 세계 크기로 자른다", () => {
+    expect(clampToWorld({ x: -50, y: -50, w: 500, h: 300 })).toEqual(FULL_VIEW);
+  });
+});
+
+describe("zoomAt — 강제 확대(전진 보장용)", () => {
+  it("중심 기준 k 배 축소", () => {
+    const b = zoomAt({ x: 0, y: 0, w: 360, h: 180 }, 180, 90, 0.5);
+    expect(b.w).toBe(180); expect(b.h).toBe(90);
+    expect(b.x).toBe(90); expect(b.y).toBe(45);
+  });
+
+  it("가장자리 중심이어도 세계 안에 남는다", () => {
+    const b = zoomAt(FULL_VIEW, 5, 3, 0.5);
+    expect(b.x).toBeGreaterThanOrEqual(0);
+    expect(b.y).toBeGreaterThanOrEqual(0);
+    expect(b.x + b.w).toBeLessThanOrEqual(360.001);
+  });
+});
+
+// ── 재귀 확대가 **반드시 수렴한다** ──
+// 이게 C안의 핵심 계약이다. 군집을 클릭할 때마다 군집이 쪼개져야 하고, 유한 횟수 안에 개별 도시에
+// 도달해야 한다. 안 그러면 "클릭이 먹지 않는" 상태로 갇힌다 — 등간격으로 늘어선 다수에서 실제로
+// 그럴 수 있다(100도시 확장 시 동아시아 군집 25개가 2.45% 간격 → fitViewBox 만으로는 영원히 한 덩어리).
+describe("재귀 확대 — 군집이 매번 쪼개진다", () => {
+  const ASPECT = 2;
+  /** 호출부(MenuScreen.zoomIntoCluster)가 쓰는 **바로 그 함수**를 검증한다 — 규칙을 재구현하지 않는다. */
+  const nextView = (members: { lat: number; lon: number }[], cur: { x: number; y: number; w: number; h: number }) =>
+    zoomToSplit(members, cur, ASPECT);
+  /** 현재 뷰에서 점들을 투영해 군집을 만든다(MenuScreen.renderWorldMap 과 동일). */
+  const groupsAt = (cities: { id: string; lat: number; lon: number }[], box: { x: number; y: number; w: number; h: number }) =>
+    clusterDots(cities.map((c) => ({ ...c, ...projectInBox(c.lat, c.lon, box) })), 2.6);
+
+  it("등간격 25개(최악의 경우)도 유한 단계에 개별 도시로 분해된다", () => {
+    // fitViewBox 만으로는 상대 간격이 그대로라 절대 안 쪼개지는 배치 — 강제 확대가 없으면 무한 루프.
+    const cities = Array.from({ length: 25 }, (_, i) => ({ id: `c${i}`, lat: 35, lon: 120 + i * 0.1 }));
+    let box = FULL_VIEW;
+    let target = cities;
+    let steps = 0;
+    while (target.length > 1 && steps < 30) {
+      box = nextView(target, box);
+      const g = groupsAt(cities, box).filter((c) => c.members.length > 1);
+      // 가장 큰 군집을 계속 파고든다
+      const biggest = g.sort((a, b) => b.members.length - a.members.length)[0];
+      if (!biggest) { target = [target[0]]; break; }
+      expect(biggest.members.length, `${steps}단계에서 전진 없음`).toBeLessThan(target.length);
+      target = biggest.members as typeof cities;
+      steps++;
+    }
+    expect(steps, "30단계 안에 분해되지 않았다").toBeLessThan(30);
+    expect(target.length).toBe(1);
+  });
+
+  it("실제 한일 5도시 — 한 번 확대하면 모두 단일 점", () => {
+    const cities = [
+      { id: "seoul", lat: 37.5796, lon: 126.977 },
+      { id: "busan", lat: 35.1379, lon: 129.0756 },
+      { id: "osaka", lat: 34.6937, lon: 135.5015 },
+      { id: "kyoto", lat: 35.0116, lon: 135.7681 },
+      { id: "nara", lat: 34.6845, lon: 135.86 },
+    ];
+    const box = nextView(cities, FULL_VIEW);
+    const g = groupsAt(cities, box);
+    // 서울·부산은 떨어지고 간사이 3도시는 아직 뭉칠 수 있다 — 다만 **전체가 한 덩어리는 아니어야** 한다.
+    expect(g.length).toBeGreaterThan(1);
+    expect(Math.max(...g.map((c) => c.members.length))).toBeLessThan(cities.length);
   });
 });
 
@@ -215,17 +281,17 @@ describe("driftOverlaySvg — 표류 벡터 오버레이", () => {
   });
 });
 
-describe("zoomMapBox / niceGridStep — 종횡비·격자 경계", () => {
+describe("fitViewBox / niceGridStep — 종횡비·격자 경계", () => {
   it("가로로 납작한 분포는 세로를 늘려 상자 비율을 맞춘다(반대도 성립)", () => {
-    const wide = zoomMapBox([{ lat: 0, lon: -60 }, { lat: 0, lon: 60 }], 2);
+    const wide = fitViewBox([{ lat: 0, lon: -60 }, { lat: 0, lon: 60 }], 2);
     expect(wide.w / wide.h).toBeCloseTo(2, 3);
-    const tall = zoomMapBox([{ lat: -40, lon: 0 }, { lat: 40, lon: 0 }], 2);
+    const tall = fitViewBox([{ lat: -40, lon: 0 }, { lat: 40, lon: 0 }], 2);
     expect(tall.w / tall.h).toBeCloseTo(2, 3);
   });
 
-  it("모든 점이 상자 안에 남는다 — 최근접 쌍을 벌리려 좁혀도", () => {
+  it("모든 점이 상자 안에 남는다", () => {
     const pts = [{ lat: 35, lon: 127 }, { lat: 35.1, lon: 127.1 }, { lat: 60, lon: 100 }];
-    const b = zoomMapBox(pts, 1.6);
+    const b = fitViewBox(pts, 1.6);
     for (const p of pts) {
       const q = projectInBox(p.lat, p.lon, b);
       expect(q.x).toBeGreaterThanOrEqual(-0.001);
@@ -241,5 +307,34 @@ describe("zoomMapBox / niceGridStep — 종횡비·격자 경계", () => {
     expect(niceGridStep(20)).toBe(5); // raw 5 → 5
     expect(niceGridStep(28)).toBe(10); // raw 7 → 1·5 초과 → 10
     expect(niceGridStep(280)).toBe(100);
+  });
+});
+
+// ── 라벨 배치 ──
+// 옛 확대창은 "x>55% 면 왼쪽"이라는 **고정 임계값 하나**로 좌우를 정했다. 이름 길이를 모르므로
+// `"루앙프라방 · Luang Prabang"`(추정 146px)이 폭 306px 상자의 x=50% 에서도 넘쳐 잘렸다.
+describe("labelSide / estLabelPx — 라벨이 지도 밖으로 넘치지 않는다", () => {
+  it("한글은 라틴보다 넓게 센다 — 같은 글자 수라도 폭이 다르다", () => {
+    expect(estLabelPx("서울")).toBeGreaterThan(estLabelPx("ab"));
+    expect(estLabelPx("")).toBe(0);
+  });
+
+  it("오른쪽에 자리가 있으면 오른쪽", () => {
+    expect(labelSide(10, 60, 900)).toBe("r");
+  });
+
+  it("오른쪽이 모자라면 왼쪽으로 넘긴다", () => {
+    expect(labelSide(97, 60, 900)).toBe("l"); // 873px + 10 + 60 > 900
+  });
+
+  it("양쪽 다 모자라면 여유가 더 큰 쪽 — 좁은 지도에서 최소한의 손실", () => {
+    expect(labelSide(40, 500, 300)).toBe("r"); // 120px 지점, 왼쪽 120 < 오른쪽 180
+    expect(labelSide(70, 500, 300)).toBe("l");
+  });
+
+  it("회귀: 긴 이름이 중앙 부근에 있어도 넘치면 왼쪽 — 옛 x>55% 규칙은 오른쪽을 골랐다", () => {
+    const long = estLabelPx("루앙프라방 · Luang Prabang");
+    expect(long).toBeGreaterThan(140);
+    expect(labelSide(50, long, 306)).toBe("l");
   });
 });

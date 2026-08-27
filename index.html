@@ -108,11 +108,8 @@
                 <div class="zonepop__dlabel">기체 선택 → 출격 / DEPLOY</div>
                 <div class="zonepop__drones" id="zonePopDrones"></div>
               </div>
-              <!-- 클러스터(대표 점) 클릭 시 해당 지역 확대 — 세부 점들을 펼쳐 표시(점 클릭 → 출격 팝업) -->
-              <div id="clusterPopup" class="clusterpop" hidden>
-                <button id="clusterPopClose" class="clusterpop__close" type="button" aria-label="close">×</button>
-                <div class="clusterpop__map" id="clusterMap"></div>
-              </div>
+              <!-- 확대 바 — 군집을 파고들어 확대 중일 때만 표시(축소 / 전체 / 현재 배율) -->
+              <div id="mapZoomBar" class="mapzoom" hidden></div>
               <!-- 좌하단 스토리 버튼 + 세로 목록 팝업 -->
               <button id="storyBtn" class="map-btn map-btn--story" type="button">스토리 / STORY</button>
               <div id="storyPopup" class="sidepop" hidden>

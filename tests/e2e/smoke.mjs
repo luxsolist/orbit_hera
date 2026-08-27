@@ -181,16 +181,18 @@ try {
     await page.goto(BASE, { waitUntil: "load" });
     await page.waitForTimeout(800);
     await page.locator(".zone-dot").first().waitFor({ state: "visible", timeout: 15000 });
-    const dot = page.locator(`.zone-dot[data-map="${m.id}"]`);
-    if (await dot.count()) {
-      await dot.click(); // 단일 점 → 바로 팝업
-    } else {
-      // 클러스터(대표 점)에 묶임 → 대표 점 클릭 → 확대창의 세부 점 클릭
+    // 군집에 묶여 있으면 **지도를 파고들어** 단일 점이 될 때까지 확대한다(재귀 확대 — 옛 확대창 대체).
+    // 실측 최대 깊이는 2 이지만 여유를 두고 6 회까지 시도한다. 한 번도 전진하지 못하면 실패로 드러난다.
+    let picked = false;
+    for (let depth = 0; depth < 6 && !picked; depth++) {
+      const dot = page.locator(`.zone-dot[data-map="${m.id}"]`);
+      if (await dot.count()) { await dot.first().click(); picked = true; break; }
       const cluster = page.locator(`.zone-dot[data-cluster*="${m.id}"]`);
+      if (!(await cluster.count())) break; // 지도에 없다 — 아래 단언에서 잡힌다
       await cluster.first().click();
-      await page.locator(`#clusterMap .zone-dot[data-map="${m.id}"]`).waitFor({ state: "visible", timeout: 5000 });
-      await page.locator(`#clusterMap .zone-dot[data-map="${m.id}"]`).click();
+      await page.waitForTimeout(150); // 재렌더
     }
+    ok(picked, `지도에서 전장 선택 도달(재귀 확대)`);
     await page.locator(".zonepop__drone").first().waitFor({ state: "visible", timeout: 8000 });
     await page.locator(".zonepop__drone").first().click(); // 기체 선택 → 즉시 출격
     await page.waitForTimeout(5000); // 다운로드 + 월드 빌드 + 첫 프레임들

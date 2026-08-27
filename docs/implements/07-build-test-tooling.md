@@ -44,7 +44,7 @@
 | 맵 파이프라인 | `worldValidate` `clip` `dem` `osm` `osmxml` | 청크/매니페스트 16종 불변식 게이트 · 폴리곤/폴리라인 클립(S-H·L-B) · DEM 디코드·bare-earth · OSM 변환·stroke병합·복개천·타일분할 · OSM XML 스트리밍 파서 |
 | 데이터 | `specs` `loader` | 드론·무기·**적(플라즈모이드)**·맵 JSON 필수필드 + 교차참조 · 로더 fetch 성공/에러경로 |
 | UI/FX | `targetBrackets` `hudLayout` `hudLayoutRects` `aimArrows` | 코너 브래킷 거리 페이드 · **화면투영(projectToScreen)·체력라벨(labelText)** · **화면비례 HUD 위젯 크기(hudSizes)·박스 배치(rects)** · **조준선 둘레 적방향 화살표(aimArrow/arrowOffset)** |
-| 투영/데이터 | `worldMap` `osm` `introHelpers` `cinematicFade` | equirectangular 투영·**클러스터/확대 박스(clusterDots/zoomMapBox/projectInBox)** · OSM 변환 · 컷씬 헬퍼(ease/rng/fallFrag/track 등)·**컷씬 페이드** |
+| 투영/데이터 | `worldMap` `osm` `introHelpers` `cinematicFade` | equirectangular 투영·**군집/재귀 확대(clusterDots/fitViewBox/zoomToSplit/projectInBox)** · OSM 변환 · 컷씬 헬퍼(ease/rng/fallFrag/track 등)·**컷씬 페이드** |
 
 > 데이터 검증(`specs.test.ts`)은 tsc가 못 보는 `public/*.json`의 누락/오타/dangling 참조(무기·맵·적 id)와
 > 권역 스키마를 빌드 타임에 차단한다. `DEFAULT_PLASMOID ≡ plasmoid.json` 동치도 테스트로 고정(드리프트 방지).
@@ -63,7 +63,7 @@
 빌드 산출물을 Playwright로 띄워 먼저 **인트로 시네마틱**(재생 중 비-블랙·Esc 메뉴 복귀·에러 0)을 검증한 뒤,
 `public/maps/index.json` **카탈로그 전 전장**(현재 스트리밍 3맵 `seoul-stream`·`everest-stream`·`busan-stream`)을 차례로 실제 로드/플레이하며 검증:
 1. 콘솔/페이지 에러 0
-2. 게임 `playing` 진입(오버레이 숨김) — 세계지도 점 클릭(클러스터면 대표 점 → 확대창 세부 점) → 팝업 드론 버튼 → 출격 경로
+2. 게임 `playing` 진입(오버레이 숨김) — 세계지도 점 클릭(군집이면 단일 점이 될 때까지 재귀 확대) → 팝업 드론 버튼 → 출격 경로
 3. 미니맵 렌더됨(프레임 루프 동작)
 4. 메인 WebGL 화면이 블랙이 아님(스크린샷 PNG 크기 휴리스틱)
 

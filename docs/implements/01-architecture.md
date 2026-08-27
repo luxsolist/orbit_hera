@@ -65,7 +65,7 @@ intro ─(컷씬 끝)─▶ menu ─(점 클릭→드론 선택)─▶ loading �
 
 - **intro** — `CinematicPlayer`가 인트로 장면 재생, 끝나면 `showMenu()`.
 - **menu** — `MenuScreen`(세계지도)이 활성. 배경엔 `MenuBackground`가 랜덤 인트로 장면을 페이드
-  전환하며 렌더. 점 클릭(근접 점은 클러스터→확대창 드릴다운) → 팝업에서 드론 선택 + 탐방 토글 →
+  전환하며 렌더. 점 클릭(근접 점은 군집 → **지도 자체가 확대**되는 재귀 드릴다운) → 팝업에서 드론 선택 + 탐방 토글 →
   `onDeploy(mapId, droneId, peaceful)` → `selectMap()`. 자세한 메뉴 동작은 [06](06-ui-menu-intro.md#menuscreen--세계지도-전장-선택).
 - **loading → playing** — 데이터 fetch + 전장 빌드 + **게임 인스턴스 생성**(미션 배정, 아래/[08](08-game-instance-mission.md)).
 - **paused** — `playing` 중 포인터 락이 풀리면(ESC 등) 자동 전이.
