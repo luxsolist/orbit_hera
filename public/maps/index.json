@@ -320,5 +320,53 @@
   "lon": 44.3872213,
   "stream": true,
   "spawnYaw": 0
+ },
+ {
+  "id": "addis-ababa-stream",
+  "name": "아디스아바바 · Addis Ababa",
+  "subtitle": "에티오피아 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 78633,
+  "landmarks": 58,
+  "sites": 4,
+  "lat": 9.0358119,
+  "lon": 38.7524315,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "cusco-stream",
+  "name": "쿠스코 · Cusco",
+  "subtitle": "페루 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 153410,
+  "landmarks": 37,
+  "sites": 8,
+  "lat": -13.5170887,
+  "lon": -71.9785356,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "kathmandu-stream",
+  "name": "카트만두 · Kathmandu",
+  "subtitle": "네팔 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 552389,
+  "landmarks": 42,
+  "sites": 0,
+  "lat": 27.708317,
+  "lon": 85.3205817,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "mexico-city-stream",
+  "name": "멕시코시티 · Mexico City",
+  "subtitle": "멕시코 — 도심 반경 20km 청크 스트리밍 (1장 열지도)",
+  "buildings": 162980,
+  "landmarks": 501,
+  "sites": 6,
+  "lat": 19.3207722,
+  "lon": -99.1514678,
+  "stream": true,
+  "spawnYaw": 0
  }
 ]
