@@ -112,7 +112,12 @@ for (const [cityKo, name] of Object.entries(names)) {
   const m = doc[normCity(cityKo)];
   if (!g || typeof g.lat !== "number") { missing.push(`${cityKo}: 실측 좌표 없음(${GEO})`); continue; }
   if (!m) { missing.push(`${cityKo}: 장 배속 없음(${DOC} 표에서 못 찾음)`); continue; }
-  cities.push({ ...cityEntry(cityKo, m, g, name), ...(name.mapId ? { mapId: name.mapId } : {}) });
+  // buildExcluded: 큐레이션 정책 판단으로 **빌드하지 않기로 한** 도시(maps.config 가 MAPS 에서 제외).
+  // 카탈로그에서 지우지 않고 표시만 하는 이유: 장 배속·도시 100선 집계가 그대로 유지돼야 하고,
+  // 왜 빠졌는지가 데이터에 남아야 한다(빈자리는 누락과 구분되지 않는다).
+  cities.push({ ...cityEntry(cityKo, m, g, name),
+    ...(name.mapId ? { mapId: name.mapId } : {}),
+    ...(name.buildExcluded ? { buildExcluded: name.buildExcluded } : {}) });
 }
 
 if (missing.length) {
@@ -144,6 +149,7 @@ if (process.argv.includes("--check")) {
   writeFileSync(OUT, text);
   const byCh = cities.reduce((a, c) => ((a[c.chapter] = (a[c.chapter] ?? 0) + 1), a), {});
   const handled = cities.filter((c) => c.mapId).length;
-  console.error(`wrote ${OUT}: ${cities.length}개 도시 (장별 ${JSON.stringify(byCh)}, 기등록 맵 연결 ${handled}개)`);
+  const excl = cities.filter((c) => c.buildExcluded).length;
+  console.error(`wrote ${OUT}: ${cities.length}개 도시 (장별 ${JSON.stringify(byCh)}, 기등록 맵 연결 ${handled}개, 빌드 제외 ${excl}개)`);
 }
 }

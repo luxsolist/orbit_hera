@@ -107,13 +107,27 @@ describe("city-catalog.json — 생성 결과", () => {
 });
 
 describe("maps.config — 손 맵 + 생성 맵 병합", () => {
-  it("101개(손 4 + 생성 97) — 기등록 도시는 생성에서 빠진다", () => {
-    expect(MAPS).toHaveLength(101);
+  it("100개(손 4 + 생성 96) — 기등록 도시와 빌드 제외 도시는 생성에서 빠진다", () => {
+    // 97 → 96: 예루살렘이 buildExcluded(큐레이션 정책 판단, 2026-08-27). 카탈로그 100선에는
+    // 남아 있고 MAPS 에서만 빠진다 — 이 차이가 곧 "빌드하지 않는다"의 실체다.
+    expect(MAPS).toHaveLength(100);
     const gen = MAPS.filter((m: { chapter?: number }) => m.chapter !== undefined);
-    expect(gen).toHaveLength(97);
+    expect(gen).toHaveLength(96);
     // 서울/부산/로마는 손 맵이 담당 → 생성 목록에 없어야(도시가 두 벌 생기지 않게)
     for (const id of ["seoul", "busan", "rome"]) {
       expect(gen.find((m: { id: string }) => m.id === id), id).toBeUndefined();
+    }
+  });
+
+  it("buildExcluded 도시는 MAPS 에 없고 카탈로그에는 남는다 — 빈자리가 누락과 구분되게", () => {
+    const cat = JSON.parse(readFileSync("scripts/data/city-catalog.json", "utf8"));
+    const excluded = cat.cities.filter((c: { buildExcluded?: unknown }) => c.buildExcluded);
+    expect(excluded.length).toBeGreaterThan(0);
+    for (const c of excluded) {
+      expect(MAPS.find((m: { id: string }) => m.id === c.id), `${c.id} 가 빌드 가능 상태다`).toBeUndefined();
+      expect(String(c.buildExcluded.reason ?? "").length, c.id).toBeGreaterThan(20);
+      expect(c.buildExcluded.decidedAt, c.id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(c.chapter, `${c.id}: 장 배속은 유지돼야 한다`).toBeTypeOf("number");
     }
   });
 

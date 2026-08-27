@@ -16,7 +16,12 @@
     },
     "예루살렘": {
       "id": "jerusalem",
-      "en": "Jerusalem"
+      "en": "Jerusalem",
+      "buildExcluded": {
+        "decidedAt": "2026-08-27",
+        "category": "dispute-symbol",
+        "reason": "성전산/하람 알샤리프의 귀속이 현재진행형 주권·종교 분쟁의 핵심 쟁점인데, 랜드마크는 guard/aggro:landmark 미션에서 실제 표적이 되고 피격 시 붕괴해 잔해로 남는다(BuildingCombat.destroyedLandmarks). 또 반경 20km 커버리지가 그린라인을 가로질러 라말라(북 13.5km)·베들레헴(남 9km)을 한 전장에 담는다. 개별 항목 단위로는 정책 위반이 없다(추모 시설은 curationPolicy 가 명시적으로 유지 대상) — 도시 자체를 전장으로 삼지 않기로 한 결정이다."
+      }
     },
     "다마스쿠스": {
       "id": "damascus",

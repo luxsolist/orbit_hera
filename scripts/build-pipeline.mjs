@@ -18,6 +18,16 @@
 // 무조건 건너뛴다. --no-terrain 은 이제 실질적으로 항상 켜진 상태와 같지만, 미래의 비-스트리밍
 // 맵(있다면 monolithic World 가 .bin 을 직접 읽는다)을 위해 옵션 자체는 남겨 둔다.
 //
+// ── 2단계는 OSM 캐시가 **이미 있을 때만** 정석 경로다(2026-08-27) ──
+// build-maps 는 /tmp/osm-<id>.ndjson 이 있으면 그걸 쓰고, **없으면 Overpass 1km 타일로 폴백**한다.
+// 폴백은 spec/03-maps.md §"대면적 OSM 수집 — Geofabrik 추출 우선" 이 금지한 경로이고 실제로 느리다
+// (실측: 루앙프라방 1,558 타일 · 약 8타일/분 → 3시간+, 같은 도시를 추출 경로로는 **2분 26초**에 완료).
+// 그러니 광역 맵은 이 파이프라인을 부르기 **전에** 추출을 먼저 돌린다:
+//
+//   curl -L -o /tmp/<region>-latest.osm.pbf https://download.geofabrik.de/<대륙>/<region>-latest.osm.pbf
+//   node --max-old-space-size=8192 scripts/import-extract.mjs <id> /tmp/<region>-latest.osm.pbf /tmp/osmconvert
+//   node scripts/build-pipeline.mjs <id>
+//
 // 사용:
 //   node scripts/build-pipeline.mjs <id> [--force-terrain] [--zoom=13]
 //     --force-terrain : stream 맵이라도 1단계(도시별 .bin)를 강제로 굽는다(디버깅용 — 평소엔 불필요)

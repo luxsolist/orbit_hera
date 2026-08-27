@@ -611,6 +611,68 @@ export function matchCuratedBuilding(buildings, x, z, snapM = CURATED_SNAP_M, ta
 }
 
 
+// ────────────────────────── 자동 승격 차단(큐레이션 정책) ──────────────────────────
+// curationPolicy 5범주에 해당하는 건물이 **자동 승격으로 되돌아오는 것**을 막는다.
+//
+// 왜 필요한가: excludedLandmarks 는 "큐레이션 배열에서 뺐다"는 이력일 뿐 강제력이 없었다.
+// 랜드마크는 큐레이션 말고도 landmarkFrom() 태그+면적 승격으로 들어오므로, 손으로 뺀 대상이
+// OSM 이름을 달고 그대로 승격된다(실증: 베이징 천안문광장을 뺐으나 그 광장의 毛主席纪念堂 이
+// historic=tomb 로 승격돼 배포본에 실려 있었다).
+//
+// **이름이 아니라 좌표로** 매칭하는 이유는 둘이다. ① 승격이 위치로 결정돼야 같은 청크를 어느
+// 도시가 굽든 같은 결과가 나온다(전역 레지스트리 원칙 — applyCurated 주석 참조). ② 이름 전역
+// 차단은 동명 충돌을 일으킨다("Peace Palace"는 헤이그 국제사법재판소이기도 하다).
+
+/** 차단 반경 기본값(m) — 큐레이션 스냅(30m)보다 살짝 넓게: 차단은 놓치는 쪽이 비싸다. */
+export const BLOCK_MATCH_M = 40;
+
+/**
+ * 차단 좌표 하나에 걸리는 건물 인덱스 전부(순수). matchCuratedBuilding 과 달리 **여럿을 반환**한다 —
+ * 궁전 단지처럼 한 좌표 주변에 여러 동이 흩어진 경우 하나만 막으면 나머지가 남는다.
+ *
+ * 포함(footprint 안) 판정과 반경 판정을 **합집합**으로 본다: 포함만 보면 좌표가 마당에 찍힌 항목을
+ * 놓치고, 반경만 보면 큰 건물의 중심이 멀 때 놓친다.
+ */
+export function blockedBuildingIndices(buildings, x, z, radiusM = BLOCK_MATCH_M) {
+  const out = [];
+  const r2 = radiusM * radiusM;
+  for (let i = 0; i < buildings.length; i++) {
+    const p = buildings[i].p, n = p.length / 2;
+    if (n < 3) continue;
+    if (inPoly(x, z, p)) { out.push(i); continue; }
+    let cx = 0, cz = 0;
+    for (let k = 0; k < n; k++) { cx += p[k * 2]; cz += p[k * 2 + 1]; }
+    if ((cx / n - x) ** 2 + (cz / n - z) ** 2 <= r2) out.push(i);
+  }
+  return out;
+}
+
+/**
+ * 차단 적용(비순수 — buildings 를 제자리 수정). 반환: { blocked, misses }.
+ *   blocked = 승격이 실제로 취소된 건물 수, misses = 좌표에 해당 건물이 없던 항목명(경고용).
+ *
+ * lm 과 n 을 **함께** 지운다 — lm 만 지우면 이름이 남아 청크에 표시명이 실린다.
+ * 승격되지 않은 건물에 걸려도 무해하다(이미 lm 이 없으니 지울 것이 없다) — 그래서 커버리지 안
+ * 항목은 조건 없이 전부 훑는다.
+ */
+export function applyBlocklist(buildings, items, proj, cover = 0, radiusM = BLOCK_MATCH_M) {
+  let blocked = 0;
+  const misses = [];
+  for (const it of items ?? []) {
+    if (typeof it.lat !== "number" || typeof it.lon !== "number") continue;
+    const [x, z] = proj(it.lat, it.lon);
+    if (cover && (Math.abs(x) > cover / 2 || Math.abs(z) > cover / 2)) continue; // 이 맵 밖 — 조용히 건너뜀
+    const hits = blockedBuildingIndices(buildings, x, z, radiusM);
+    if (!hits.length) { misses.push(it.name ?? it.osmName ?? "?"); continue; }
+    for (const i of hits) {
+      if (buildings[i].lm === undefined && buildings[i].n === undefined) continue;
+      delete buildings[i].lm;
+      delete buildings[i].n;
+      blocked++;
+    }
+  }
+  return { blocked, misses };
+}
 
 // ─────────────────────── 큐레이션 ↔ OSM **이름** 매칭 ───────────────────────
 // 큐레이션 랜드마크 1,749개 중 175개(10%·71개 도시)가 지오코딩 미해결이었다. Nominatim 을 질의

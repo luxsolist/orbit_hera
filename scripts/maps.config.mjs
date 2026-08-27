@@ -167,12 +167,18 @@ export function cityMapDef(c) {
   };
 }
 
-/** 생성 도시 목록 — mapId(손 맵이 담당) 표시된 항목은 제외. 파일이 없으면 빈 배열(손 맵만으로 동작). */
+/**
+ * 생성 도시 목록 — 파일이 없으면 빈 배열(손 맵만으로 동작). 두 부류를 뺀다:
+ *   · mapId — 손 맵이 담당하는 도시
+ *   · buildExcluded — 큐레이션 정책 판단으로 빌드하지 않기로 한 도시. **MAPS 에서 빼야** 실효가 있다:
+ *     남겨 두면 build-pipeline 이 그대로 받고, --all 전량 빌드에도 딸려 들어간다. 카탈로그에는
+ *     남아 있으므로(장 배속·100선 집계 유지) 왜 빠졌는지는 데이터에서 확인된다.
+ */
 function generatedMaps() {
   let cat;
   try { cat = JSON.parse(readFileSync(CITY_CATALOG, "utf8")); }
   catch { return []; } // 아직 생성 안 됨 — build:map 은 손 맵으로 계속 동작
-  return (cat.cities ?? []).filter((c) => !c.mapId).map(cityMapDef);
+  return (cat.cities ?? []).filter((c) => !c.mapId && !c.buildExcluded).map(cityMapDef);
 }
 
 const handIds = new Set(HAND.map((m) => m.id));

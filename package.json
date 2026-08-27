@@ -13,6 +13,7 @@
     "test:e2e": "vite build && node tests/e2e/smoke.mjs",
     "build:map": "node scripts/build-pipeline.mjs",
     "gen:cities": "node scripts/gen-city-config.mjs",
+    "audit:landmarks": "node scripts/audit-landmarks.mjs",
     "validate:world": "node scripts/validate-world.mjs"
   },
   "dependencies": {

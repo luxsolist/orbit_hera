@@ -4361,7 +4361,14 @@
     "nameEn": "Mount Phousi",
     "cls": "ritual",
     "note": "탑 있는 성산",
-    "geocodeStatus": "unresolved"
+    "lat": 19.890256,
+    "lon": 102.136945,
+    "geocodeStrategy": "osm-extract",
+    "geocodeSource": {
+     "osmType": "node",
+     "osmId": 2616613656,
+     "displayName": "Phou Si Mountain (พระธาตุภูสี)"
+    }
    },
    {
     "name": "왕궁박물관",
@@ -4471,14 +4478,28 @@
     "nameEn": "Wat Pa Huak",
     "cls": "ritual",
     "note": "옛 벽화 사원",
-    "geocodeStatus": "unresolved"
+    "lat": 19.890544,
+    "lon": 102.135988,
+    "geocodeStrategy": "osm-extract",
+    "geocodeSource": {
+     "osmType": "node",
+     "osmId": 689938994,
+     "displayName": "Wat Pa Houak"
+    }
    },
    {
     "name": "탈랏사오(모닝마켓)",
     "nameEn": "Talat Sao Morning Market",
     "cls": "resonance",
     "note": "새벽 재래시장",
-    "geocodeStatus": "unresolved"
+    "lat": 19.890027,
+    "lon": 102.132916,
+    "geocodeStrategy": "osm-extract",
+    "geocodeSource": {
+     "osmType": "node",
+     "osmId": 4890082821,
+     "displayName": "Morning Market (早市)"
+    }
    },
    {
     "name": "왓 시엥무안",
@@ -4492,7 +4513,14 @@
     "nameEn": "Wat Pha Phutthabath",
     "cls": "ritual",
     "note": "불족적 사원",
-    "geocodeStatus": "unresolved"
+    "lat": 19.891668,
+    "lon": 102.138624,
+    "geocodeStrategy": "osm-extract",
+    "geocodeSource": {
+     "osmType": "node",
+     "osmId": 1215336028,
+     "displayName": "Wat Prah Buddhabat / Buddha's Footprint Temple"
+    }
    }
   ],
   "멕시코시티": [
@@ -25048,8 +25076,8 @@
   ]
  },
  "geocodeStats": {
-  "resolved": 1574,
-  "unresolved": 175,
+  "resolved": 1571,
+  "unresolved": 170,
   "resolvedAt": "2026-08-22"
  },
  "curationPolicy": {
@@ -25061,6 +25089,34 @@
    "war-perpetrator": "전쟁범죄·학살의 가해자(또는 그 직접 지휘·합사 시설)를 기리는 상징물",
    "atrocity-symbol": "기타 반인륜적 행위(식민 착취, 유혈 진압 등)의 가해 쪽을 대표하는 상징물(피해자 추모 시설은 해당하지 않음 — 홀로코스트·노예제·아파르트헤이트 추모관은 유지)"
   }
+ },
+
+ "blockedLandmarks": {
+  "note": "**자동 승격 차단 목록**(2026-08-27). excludedLandmarks 는 큐레이션 배열에서 뺀 이력일 뿐이라 강제력이 없었다 — 랜드마크는 큐레이션 말고도 landmarkFrom() 태그+면적 자동 승격으로 들어오므로, 손으로 뺀 항목이 OSM 이름을 달고 그대로 되돌아온다(실증 2건: 베이징 천안문광장을 뺐으나 그 광장 안 '毛主席纪念堂'이 배포본에 승격돼 있었고, 바그다드 '승리의 손'은 OSM 'سيوف القادسية' 2채로 승격 예정이었다). 이 목록이 그 경로를 막는다. 매칭은 **이름이 아니라 좌표**로 한다 — 승격이 위치로 결정돼야 같은 청크를 어느 도시가 굽든 같은 결과가 나온다(cities 주석의 전역 레지스트리 원칙과 동일). 이름 전역 차단은 동명이인 문제가 있다(예: 'Peace Palace'는 헤이그 국제사법재판소이기도 하다).",
+  "matchRadiusM": 40,
+  "items": [
+   { "city": "베이징", "name": "마오쩌둥 기념당", "osmName": "毛主席纪念堂 / Chairman Mao Memorial Hall", "osmRef": "relation/8848142", "lat": 39.90111, "lon": 116.39154, "category": "atrocity-symbol", "reason": "천안문광장 제외(=excludedLandmarks)의 실효를 무력화하던 항목 — 광장 한복판의 마오쩌둥 영묘가 historic=tomb 로 자동 승격돼 배포본에 실려 있었다" },
+   { "city": "바그다드", "name": "승리의 손(칼의 아치) 동측", "osmName": "سيوف القادسية", "osmRef": "way/1076927374", "lat": 33.305258, "lon": 44.386452, "category": "war-glorification", "reason": "excludedLandmarks 의 '승리의 손'과 동일 대상 — 한 쌍이라 OSM 에 2채로 존재한다" },
+   { "city": "바그다드", "name": "승리의 손(칼의 아치) 서측", "osmName": "سيوف القادسية", "osmRef": "way/1089243202", "lat": 33.305973, "lon": 44.379575, "category": "war-glorification", "reason": "위와 같은 아치의 나머지 한 채" },
+   { "city": "바그다드", "name": "미국에 대한 승리 궁전", "osmName": "Victory Over America Palace", "osmRef": "way/1126951659", "lat": 33.250262, "lon": 44.268865, "category": "war-glorification", "reason": "1991 걸프전 '승전'을 자축해 후세인이 착공한 궁전 — 애도가 아니라 승리 과시" },
+   { "city": "바그다드", "name": "바트당 위락 궁전", "osmName": "Ba'ath Party Recreation Palace", "osmRef": "way/1126951669", "lat": 33.25649, "lon": 44.26638, "category": "war-perpetrator", "reason": "바트당 시설 — 안팔 학살·쿠르드 화학공격의 가해 주체를 대표" },
+   { "city": "바그다드", "name": "미셸 아플라크 영묘", "osmName": "ضريح ميشيل عفلق", "osmRef": "way/884855587", "lat": 33.298846, "lon": 44.375009, "category": "war-perpetrator", "reason": "바트주의 창시자 영묘 — 인물 자체를 기리는 시설" },
+   { "city": "바그다드", "name": "아드난 카이랄라 영묘", "osmName": "ضريح عدنان خير الله", "osmRef": "way/1075913905", "lat": 33.343242, "lon": 44.441642, "category": "war-perpetrator", "reason": "이란-이라크전 당시 국방장관 영묘 — 전몰자 추모가 아니라 지휘부 개인 현창" },
+   { "city": "바그다드", "name": "알살람 궁전", "osmName": "قصر السلام", "osmRef": "way/4235535", "lat": 33.300932, "lon": 44.361522, "category": "atrocity-symbol", "reason": "후세인 정권의 대통령 궁전 — 티그리스 강변 정권 중심부. 정권의 통치를 대표하는 시설이라 전장의 대표 표적으로 승격시키지 않는다" },
+   { "city": "바그다드", "name": "알살람 궁전(제2)", "osmName": "قصر السلام", "osmRef": "way/1077570047", "lat": 33.278224, "lon": 44.399533, "category": "atrocity-symbol", "reason": "위와 같은 이름의 별개 궁전 동" },
+   { "city": "바그다드", "name": "라드와니야 궁전", "osmName": "قصر الرضوانية", "osmRef": "way/1162378584", "lat": 33.218988, "lon": 44.216978, "category": "atrocity-symbol", "reason": "후세인 정권의 대통령 궁전 단지 중 하나 — 바그다드 서부 라드와니야에 위치. 정권의 통치·특권을 대표하는 시설이라 승격 시 도시의 대표 표적이 된다" },
+   { "city": "바그다드", "name": "무스크 궁전", "osmName": "Perfume (Musk) Palace", "osmRef": "way/1126951668", "lat": 33.25531, "lon": 44.272845, "category": "atrocity-symbol", "reason": "후세인 정권의 대통령 궁전 단지 중 하나 — 미국에 대한 승리 궁전·바트당 위락 궁전과 같은 구역에 있다. 정권의 통치·특권을 대표하는 시설" },
+   { "city": "바그다드", "name": "사둔 샤키르 하마디 궁전", "osmName": "قصر سعدون شاكر حمادي", "osmRef": "way/445890187", "lat": 33.282352, "lon": 44.406379, "category": "atrocity-symbol", "reason": "후세인 정권 내무장관 관저" },
+   { "city": "다마스쿠스", "name": "대통령궁(카스르 앗샤브)", "osmName": "القصر الرئاسي / Ash Shaab Presidential Palace", "osmRef": "relation/71797", "lat": 33.517637, "lon": 36.251933, "category": "atrocity-symbol", "reason": "메제 산 위 아사드 정권의 **주** 대통령궁 — 앞서 차단한 '인민궁 제2'가 아니라 이쪽이 본궁이다. 1차 감사에서 릴레이션을 훑지 않아 빠졌던 항목(전수 점검 2026-08-27에 포착)" },
+   { "city": "다마스쿠스", "name": "티슈린 궁", "osmName": "قصر تشرين / Teshreen Palace", "osmRef": "relation/71812", "lat": 33.518811, "lon": 36.262191, "category": "atrocity-symbol", "reason": "아사드 정권의 또 다른 대통령궁 — 정권 수반의 거처로 통치를 대표한다" },
+   { "city": "다마스쿠스", "name": "영빈궁", "osmName": "قصر الضيافة", "osmRef": "way/1110642055", "lat": 33.514468, "lon": 36.288194, "category": "atrocity-symbol", "reason": "정권의 국빈 접대용 궁 — historic=castle+castle_type=palace 로 승격돼 있었다. 대통령궁 단지와 같은 성격" },
+   { "city": "바그다드", "name": "아드난 궁", "osmName": "قصر عدنان / Adnan Palace", "osmRef": "way/82567770", "lat": 33.304559, "lon": 44.378432, "category": "war-perpetrator", "reason": "이란-이라크전 국방장관 아드난 카이랄라의 궁(현재 박물관, tourism=museum 으로 archive 승격) — 같은 인물의 영묘를 이미 차단했으므로 개인 현창 시설로 일관 처리" },
+   { "city": "바그다드", "name": "공화국 궁전", "osmName": "القصر الجمهوري / Republican Palace", "osmRef": "way/4082618", "lat": 33.304221, "lon": 44.408712, "category": "atrocity-symbol", "reason": "후세인 정권의 공화국 궁전. **선제 차단** — 현재 building=yes 뿐이라 승격 문턱을 넘지 않지만 historic/castle_type 태그가 하나만 붙으면 즉시 승격된다(같은 단지의 다른 궁들은 그 태그를 갖고 있다)" },
+   { "city": "바그다드", "name": "수주드 궁", "osmName": "قصر السجود / Sijood Palace", "osmRef": "way/156112983", "lat": 33.29638, "lon": 44.378118, "category": "atrocity-symbol", "reason": "후세인 궁전군. **선제 차단** — 현재 building=public 이라 미승격이나 태그 변경에 취약하다" },
+   { "city": "바그다드", "name": "자파라니야 궁", "osmName": "قصر الزعفرانية", "osmRef": "way/1086282460", "lat": 33.226976, "lon": 44.508723, "category": "atrocity-symbol", "reason": "후세인 궁전군. **선제 차단** — 현재 building=yes 뿐이라 미승격" },
+   { "city": "다마스쿠스", "name": "공화국 궁", "osmName": "القصر الجمهوري", "osmRef": "way/1112172692", "lat": 33.52174, "lon": 36.271601, "category": "atrocity-symbol", "reason": "아사드 정권 대통령궁 — 내전기 민간인 대량 학살의 지휘 주체를 대표하는 시설" },
+   { "city": "다마스쿠스", "name": "인민궁 제2", "osmName": "قصر الشعب الثاني", "osmRef": "way/1137716361", "lat": 33.509142, "lon": 36.227508, "category": "atrocity-symbol", "reason": "위와 같은 대통령궁 단지" }
+  ]
  },
  "excludedLandmarks": [
   {

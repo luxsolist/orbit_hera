@@ -10,7 +10,7 @@ import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
 import { MAPS } from "./maps.config.mjs";
 import { RECIPES } from "./landmarks.mjs";
-import { projFns, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius, buildNameIndex, matchCuratedByName } from "./osm.mjs";
+import { projFns, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, overpassQuery, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, bboxTiles, mergeOSM, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius, buildNameIndex, matchCuratedByName, applyBlocklist, BLOCK_MATCH_M } from "./osm.mjs";
 
 // 레시피가 있는 랜드마크는 부품 목록(structure)으로 베이킹, 나머지는 그대로(타입별 빌더).
 function bakeLandmarks(landmarks) {
@@ -311,7 +311,29 @@ function applyCuratedLandmarks(core, cityKey, proj, nameIndex = null, cover = nu
   const left = unresolved ? ` · 미해결 ${unresolved}` : "";
   console.error(`  큐레이션 랜드마크: 건물 ${matched} + site(비건물) ${sites.length} = ${matched + sites.length}/${list.length}` +
                 ` (좌표 ${geo}${via}${left})`);
+
   return { matched, sites, total: list.length, byName, unresolved };
+}
+
+/**
+ * 자동 승격 차단(큐레이션 정책) — **applyCuratedLandmarks 와 분리해 항상 돈다**.
+ *
+ * 차단을 큐레이션 함수 안에 두면 그 함수의 조기 반환(catalogCity 없음 · 카탈로그 읽기 실패 ·
+ * 도시 미등재)에 가려 손 맵과 무카탈로그 맵에서 조용히 건너뛰어진다. 차단은 **위치로 결정**되는
+ * 규칙이라 어느 맵이 그 땅을 굽든 동일하게 적용돼야 한다(전역 레지스트리 원칙).
+ *
+ * 호출 순서도 계약이다 — 큐레이션 승격 **뒤**라야 큐레이션·자동 승격 둘 다 덮는다.
+ */
+function applyLandmarkBlocklist(core, proj, cover = null) {
+  let cat;
+  try { cat = JSON.parse(readFileSync(CURATED_PATH, "utf8")); }
+  catch { return; } // 카탈로그를 못 읽으면 큐레이션 쪽에서 이미 경고했다
+  const blk = cat.blockedLandmarks;
+  if (!blk?.items?.length) return;
+  const { blocked, misses } = applyBlocklist(core.buildings, blk.items, proj, cover, blk.matchRadiusM ?? BLOCK_MATCH_M);
+  if (blocked) console.error(`  ⛔ 승격 차단(큐레이션 정책): ${blocked}채`);
+  // 커버리지 **안**인데 건물이 없는 항목만 남는다 — OSM 에서 사라졌거나 좌표가 틀렸다는 신호.
+  if (misses.length) console.error(`  ⚠ 차단 목록 미적중 ${misses.length}건: ${misses.join(", ")} (OSM 갱신/좌표 확인 필요)`);
 }
 
 const catalog = [];
@@ -340,6 +362,7 @@ for (const m of MAPS) {
     // 이름 색인은 **가공 전 원본 요소**에서 만든다 — processOSM 은 태그를 버리고 형상만 남긴다.
     const nameIndex = buildNameIndex(osm.elements, proj);
     core.sites = applyCuratedLandmarks(core, m.catalogCity, proj, nameIndex, m.heightmap?.meters ?? null).sites; // 사람 검수 카탈로그: 건물은 승격, 비건물은 site
+    applyLandmarkBlocklist(core, proj, m.heightmap?.meters ?? null); // 정책 차단 — 큐레이션·자동 승격 둘 다 덮는다(반드시 이 뒤)
   }
   precinct = m.precinct ?? precinct; // config 우선
 
