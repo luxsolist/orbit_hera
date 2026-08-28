@@ -45,9 +45,15 @@ if (!id) { console.error("usage: node scripts/build-pipeline.mjs <id> [--force-t
 const m = MAPS.find((x) => x.id === id);
 if (!m) { console.error(`maps.config 에 '${id}' 없음`); process.exit(2); }
 
+// 힙 상한을 **명시**한다 — 대도시는 기본 힙으로 터진다. build-maps 는 NDJSON 전량을 JS 객체로
+// 올리고(시카고 762MB → OOM 실측), build-world 도 build/<id>.json 을 통째로 읽는다. import-extract
+// 는 이미 호출부에서 같은 값을 받고 있었는데 여기만 빠져 있었다.
+// ⚠ 물리 메모리(7.8GB)보다 큰 값이라 **동시에 무거운 작업을 돌리면 여전히 죽는다** — 실측: 이 배치와
+//    osmconvert 병합(1.1GB 산출)을 겹쳐 돌렸다가 시카고가 OOM 났다. 맵 빌드는 한 번에 하나만.
+const NODE_MEM = "--max-old-space-size=8192";
 const run = (label, file, a) => {
   console.error(`\n▶ ${label}  (node ${file} ${a.join(" ")})`);
-  try { execFileSync("node", [file, ...a], { stdio: "inherit" }); }
+  try { execFileSync("node", [NODE_MEM, file, ...a], { stdio: "inherit" }); }
   catch (e) { console.error(`\n✗ 단계 실패: ${label} (exit ${e.status ?? "?"})`); process.exit(1); }
 };
 

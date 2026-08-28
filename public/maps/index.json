@@ -368,5 +368,89 @@
   "lon": -99.1514678,
   "stream": true,
   "spawnYaw": 0
+ },
+ {
+  "id": "hagatna-stream",
+  "name": "하갓냐(괌) · Hagatna",
+  "subtitle": "미국(자치령) — 도심 반경 20km 청크 스트리밍 (3장 죽음의 방향)",
+  "buildings": 28385,
+  "landmarks": 32,
+  "sites": 10,
+  "lat": 13.4748148,
+  "lon": 144.7516191,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "honolulu-stream",
+  "name": "호놀룰루 · Honolulu",
+  "subtitle": "미국 — 도심 반경 20km 청크 스트리밍 (3장 죽음의 방향)",
+  "buildings": 74238,
+  "landmarks": 418,
+  "sites": 6,
+  "lat": 21.304547,
+  "lon": -157.855676,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "seattle-stream",
+  "name": "시애틀 · Seattle",
+  "subtitle": "미국 — 도심 반경 20km 청크 스트리밍 (3장 죽음의 방향)",
+  "buildings": 508986,
+  "landmarks": 530,
+  "sites": 4,
+  "lat": 47.6038321,
+  "lon": -122.330062,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "miami-stream",
+  "name": "마이애미 · Miami",
+  "subtitle": "미국 — 도심 반경 20km 청크 스트리밍 (2장 같은 박자)",
+  "buildings": 400948,
+  "landmarks": 175,
+  "sites": 7,
+  "lat": 25.7741566,
+  "lon": -80.1935973,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "san-francisco-stream",
+  "name": "샌프란시스코 · San Francisco",
+  "subtitle": "미국 — 도심 반경 20km 청크 스트리밍 (3장 죽음의 방향)",
+  "buildings": 507610,
+  "landmarks": 605,
+  "sites": 6,
+  "lat": 37.7879363,
+  "lon": -122.4075201,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "new-york-stream",
+  "name": "뉴욕 · New York",
+  "subtitle": "미국 — 도심 반경 20km 청크 스트리밍 (2장 같은 박자)",
+  "buildings": 955586,
+  "landmarks": 950,
+  "sites": 6,
+  "lat": 40.7127281,
+  "lon": -74.0060152,
+  "stream": true,
+  "spawnYaw": 0
+ },
+ {
+  "id": "casablanca-stream",
+  "name": "카사블랑카 · Casablanca",
+  "subtitle": "모로코 — 도심 반경 20km 청크 스트리밍 (2장 같은 박자)",
+  "buildings": 47939,
+  "landmarks": 114,
+  "sites": 7,
+  "lat": 33.5945144,
+  "lon": -7.6200284,
+  "stream": true,
+  "spawnYaw": 0
  }
 ]
