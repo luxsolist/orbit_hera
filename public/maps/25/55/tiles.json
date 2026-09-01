@@ -1,0 +1,12494 @@
+{
+ "cell": [
+  25,
+  55
+ ],
+ "originLat": 26,
+ "originLon": 55,
+ "chunkSize": 1024,
+ "terrainSize": 33,
+ "mLon": 100475.79385382649,
+ "block": 16,
+ "chunks": [
+  {
+   "cx": -1,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 81,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 243,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 441,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 418,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 344,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 234,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 269,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 385,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 219,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 30,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 81,
+   "objects": true,
+   "terrain": true,
+   "buildings": 76,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 82,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 270,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 847,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 921,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 462,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 359,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 372,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 61,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 164,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 982,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 376,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 170,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 82,
+   "objects": true,
+   "terrain": true,
+   "buildings": 46,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 29,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 83,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 287,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1086,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1067,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 543,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 169,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 332,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 148,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 126,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 229,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 589,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 731,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 83,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1032,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 31,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 41,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 84,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 31,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 191,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1111,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1040,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 178,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 305,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 527,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 730,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 233,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 160,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 136,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 49,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 245,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 384,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 84,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1430,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 85,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 82,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 908,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1082,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1224,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 170,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 163,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 51,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 31,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 72,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 269,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 105,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 68,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 67,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 85,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1424,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 86,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 433,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1418,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 564,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 122,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 649,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 816,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 68,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 75,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 83,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 86,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1419,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 100,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 87,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 80,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 755,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1307,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 457,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 123,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 114,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 114,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 20,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 427,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 87,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1572,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 88,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 842,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 685,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 250,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 104,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 111,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 135,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 51,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 147,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 105,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 216,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 280,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 126,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 88,
+   "objects": true,
+   "terrain": true,
+   "buildings": 259,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 89,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 376,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 961,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 617,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 913,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 310,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 130,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 255,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 39,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 85,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 204,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 250,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 283,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 370,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 592,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 228,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 89,
+   "objects": true,
+   "terrain": true,
+   "buildings": 173,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 90,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 173,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1190,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1031,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 502,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1959,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1399,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 248,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 225,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 72,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 76,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 46,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 207,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 283,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 283,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 150,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 90,
+   "objects": true,
+   "terrain": true,
+   "buildings": 128,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 91,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 73,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1218,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1001,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 558,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 254,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 361,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1003,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1315,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 288,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 99,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 53,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 55,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 207,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 182,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 423,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 413,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 210,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 552,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 91,
+   "objects": true,
+   "terrain": true,
+   "buildings": 906,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 92,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 845,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1372,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 885,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 259,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 331,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 321,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1552,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 612,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 242,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 253,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 121,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 731,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 150,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 180,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 207,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 394,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 251,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 92,
+   "objects": true,
+   "terrain": true,
+   "buildings": 258,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 54,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 18,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 93,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 312,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1062,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1145,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 566,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 391,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 399,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 328,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 194,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 39,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 24,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 299,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 400,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 92,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 105,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 85,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 342,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 781,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 615,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 93,
+   "objects": true,
+   "terrain": true,
+   "buildings": 261,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 60,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 109,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 184,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 111,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 31,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 94,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 137,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 287,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 790,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 664,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 507,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 470,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 477,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 464,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 98,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 112,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 190,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 150,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 50,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 55,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 55,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 146,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 113,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 518,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 536,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 94,
+   "objects": true,
+   "terrain": true,
+   "buildings": 111,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 95,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 51,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 66,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 369,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 326,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 63,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 18,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 369,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 145,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 107,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 249,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 425,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 501,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 403,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 87,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 228,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 169,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 178,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 100,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 76,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 58,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 256,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 637,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 176,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 91,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 95,
+   "objects": true,
+   "terrain": true,
+   "buildings": 96,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 96,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 49,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 106,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 262,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 161,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 139,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 307,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 423,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 245,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 353,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 900,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 796,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 458,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 134,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 170,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 239,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 266,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 225,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 68,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 39,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 92,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 58,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 60,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 67,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 96,
+   "objects": true,
+   "terrain": true,
+   "buildings": 573,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 97,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 79,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 47,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 49,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 91,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 404,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 307,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1056,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 728,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1127,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1652,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 469,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 109,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 686,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 182,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 160,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 139,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 211,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 82,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 111,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 408,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 42,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 39,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 97,
+   "objects": true,
+   "terrain": true,
+   "buildings": 50,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 98,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 34,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 73,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 189,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 186,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 127,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1053,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1352,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1654,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1190,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 867,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1413,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 805,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 133,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 29,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 38,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 179,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 402,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 180,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 64,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 35,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 83,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 83,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 29,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 98,
+   "objects": true,
+   "terrain": true,
+   "buildings": 30,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 99,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 81,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 126,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 131,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 384,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 70,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 122,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 569,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1139,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 741,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1323,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1681,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 621,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 84,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 23,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 103,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 137,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 323,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 52,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 72,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 56,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 170,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 48,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 99,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 100,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 113,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 118,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 234,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 453,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 488,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 478,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 66,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 144,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 474,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1072,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 369,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 30,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 20,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 151,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 18,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 267,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 167,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 49,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 100,
+   "objects": true,
+   "terrain": true,
+   "buildings": 18,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 101,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 95,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 62,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 293,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 499,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 302,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 345,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 632,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 69,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 334,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 461,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 503,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 257,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 100,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 111,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 422,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 139,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 24,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 101,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 63,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 35,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 120,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 577,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 402,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 730,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1565,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 910,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 153,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 218,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 200,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 72,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 89,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 75,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 330,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 293,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 351,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 116,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 78,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 102,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 102,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 103,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 74,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 89,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 77,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 369,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 662,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 704,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 847,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 850,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 203,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 129,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 70,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 52,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 249,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 416,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 153,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 69,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 103,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 201,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 22,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 51,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 145,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 115,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 68,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 281,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 711,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 240,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 138,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 34,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 273,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 294,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 165,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 202,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 105,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 169,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 237,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 824,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 715,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 31,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 104,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 104,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 105,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 105,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 105,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 268,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 178,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 104,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 232,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 78,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 208,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 363,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 236,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 54,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 46,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 84,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 131,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 263,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 213,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 462,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 317,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 136,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 393,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 291,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 375,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 332,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 105,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 106,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 106,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 106,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 55,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 114,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 20,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 24,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 325,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 346,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 71,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 181,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 232,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 162,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 105,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 66,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 64,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 256,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 285,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 75,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 106,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 106,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 23,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 64,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 34,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 106,
+   "objects": true,
+   "terrain": true,
+   "buildings": 31,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 107,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 107,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 107,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 51,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 64,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 93,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 117,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 116,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 22,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 91,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 199,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 37,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 105,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 94,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 24,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 241,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 173,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 77,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 414,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 109,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 107,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 108,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 104,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 185,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 116,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 48,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 28,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 23,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 22,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 369,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 180,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 23,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 60,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 54,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 111,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 111,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 108,
+   "objects": true,
+   "terrain": true,
+   "buildings": 65,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 109,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 23,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 66,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 69,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 49,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 66,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 44,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 176,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 224,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 97,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 30,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 53,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 23,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 53,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 109,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 79,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 109,
+   "objects": true,
+   "terrain": true,
+   "buildings": 166,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 77,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 18,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 148,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 47,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 118,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 48,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 52,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 66,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 43,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 169,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 64,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 140,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 63,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 47,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 86,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 129,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 91,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 110,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 110,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 110,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 58,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 77,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 96,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 100,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 74,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 42,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 44,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 66,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 107,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 39,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 87,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 130,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 74,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 111,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 111,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 78,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 49,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 84,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 65,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 65,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 51,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 36,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 110,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 13,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 29,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 87,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 64,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 169,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 54,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 51,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 51,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 48,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 112,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 112,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 94,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 62,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 63,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 43,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 87,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 41,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 78,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 92,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 62,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 26,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 190,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 114,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 85,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 12,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 113,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 113,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 114,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 82,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 95,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 57,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 34,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 58,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 169,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 37,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 27,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 11,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 41,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 82,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 37,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 114,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 9,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 89,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 56,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 52,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 76,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 24,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 37,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 35,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 40,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 375,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 180,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 115,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 115,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 34,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 94,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 70,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 24,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 55,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 39,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 145,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 110,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 116,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 116,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 34,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 209,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 128,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 14,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 70,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 84,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 10,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 37,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 20,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 15,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 117,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 117,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 25,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 68,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 68,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 21,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 53,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 62,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 63,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 16,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 53,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 118,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 118,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 7,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 32,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 37,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 58,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 1,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 3,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 17,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 6,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 119,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 119,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": -1,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 30,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 0,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 1,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 2,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 3,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 4,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 5,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 2,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 6,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 61,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 7,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 44,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 8,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 9,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 10,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 33,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 11,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 12,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 4,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 13,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 22,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 14,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 43,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 15,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 19,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 16,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 17,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 5,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 18,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 19,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 20,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 8,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 21,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 22,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 23,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 24,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 25,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 26,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 27,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 28,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 29,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 30,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 31,
+   "cz": 120,
+   "objects": false,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 32,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 33,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 34,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 35,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 36,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  },
+  {
+   "cx": 37,
+   "cz": 120,
+   "objects": true,
+   "terrain": true,
+   "buildings": 0,
+   "m": "dubai-stream"
+  }
+ ]
+}
