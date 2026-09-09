@@ -32,7 +32,7 @@ import { EnergyWall } from "../fx/EnergyWall";
 import { KillBurst } from "../fx/killBurst";
 import { CinematicPlayer } from "../intro/CinematicPlayer";
 import { MenuBackground } from "../intro/MenuBackground";
-import { introScenes } from "../intro/scenes";
+import { introScenes, menuScenes } from "../intro/scenes";
 import { fetchMap, fetchCatalog, loadTerrainHeights } from "../world/maps";
 import type { MapCatalogEntry, NormalizedMap } from "../world/MapData";
 import { GameInstance, runDeploy } from "../game/GameInstance";
@@ -616,7 +616,7 @@ export class Game {
 
     if (this.state === "menu") {
       if (!this.menuBg) {
-        this.menuBg = new MenuBackground(this.renderer, introScenes());
+        this.menuBg = new MenuBackground(this.renderer, menuScenes());
         this.overlay.classList.add("overlay--scene");
         this.diag.snapshot(this.renderer, "menuBg+"); // 메뉴 배경 컴포저 생성 직후
       }

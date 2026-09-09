@@ -96,6 +96,14 @@ export function dirSpeedMult(mx: number, mz: number, fwd: { x: number; z: number
   return dot >= 0 ? STRAFE_MULT + (1 - STRAFE_MULT) * dot : STRAFE_MULT + (STRAFE_MULT - BACK_MULT) * dot;
 }
 
+/** Directional speed with explicit walker tuning; legacy drones retain their multipliers. */
+export function directionalSpeed(x: number, z: number, fwd: {x:number;z:number}, speed: number, back = speed*.6, strafe = speed*.85): number {
+  const length=Math.hypot(x,z);
+  if(length<1e-6)return speed;
+  const dot=(x*fwd.x+z*fwd.z)/length;
+  return dot>=0?strafe+(speed-strafe)*dot:strafe+(strafe-back)*dot;
+}
+
 /**
  * 비행 이동 방향(3D, 정규화 전) 계산 — 순수 함수.
  * 수동 입력(fb 전후 / lr 좌우)이 있으면 시선 기준 3D 이동(f3=피치 포함 전방, rightH=수평 우측).
@@ -213,6 +221,8 @@ export class PlayerController {
   private hVel = new THREE.Vector3();
   private coyote = 0;
   private dashTime = 0;
+  private dashBraking = false;
+  private dashTargetSpeed = 0;
   private dashCooldown = 0;
   private dashDir = new THREE.Vector3();
   // 매 프레임 재사용 임시 벡터
@@ -282,6 +292,15 @@ export class PlayerController {
     this.position.set(sp.x, ground + spawnHeightAboveGround(this.spec.move, this.eye), sp.z);
     this.yaw = sp.yaw;
   }
+
+  /** Read-only animation state after collision and gravity have been applied. */
+  get motionState() {
+    return { velocityX: this.hVel.x, velocityZ: this.hVel.z, velocityY: this.velocityY,
+      grounded: this.grounded, dashing: this.frameDashing, dashPowered: this.framePropelling, dashRemaining: Math.max(0,this.dashTime), jumpThrust: this.jumpThrustTime / .24, airMoveX: this.grounded ? 0 : this._wish.x * this.input.moveScale, airMoveZ: this.grounded ? 0 : this._wish.z * this.input.moveScale, dashDirectionX: this.dashDir.x, dashDirectionZ: this.dashDir.z, dashCooldown: Math.max(0, this.dashCooldown), yaw: this.yaw };
+  }
+  private frameDashing = false;
+  private framePropelling = false;
+  private jumpThrustTime = 0;
 
   get worldPosition(): THREE.Vector3 {
     return this.position;
@@ -392,8 +411,11 @@ export class PlayerController {
     if (dash) {
       if (this.dashCooldown > 0) this.dashCooldown -= dt;
       const dashKey = this.input.wasPressed("ShiftLeft") || this.input.wasPressed("ShiftRight");
-      if (dashKey && this.dashCooldown <= 0) {
+      if (dashKey && this.dashCooldown <= 0 && (dash.hopVelocity === undefined || this.grounded)) {
         this.dashDir.copy(wishH.lengthSq() > 0 ? wishH : fwdH).normalize();
+        this.dashTargetSpeed = directionalSpeed(this.dashDir.x,this.dashDir.z,fwdH,dash.speed,dash.backSpeed??dash.speed,dash.strafeSpeed??dash.speed);
+        this.dashBraking = false;
+        if(dash.hopVelocity){this.velocityY=dash.hopVelocity;this.grounded=false;this.coyote=0;}
         this.dashTime = dash.duration;
         this.dashCooldown = dash.cooldown;
       }
@@ -401,9 +423,15 @@ export class PlayerController {
 
     // --- 수평 속도 결정 ---
     let lookClimb = 0; // 비행: 시선(피치) 방향 전후 이동에서 나오는 수직 성분
+    this.framePropelling = !!dash && this.dashTime > 0;
+    this.frameDashing = !!dash && (this.dashTime > 0 || this.dashBraking);
     if (dash && this.dashTime > 0) {
       this.dashTime -= dt;
-      this.hVel.copy(this.dashDir).multiplyScalar(dash.speed); // 대시 중 운동량 덮어씀(평면)
+      const target=this.dashDir.clone().multiplyScalar(this.dashTargetSpeed);
+      if(dash.acceleration){
+        const change=target.sub(this.hVel);this.hVel.add(change.clampLength(0,dash.acceleration*dt));
+      }else this.hVel.copy(target);
+      if(this.dashTime<=0 && dash.braking)this.dashBraking=true;
     } else if (move.mode === "fly") {
       // 시선 방향(피치 포함) 전후 + 수평 스트레이프 → 위/아래를 보고 전진하면 자연스럽게 상승/하강.
       const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
@@ -422,11 +450,17 @@ export class PlayerController {
       lookClimb = mvy * spd;
     } else {
       // 보행: 지상/공중 응답 구분
-      const spd = move.speed * this.input.moveScale * dirSpeedMult(wishH.x, wishH.z, fwdH); // 방향별 속도(후진 페널티)
+      const spd = directionalSpeed(wishH.x,wishH.z,fwdH,move.speed,move.backSpeed,move.strafeSpeed) * this.input.moveScale; // 방향별 속도(후진 페널티)
       const rate = this.grounded ? move.groundAccel : move.airAccel;
       const t = 1 - Math.exp(-rate * dt);
-      this.hVel.x += (wishH.x * spd - this.hVel.x) * t;
-      this.hVel.z += (wishH.z * spd - this.hVel.z) * t;
+      if(this.dashBraking && dash?.braking){
+        const change=wishH.clone().multiplyScalar(spd).sub(this.hVel);
+        const distance=change.length();this.hVel.add(change.clampLength(0,dash.braking*dt));
+        if(distance<=dash.braking*dt)this.dashBraking=false;
+      }else{
+        this.hVel.x += (wishH.x * spd - this.hVel.x) * t;
+        this.hVel.z += (wishH.z * spd - this.hVel.z) * t;
+      }
     }
 
     this.moveHorizontal(dt); // 서브스테핑 충돌 해소(고속 터널링 방지)
@@ -510,6 +544,7 @@ export class PlayerController {
 
   /** 보행: 점프(상한 게이트) + 중력(상승 감속/하강 종단) + 착지. */
   private updateWalkVertical(dt: number, jump: JumpSpec) {
+    this.jumpThrustTime = Math.max(0,this.jumpThrustTime-dt);
     if (this.grounded) this.coyote = jump.coyoteTime;
     else if (this.coyote > 0) this.coyote -= dt;
 
@@ -517,8 +552,9 @@ export class PlayerController {
     if (this.input.wasPressed("Space")) {
       const curFeetY = this.position.y - this.eye;
       const groundBelow = this.standSurfaceY(this.position.x, this.position.z, curFeetY);
-      if (this.grounded || this.coyote > 0 || this.position.y < maxRiseAltitude(groundBelow, jump.maxRiseHeight, this.eye)) {
+      if (this.grounded || this.coyote > 0 || jump.allowAirJump !== false && this.position.y < maxRiseAltitude(groundBelow, jump.maxRiseHeight, this.eye)) {
         this.velocityY = jump.velocity;
+        this.jumpThrustTime = .24;
         this.grounded = false;
         this.coyote = 0;
       }
@@ -616,6 +652,8 @@ export class PlayerController {
     this.roll = 0;
     this.coyote = 0;
     this.dashTime = 0;
+    this.dashBraking = this.frameDashing = this.framePropelling = false;
+    this.jumpThrustTime = 0;
     this.dashCooldown = 0;
     this.placeAtSpawn();
     this.pitch = 0;

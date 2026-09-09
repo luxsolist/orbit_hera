@@ -105,29 +105,7 @@
 
 ## 인트로 / 메뉴 배경
 
-> ✅ 컷씬은 **개정 세계관**([spec/overview §4](../spec/overview.md)) 반영판 — 아무것도 떨어지지
-> 않는다: 오무아무아(탐침의 투영) 횡단 → **투영 소멸** → **심해 균열 개방**(바늘구멍) → 균열
-> 확장(흡수) → 플라즈모이드 상승 → 해변 집 **디테일 상실 → 붕괴**. (구 휴면 코어 산포/입수/침강
-> 씬은 제거 — 8씬 → 6씬.)
-
-- **CinematicPlayer** — 전용 씬/카메라로 인트로 컷씬 재생. 각 `scene`은 `build → update(t) → dispose`.
-  종료 시 `disposeComposer`(블룸 패스 RT 포함)·`disposeObject`(지오+텍스처)로 GPU 자원 해제.
-- **scenes / helpers** — 오무아무아 횡단, 투영 소멸(`sceneVanish`), 심해 균열 개방(`sceneRupture`),
-  균열 확장, 플라즈모이드 상승, **해변 집 디테일 상실 → 붕괴**(재질색 플랫 톤 lerp + 조각화 `shatterBox`/
-  모임지붕 `roofFace`/낙하 `fallFrag`) 등 장면 정의 + 결정적 난수(`rng`), ease, 카메라 보간(`track`).
-  인트로의 코어·플라즈모이드 색은 **플라즈모이드 온도 시스템**(`colorAt`)에서 파생([tests/introHelpers.test.ts](../../tests/introHelpers.test.ts)).
-- **MenuBackground** — 메뉴(전장 선택) 배경으로 인트로 장면 중 하나를 랜덤 재생, 끝나면 다른 장면으로
-  교체하며 사이를 **검정 페이드(0.7s)** 전환. 페이드 div는 캔버스 위·메뉴 오버레이 아래. 이탈 시 컴포저 해제.
-- **CinematicAudio** ([intro/CinematicAudio.ts](../../src/intro/CinematicAudio.ts)) — 인트로 컷씬 전용
-  **절차적 배경음악(앰비언트 스코어)**. Web Audio API 로 즉석 합성, 외부 음원 0(게임 전반의 무에셋 기조 =
-  `core/Sfx.ts`). **효과음 없이 배경음악만**(SFX 미포함). 구성: 옥타브를 아우르는 **디튠 톱니 패드 드론** +
-  항시 **서브 저역** + **컨볼버 리버브**(절차적 임펄스 응답) + 느린 **필터 LFO**(호흡감). 8개 인트로 컷씬마다
-  **무드 모핑** — `enterScene(name)`이 루트음을 retune(글라이드)하고 패드 필터 컷오프/게인·서브 게인을 그 장면
-  무드로 램프. 불길한 장면(`rise`)엔 **트라이톤(증4도) 불협 보이스**를 올림. 마스터 페이드 인(0.8s)/아웃이 시각
-  페이드와 동조.
-  - `CinematicPlayer`가 생성자(사용자 제스처 = 인트로 버튼 클릭) 안에서 생성하고, 장면 진입마다 `enterScene`,
-    스킵/종료 페이드 시 `stop(fade)`, 종료 시 `dispose()`(AudioContext close 로 모든 노드 일괄 해제).
-    오디오 생성 실패해도 시각은 진행(`try/catch` → 무음).
+현행 구현은 [인트로 명세](../spec/07-intro.md)를 따른다. CinematicPlayer가 8개 컷(75초)을 전용 씬·카메라로 재생한다. cinematicAssets의 절차적 PBR 표면과 PMREM 환경 반사, 낮춘 블룸으로 현실적인 재질을 표현한다. CinematicOverlay가 한국어 자막·링크 HUD·타이틀을 표시하고 CinematicAudio가 배경음과 박동·신호음을 합성한다. 녹음 대사는 없다. MenuBackground는 menuScenes의 골목 배경만 재생한다. 종료 시 컴포저·환경 반사 RT·그림자·지오메트리·텍스처를 해제한다.
 
 ## FX
 

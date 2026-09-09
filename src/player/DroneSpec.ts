@@ -9,6 +9,7 @@ export interface JumpSpec {
   fallGravity: number; // 하강 가속(점점 빨라짐)
   fallTerminal: number; // 종단(일정한 낙하) 속도
   maxRiseHeight: number; // 디딘 지면 대비 이 높이 이상이면 추가 점프 금지
+  allowAirJump?: boolean;
   coyoteTime: number; // 발판 이탈 직후 점프 허용 유예
 }
 
@@ -16,6 +17,8 @@ export interface JumpSpec {
 export interface WalkMove {
   mode: "walk";
   speed: number; // 목표 수평 속도
+  backSpeed?: number;
+  strafeSpeed?: number;
   groundAccel: number; // 지상 가감속 응답(클수록 빠릿)
   airAccel: number; // 공중 응답(관성)
   jump: JumpSpec;
@@ -54,7 +57,7 @@ export interface DroneSpec {
   body: { eyeHeight: number; radius: number }; // 시점 높이 / 충돌 반경
   vitals: { maxHp: number; maxFreq: number; freqRegen: number };
   view: { fov: number; mouseSensitivity: number };
-  dash?: { speed: number; duration: number; cooldown: number }; // 없으면 대시 불가(예: 비행 드론)
+  dash?: { speed: number; duration: number; cooldown: number; backSpeed?: number; strafeSpeed?: number; acceleration?: number; braking?: number; hopVelocity?: number }; // 없으면 대시 불가(예: 비행 드론)
   move: DroneMove;
   actions: ActionButton[]; // 모바일 동작 버튼(최대 2개)
   weapons: { primary: string; special: string }; // 무기 스펙 id 참조(public/weapons/<id>.json)

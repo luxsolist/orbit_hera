@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "id": "android-01",
+      "version": 3,
+      "droneId": "walker",
+      "name": "ED-209형 역관절 워커",
+      "url": "/models/android-01.glb",
+      "runtimeFactory": "src/assets/WalkerMech.ts#WalkerMech",
+      "units": "metres",
+      "up": "+Y",
+      "forward": "+Z",
+      "origin": "ground-between-feet",
+      "rig": "rigid-node-hierarchy",
+      "animations": [
+        "idle",
+        "walk",
+        "aim"
+      ],
+      "sockets": [
+        "socket_camera",
+        "socket_muzzle",
+        "socket_offhand",
+        "socket_back",
+        "socket_focus",
+        "socket_muzzle_left"
+      ],
+      "triangles": 20236,
+      "meshBatches": 49,
+      "proportions": {
+        "hipHeight": 2.07,
+        "upperLegLength": 0.92,
+        "lowerLegLength": 1.38,
+        "hullScale": [
+          0.88,
+          0.62,
+          0.82
+        ],
+        "legScale": [
+          1.18,
+          1.15,
+          1.12
+        ],
+        "footScale": [
+          1.18,
+          1,
+          1.2
+        ]
+      }
+    }
+  ]
+}

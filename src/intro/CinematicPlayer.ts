@@ -2,6 +2,9 @@ import * as THREE from "three";
 import type { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { createComposer, disposeComposer } from "../fx/postprocessing";
 import { CinematicAudio } from "./CinematicAudio";
+import { CinematicOverlay } from "./CinematicOverlay";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 /** 컷씬이 채우고 갱신하는 렌더 컨텍스트(전용 씬/카메라). */
 export interface SceneCtx {
@@ -38,6 +41,9 @@ export function fadeOpacity(elapsed: number, finishing: boolean, finishT: number
  * 스킵: Esc / 클릭. 시작 시 검은 화면에서 페이드인, 종료/스킵 시 페이드아웃 후 done.
  */
 export class CinematicPlayer {
+  private overlay = new CinematicOverlay();
+  private environment: THREE.WebGLRenderTarget;
+  private disposed = false;
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private composer: EffectComposer;
@@ -65,6 +71,14 @@ export class CinematicPlayer {
     const size = renderer.getSize(new THREE.Vector2());
     this.camera = new THREE.PerspectiveCamera(60, size.x / Math.max(1, size.y), 0.1, 4000);
     this.composer = createComposer(renderer, this.scene, this.camera);
+    for (const pass of this.composer.passes) if (pass instanceof UnrealBloomPass) { pass.strength = .28; pass.threshold = 1.1; }
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const room = new RoomEnvironment();
+    this.environment = pmrem.fromScene(room, .04);
+    this.scene.environment = this.environment.texture;
+    this.scene.environmentIntensity = .45;
+    room.dispose();
+    pmrem.dispose();
 
     this.fade = document.createElement("div");
     this.fade.style.cssText =
@@ -130,11 +144,11 @@ export class CinematicPlayer {
       this.t += dt;
       this.elapsed += dt;
       let cur = this.scenes[this.idx];
-      if (this.t >= cur.duration) {
+      while (this.t >= cur.duration && !this.finishing) {
         if (this.idx < this.scenes.length - 1) {
           this.clearScene();
           this.idx++;
-          this.t = 0;
+          this.t -= cur.duration;
           this.scenes[this.idx].build(this.ctx);
           this.audio?.enterScene(this.scenes[this.idx].name); // 장면 전환 → 음악 무드 모핑 + SFX 예약
           cur = this.scenes[this.idx];
@@ -147,6 +161,8 @@ export class CinematicPlayer {
       this.finishT += dt;
     }
 
+    this.overlay.update(this.elapsed);
+    this.audio?.update(this.elapsed);
     this.composer.render();
     this.updateFade();
   }
@@ -175,6 +191,10 @@ export class CinematicPlayer {
 
   /** 멱등 — 종료/스킵 시 자체 호출, 외부에서 중단할 때도 안전. */
   dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.overlay.dispose();
+    this.environment.dispose();
     window.removeEventListener("keydown", this.onSkip);
     window.removeEventListener("pointerdown", this.onSkip);
     this.audio?.dispose(); // 오디오 컨텍스트 종료(모든 예약 SFX/패드 해제)
@@ -186,7 +206,7 @@ export class CinematicPlayer {
   }
 }
 
-const TEX_SLOTS = ["map", "emissiveMap", "normalMap", "roughnessMap", "metalnessMap", "alphaMap", "aoMap"] as const;
+const TEX_SLOTS = ["map", "bumpMap", "emissiveMap", "normalMap", "roughnessMap", "metalnessMap", "alphaMap", "aoMap"] as const;
 
 function disposeMaterial(m: THREE.Material): void {
   const slots = m as unknown as Record<string, unknown>;
@@ -199,6 +219,7 @@ function disposeMaterial(m: THREE.Material): void {
 
 export function disposeObject(o: THREE.Object3D): void {
   o.traverse((c) => {
+    if (c instanceof THREE.Light) c.dispose();
     const mesh = c as THREE.Mesh;
     if (mesh.geometry) mesh.geometry.dispose();
     const mat = (mesh as { material?: THREE.Material | THREE.Material[] }).material;

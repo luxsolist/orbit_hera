@@ -1,0 +1,12 @@
+.cinematic{position:fixed;inset:0;z-index:49;pointer-events:none;color:#d6e1e5;font-family:system-ui,sans-serif;background:radial-gradient(ellipse at center,transparent 38%,#02080e55 100%);box-shadow:inset 0 7vh #03080c,inset 0 -7vh #03080c}
+.cinematic__top{position:absolute;top:10vh;left:5vw;right:5vw;display:flex;justify-content:space-between;font-size:11px;letter-spacing:.18em;opacity:.7;text-shadow:0 1px 4px #000}
+.cinematic__subtitle{position:absolute;bottom:12vh;left:8%;right:8%;text-align:center;font-size:clamp(16px,1.6vw,23px);font-weight:500;line-height:1.65;word-break:keep-all;text-wrap:balance;background:#03080cbb;border-radius:6px;padding:10px 16px;max-width:900px;margin:0 auto;letter-spacing:.02em;text-shadow:0 2px 8px #000,0 1px 3px #000}
+.cinematic__hud{position:absolute;inset:0;transition:opacity .5s;opacity:0}
+.cinematic__hud i{position:absolute;left:calc(50% - 20px);top:calc(50% - 20px);width:40px;height:40px;border:1px solid #c1edf266;border-radius:50%}
+.cinematic__hud i:after{content:"";position:absolute;left:18px;top:18px;width:3px;height:3px;background:#d9ffff}
+.cinematic__hud span{position:absolute;left:5vw;bottom:20vh;font:10px monospace;letter-spacing:.14em;color:#97d4d9}
+.cinematic__title{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:clamp(55px,8vw,110px);font-weight:200;letter-spacing:.4em;padding-left:.4em;opacity:0;transition:opacity 1.2s}
+.cinematic__title small{font-size:14px;letter-spacing:.35em;margin-top:25px;color:#99aab5;font-weight:400}
+@media(prefers-reduced-motion:reduce){.cinematic__title,.cinematic__hud{transition:none}}
+
+.cinematic__subtitle:empty{display:none}
