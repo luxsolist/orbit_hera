@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { exportWalkerGLB } from "./exportWalker";
+import { loadWalkerSkins, type WalkerSkin } from "./WalkerSkin";
 import { WalkerMech } from "./WalkerMech";
 import { WalkerThrusters } from "./WalkerThrusters";
 import { WalkerMotionAnimator } from "./WalkerMotion";
@@ -30,6 +31,30 @@ const ground=new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.7,.10,96),new THREE
 const ring=new THREE.Mesh(new THREE.TorusGeometry(2.58,.008,6,96),new THREE.MeshBasicMaterial({color:0x46616c}));ring.rotation.x=Math.PI/2;ring.position.y=-.035;scene.add(ring);
 const mech=new WalkerMech();scene.add(mech);
 const thrusters=new WalkerThrusters(mech);
+const stats={triangles:0,meshes:0,joints:0};
+function refreshStats(){stats.triangles=stats.meshes=stats.joints=0;mech.traverse(o=>{if(o instanceof THREE.Mesh){stats.meshes++;stats.triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;}if(o instanceof THREE.Group)stats.joints++;});
+document.getElementById("stats")!.textContent="RIGID ARTICULATED / PBR\n"+stats.triangles.toLocaleString()+" triangles\n"+stats.meshes+" mesh batches\n"+stats.joints+" articulated groups\n6 attachment sockets";
+}
+refreshStats();
+let selectedSkin:WalkerSkin|undefined;
+try{
+  const catalog=await loadWalkerSkins();
+  const skinPanel=document.getElementById("skins")!,description=document.getElementById("skinDescription")!;
+  const buttons=new Map<string,HTMLButtonElement>();
+  const choose=(skin:WalkerSkin)=>{
+    mech.applySkin(skin);selectedSkin=skin;refreshStats();description.textContent=skin.description;
+    for(const [id,button] of buttons)button.setAttribute("aria-pressed",String(id===skin.id));
+  };
+  const baseButton=document.createElement("button");baseButton.className="skin-choice";baseButton.dataset.skin="base";baseButton.textContent="기본형 · 골격 / 외피";
+  const chooseBase=()=>{mech.clearSkin();selectedSkin=undefined;description.textContent="장식·가니쉬·무늬 없는 기본 골격과 외피";for(const [id,button] of buttons)button.setAttribute("aria-pressed",String(id==="base"));refreshStats();};
+  baseButton.onclick=chooseBase;buttons.set("base",baseButton);skinPanel.append(baseButton);
+  for(const skin of catalog.skins){
+    const button=document.createElement("button");button.className="skin-choice";button.dataset.skin=skin.id;
+    for(const slot of ["armor","trim","sensor"] as const){const swatch=document.createElement("span");swatch.className="swatch";swatch.style.backgroundColor=skin.materials[slot].color;swatch.setAttribute("aria-hidden","true");button.append(swatch);}
+    button.append(document.createTextNode(" "+skin.name));button.onclick=()=>choose(skin);buttons.set(skin.id,button);skinPanel.append(button);
+  }
+  if(catalog.defaultSkin==="base")chooseBase();else choose(catalog.skins.find(s=>s.id===catalog.defaultSkin)!);
+}catch(error){document.getElementById("skinDescription")!.textContent="스킨을 불러오지 못했습니다. 새로고침해 주세요.";console.error(error);}
 let mode:"idle"|"walk"|"aim"="idle",phase=0,frozen=false;
 // Flat inspection arena: movement is performed by the game controller itself.
 const response=await fetch("/drones/walker.json");
@@ -85,19 +110,16 @@ for(const name of ["idle","walk","aim"] as const)document.getElementById(name)!.
   if(name==="walk"){startMotion();autoKey="KeyW";}
   for(const id of ["idle","walk","aim"])document.getElementById(id)!.setAttribute("aria-pressed",String(name===id));
 };
-const stats={triangles:0,meshes:0,joints:0};
-mech.traverse(o=>{if(o instanceof THREE.Mesh){stats.meshes++;stats.triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;}if(o instanceof THREE.Group)stats.joints++;});
-document.getElementById("stats")!.textContent="RIGID ARTICULATED / PBR\n"+stats.triangles.toLocaleString()+" triangles\n"+stats.meshes+" mesh batches\n"+stats.joints+" articulated groups\n6 attachment sockets";
-const exportBuffer=()=>exportWalkerGLB();
+const exportBuffer=()=>exportWalkerGLB({skin:selectedSkin});
 document.getElementById("export")!.onclick=async()=>{
   const button=document.querySelector<HTMLButtonElement>("#export")!;button.disabled=true;
   try{
     const bytes=await exportBuffer(),url=URL.createObjectURL(new Blob([bytes],{type:"model/gltf-binary"}));
-    const link=document.createElement("a");link.href=url;link.download="android-01.glb";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    const link=document.createElement("a");link.href=url;link.download=`android-01-${selectedSkin?.id??"default"}.glb`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }catch(error){button.textContent="내보내기 실패 · 다시 시도";console.error(error);}finally{button.disabled=false;}
 };
 declare global { interface Window { mechReview: { stats:typeof stats; motion():unknown; freeze(phase:number):void; exportBuffer():Promise<number[]>; }; } }
-window.mechReview={stats,motion:()=>({...player.motionState,height:mech.position.y,phase:animator.phase,jets:thrusters.ports.filter(p=>p.flame.visible).length,jumpJets:thrusters.ports.filter(p=>p.normal.y<0&&p.flame.visible).length,x:player.worldPosition.x,z:player.worldPosition.z}),freeze(p){phase=p;animator.phase=p;frozen=true;},async exportBuffer(){return [...new Uint8Array(await exportBuffer())];}};
+window.mechReview={stats,motion:()=>({...player.motionState,skinId:mech.userData.skinId,height:mech.position.y,phase:animator.phase,jets:thrusters.ports.filter(p=>p.flame.visible).length,jumpJets:thrusters.ports.filter(p=>p.normal.y<0&&p.flame.visible).length,x:player.worldPosition.x,z:player.worldPosition.z}),freeze(p){phase=p;animator.phase=p;frozen=true;},async exportBuffer(){return [...new Uint8Array(await exportBuffer())];}};
 const clock=new THREE.Clock();
 renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05);

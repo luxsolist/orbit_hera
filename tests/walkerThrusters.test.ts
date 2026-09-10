@@ -3,6 +3,17 @@ import * as THREE from "three";
 import {WalkerMech} from "../src/assets/WalkerMech";
 import {WalkerThrusters} from "../src/assets/WalkerThrusters";
 describe("directional body rocket exhaust",()=>{
+  it("keeps the belly mount on the pelvis while aiming the torso",()=>{
+    const mech=new WalkerMech(),jets=new WalkerThrusters(mech);
+    try{
+      const port=jets.ports.find(p=>p.normal.y<0)!;
+      const before=port.flame.getWorldPosition(new THREE.Vector3());
+      mech.setPose({aimYaw:.8});
+      expect(port.flame.getWorldPosition(new THREE.Vector3()).distanceTo(before)).toBeLessThan(1e-6);
+      expect(port.flame.parent!.parent!.parent).toBe(mech.pelvis);
+      jets.dispose();expect(jets.pelvisRoot.parent).toBeNull();
+    }finally{mech.dispose();}
+  });
  it.each([[0,1],[0,-1],[1,0],[-1,0]])("sustains air-control exhaust opposite (%s,%s) and stops on release",(x,z)=>{
   const mech=new WalkerMech({detail:"medium"}),jets=new WalkerThrusters(mech);
   try{
@@ -21,7 +32,7 @@ describe("directional body rocket exhaust",()=>{
    const state={dashPowered:false,dashDirectionX:0,dashDirectionZ:0,jumpThrust:1};
    for(let i=0;i<2;i++){
     jets.update(.01,state);mech.updateMatrixWorld(true);
-    const lit=jets.ports.filter(p=>p.flame.visible);expect(lit).toHaveLength(1);expect(lit[0].flame.parent!.position.x).toBe(0);expect(lit[0].flame.parent!.position.z).toBeCloseTo(-.12);
+    const lit=jets.ports.filter(p=>p.flame.visible);expect(lit).toHaveLength(1);expect(lit[0].flame.parent!.position.x).toBe(0);expect(lit[0].flame.parent!.position.z).toBeCloseTo(0);
     for(const port of lit){
      expect(port.normal.y).toBe(-1);expect(port.shells[0].scale.x).toBeCloseTo(1.8);
      expect(port.flame.getWorldDirection(new THREE.Vector3()).y).toBeCloseTo(-1,5);

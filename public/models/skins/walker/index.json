@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "modelId": "android-01",
+  "defaultSkin": "base",
+  "skins": [
+    {
+      "id": "obsidian",
+      "url": "/models/skins/walker/obsidian.json"
+    },
+    {
+      "id": "polar",
+      "url": "/models/skins/walker/polar.json"
+    },
+    {
+      "id": "dune",
+      "url": "/models/skins/walker/dune.json"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { WalkerMech } from "./WalkerMech";
+import { WALKER_PROPORTIONS, type WalkerMech } from "./WalkerMech";
 
 export interface WalkerThrustState {
   dashPowered: boolean;
@@ -13,6 +13,7 @@ export interface WalkerThrustState {
 /** Runtime-only body jets. Kept separate from GLB geometry and portable idle clips. */
 export class WalkerThrusters {
   readonly root = new THREE.Group();
+  readonly pelvisRoot = new THREE.Group();
   readonly ports: {normal: THREE.Vector3; flame: THREE.Group; shells: THREE.Mesh[]; light: THREE.PointLight}[] = [];
   private time = 0;
   private envelope = 0;
@@ -25,42 +26,52 @@ export class WalkerThrusters {
   private materials: THREE.Material[] = [];
   constructor(private mech: WalkerMech) {
     this.root.name="walker_body_thrusters";mech.torso.add(this.root);
+    this.pelvisRoot.name="walker_pelvis_thrusters";mech.pelvis.add(this.pelvisRoot);
     const nozzle=new THREE.TorusGeometry(.105,.032,6,16);
     const outer=new THREE.ConeGeometry(.16,1,16,1,true);
     outer.rotateX(Math.PI/2);outer.translate(0,0,.5);
     const housing=new THREE.CylinderGeometry(.13,.19,.22,8);
     housing.rotateX(Math.PI/2);housing.translate(0,0,-.08);
-    this.geometries.push(nozzle,outer,housing);
+    // Shallow rectangular front outlets read as propulsion vents, not a pair of eyes.
+    const frontShape=new THREE.Shape();frontShape.moveTo(-.15,-.055);frontShape.lineTo(.15,-.055);frontShape.lineTo(.15,.055);frontShape.lineTo(-.15,.055);frontShape.closePath();
+    const aperture=new THREE.Path();aperture.moveTo(-.115,-.028);aperture.lineTo(-.115,.028);aperture.lineTo(.115,.028);aperture.lineTo(.115,-.028);aperture.closePath();frontShape.holes.push(aperture);
+    const frontRim=new THREE.ExtrudeGeometry(frontShape,{depth:.035,bevelEnabled:false,steps:1});frontRim.translate(0,0,-.02);
+    const frontHousing=new THREE.BoxGeometry(.32,.13,.16);frontHousing.translate(0,0,-.09);
+    const frontOpening=new THREE.PlaneGeometry(.23,.056);frontOpening.translate(0,0,.017);
+    this.geometries.push(nozzle,outer,housing,frontRim,frontHousing,frontOpening);
     // Intersect the finished, proportion-adjusted hull, not its old bounding dimensions.
     mech.updateMatrixWorld(true);
     const hull=mech.torso.children.filter((node):node is THREE.Mesh=>node instanceof THREE.Mesh);
     const ray=new THREE.Raycaster();
-    const hullRotation=mech.torso.getWorldQuaternion(new THREE.Quaternion());
-    const metal=new THREE.MeshStandardMaterial({color:0x323c44,metalness:.85,roughness:.35});this.materials.push(metal);
+    const lengthScale=WALKER_PROPORTIONS.hullScale[2]/.82;
+
+    const metal=mech.getSkinMaterial("steel"); // Borrowed: skin swaps also recolor nozzle housings.
     for(const normal of [new THREE.Vector3(0,0,-1),new THREE.Vector3(0,0,1),new THREE.Vector3(-1,0,0),new THREE.Vector3(1,0,0),new THREE.Vector3(0,-1,0)]){
       for(const side of normal.y<0?[0]:[-1,1]){
         const port=new THREE.Group();
-        const underside=normal.y<0;
-        const origin=underside?new THREE.Vector3(0,-2,-.12):new THREE.Vector3(normal.x*2+(normal.z?side*.28:0),normal.z?.25:.32,normal.z*2+(normal.x?side*.25:0));
-        ray.set(mech.torso.localToWorld(origin),normal.clone().negate().applyQuaternion(hullRotation));
-        const surfaces=underside?[...hull,...mech.pelvis.children.filter((node):node is THREE.Mesh=>node instanceof THREE.Mesh)]:hull;
+        const underside=normal.y<0,front=normal.z>0;
+        const origin=underside?new THREE.Vector3(0,-2,0):new THREE.Vector3(normal.x*2+(normal.z?side*(front?.58:.28):0),front?.08:normal.z?.25:.32,normal.z*2+(normal.x?side*.25*lengthScale:0));
+        const host=underside?mech.pelvis:mech.torso;
+        ray.set(host.localToWorld(origin),normal.clone().negate().applyQuaternion(host.getWorldQuaternion(new THREE.Quaternion())));
+        const surfaces=underside?mech.pelvis.children.filter((node):node is THREE.Mesh=>node instanceof THREE.Mesh):hull;
         const hit=ray.intersectObjects(surfaces,false)[0];
         if(!hit)throw new Error("Walker thruster mount must intersect the hull");
-        port.position.copy(mech.torso.worldToLocal(hit.point)).addScaledVector(normal,.035);
+        port.position.copy(host.worldToLocal(hit.point)).addScaledVector(normal,.035);
         port.name=underside?"belly_jump_thruster_mount":"hull_thruster_mount";
         const mount=new THREE.Group();if(underside)mount.scale.setScalar(1.8);mount.quaternion.setFromUnitVectors(this.forward,normal);port.add(mount);
-        const collar=new THREE.Mesh(housing,metal);collar.castShadow=collar.receiveShadow=true;mount.add(collar);
-        const rim=new THREE.Mesh(nozzle,metal);rim.castShadow=rim.receiveShadow=true;mount.add(rim);
+        const collar=new THREE.Mesh(front?frontHousing:housing,front?mech.getSkinMaterial("frame"):metal);collar.castShadow=collar.receiveShadow=true;mount.add(collar);
+        const rim=new THREE.Mesh(front?frontRim:nozzle,metal);rim.castShadow=rim.receiveShadow=true;mount.add(rim);
+        if(front)mount.add(new THREE.Mesh(frontOpening,mech.getSkinMaterial("frame")));
         const flame=new THREE.Group();flame.visible=false;port.add(flame);
         const shells:THREE.Mesh[]=[];
         for(const [color,width,length,opacity] of [[0xff6520,1,1,.65],[0xffca72,.65,.75,.85],[0xdff8ff,.33,.52,1]]){
           const material=new THREE.MeshBasicMaterial({color,transparent:true,opacity,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
           this.materials.push(material);
-          const shell=new THREE.Mesh(outer,material);shell.scale.set(width*(underside?1.8:1),width*(underside?1.8:1),length);shell.userData.opacity=opacity;shell.userData.length=length;
+          const shell=new THREE.Mesh(outer,material);shell.scale.set(width*(underside?1.8:front?1.1:1),width*(underside?1.8:front?.4:1),length);shell.userData.opacity=opacity;shell.userData.length=length;
           flame.add(shell);shells.push(shell);
         }
         const light=new THREE.PointLight(0xffac5c,0,3,2);flame.add(light);light.position.z=.18;
-        this.root.add(port);this.ports.push({normal,flame,shells,light});
+        (underside?this.pelvisRoot:this.root).add(port);this.ports.push({normal,flame,shells,light});
       }
     }
   }
@@ -78,7 +89,7 @@ export class WalkerThrusters {
     this.mech.updateMatrixWorld(true);
     this.inverse.copy(this.mech.torso.getWorldQuaternion(this.inverse)).invert();
     this.local.copy(this.direction).applyQuaternion(this.inverse);
-    const down=new THREE.Vector3(0,-1,0).applyQuaternion(this.inverse);
+    const down=new THREE.Vector3(0,-1,0).applyQuaternion(this.mech.pelvis.getWorldQuaternion(new THREE.Quaternion()).invert());
     const pulse=1+.10*Math.sin(this.time*137)+.06*Math.sin(this.time*251);
     const ignition=state.dashPowered?1+.5*Math.exp(-this.time*18):1;
     for(const port of this.ports){
@@ -95,5 +106,5 @@ export class WalkerThrusters {
       port.light.intensity=5*strength*pulse;
     }
   }
-  dispose():void {this.root.removeFromParent();this.geometries.forEach(g=>g.dispose());this.materials.forEach(m=>m.dispose());}
+  dispose():void {this.root.removeFromParent();this.pelvisRoot.removeFromParent();this.geometries.forEach(g=>g.dispose());this.materials.forEach(m=>m.dispose());}
 }

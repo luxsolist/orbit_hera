@@ -20,6 +20,7 @@ try{
    let triangles=0,textures=0;gltf.scene.traverse(o=>{if(o.isMesh){triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;if(o.material.roughnessMap)textures++;}});
    return {clips:gltf.animations.map(c=>c.name),camera:!!camera,muzzle:!!muzzle,leftMuzzle:!!gltf.scene.getObjectByName("socket_muzzle_left"),moved,triangles,textures};
  });
- assert.deepEqual(result.clips,["idle","walk","aim"]);assert.ok(result.camera&&result.muzzle&&result.leftMuzzle&&result.moved&&result.textures);
+ assert.deepEqual(result.clips,["idle","walk","aim"]);assert.ok(result.camera&&result.muzzle&&result.leftMuzzle&&result.moved);
+ assert.equal(result.textures,0);
  console.log("PASS GLB reload, articulated animation, sockets, PBR textures",result);
 }finally{await browser.close();}

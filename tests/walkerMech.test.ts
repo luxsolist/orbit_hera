@@ -3,6 +3,21 @@ import * as THREE from "three";
 import { WalkerMech } from "../src/assets/WalkerMech";
 
 describe("reusable walker asset",()=>{
+  it("keeps the rotating hull above the fixed pelvic hip joints",()=>{
+    const mech=new WalkerMech();
+    try{
+      for(const yaw of [-.8,0,.8]){
+        mech.setPose({aimYaw:yaw});
+        const hull=new THREE.Box3();
+        mech.torso.children.forEach(n=>{if(n instanceof THREE.Mesh)hull.union(new THREE.Box3().setFromObject(n,true));});
+        for(const leg of Object.values(mech.legs)){
+          expect(leg.hip.parent).toBe(mech.pelvis);
+          const hip=new THREE.Box3();leg.hip.children.forEach(n=>{if(n instanceof THREE.Mesh)hip.union(new THREE.Box3().setFromObject(n,true));});
+          expect(hull.min.y-hip.max.y).toBeGreaterThan(.01);
+        }
+      }
+    }finally{mech.dispose();}
+  });
   it("keeps the feet above ground throughout the gait and crouch range",()=>{
     const mech=new WalkerMech({detail:"medium"});
     try{

@@ -1,3 +1,4 @@
+import { WalkerThrusters } from "../assets/WalkerThrusters";
 import { WalkerMech } from "../assets/WalkerMech";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
@@ -174,7 +175,18 @@ export function entity(scene: THREE.Scene, color = 0xff593b, role: "disc" | "spi
   scene.add(group); return group;
 }
 
-/** Shared articulated walker; caller owns its lifetime. */
-export function drone(parent: THREE.Object3D): WalkerMech {
-  const mech = new WalkerMech(); parent.add(mech); return mech;
+/** Same plain chassis and functional nozzles as the mech preview; no skin garnish. */
+export class CinematicWalker extends WalkerMech {
+  private thrusters?: WalkerThrusters;
+  constructor() {
+    super({detail:"high"});
+    this.thrusters=new WalkerThrusters(this);
+  }
+  override dispose():void {
+    this.thrusters?.dispose();this.thrusters=undefined;
+    super.dispose();
+  }
+}
+export function drone(parent: THREE.Object3D): CinematicWalker {
+  const mech = new CinematicWalker(); parent.add(mech); return mech;
 }

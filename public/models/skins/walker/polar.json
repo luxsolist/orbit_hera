@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "polar",
+  "modelId": "android-01",
+  "name": "폴라리스",
+  "description": "백색 세라믹 장갑과 주황색 구조대 표식",
+  "materials": {
+    "armor": {
+      "color": "#d8e4e5",
+      "roughness": 0.72,
+      "metalness": 0.18
+    },
+    "trim": {
+      "color": "#ef682c",
+      "roughness": 0.48,
+      "metalness": 0.38
+    },
+    "frame": {
+      "color": "#23323e",
+      "roughness": 0.62,
+      "metalness": 0.65
+    },
+    "steel": {
+      "color": "#839ba8",
+      "roughness": 0.28,
+      "metalness": 0.88
+    },
+    "accent": {
+      "color": "#ffae32",
+      "roughness": 0.42,
+      "metalness": 0.35
+    },
+    "sensor": {
+      "color": "#56dfff",
+      "roughness": 0.2,
+      "metalness": 0.25,
+      "emissive": "#56dfff",
+      "emissiveIntensity": 1.4
+    }
+  },
+  "garnish": [
+    "panels",
+    "markings"
+  ]
+}

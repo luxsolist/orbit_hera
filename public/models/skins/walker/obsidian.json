@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "obsidian",
+  "modelId": "android-01",
+  "name": "옵시디언",
+  "description": "흑연 장갑과 적색 센서의 야간 작전 도색",
+  "materials": {
+    "armor": {
+      "color": "#202830",
+      "roughness": 0.57,
+      "metalness": 0.48
+    },
+    "trim": {
+      "color": "#404d57",
+      "roughness": 0.5,
+      "metalness": 0.38
+    },
+    "frame": {
+      "color": "#151e26",
+      "roughness": 0.58,
+      "metalness": 0.65
+    },
+    "steel": {
+      "color": "#71858e",
+      "roughness": 0.3,
+      "metalness": 0.88
+    },
+    "accent": {
+      "color": "#d99135",
+      "roughness": 0.52,
+      "metalness": 0.35
+    },
+    "sensor": {
+      "color": "#ea332b",
+      "roughness": 0.25,
+      "metalness": 0.25,
+      "emissive": "#ea332b",
+      "emissiveIntensity": 1.4
+    }
+  },
+  "garnish": [
+    "panels",
+    "vents",
+    "fasteners",
+    "footGuards",
+    "weaponPods"
+  ]
+}

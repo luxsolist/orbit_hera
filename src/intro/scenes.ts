@@ -103,7 +103,7 @@ function safety():CutScene {
       bot.position.z=3-Math.max(0,t-4)*.65;
       bot.setPose({phase:Math.max(0,t-4)*3.8,walk:THREE.MathUtils.smoothstep(t,4,4.4)});
       danger.scale.setScalar(sharedPulse(28+t));
-      camera(ctx,[4,2.8,8-t*.15],[0,1.7,-3],53);
+      camera(ctx,[4.8,3.2,9-t*.15],[0,1.8,-2],53);
     },
     dispose(){bot.dispose();}
   };
@@ -128,7 +128,7 @@ function link(): CutScene {
       const light=new THREE.PointLight(0x92dfff,35,12); light.position.set(0,4,2);scene.add(light);
     },
     update(t,_dt,ctx) {
-      camera(ctx,t<5 ? [3.8,2.4,5.5-t*.08] : [3.4-(t-5)*.35,2.9+(t-5)*.08,5.3-(t-5)*.35],t<5 ? [2,1.15,3] : [0,2.6+(t-5)*.10,.1],43);
+      camera(ctx,t<5 ? [3.8,2.4,5.5-t*.08] : [4.8-(t-5)*.26,3.5-(t-5)*.04,7.6-(t-5)*.22],t<5 ? [2,1.15,3] : [0,2.45,.1],t<5?43:48);
       (indicator.material as THREE.MeshStandardMaterial).emissiveIntensity=t>2 ? 2 : .2;
       bot.setPose({aimYaw:Math.max(0,t-5)*.035});
     },

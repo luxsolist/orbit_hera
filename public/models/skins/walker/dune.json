@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "dune",
+  "modelId": "android-01",
+  "name": "듄 센티널",
+  "description": "모래색 무광 장갑과 올리브색 사막 도색",
+  "materials": {
+    "armor": {
+      "color": "#bba17a",
+      "roughness": 0.88,
+      "metalness": 0.25
+    },
+    "trim": {
+      "color": "#59624a",
+      "roughness": 0.8,
+      "metalness": 0.38
+    },
+    "frame": {
+      "color": "#332e28",
+      "roughness": 0.72,
+      "metalness": 0.65
+    },
+    "steel": {
+      "color": "#81796a",
+      "roughness": 0.44,
+      "metalness": 0.88
+    },
+    "accent": {
+      "color": "#dfb34d",
+      "roughness": 0.6,
+      "metalness": 0.35
+    },
+    "sensor": {
+      "color": "#9cff74",
+      "roughness": 0.22,
+      "metalness": 0.25,
+      "emissive": "#9cff74",
+      "emissiveIntensity": 1.4
+    }
+  },
+  "garnish": [
+    "vents",
+    "markings",
+    "fasteners",
+    "weaponPods"
+  ]
+}
