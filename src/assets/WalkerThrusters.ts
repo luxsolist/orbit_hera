@@ -3,6 +3,10 @@ import { WALKER_PROPORTIONS, type WalkerMech } from "./WalkerMech";
 
 export interface WalkerThrustState {
   dashPowered: boolean;
+  dashing?: boolean;
+  grounded?: boolean;
+  velocityX?: number;
+  velocityZ?: number;
   jumpThrust?: number;
   airMoveX?: number;
   airMoveZ?: number;
@@ -28,7 +32,7 @@ export class WalkerThrusters {
     this.root.name="walker_body_thrusters";mech.torso.add(this.root);
     this.pelvisRoot.name="walker_pelvis_thrusters";mech.pelvis.add(this.pelvisRoot);
     const nozzle=new THREE.TorusGeometry(.105,.032,6,16);
-    const outer=new THREE.ConeGeometry(.16,1,16,1,true);
+    const outer=new THREE.CylinderGeometry(.025,.095,1,24,16,true);
     outer.rotateX(Math.PI/2);outer.translate(0,0,.5);
     const housing=new THREE.CylinderGeometry(.13,.19,.22,8);
     housing.rotateX(Math.PI/2);housing.translate(0,0,-.08);
@@ -64,46 +68,64 @@ export class WalkerThrusters {
         if(front)mount.add(new THREE.Mesh(frontOpening,mech.getSkinMaterial("frame")));
         const flame=new THREE.Group();flame.visible=false;port.add(flame);
         const shells:THREE.Mesh[]=[];
-        for(const [color,width,length,opacity] of [[0xff6520,1,1,.65],[0xffca72,.65,.75,.85],[0xdff8ff,.33,.52,1]]){
-          const material=new THREE.MeshBasicMaterial({color,transparent:true,opacity,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
+        for(const [color,width,length,opacity] of [[0x237eff,1,1,.13],[0x65baff,.67,.90,.20],[0xbceaff,.30,.72,.27]]){
+          const material=new THREE.ShaderMaterial({
+            uniforms:{tint:{value:new THREE.Color(color)},opacity:{value:opacity}},
+            vertexShader:`varying vec2 flameUv; varying vec3 viewNormal; varying vec3 viewPosition;
+              void main(){flameUv=uv;viewNormal=normalMatrix*normal;vec4 p=modelViewMatrix*vec4(position,1.0);viewPosition=p.xyz;gl_Position=projectionMatrix*p;}`,
+            fragmentShader:`uniform vec3 tint;uniform float opacity;varying vec2 flameUv;varying vec3 viewNormal;varying vec3 viewPosition;
+              void main(){
+                float t=flameUv.y;
+                float edge=pow(abs(dot(normalize(viewNormal),normalize(-viewPosition))),0.65);
+                float fade=(1.0-smoothstep(0.12,1.0,t))*smoothstep(0.0,0.035,t);
+                float cells=0.86+0.14*pow(max(0.0,cos(t*37.7)),8.0);
+                vec3 gradient=mix(tint,vec3(0.015,0.12,0.8),smoothstep(0.0,0.9,t));
+                gl_FragColor=vec4(gradient,opacity*edge*fade*cells);
+              }`,
+            transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,toneMapped:false
+          });
           this.materials.push(material);
           const shell=new THREE.Mesh(outer,material);shell.scale.set(width*(underside?1.8:front?1.1:1),width*(underside?1.8:front?.4:1),length);shell.userData.opacity=opacity;shell.userData.length=length;
           flame.add(shell);shells.push(shell);
         }
-        const light=new THREE.PointLight(0xffac5c,0,3,2);flame.add(light);light.position.z=.18;
+        const light=new THREE.PointLight(0x65baff,0,2.5,2);flame.add(light);light.position.z=.18;
         (underside?this.pelvisRoot:this.root).add(port);this.ports.push({normal,flame,shells,light});
       }
     }
   }
   update(dt:number,state:WalkerThrustState):void {
-    const airStrength=Math.min(1,Math.hypot(state.airMoveX??0,state.airMoveZ??0));
+    const speed=Math.hypot(state.velocityX??0,state.velocityZ??0);
+    const braking=!!state.dashing&&!state.dashPowered&&speed>12;
+    const moveX=braking?-(state.velocityX??0)/speed:(state.airMoveX??0);
+    const moveZ=braking?-(state.velocityZ??0)/speed:(state.airMoveZ??0);
+    const airStrength=Math.min(1,Math.hypot(moveX,moveZ));
     const powered=state.dashPowered||airStrength>.001;
     if(powered){
       if(!this.active)this.time=0;
-      const x=state.dashPowered?state.dashDirectionX:(state.airMoveX??0);
-      const z=state.dashPowered?state.dashDirectionZ:(state.airMoveZ??0);
+      const x=state.dashPowered?state.dashDirectionX:moveX;
+      const z=state.dashPowered?state.dashDirectionZ:moveZ;
       this.direction.set(-x,0,-z).normalize();
-      this.time+=dt;this.envelope=state.dashPowered?1:.45*airStrength;
+      this.time+=dt;this.envelope=state.dashPowered?1:(braking?.8:.45)*airStrength;
     }else this.envelope=Math.max(0,this.envelope-dt/.09);
     this.active=powered;
     this.mech.updateMatrixWorld(true);
     this.inverse.copy(this.mech.torso.getWorldQuaternion(this.inverse)).invert();
     this.local.copy(this.direction).applyQuaternion(this.inverse);
     const down=new THREE.Vector3(0,-1,0).applyQuaternion(this.mech.pelvis.getWorldQuaternion(new THREE.Quaternion()).invert());
-    const pulse=1+.10*Math.sin(this.time*137)+.06*Math.sin(this.time*251);
-    const ignition=state.dashPowered?1+.5*Math.exp(-this.time*18):1;
+    const pulse=1+.025*Math.sin(this.time*137)+.015*Math.sin(this.time*251);
+    const ignition=state.dashPowered?1+.20*Math.exp(-this.time*18):1;
     for(const port of this.ports){
       const underside=port.normal.y<0;
       const strength=underside?THREE.MathUtils.clamp(state.jumpThrust??0,0,1):Math.max(0,port.normal.dot(this.local))*this.envelope;
       const exhaust=underside?down:this.local;
       port.flame.visible=strength>.04;
       port.flame.quaternion.setFromUnitVectors(this.forward,exhaust.lengthSq()>.01?exhaust:this.forward);
-      const length=(underside?2.1:1.65)*pulse*(underside?1+.4*strength:ignition)*strength;
+      const length=(underside?2.6:2.2)*pulse*(underside?1+.4*strength:ignition)*strength;
       for(const shell of port.shells){
         shell.scale.z=shell.userData.length*length;
-        (shell.material as THREE.MeshBasicMaterial).opacity=shell.userData.opacity*strength;
+        (shell.material as THREE.ShaderMaterial).uniforms.opacity.value=shell.userData.opacity*strength;
       }
-      port.light.intensity=5*strength*pulse;
+      port.light.intensity=1.4*strength*pulse;
     }
   }
   dispose():void {this.root.removeFromParent();this.pelvisRoot.removeFromParent();this.geometries.forEach(g=>g.dispose());this.materials.forEach(m=>m.dispose());}

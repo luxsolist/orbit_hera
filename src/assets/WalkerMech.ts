@@ -26,6 +26,9 @@ export interface WalkerPose {
   /** Continuous gait cycle in radians. Advance with distance travelled, not frame count. */
   phase?: number;
   walk?: number;
+  run?: number;
+  /** Fraction of each leg cycle spent planted. */
+  stance?: number;
   /** Local-space foot travel; +Z is forward. Legacy clips default to forward. */
   travelX?: number;
   travelZ?: number;
@@ -282,22 +285,25 @@ export class WalkerMech extends THREE.Group {
 
   setPose(pose: WalkerPose = {}): void {
     this.pose={...pose};
+    const run=THREE.MathUtils.clamp(pose.run??0,0,1);
+    const stance=THREE.MathUtils.clamp(pose.stance??.5,.18,.5);
     const phase=pose.phase??0, walk=THREE.MathUtils.clamp(pose.walk??0,0,1);
     const aim=THREE.MathUtils.clamp(pose.aim??0,0,1), crouch=THREE.MathUtils.clamp(pose.crouch??0,0,1);
-    this.pelvis.position.y=WALKER_PROPORTIONS.hipHeight-crouch*.24+(pose.airborne??0)*.14;
+    this.pelvis.position.y=WALKER_PROPORTIONS.hipHeight-crouch*.24+(pose.airborne??0)*.14+run*(.035*Math.cos(phase*2)-.045);
     this.pelvis.rotation.y=Math.sin(phase)*.045*walk;
-    this.torso.rotation.set(.04*walk+Math.sin(phase)*.007*(1-walk),THREE.MathUtils.clamp(pose.aimYaw??0,-.8,.8),-Math.sin(phase)*.035*walk);
+    this.torso.rotation.set(-.06*run*(pose.travelZ??1)+.04*walk+Math.sin(phase)*.007*(1-walk),THREE.MathUtils.clamp(pose.aimYaw??0,-.8,.8),-Math.sin(phase)*.035*walk);
     this.head.rotation.set(0,0,0);
     for(const [side,leg] of [[-1,this.legs.left],[1,this.legs.right]] as const){
       const p=phase+(side>0?Math.PI:0);
       const u=((p/(Math.PI*2))%1+1)%1;
       // Half a cycle in contact: linear foot speed exactly opposes root travel.
-      const sweep=u<.5 ? 1-4*u : -1+4*(u-.5);
+      const swing=(u-stance)/(1-stance);
+      const sweep=u<stance ? 1-2*u/stance : (1-run)*(-1+2*swing)-run*Math.cos(Math.PI*swing);
       const stride=pose.stride??.24;
       const x=sweep*stride*walk*(pose.travelX??0)+(pose.legTrailX??0);
       const z=sweep*stride*walk*(pose.travelZ??1)+.025+(pose.legTrailZ??0);
       const air=pose.airborne??0;
-      const y=.14+(u>=.5?Math.sin((u-.5)*Math.PI*2):0)*(pose.lift??.10)*walk+air*.02-this.pelvis.position.y;
+      const y=.14+(u>=stance?Math.sin(swing*Math.PI):0)*(pose.lift??.10)*walk+air*.02-this.pelvis.position.y;
       const upper=WALKER_PROPORTIONS.upperLegLength,lower=WALKER_PROPORTIONS.lowerLegLength,d=Math.min(upper+lower-.001,Math.hypot(x,y,z));
       const knee=-Math.acos(THREE.MathUtils.clamp((d*d-upper*upper-lower*lower)/(2*upper*lower),-1,1));
       leg.hip.rotation.order="ZXY";

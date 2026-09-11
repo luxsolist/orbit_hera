@@ -16,31 +16,31 @@
     "mouseSensitivity": 0.0022
   },
   "dash": {
-    "speed": 20,
-    "duration": 0.95,
+    "speed": 83.33333333333333,
+    "duration": 0.65,
     "cooldown": 2,
-    "backSpeed": 20,
-    "strafeSpeed": 20,
-    "acceleration": 30,
-    "braking": 24,
+    "backSpeed": 83.33333333333333,
+    "strafeSpeed": 83.33333333333333,
+    "acceleration": 240,
+    "braking": 300,
     "hopVelocity": 0
   },
   "move": {
     "mode": "walk",
-    "speed": 4.8,
-    "groundAccel": 6,
+    "speed": 13.88888888888889,
+    "groundAccel": 4,
     "airAccel": 2,
     "jump": {
-      "velocity": 5.42,
-      "riseGravity": 9.81,
-      "fallGravity": 9.81,
-      "fallTerminal": 25.5,
+      "velocity": 27.77777777777778,
+      "riseGravity": 28,
+      "fallGravity": 36,
+      "fallTerminal": 40,
       "maxRiseHeight": 100,
       "coyoteTime": 0.1,
       "allowAirJump": true
     },
-    "backSpeed": 2.7,
-    "strafeSpeed": 3.0
+    "backSpeed": 6.944444444444445,
+    "strafeSpeed": 4
   },
   "actions": [
     {

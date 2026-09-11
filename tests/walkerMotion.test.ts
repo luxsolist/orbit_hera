@@ -39,7 +39,7 @@ describe("walker motion driven by game controller",()=>{
    for(let i=0;i<420;i++){
      const state=f.step(),pose=a.update(1/120,state);
      expect(Math.abs(pose.dash!-previous.dash!)).toBeLessThan(.15);
-     if(state.dashing&&!state.dashPowered&&pose.walk!>.15)sawRecovery=true;
+     if(state.dashing&&!state.dashPowered&&pose.walk!>.04)sawRecovery=true;
      if(!state.dashing)expect(Math.abs(pose.walk!-previous.walk!)).toBeLessThan(.09);
      previous=pose;
    }
@@ -62,23 +62,23 @@ describe("walker motion driven by game controller",()=>{
      expect(mech.pelvis.position.y).toBeCloseTo(height,3);expect(Math.abs(mech.legs.left.knee.rotation.x)).toBeCloseTo(idle,3);
    }finally{mech.dispose();}
  });
- it.each([["KeyW",4.8],["KeyS",2.7],["KeyA",3.0],["KeyD",3.0]] as const)("%s reaches configured directional speed",(key,speed)=>{
+ it.each([["KeyW",50/3.6],["KeyS",25/3.6],["KeyA",4],["KeyD",4]] as const)("%s reaches configured directional speed",(key,speed)=>{
   const f=fixture();f.held.add(key);for(let i=0;i<360;i++)f.step();
-  expect(Math.hypot(f.player.motionState.velocityX,f.player.motionState.velocityZ)).toBeCloseTo(speed,4);
+  expect(Math.hypot(f.player.motionState.velocityX,f.player.motionState.velocityZ)).toBeCloseTo(speed,3);
  });
  it("uses configured jump arc, terminal fall and landing",()=>{
   const f=fixture();f.pressed.add("Space");let apex=0,air=false;
-  for(let i=0;i<180;i++){const s=f.step();air ||= !s.grounded;apex=Math.max(apex,f.player.worldPosition.y-spec.body.eyeHeight);expect(s.velocityY).toBeGreaterThanOrEqual(-spec.move.jump.fallTerminal);}
-  expect(air).toBe(true);expect(apex).toBeGreaterThan(1.4);expect(apex).toBeLessThan(1.55);expect(f.player.motionState.grounded).toBe(true);
+  for(let i=0;i<360;i++){const s=f.step();air ||= !s.grounded;apex=Math.max(apex,f.player.worldPosition.y-spec.body.eyeHeight);expect(s.velocityY).toBeGreaterThanOrEqual(-spec.move.jump.fallTerminal);}
+  expect(air).toBe(true);expect(apex).toBeGreaterThan(13.5);expect(apex).toBeLessThan(13.9);expect(f.player.motionState.grounded).toBe(true);
  });
- it.each([["KeyW",20],["KeyS",20],["KeyA",20],["KeyD",20]] as const)("ramps %s dash at standing height and brakes without velocity discontinuities",(key,maximum)=>{
+ it.each([["KeyW",300/3.6],["KeyS",300/3.6],["KeyA",300/3.6],["KeyD",300/3.6]] as const)("ramps %s dash at standing height and brakes without velocity discontinuities",(key,maximum)=>{
   const f=fixture();f.held.add(key);for(let i=0;i<360;i++)f.step();
   let prev=f.player.motionState,peak=0,air=false;
   f.pressed.add("ShiftLeft");
   for(let i=0;i<240;i++){
     const state=f.step(),speed=Math.hypot(state.velocityX,state.velocityZ);
     peak=Math.max(peak,speed);air ||= !state.grounded;
-    if(state.dashing)expect(Math.hypot(state.velocityX-prev.velocityX,state.velocityZ-prev.velocityZ)).toBeLessThanOrEqual(30/120+1e-6);
+    if(state.dashing)expect(Math.hypot(state.velocityX-prev.velocityX,state.velocityZ-prev.velocityZ)).toBeLessThanOrEqual(300/120+1e-6);
     if(i===10)f.pressed.add("ShiftLeft");
     prev=state;
   }
@@ -88,9 +88,17 @@ describe("walker motion driven by game controller",()=>{
    const f=fixture();f.pressed.add("Space");f.step();for(let i=0;i<30;i++)f.step();
    const vy=f.player.motionState.velocityY;f.pressed.add("Space");const state=f.step();expect(state.velocityY).toBeGreaterThan(vy);expect(state.jumpThrust).toBe(1);
  });
- it("limits leg cadence to 2.5 total footfalls per second",()=>{
+ it.each([[0,-50/3.6],[0,25/3.6],[4,0],[-4,0]])("matches planted foot speed to running velocity (%s,%s)",(vx,vz)=>{
+   const a=new WalkerMotionAnimator(),speed=Math.hypot(vx,vz),dt=.001;
+   const p=a.update(dt,{velocityX:vx,velocityZ:vz,velocityY:0,grounded:true,dashing:false,dashPowered:false,yaw:0});
+   const cadence=a.phase/(Math.PI*2*dt);
+   expect(p.walk).toBe(1);expect(p.stance).toBeLessThan(.5);
+   expect(2*p.stride!*cadence/p.stance!).toBeCloseTo(speed,5);
+   expect(p.lift).toBeGreaterThan(.22);
+ });
+ it("limits running cadence to 3.6 total footfalls per second",()=>{
    const a=new WalkerMotionAnimator();a.update(.1,{velocityX:20,velocityZ:0,velocityY:0,grounded:true,dashing:false,yaw:0});
-   expect(a.phase/(Math.PI*2)/.1).toBeLessThanOrEqual(1.25);
+   expect(a.phase/(Math.PI*2)/.1).toBeLessThanOrEqual(1.8);
  });
  it("advances phase by distance, reverses travel and suspends gait in air/dash",()=>{
   const a=new WalkerMotionAnimator();const state={velocityX:0,velocityZ:-3.2,velocityY:0,grounded:true,dashing:false,yaw:0};
@@ -103,7 +111,7 @@ describe("walker motion driven by game controller",()=>{
  });
  it("keeps the sole level and above ground in forward, reverse and strafe poses",()=>{
   const mech=new WalkerMech({detail:"medium"});const a=new WalkerMotionAnimator();
-  try{for(const [vx,vz] of [[0,-4.8],[0,2.7],[3.0,0],[-3.0,0]])for(let i=0;i<40;i++){
+  try{for(const [vx,vz] of [[0,-50/3.6],[0,25/3.6],[4,0],[-4,0]])for(let i=0;i<40;i++){
     a.apply(mech,1/120,{velocityX:vx,velocityZ:vz,velocityY:0,grounded:true,dashing:false,yaw:0});
     for(const leg of Object.values(mech.legs)){
       expect(new THREE.Box3().setFromObject(leg.ankle).min.y).toBeGreaterThan(-.02);

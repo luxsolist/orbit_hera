@@ -3,43 +3,49 @@
   "id": "dune",
   "modelId": "android-01",
   "name": "듄 센티널",
-  "description": "모래색 무광 장갑과 올리브색 사막 도색",
+  "description": "황금 금속 장갑과 밝은 금빛 테두리가 빛나는 로열 골드 스킨",
   "materials": {
     "armor": {
-      "color": "#bba17a",
-      "roughness": 0.88,
-      "metalness": 0.25
+      "color": "#e8b644",
+      "roughness": 0.19,
+      "metalness": 0.95,
+      "emissive": "#9b580c",
+      "emissiveIntensity": 0.12
     },
     "trim": {
-      "color": "#59624a",
-      "roughness": 0.8,
-      "metalness": 0.38
+      "color": "#ffe3a0",
+      "roughness": 0.14,
+      "metalness": 0.92,
+      "emissive": "#ffc75b",
+      "emissiveIntensity": 0.28
     },
     "frame": {
-      "color": "#332e28",
-      "roughness": 0.72,
-      "metalness": 0.65
+      "color": "#362615",
+      "roughness": 0.35,
+      "metalness": 0.8
     },
     "steel": {
-      "color": "#81796a",
-      "roughness": 0.44,
-      "metalness": 0.88
+      "color": "#d6a43b",
+      "roughness": 0.16,
+      "metalness": 0.95
     },
     "accent": {
-      "color": "#dfb34d",
-      "roughness": 0.6,
-      "metalness": 0.35
+      "color": "#fff0b8",
+      "roughness": 0.2,
+      "metalness": 0.7,
+      "emissive": "#ffca55",
+      "emissiveIntensity": 1.1
     },
     "sensor": {
-      "color": "#9cff74",
+      "color": "#fff4cd",
       "roughness": 0.22,
       "metalness": 0.25,
-      "emissive": "#9cff74",
-      "emissiveIntensity": 1.4
+      "emissive": "#ffdb79",
+      "emissiveIntensity": 2
     }
   },
   "garnish": [
-    "vents",
+    "panels",
     "markings",
     "fasteners",
     "weaponPods"

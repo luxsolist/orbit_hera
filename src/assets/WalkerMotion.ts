@@ -15,6 +15,7 @@ export class WalkerMotionAnimator {
   private dashBlend = 0;
   private legTrailX = 0;
   private legTrailZ = 0;
+
   update(dt: number, state: WalkerMotionState): WalkerPose {
     const speed = Math.hypot(state.velocityX, state.velocityZ);
     const c = Math.cos(state.yaw), s = Math.sin(state.yaw);
@@ -33,9 +34,12 @@ export class WalkerMotionAnimator {
     this.legTrailX+=((c*dx-s*dz)/length*.28*trailWeight-this.legTrailX)*response;
     this.legTrailZ+=((s*dx+c*dz)/length*.28*trailWeight-this.legTrailZ)*response;
     const walk = state.grounded && !powered ? Math.min(1,speed/2)*(1-this.dashBlend) : 0;
-    // Bound reach to avoid crossing the feet during lateral travel.
-    const stride = Math.min(.85, .42/Math.max(.001,Math.abs(x)));
-    if (walk > .001) this.phase = (this.phase + dt*Math.min(1.25,speed/(4*stride*walk))*Math.PI*2)%(Math.PI*2);
+    const run=Math.max(0,Math.min(1,(speed-3.5)/5))*walk;
+    // Faster running uses a longer aerial swing and shorter planted phase, not frantic stepping.
+    const stride=Math.min(.85+.15*run,.42/Math.max(.001,Math.abs(x)));
+    const cadence=Math.min(1.25+.55*run,speed/Math.max(.001,4*stride*walk));
+    const stance=Math.max(.18,Math.min(.5,2*stride*walk*cadence/Math.max(speed,.001)));
+    if(walk>.001)this.phase=(this.phase+dt*cadence*Math.PI*2)%(Math.PI*2);
     if (state.grounded && !this.wasGrounded) this.landingTime = 0;
     else if(state.grounded) this.landingTime += dt;
     else this.landingTime = Infinity;
@@ -44,8 +48,8 @@ export class WalkerMotionAnimator {
     const landing=t<.12?Math.sin(t/.12*Math.PI/2):t<.54?(1+Math.cos((t-.12)/.42*Math.PI))*.5:0;
     this.airExtension += ((state.grounded?0:1)-this.airExtension)*(1-Math.exp(-dt*(state.grounded?18:8)));
     this.wasGrounded = state.grounded;
-    return { phase:this.phase, walk, travelX:x, travelZ:z, stride,
-      lift:.12+.10*Math.min(1,speed/3.2),
+    return { phase:this.phase, walk, run, stance, travelX:x, travelZ:z, stride,
+      lift:.12+.10*Math.min(1,speed/3.2)+.16*run,
       airborne:this.airExtension,
       dash:this.dashBlend, legTrailX:this.legTrailX, legTrailZ:this.legTrailZ,
       crouch:landing };

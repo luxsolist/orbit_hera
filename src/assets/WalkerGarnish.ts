@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { WalkerMech } from "./WalkerMech";
 import type { WalkerSkinSlot } from "./WalkerSkin";
-export const WALKER_GARNISH_FEATURES=["panels","vents","markings","fasteners","footGuards","weaponPods"] as const;
+export const WALKER_GARNISH_FEATURES=["panels","vents","markings","fasteners","footGuards","weaponPods","viking"] as const;
 export type WalkerGarnishFeature=typeof WALKER_GARNISH_FEATURES[number];
 
 /** Skin-owned surface geometry. It never modifies the base hull or animated joints. */
@@ -20,6 +20,18 @@ export class WalkerGarnish {
     const box=(root:THREE.Group,slot:WalkerSkinSlot,size:number[],pos:number[])=>add(root,slot,new THREE.BoxGeometry(...size as [number,number,number]),pos);
     const bolt=(root:THREE.Group,pos:number[])=>{const g=new THREE.CylinderGeometry(.015,.015,.028,6);g.rotateX(Math.PI/2);add(root,"steel",g,pos);};
     const hull=attach(mech.torso,hullScale);
+    if(enabled.has("viking")){
+      // Faceted helmet plates and swept ivory horns, clear of the propulsion outlets.
+      for(const side of [-1,1]){
+        const brow=box(hull,"trim",[.16,.09,.92],[side*.27,.96,-.08]);brow.rotation.x=.11;
+        const points=[[side*.54,.91,-.38],[side*.76,1.08,-.43],[side*.91,1.34,-.50],[side*.86,1.60,-.59]];
+        for(let i=1;i<points.length;i++){
+          const a=new THREE.Vector3(...points[i-1]),b=new THREE.Vector3(...points[i]),d=b.clone().sub(a);
+          const horn=add(hull,"accent",new THREE.CylinderGeometry(i===3?.008:.13-i*.035,.165-(i-1)*.045,d.length(),8),a.add(b).multiplyScalar(.5).toArray());
+          horn.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());
+        }
+      }
+    }
     for(const side of [-1,1]){
       if(enabled.has("panels")){
         const roof=[[-.55,.997],[.38,.89],[.55,.787]];
@@ -36,6 +48,12 @@ export class WalkerGarnish {
     }
     for(const [side,leg] of [[-1,mech.legs.left],[1,mech.legs.right]] as const){
       const hip=attach(leg.hip,[1.18,1.15,1.12]),knee=attach(leg.knee,[1.18,1.15,1.12]);
+      if(enabled.has("viking")){
+        for(let i=0;i<3;i++)box(knee,i===1?"trim":"armor",[.38-i*.035,.23,.055],[0,-.27-i*.23,.245]);
+        // Angular inlaid rune: a stem and two diagonal branches.
+        box(knee,"sensor",[.018,.19,.014],[0,-.50,.282]);
+        for(const sign of [-1,1]){const rune=box(knee,"sensor",[.018,.11,.014],[.032,-.46+sign*.035,.282]);rune.rotation.z=sign*.72;}
+      }
       if(enabled.has("footGuards")){
         const foot=attach(leg.ankle,[1.18,1,1.20]);
         for(const edge of [-1,1])box(foot,"frame",[.27,.045,.25],[edge*.23,-.102,.42]);
@@ -52,6 +70,15 @@ export class WalkerGarnish {
     }
     for(const [side,arm] of [[-1,mech.arms.left],[1,mech.arms.right]] as const){
       const gun=attach(arm.elbow,[.94,.94,.94]);
+      if(enabled.has("viking")){
+        const shield=add(gun,"trim",new THREE.CylinderGeometry(.29,.29,.055,16),[side*.27,0,.22]);shield.rotation.z=Math.PI/2;
+        const face=add(gun,"frame",new THREE.CylinderGeometry(.245,.245,.064,16),[side*.30,0,.22]);face.rotation.z=Math.PI/2;
+        const boss=add(gun,"steel",new THREE.SphereGeometry(.09,12,8),[side*.35,0,.22]);boss.scale.x=.5;
+        for(const angle of [0,Math.PI/2,Math.PI,Math.PI*1.5]){
+          const stud=add(gun,"accent",new THREE.SphereGeometry(.024,8,6),[side*.34,Math.sin(angle)*.21,.22+Math.cos(angle)*.21]);
+          stud.scale.x=.5;
+        }
+      }
       if(enabled.has("weaponPods"))box(gun,"frame",[.19,.21,.34],[side*.25,-.035,.13]);
       if(enabled.has("panels"))box(gun,"trim",[.23,.035,.48],[0,.26,.25]);
       if(enabled.has("markings"))for(let i=0;i<3;i++)box(gun,"accent",[.05,.018,.025],[-.08+i*.08,.20,.65]);

@@ -22,7 +22,7 @@ try{
   const slots={};model.scene.traverse(n=>{if(n.isMesh){const m=n.material;slots[m.userData.skinSlot]={name:m.name,color:m.color.getHexString()};}});
   return {slots,clips:model.animations.map(c=>c.name)};
  });
- assert.equal(exported.slots.armor.color,'d8e4e5');assert.equal(exported.slots.trim.color,'ef682c');assert.equal(Object.keys(exported.slots).length,6);
+ assert.equal(exported.slots.armor.color,'d8e4e5');assert.equal(exported.slots.trim.color,'a8793c');assert.equal(Object.keys(exported.slots).length,6);
  assert.deepEqual(exported.clips,['idle','walk','aim']);
  await page.locator('[data-skin="base"]').click();
  const downloadPromise=page.waitForEvent('download');await page.locator('#export').click();const download=await downloadPromise;

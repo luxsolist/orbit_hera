@@ -3,6 +3,17 @@ import * as THREE from "three";
 import {WalkerMech} from "../src/assets/WalkerMech";
 import {WalkerThrusters} from "../src/assets/WalkerThrusters";
 describe("directional body rocket exhaust",()=>{
+  it("keeps ground running unpowered and uses front thrust to brake",()=>{
+    const mech=new WalkerMech(),jets=new WalkerThrusters(mech);
+    try{
+      const state={dashPowered:false,dashDirectionX:0,dashDirectionZ:1,grounded:true,velocityX:0,velocityZ:50/3.6};
+      jets.update(.1,state);
+      expect(jets.ports.filter(p=>p.flame.visible)).toHaveLength(0);
+      jets.update(.1,{...state,dashing:true,velocityZ:300/3.6});
+      expect(jets.ports.filter(p=>p.flame.visible)).toHaveLength(2);
+      expect(jets.ports.filter(p=>p.flame.visible).every(p=>p.normal.z>0)).toBe(true);
+    }finally{jets.dispose();mech.dispose();}
+  });
   it("keeps the belly mount on the pelvis while aiming the torso",()=>{
     const mech=new WalkerMech(),jets=new WalkerThrusters(mech);
     try{

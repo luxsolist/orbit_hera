@@ -18,7 +18,7 @@ renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFi
 renderer.toneMappingExposure=1.12;stage.prepend(renderer.domElement);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x081019);
 scene.fog=new THREE.FogExp2(0x081019,.045);
-const camera=new THREE.PerspectiveCamera(22,1,.05,100);
+const camera=new THREE.PerspectiveCamera(26,1,.05,100);
 const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.45,.18);
 controls.enableDamping=true;controls.minDistance=3;controls.maxDistance=15;controls.maxPolarAngle=Math.PI*.53;
 const pmrem=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();
@@ -71,7 +71,7 @@ const ink=tile.getContext("2d")!;ink.fillStyle="#101e29";ink.fillRect(0,0,128,12
 const floorMap=new THREE.CanvasTexture(tile);floorMap.colorSpace=THREE.SRGBColorSpace;floorMap.wrapS=floorMap.wrapT=THREE.RepeatWrapping;floorMap.repeat.set(100,100);floorMap.anisotropy=renderer.capabilities.getMaxAnisotropy();
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({map:floorMap,roughness:.9}));floor.rotation.x=-Math.PI/2;floor.position.y=-.04;floor.receiveShadow=true;floor.visible=false;scene.add(floor);
 const readout=document.getElementById("motionStats")!;
-document.getElementById("parameters")!.textContent=`전진 ${spec.move.speed.toFixed(2)} · 후진 ${(directionalSpeed(0,1,{x:0,z:-1},spec.move.speed,spec.move.backSpeed,spec.move.strafeSpeed)).toFixed(2)} · 좌우 ${(directionalSpeed(1,0,{x:0,z:-1},spec.move.speed,spec.move.backSpeed,spec.move.strafeSpeed)).toFixed(2)} m/s\n점프 ${spec.move.jump.velocity} m/s · 대시 최고 전 ${spec.dash!.speed} / 후 ${spec.dash!.backSpeed} / 옆 ${spec.dash!.strafeSpeed} m/s · 추진 ${spec.dash!.duration}초\n대시 재사용 ${spec.dash!.cooldown}초 · 격자 2m`;
+document.getElementById("parameters")!.textContent=`전진 ${spec.move.speed.toFixed(2)} · 후진 ${(directionalSpeed(0,1,{x:0,z:-1},spec.move.speed,spec.move.backSpeed,spec.move.strafeSpeed)).toFixed(2)} · 좌우 ${(directionalSpeed(1,0,{x:0,z:-1},spec.move.speed,spec.move.backSpeed,spec.move.strafeSpeed)).toFixed(2)} m/s\n점프 ${spec.move.jump.velocity.toFixed(2)} m/s · 대시 최고 전 ${spec.dash!.speed.toFixed(2)} / 후 ${(spec.dash!.backSpeed??spec.dash!.speed).toFixed(2)} / 옆 ${(spec.dash!.strafeSpeed??spec.dash!.speed).toFixed(2)} m/s · 추진 ${spec.dash!.duration}초\n대시 재사용 ${spec.dash!.cooldown}초 · 격자 2m`;
 function startMotion(){
   frozen=false;mode="walk";
   for(const id of ["idle","walk","aim"])document.getElementById(id)!.setAttribute("aria-pressed",String(id==="walk"));
@@ -84,7 +84,7 @@ function stopMotion(){
   for(const id of ["idle","walk","aim"])document.getElementById(id)!.setAttribute("aria-pressed",String(id==="idle"));
   player=new PlayerController(input,arena,1,spec);animator=new WalkerMotionAnimator();
   mech.position.y=0;followHeight=0;thrusters.update(1,{dashPowered:false,dashDirectionX:0,dashDirectionZ:0});floor.visible=false;ground.visible=ring.visible=true;
-  controls.target.set(0,1.45,.18);camera.fov=22;camera.updateProjectionMatrix();view("threeQuarter");
+  controls.target.set(0,1.45,.18);camera.fov=26;camera.updateProjectionMatrix();view("threeQuarter");
 }
 for(const [id,key] of [["forward","KeyW"],["backward","KeyS"],["left","KeyA"],["right","KeyD"]]){
   document.getElementById(id)!.onclick=()=>{startMotion();autoKey=key;};

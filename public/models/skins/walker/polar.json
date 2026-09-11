@@ -3,17 +3,17 @@
   "id": "polar",
   "modelId": "android-01",
   "name": "폴라리스",
-  "description": "백색 세라믹 장갑과 주황색 구조대 표식",
+  "description": "서리빛 장갑, 청동 테두리, 뿔 장식과 원형 방패를 두른 바이킹 스킨",
   "materials": {
     "armor": {
       "color": "#d8e4e5",
-      "roughness": 0.72,
-      "metalness": 0.18
+      "roughness": 0.42,
+      "metalness": 0.6
     },
     "trim": {
-      "color": "#ef682c",
-      "roughness": 0.48,
-      "metalness": 0.38
+      "color": "#a8793c",
+      "roughness": 0.32,
+      "metalness": 0.8
     },
     "frame": {
       "color": "#23323e",
@@ -26,9 +26,9 @@
       "metalness": 0.88
     },
     "accent": {
-      "color": "#ffae32",
-      "roughness": 0.42,
-      "metalness": 0.35
+      "color": "#e6d7b4",
+      "roughness": 0.46,
+      "metalness": 0.15
     },
     "sensor": {
       "color": "#56dfff",
@@ -40,6 +40,7 @@
   },
   "garnish": [
     "panels",
-    "markings"
+    "fasteners",
+    "viking"
   ]
 }
