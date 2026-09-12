@@ -28,8 +28,8 @@
   "move": {
     "mode": "walk",
     "speed": 13.88888888888889,
-    "groundAccel": 4,
-    "airAccel": 2,
+    "groundAccel": 18,
+    "airAccel": 10,
     "jump": {
       "velocity": 27.77777777777778,
       "riseGravity": 28,

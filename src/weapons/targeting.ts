@@ -92,3 +92,11 @@ export function nearestVisibleInCone(
   for (const t of cands) if (!blocked(t.index)) return t;
   return null;
 }
+
+/** Test occlusion only for in-cone candidates, best alignment first. */
+export function bestVisibleAlignedDir(origin: Vec3, aimDir: Vec3, positions: ReadonlyArray<Vec3>,
+  range: number, coneCos: number, blocked: (index: number) => boolean): Vec3 | null {
+  const candidates = coneTargets(origin, aimDir, positions, range, coneCos).sort((a,b)=>b.cos-a.cos);
+  for (const candidate of candidates) if (!blocked(candidate.index)) return candidate.dir;
+  return null;
+}

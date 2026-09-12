@@ -1,5 +1,7 @@
 # 02 · 드론 & 무기 (현행 로스터 + 전투 수치)
 
+> 2026-09-12: 3인칭 통합의 카메라·실제 렌즈 발사·전방 자동사격 규칙은 [12-third-person](12-third-person.md)을 우선한다. 아래의 360도 자동사격 설명은 이전 사양이다.
+
 스키마는 [01-data-schemas.md](01-data-schemas.md). 이 문서는 **현재 배치된 실제 값**과 전투 모델을
 정리한다. 값 출처는 `public/drones/*.json`, `public/weapons/*.json`.
 

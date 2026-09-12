@@ -428,6 +428,7 @@ export class CoreEnemy {
   private staggerLeft = 0; // 동시 경직 잔여(s) — 어디선가 동료가 처치되면 전 개체가 함께 움찔
   private bobPhase = Math.random() * Math.PI * 2;
   private speed: number;
+  get movementSpeed():number {return this.speed;}
   private attackCooldown = 0;
   private baseScale: number;
   private maxScale: number; // 흡수 성장 시각 상한(초기 baseScale 의 1.5배)
@@ -763,15 +764,16 @@ export class CoreEnemy {
   }
 
   /** 공격 가능 여부 (사거리 + 쿨다운 + 경직/동결 게이트). cooldown 으로 접촉/드레인/낙인탄 간격을 분기. */
-  tryAttack(playerPos: THREE.Vector3, range: number, cooldown = 1.0): boolean {
+  canAttack(playerPos: THREE.Vector3, range: number): boolean {
     if (this.state !== "alive" || this.attackCooldown > 0 || this.staggerLeft > 0 || this.isZenoFrozen || this.phasedOut) return false;
-    if (this.leapRecover > 0) return false; // 착지 직후 — 회피 창(도약이 곧 피해가 되지 않게)
-    const d = this.group.position.distanceTo(playerPos);
-    if (d <= range) {
-      this.attackCooldown = cooldown;
-      return true;
-    }
-    return false;
+    if (this.leapRecover > 0) return false;
+    return this.group.position.distanceToSquared(playerPos) <= range * range;
+  }
+
+  tryAttack(playerPos: THREE.Vector3, range: number, cooldown = 1.0): boolean {
+    if (!this.canAttack(playerPos, range)) return false;
+    this.attackCooldown = cooldown;
+    return true;
   }
 
   dispose() {

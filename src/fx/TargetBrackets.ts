@@ -120,7 +120,12 @@ export class TargetBrackets {
     const w = window.innerWidth, h = window.innerHeight;
     const r2 = RANGE * RANGE;
     let n = 0;
-    for (const m of markers) {
+    const occupied: { left: number; top: number }[] = [];
+    // Locked target receives label priority; nearby threats follow.
+    const ordered = [...markers].sort((a, b) =>
+      Number(b.pos === lockedPos) - Number(a.pos === lockedPos) ||
+      a.pos.distanceToSquared(_camPos) - b.pos.distanceToSquared(_camPos));
+    for (const m of ordered) {
       if (n >= MAX) break;
       const d2 = m.pos.distanceToSquared(_camPos);
       if (d2 > r2) continue;
@@ -143,7 +148,10 @@ export class TargetBrackets {
       if (label) {
         _top.copy(m.pos).addScaledVector(_camUp, m.radius * MARGIN).project(camera);
         const scr = projectToScreen(_top, w, h);
-        if (scr.visible) {
+        const fits = scr.visible && scr.left >= 32 && scr.left <= w - 32 && scr.top >= 24 && scr.top <= h - 24;
+        const overlaps = occupied.some(p => Math.abs(p.left - scr.left) < 72 && Math.abs(p.top - scr.top) < 24);
+        if (fits && !overlaps && occupied.length < 12) {
+          occupied.push(scr);
           label.style.display = "block";
           label.style.left = scr.left.toFixed(1) + "px";
           label.style.top = scr.top.toFixed(1) + "px";

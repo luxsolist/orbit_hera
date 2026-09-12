@@ -56,6 +56,7 @@ export class MobileControls {
   static isTouchDevice(): boolean {
     if (typeof window === "undefined") return false;
     return (
+      new URLSearchParams(window.location.search).get("controls") === "touch" ||
       window.matchMedia("(pointer: coarse)").matches ||
       "ontouchstart" in window ||
       (navigator.maxTouchPoints ?? 0) > 0
@@ -263,7 +264,7 @@ export class MobileControls {
   private bindButtons() {
     // 고정 전투: 기본무기 수동발사(좌클릭과 동일 경로) / 특수(엣지)
     this.bindButton(this.btnFire,
-      () => { this.input.fireHeld = true; },
+      () => { this.input.fireHeld = true; this.input.firePressed = true; },
       () => { this.input.fireHeld = false; });
     this.bindButton(this.btnSpecial,
       () => { this.input.specialPressed = true; },
@@ -301,15 +302,27 @@ export class MobileControls {
   }
 
   private bindButton(el: HTMLElement, down: () => void, up: () => void) {
-    el.addEventListener("touchstart", (e) => {
+    let pointer: number | null = null;
+    el.style.touchAction = "none";
+    el.addEventListener("pointerdown", (e) => {
+      if (pointer !== null || e.button !== 0) return;
       e.stopPropagation();
       e.preventDefault();
+      pointer = e.pointerId;
+      el.setPointerCapture(pointer);
       el.classList.add("is-pressed");
       down();
-    }, { passive: false });
-    const release = () => { el.classList.remove("is-pressed"); up(); };
-    el.addEventListener("touchend", (e) => { e.stopPropagation(); release(); });
-    el.addEventListener("touchcancel", (e) => { e.stopPropagation(); release(); });
+    });
+    const release = (e: PointerEvent) => {
+      if (e.pointerId !== pointer) return;
+      e.stopPropagation();
+      pointer = null;
+      el.classList.remove("is-pressed");
+      up();
+    };
+    el.addEventListener("pointerup", release);
+    el.addEventListener("pointercancel", release);
+    el.addEventListener("lostpointercapture", release);
   }
 
   private isOverlayVisible(): boolean {

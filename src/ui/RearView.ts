@@ -53,7 +53,11 @@ export class RearView {
     r.setScissorTest(true);
     r.setScissor(x, y, rearW, rearH);
     r.setViewport(x, y, rearW, rearH);
-    r.render(this.scene, this.camera);
+    const body = this.scene.getObjectByName("player_drone");
+    const wasVisible = body?.visible;
+    if (body) body.visible = false;
+    try { r.render(this.scene, this.camera); }
+    finally { if (body) body.visible = wasVisible!; }
     r.setScissorTest(false);
     r.setViewport(0, 0, winW, winH);
     r.autoClear = prevAutoClear;

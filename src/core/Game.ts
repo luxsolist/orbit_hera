@@ -1,3 +1,6 @@
+import {selectSpawn} from "../player/SpawnPlanner";
+import {renderPixelRatio} from "./renderQuality";
+import { DronePresentation } from "../player/DronePresentation";
 import * as THREE from "three";
 import type { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { Input } from "./Input";
@@ -72,6 +75,7 @@ interface DeployInfo {
 interface Session {
   world: GameWorld;
   player: PlayerController;
+  droneView: DronePresentation;
   enemies: EnemyManager;
   beam: FrequencyBeam;
   special: SpecialWeapon;
@@ -98,6 +102,8 @@ export class Game {
   private mobile: MobileControls;
   private hud: HUD;
   private sfx = new Sfx();
+  private pendingRespawn=false;
+  private respawnRetry=0;
   private diag = new Diagnostics();
 
   // 전장 선택 후 원자적으로 생성되는 플레이 세션(전부 존재 or 전부 없음)
@@ -137,8 +143,7 @@ export class Game {
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     // 터치/iPad(Retina)는 DPR 캡을 낮춰 프레임버퍼·VRAM 부하 완화(반복 실행 시 GPU 스톨/멈춤 방지)
-    const dprCap = navigator.maxTouchPoints > 0 ? 1.5 : 2;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, dprCap));
+    this.renderer.setPixelRatio(renderPixelRatio(window.innerWidth,window.innerHeight,window.devicePixelRatio));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -162,6 +167,11 @@ export class Game {
     this.backBtn = byId("backBtn") as HTMLButtonElement;
     this.startBtn.addEventListener("click", () => this.startOrResume());
     this.backBtn.addEventListener("click", () => this.changeMap());
+    const pauseButton=document.createElement("button");
+    pauseButton.id="pauseGame";pauseButton.textContent="Ⅱ 일시정지";pauseButton.hidden=true;
+    pauseButton.style.cssText="position:fixed;left:16px;bottom:16px;z-index:40;background:#102630cc;color:#d5eff4;border:1px solid #48646a;border-radius:6px;padding:9px 12px;cursor:pointer";
+    document.body.append(pauseButton);pauseButton.addEventListener("click",()=>this.pauseGame());
+    window.addEventListener("keydown",e=>{if(e.code==="Escape" && this.mobile.enabled)this.pauseGame();});
     this.menu = new MenuScreen({
       onDeploy: (mapId, droneId, peaceful) => void this.selectMap(mapId, droneId, peaceful),
       onPlayIntro: () => this.playIntro(),
@@ -211,6 +221,7 @@ export class Game {
 
   /** HUD + 모바일 가상 컨트롤을 함께 표시/숨김(플레이 중에만 표시). */
   private setPlayActive(active: boolean) {
+    const pauseButton=document.getElementById("pauseGame");if(pauseButton)pauseButton.hidden=!active;
     this.hud.setActive(active);
     this.mobile.setActive(active);
   }
@@ -333,7 +344,8 @@ export class Game {
     if (specialWeapon.type === "stream") special = new SpecialStream(this.scene, player, enemies, specialWeapon, this.sfx);
     else if (specialWeapon.type === "barrage") special = new SpecialBarrage(this.scene, player, enemies, specialWeapon, this.sfx);
     else return this.failToMenu("특수무기 타입 오류 — " + specialWeapon.type);
-    const composer = createComposer(this.renderer, this.scene, player.camera);
+    const droneView = new DronePresentation(this.scene, player, this.renderer);
+    const composer = createComposer(this.renderer, this.scene, droneView.camera);
     const lens = addLensDistortPass(composer); // 중력 렌즈 왜곡(§2.7.1) — 위상 이탈 개체 배경 일렁임
     lens.setAspect(window.innerWidth / Math.max(1, window.innerHeight));
     const rearView = new RearView(this.renderer, this.scene, player);
@@ -367,17 +379,59 @@ export class Game {
       wall = new EnergyWall(this.scene, sx, sz, mission.zoneRadius, gy - 200, gy + 1600);
       this.wallParams = { sx, sz, y0: gy - 200, y1: gy + 1600 }; // 구역 축소 시 벽 재생성용
     } else this.wallParams = null;
-    this.session = { world, player, enemies, beam, special, composer, lens, rearView, minimap, brackets, instance, wall, killBurst };
+    this.pendingRespawn=false;this.respawnRetry=0;
+    this.session = { world, player, droneView, enemies, beam, special, composer, lens, rearView, minimap, brackets, instance, wall, killBurst };
+    this.installSkinPicker(droneView);
+    const pathHint=document.createElement("div");pathHint.id="shotPathHint";pathHint.textContent="무기 앞 장애물";
+    pathHint.style.cssText="position:absolute;left:50%;top:calc(50% + 30px);transform:translateX(-50%);font-size:12px;color:#ffbb76;pointer-events:none";
+    pathHint.hidden=true;document.getElementById("hud")!.append(pathHint);
+    const shieldHint=document.createElement("div");shieldHint.id="spawnProtectionHint";shieldHint.hidden=true;shieldHint.style.cssText="position:absolute;left:50%;top:62%;transform:translateX(-50%);color:#9deaff;font-size:14px;pointer-events:none";document.getElementById("hud")!.append(shieldHint);
+    document.getElementById("respawnCheck")?.remove();
+    if(this.diag.enabled){
+      const check=document.createElement("button");check.id="respawnCheck";
+      check.textContent="리스폰 확인 (횟수 소모)";
+      check.style.cssText="position:absolute;right:16px;top:180px;pointer-events:auto;padding:8px;background:#183442;color:#bdefff;border:1px solid #56849c";
+      check.onclick=()=>{if(this.state==="playing"&&!player.isDead)player.hp=0;};
+      document.getElementById("hud")!.append(check);
+    }
     this.applyHudLayout(); // 새 미니맵을 현재 화면 비례로 동기화
+    this.diag.beginCombat(`${player.spec.id} / ${this.peaceful ? "탐방" : "전투"}`);
     this.diag.snapshot(this.renderer, "battle-built"); // 세션(컴포저 등) 생성 직후 — 누수 추적 핵심 지점
     this.wireEvents(this.session);
     this.beginPlay();
+  }
+
+  private installSkinPicker(view: DronePresentation) {
+    document.getElementById("battleSkin")?.remove();
+    const label = document.createElement("label");
+    label.id = "battleSkin";
+    label.textContent = "기체 스킨 ";
+    label.style.cssText = "display:block;margin:12px auto;color:#bed7df;font-size:14px";
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", "기체 스킨");
+    select.style.cssText = "background:#14232c;color:#e2f2f6;border:1px solid #466273;padding:8px;border-radius:6px";
+    for (const [id,name] of [["base","기본형"],["obsidian","옵시디언"],["polar","폴라리스"],["dune","듄 센티널"]]) {
+      const option = document.createElement("option"); option.value=id;option.textContent=name;select.append(option);
+    }
+    const key = "core.skin." + this.session!.player.spec.id;
+    try { select.value=localStorage.getItem(key) ?? "base"; } catch { /* storage optional */ }
+    if (!select.value) select.value="base";
+    const apply = async () => {
+      select.disabled=true;
+      try { await view.setSkin(select.value); view.update(0); try {localStorage.setItem(key,select.value);} catch {} }
+      catch { select.value="base"; }
+      finally {select.disabled=false;}
+    };
+    select.addEventListener("change",()=>{void apply();});
+    label.append(select);this.startBtn.before(label);
+    if(select.value!=="base")void apply();
   }
 
   private beginPlay() {
     const s = this.session;
     if (!s) return;
     s.player.reset();
+    s.droneView.update(0, true);
     // 작전구역(미션 zoneRadius, 중심 = 스폰) — 플레이어·플라즈모이드 모두 이 원 밖으로 못 나간다. 탐방은 무제한.
     const m = s.instance.mission;
     if (!this.peaceful && m.zoneRadius > 0) {
@@ -391,6 +445,10 @@ export class Game {
     // 적 투입 — deploy 모델 매핑은 runDeploy(훅 ①⑤⑥ 공용). phased 후속 페이즈는 GameInstance 가 구동.
     if (this.peaceful) s.enemies.start(false);
     else runDeploy(s.enemies, m.deploy, true);
+    const safeStart=selectSpawn(s.player,s.enemies.spawnThreats,(x,z)=>s.enemies.unsafeSpawn(x,z),true);
+    if(safeStart)s.player.respawn(3,safeStart);
+    else s.player.spawnProtection=3;
+    s.droneView.update(0,true);
     // 변조 레이어(훅 ④⑥) — 투입 후 지정(start*/clear 가 기본값으로 리셋하므로 반드시 이후에)
     s.enemies.setAggro(m.modifiers?.aggro ?? "player");
     s.enemies.setBuildingBrands(!!m.modifiers?.buildingBrands); // 공성 낙인(패턴 17)
@@ -437,7 +495,7 @@ export class Game {
       this.input.locked = true;
       this.mobile.attemptLandscapeLock();
     } else {
-      this.input.requestLock();
+      void this.requestPlayLock();
     }
   }
 
@@ -489,9 +547,10 @@ export class Game {
     s.enemies.onWaveChange = (w) => this.hud.setWave(w);
     s.enemies.onPlayerHit = (_dmg, source) => {
       this.hud.flashDamage();
+      s.droneView.hit();
       this.sfx.sizzle(); // 접촉 피해 — 달군 철판에 물 닿는 "치익" 기화음
       s.player.shake(0.012); // 피격 셰이크
-      if (source) this.hud.flashDamageFrom(s.player.camera, source); // 피해 방향 인디케이터
+      if (source) this.hud.flashDamageFrom(s.droneView.camera, source); // 피해 방향 인디케이터
     };
     // 심판 파문이 내 위치를 통과 — 화면 펄스 + 저음 + 셰이크(낙인 피해면 강하게)
     s.enemies.onSweepPass = (branded) => {
@@ -506,7 +565,7 @@ export class Game {
     const bc = s.world.buildings;
     if (bc) bc.onDestroyed = (isLandmark, x, y, z) => {
       this.hud.setDestroyed(bc.destroyedBuildings, bc.destroyedLandmarks);
-      this.hud.flashLossFrom(s.player.camera, { x, y, z });
+      this.hud.flashLossFrom(s.droneView.camera, { x, y, z });
       this.sfx.reckoning(isLandmark);
       s.player.shake(isLandmark ? 0.022 : 0.01);
     };
@@ -541,7 +600,7 @@ export class Game {
       this.hideOverlay();
       this.setPlayActive(true);
       if (this.mobile.enabled) this.input.locked = true;
-      else this.input.requestLock();
+      else void this.requestPlayLock();
     }
   }
 
@@ -554,7 +613,7 @@ export class Game {
     this.renderer.setAnimationLoop(null);
     this.intro?.dispose();
     this.menuBg?.dispose();
-    if (this.session) { disposeComposer(this.session.composer); this.session.wall?.dispose(); this.session.killBurst.clear(); }
+    if (this.session) { this.session.droneView.dispose(); disposeComposer(this.session.composer); this.session.wall?.dispose(); this.session.killBurst.clear(); }
     this.renderer.forceContextLoss(); // GPU 컨텍스트 즉시 반납(iOS 회수 촉진)
     this.renderer.dispose();
   }
@@ -590,6 +649,23 @@ export class Game {
     } catch { /* 손상된 값 — 메뉴 유지 */ }
   }
 
+  private pauseGame() {
+    if(this.state!=="playing")return;
+    this.state="paused";this.input.locked=false;
+    if(document.pointerLockElement)document.exitPointerLock();
+    this.showPanel("PAUSED", "스킨을 선택하거나 전투를 계속할 수 있습니다", "재접속 / RESUME");
+    this.setPlayActive(false);
+  }
+
+  private async requestPlayLock() {
+    const granted = await this.input.requestLock();
+    if (!granted && this.state === "playing") {
+      this.state="paused";
+      this.showPanel("READY", "화면을 클릭해 드론에 접속하세요", "접속 / PLAY");
+      this.setPlayActive(false);
+    }
+  }
+
   private onPointerLockChange() {
     if (this.mobile.enabled) return;
     if (!this.input.locked && this.state === "playing") {
@@ -600,7 +676,8 @@ export class Game {
   }
 
   private frame() {
-    const rawDt = Math.min(this.clock.getDelta(), 0.05);
+    const frameSeconds=this.clock.getDelta();
+    const rawDt = Math.min(frameSeconds, 0.05);
     let dt = rawDt;
     // 히트스톱 — 시뮬레이션만 정지(dt=0). 시점 회전(마우스 델타)은 dt 무관이라 조작감 유지.
     if (this.hitstopLeft > 0) {
@@ -627,14 +704,20 @@ export class Game {
     const s = this.session;
     if (!s) return; // 전장 빌드 전(로딩)
 
+    const worldPos=s.player.worldPosition;
+    s.world.update(worldPos.x,worldPos.z,worldPos.y);
     if (this.state === "playing" && this.input.locked && !this.mobile.isBlocked) {
+      this.respawnRetry=Math.max(0,this.respawnRetry-dt);
       s.player.update(dt);
-      const pp = s.player.worldPosition;
-      s.world.update(pp.x, pp.z, pp.y); // 그림자 추종 + (스트리밍) 청크 로드/언로드
+      s.droneView.update(dt);
       s.wall?.update(dt); // 작전구역 에너지 벽 애니메이션
       this.tickZoneShrink(s, dt); // 구역 축소 변조(훅 ⑥) — 주기 도래 시 반경 축소 + 벽 재생성
-      s.beam.update(dt, this.input.fireHeld);
+      if(this.input.fireHeld||this.input.firePressed||this.input.specialPressed)s.player.cancelSpawnProtection();
+      const protectionHint=document.getElementById("spawnProtectionHint");
+      if(protectionHint){protectionHint.hidden=s.player.spawnProtection<=0;protectionHint.textContent=`보호막 ${s.player.spawnProtection.toFixed(1)}초 · 직접 사격 시 해제`;}
+      s.beam.update(dt, this.input.fireHeld || this.input.firePressed);
       s.special.update(dt, this.input.specialPressed);
+      const pathHint=document.getElementById("shotPathHint");if(pathHint)pathHint.hidden=s.player.blockedShotTime<=0;
       s.enemies.update(dt);
       s.killBurst.update(dt); // 처치 파편 낙하·소산
 
@@ -648,7 +731,7 @@ export class Game {
         } else {
           // 락온 없음 → 조준 콘(30°) 안 최적 대상 선택
           const target = s.enemies.bestTargetInView(
-            s.player.camera.position,
+            s.droneView.camera.position,
             s.player.getAimDirection(),
             30,
           );
@@ -660,8 +743,8 @@ export class Game {
       if (s.player.lockOnTarget === null) this.hud.setLockOn(false);
 
       const lockedPos = s.player.lockOnTarget ? s.player.lockOnTarget.group.position : null;
-      s.brackets.update(s.player.camera, s.enemies.aliveMarkers, lockedPos); // 코너 브래킷(락온=빨강·그 외 노랑)
-      this.hud.setEnemyDirections(s.player.camera, s.enemies.aliveWorldPositions); // 조준선 둘레 방향 화살표
+      s.brackets.update(s.droneView.camera, s.enemies.aliveMarkers, lockedPos); // 코너 브래킷(락온=빨강·그 외 노랑)
+      this.hud.setEnemyDirections(s.droneView.camera, s.enemies.aliveWorldPositions); // 조준선 둘레 방향 화살표
       this.hud.setReckoning(s.enemies.sweepWarnLeft, s.enemies.brandCount(0)); // 낙인/심판 파문 경고
       this.hud.update(rawDt); // HUD 페이드는 히트스톱 무관(실시간)
 
@@ -673,6 +756,7 @@ export class Game {
       this.mobile.setSpecialState(cdReady, s.special.isActive, cdRemaining);
 
       // 인스턴스: 미션 평가(타이머/목표/종료). 종료 전이 시 onEnd→endMission 으로 state 가 바뀐다.
+      this.diag.sampleCombat(frameSeconds,dt,s.enemies.killCount,s.player.freq/s.player.maxFreq);
       s.instance.update(dt);
       this.tickDirector(s, dt); // LLM 감독 파일럿(§10 단계 1) — 주기 경계에서 스냅샷 → 행동 적용
       this.tickDirectorMods(s, dt); // 감독 변조 만료 → 미션 기준값 복귀(영구 고착 방지)
@@ -685,10 +769,11 @@ export class Game {
     }
 
     // 중력 렌즈 왜곡(§2.7.1) — 위상 이탈 개체의 화면상 위치로 왜곡 점 갱신(플레이 중일 때만 무의미하지 않음)
-    const phased = s.enemies.phasedMarkers(s.player.camera.position);
-    s.lens.setPoints(projectLensPoints(phased, s.player.camera));
+    const phased = s.enemies.phasedMarkers(s.droneView.camera.position);
+    s.lens.setPoints(projectLensPoints(phased, s.droneView.camera));
 
     this.input.endFrame();
+    s.enemies.visibility.update(s.droneView.camera, s.player.worldPosition);
     s.composer.render();
     if (this.state === "playing") {
       s.rearView.render();
@@ -805,22 +890,31 @@ export class Game {
   }
 
   /**
-   * 플레이어(기체) 파괴 — 인스턴스 리스폰 예산을 조회한다. 남으면 **제자리 부활**(적/미션/처치 유지)로
+   * 플레이어(기체) 파괴 — 인스턴스 리스폰 예산을 조회한다. 남으면 **안전 위치에서 부활**(적/미션/처치 유지)로
    * 전투를 잇고, 소진이면 인스턴스를 종료 평가(→ onEnd→endMission 으로 미션 실패 패널).
    */
   private handlePlayerDeath() {
     const s = this.session;
     if (!s) return;
+    if(this.pendingRespawn && this.respawnRetry>0)return;
+    if(!this.pendingRespawn){this.diag.combatDeath();s.special.abort();}
     // 사망 시 락온 해제
     s.player.setLockOn(null);
     this.hud.setLockOn(false);
-    if (s.instance.registerDeath()) {
-      s.player.respawn(); // 스폰 복귀 + 짧은 무적. 적/미션은 그대로 진행
+    if (this.pendingRespawn || s.instance.registerDeath()) {
+      this.pendingRespawn=true;
+      const safe=selectSpawn(s.player,s.enemies.spawnThreats,(x,z)=>s.enemies.unsafeSpawn(x,z));
+      if(!safe){this.respawnRetry=.5;return;}
+      this.pendingRespawn=false;
+      s.enemies.clearPlayerSpawnEffects();
+      s.player.respawn(3,safe);
+      s.droneView.update(0,true); // 스폰 복귀 + 짧은 무적. 적/미션은 그대로 진행
       // 특수무기 발동 중 사망하면 DrainCycle 이 active 인 채 남는다 → 리스폰으로 가득 찬 게이지가
       // 입력 없이 그대로 다시 소진된다(배러지 60/s = 2초). reset 이 아니라 abort — 쿨다운은 정상
       // 소모시켜 사망이 특수무기를 환급하지 않게 한다.
       s.special.abort();
       this.hud.flashDamage();
+      s.droneView.hit();
       return;
     }
     s.instance.finalize(); // 리스폰 소진 → 미션 실패 전이(onEnd→endMission)
@@ -909,9 +1003,13 @@ export class Game {
   private onResize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
+    this.renderer.setPixelRatio(renderPixelRatio(w,h,window.devicePixelRatio));
     if (this.session) {
       this.session.player.camera.aspect = w / h;
+      this.session.droneView.camera.aspect = w / h;
+      this.session.droneView.camera.updateProjectionMatrix();
       this.session.player.camera.updateProjectionMatrix();
+      this.session.composer.setPixelRatio(this.renderer.getPixelRatio());
       this.session.composer.setSize(w, h);
       this.session.lens.setAspect(w / h);
     }

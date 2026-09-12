@@ -123,12 +123,17 @@ export interface EmitterShot {
   origin: THREE.Vector3; // 시점(카메라) 위치
   dir: THREE.Vector3;
   muzzleOffsets: number[];
+  physicalMuzzles?: THREE.Vector3[];
+  aimMuzzles?: (target: THREE.Vector3) => THREE.Vector3[];
+  bodyOrigin?: THREE.Vector3;
+  exactOrigin?: boolean;
   baseDamage: number;
   falloff: DamageFalloff;
   range: number;
   style: BeamStyle;
   zeno?: ZenoSpec; // 관측 고정(W1) — 적중마다 대상 노출 갱신(지속 조사 감속→동결)
   observe?: { decohere?: boolean; pinSec?: number }; // 수동 관측 사격(W2/§2.2) — 실체화 강제·관측 계류
+  onBlocked?: () => void;
   onHit?: (endPoint: THREE.Vector3, hit: THREE.Intersection, dir: THREE.Vector3) => void;
   onEnemyHit?: (killed: boolean) => void; // 적 명중 확정 후(처치 여부 포함) — 히트스톱 등 손맛 훅
 }
@@ -139,6 +144,30 @@ export interface EmitterShot {
  * FrequencyBeam·SpecialStream 공유(비용 차감·발사음은 호출부 책임). 단일 발사관[0]이면 일반 단발.
  */
 export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
+  if (shot.physicalMuzzles?.length || shot.aimMuzzles) {
+    // Pick the reticle target first; each real lens then traces its own unobstructed path.
+    ctx.raycaster.set(shot.origin, shot.dir);
+    const hit = ctx.raycaster.intersectObjects(ctx.enemies.hitMeshes, false)[0];
+    const end = shot.origin.clone().addScaledVector(shot.dir, shot.range);
+    const t = ctx.world.segmentHitsBuilding(shot.origin.x, shot.origin.y, shot.origin.z, end.x, end.y, end.z);
+    const distance = Math.min(hit?.distance ?? shot.range, t <= 1 ? t*shot.range : shot.range);
+    const target = shot.origin.clone().addScaledVector(shot.dir, distance);
+    // At contact range the camera-facing shell can sit beside/behind a lens.
+    // Converge toward the selected enemy's centre, then trace each lens normally.
+    if(hit && hit.distance<=distance){
+      const enemy=ctx.enemies.enemyFromHit(hit);
+      if(enemy?.group)target.copy(enemy.group.position);
+    }
+    for (const muzzle of shot.aimMuzzles?.(target) ?? shot.physicalMuzzles ?? []) {
+      const body=shot.bodyOrigin;
+      if(body && ctx.world.segmentHitsBuilding(body.x,body.y,body.z,muzzle.x,muzzle.y,muzzle.z)<=1) {shot.onBlocked?.();continue;}
+      const dir = target.clone().sub(muzzle);
+      // Never fire backwards through the drone at a wall between camera and body.
+      if (dir.dot(shot.dir) <= 0) {shot.onBlocked?.();continue;}
+      fireEmitters(ctx, {...shot, origin: muzzle, dir: dir.normalize(), muzzleOffsets: [0], physicalMuzzles: undefined, aimMuzzles: undefined, exactOrigin: true});
+    }
+    return;
+  }
   const n = shot.muzzleOffsets.length;
   // (1) 명중 판정 — 중앙 단일 레이(반드시 조준 대상을 관통 → 작은/쪼그라든 적도 적중)
   ctx.raycaster.set(shot.origin, shot.dir);
@@ -150,6 +179,7 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
   const buildDist = bt <= 1 ? bt * R : Infinity;
   let endPoint: THREE.Vector3;
   if (buildDist < enemyDist) {
+    shot.onBlocked?.();
     // 건물에 막힘 — 빔은 건물 표면에서 멈추고 뒤 적은 피해 없음
     endPoint = o.clone().addScaledVector(d, buildDist);
     // W4 복구 사격 — 납치(부양) 중 건물이면 관측이 존재를 막 위에 다시 고정한다(재안착 가속)
@@ -171,7 +201,7 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
   // (2) 시각 — 발사관마다 좌우 오프셋에서 적중점으로 수렴하는 빔
   const side = sideVector(shot.dir, _side);
   for (const off of shot.muzzleOffsets) {
-    const muzzle = muzzleFrom(_emitOrigin.copy(shot.origin).addScaledVector(side, off), shot.dir);
+    const muzzle = shot.exactOrigin ? shot.origin : muzzleFrom(_emitOrigin.copy(shot.origin).addScaledVector(side, off), shot.dir);
     ctx.beamPool.spawn(muzzle, endPoint, shot.style);
   }
 }

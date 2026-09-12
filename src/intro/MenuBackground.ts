@@ -19,7 +19,7 @@ export class MenuBackground {
   private t = 0;
   private fade: HTMLDivElement;
 
-  constructor(renderer: THREE.WebGLRenderer, private scenes: CutScene[]) {
+  constructor(private renderer: THREE.WebGLRenderer, private scenes: CutScene[]) {
     const size = renderer.getSize(new THREE.Vector2());
     this.camera = new THREE.PerspectiveCamera(60, size.x / Math.max(1, size.y), 0.1, 4000);
     this.composer = createComposer(renderer, this.scene, this.camera);
@@ -61,6 +61,7 @@ export class MenuBackground {
   setSize(w: number, h: number): void {
     this.camera.aspect = w / Math.max(1, h);
     this.camera.updateProjectionMatrix();
+    this.composer.setPixelRatio(this.renderer.getPixelRatio());
     this.composer.setSize(w, h);
   }
 

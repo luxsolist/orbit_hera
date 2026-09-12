@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { EnemyVisibility } from "./EnemyVisibility";
 import { CoreEnemy, chooseTarget, buildBoidGrid, recomputeSteer, advanceGlobalPulse, KILL_STAGGER_SEC, CORE_GEO, SHELL_GEOS, MARKER_TELEGRAPH_SEC, type Boid } from "./CoreEnemy";
 import type { GameWorld } from "../world/GameWorld";
 import type { PlayerController } from "../player/PlayerController";
@@ -166,6 +167,7 @@ interface Target {
  * **고유 아키타입**(rusher/kiter)으로 결정 — 어느 드론이 플레이하든 무관(자기정렬).
  */
 export class EnemyManager {
+  readonly visibility = new EnemyVisibility();
   private enemies: CoreEnemy[] = [];
   private scene: THREE.Scene;
   private world: GameWorld;
@@ -281,6 +283,7 @@ export class EnemyManager {
 
     // 코어 InstancedMesh — 살아있는/디졸브 개체 코어 일괄 렌더(MeshBasic + instanceColor = 발광).
     this.coreInst = new THREE.InstancedMesh(CORE_GEO, new THREE.MeshBasicMaterial(), INST_CAP);
+    this.visibility.apply(this.coreInst.material as THREE.MeshBasicMaterial);
     this.coreInst.frustumCulled = false;
     this.coreInst.count = 0;
     scene.add(this.coreInst);
@@ -288,6 +291,7 @@ export class EnemyManager {
     // 셸 InstancedMesh — 살아있는 적 본체 일괄 렌더 + 레이캐스트 대상. 자체발광(MeshBasic — 조명에 탁해지지 않게)
     // + DoubleSide(코앞 적 내부 적중) + 그림자. **직무별 4형태**(P3 §6.7 — 형태=직무 채널 분리).
     const shellMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+    this.visibility.apply(shellMat);
     const makeShell = (geo: THREE.BufferGeometry) => {
       const m = new THREE.InstancedMesh(geo, shellMat, INST_CAP);
       m.frustumCulled = false;
@@ -381,6 +385,12 @@ export class EnemyManager {
   }
 
   /** 코너 브래킷·체력표시용 — 살아있는 적의 월드 위치 + 시각 반경(= group.scale) + 현재 체력. 위상 이탈 제외(확률 구름). */
+  get spawnThreats() {
+    return this.enemies.filter(e=>e.state==="alive").map(e=>({pos:e.group.position,radius:e.group.scale.x,speed:e.movementSpeed,range:e.role==="kiter"?this.kiterArche.attackRange:3.2}));
+  }
+  clearPlayerSpawnEffects(index=0):void {this.brand.clearPlayer(index);}
+  unsafeSpawn(x:number,z:number):boolean {return this.brand.unsafeSpawn(x,z,this.sweepAnchor());}
+
   get aliveMarkers(): readonly { pos: THREE.Vector3; radius: number; hp: number }[] {
     const out: { pos: THREE.Vector3; radius: number; hp: number }[] = [];
     for (const e of this.enemies) {
@@ -861,8 +871,9 @@ export class EnemyManager {
     const range = drain ? k.attackRange : ATTACK_RANGE;
     const cooldown = drain ? k.drainInterval : 1.0;
     const amount = drain ? k.drainDamage : contactDamage(this.spec, enemy.maxHp);
-    // 드레인빔(원거리)은 건물을 관통 못함 — 표적 플레이어와의 사이가 건물로 막히면 드레인 불가(쿨다운 미소모, 시야 확보 시 재시도).
-    if (drain && player && this.world.segmentHitsBuilding(from.x, from.y, from.z, targetPos.x, targetPos.y, targetPos.z) <= 1) return false;
+    // Reject range/cooldown first; a wall blocks both contact and ranged damage, without spending cooldown.
+    if (!enemy.canAttack(targetPos, range)) return false;
+    if (player && this.world.segmentHitsBuilding(from.x, from.y, from.z, targetPos.x, targetPos.y, targetPos.z) <= 1) return false;
     if (!enemy.tryAttack(targetPos, range, cooldown)) return false;
 
     let landed = false, destroyed = false;

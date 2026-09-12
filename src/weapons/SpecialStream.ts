@@ -7,7 +7,7 @@ import type { StreamSpec, SpecialWeapon } from "./WeaponSpec";
 import { makeGlowTexture, BeamPool, fireEmitters, type BeamStyle } from "./beamFx";
 import { DrainCycle } from "./DrainCycle";
 import { parseHexColor } from "../core/math";
-import { bestAlignedDir } from "./targeting";
+import { bestVisibleAlignedDir } from "./targeting";
 
 // 오버드라이브 스트림(특수) — 발동 시 freq 게이지가 0 이 될 때까지 듀얼 발사관으로 전방 연속 사격.
 // 발사관당 중주파 빔 수준 데미지(거리 falloff). 콘 살포(barrage)와 달리 정면 집중 화력.
@@ -64,6 +64,7 @@ export class SpecialStream implements SpecialWeapon {
   }
 
   update(dt: number, triggerPressed: boolean): void {
+    if (this.player.isDead) { this.abort(); triggerPressed = false; }
     const r = this.cycle.step(dt, triggerPressed, this.player.freq);
     this.player.freqRegenSuppressed = r.active;
     if (r.drain) this.player.freq = Math.max(0, this.player.freq - r.drain);
@@ -74,14 +75,21 @@ export class SpecialStream implements SpecialWeapon {
 
   /** 한 번의 사격 — 에임 어시스트 방향으로 듀얼 발사관 일제 사격(공유 fireEmitters). */
   private fire(): void {
-    const cam = this.player.camera.position;
+    const cam = this.player.aimOrigin;
     const aim = this.player.getAimDirection().clone();
-    const assist = bestAlignedDir(cam, aim, this.enemies.aliveWorldPositions, this.spec.range, this.assistCos);
+    const world=this.player.gameWorld;
+    const positions=this.enemies.aliveWorldPositions;
+    const assist = bestVisibleAlignedDir(cam, aim, positions, this.spec.range, this.assistCos, i => {
+      const p=positions[i];
+      return world.segmentHitsBuilding(cam.x,cam.y,cam.z,p.x,p.y,p.z)<=1;
+    });
     const dir = assist ? new THREE.Vector3(assist.x, assist.y, assist.z) : aim;
     fireEmitters(
       { raycaster: this.raycaster, enemies: this.enemies, damageNumbers: this.damageNumbers, beamPool: this.beamPool, world: this.player.gameWorld },
       {
         origin: cam,
+        bodyOrigin: this.player.worldPosition,
+        physicalMuzzles: this.player.getMuzzles(this.spec.muzzleOffsets.length),
         dir,
         muzzleOffsets: this.spec.muzzleOffsets,
         baseDamage: this.spec.damage,

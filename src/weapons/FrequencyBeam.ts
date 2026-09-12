@@ -7,7 +7,7 @@ import type { BeamSpec } from "./WeaponSpec";
 import { makeGlowTexture, makeRadialTexture, BeamPool, fireEmitters, type BeamStyle } from "./beamFx";
 import { autoFireAllowed } from "./WeaponSpec";
 import { parseHexColor } from "../core/math";
-import { bestAlignedDir, nearestVisibleInCone } from "./targeting";
+import { bestVisibleAlignedDir, nearestVisibleInCone } from "./targeting";
 
 // 적중 임팩트 FX(프레젠테이션 — 무기 밸런스와 무관해 코드 고정. 데미지/사거리/연사 등 전투
 // 수치는 모두 BeamSpec(JSON)에서 주입된다.)
@@ -78,20 +78,20 @@ export class FrequencyBeam {
     if (this.cooldown > 0) this.cooldown -= dt;
     if (this.autoCooldown > 0) this.autoCooldown -= dt;
 
-    // 360° 근거리 오토파이어(소프트락) — 정면을 안 봐도 최근접 추격자를 자동 타격(이동·조준 분리 → 백페달 완화).
+    // 전방 오토파이어 — 워커 반각 60°, 플라이어 반각 45° 안의 최근접 적을 타격.
     // 단 **게이지 바닥 위에서만**: 오토는 입력과 무관하게 상시 소모하므로 바닥이 없으면 회복이 소모를
     // 못 이기는 구간(옅은 장 = freqRegenMul 0.5)에서 게이지가 0 에 고착된다. 바닥 아래선 쉬어 회복이 이긴다.
-    if (this.autoCooldown <= 0 && autoFireAllowed(this.player.freq, this.player.maxFreq, this.spec.auto.freqFloor)) {
-      const origin = this.player.camera.position;
+    if (!this.player.isDead && !(this.player.spawnProtection>0) && this.autoCooldown <= 0 && autoFireAllowed(this.player.freq, this.player.maxFreq, this.spec.auto.freqFloor)) {
+      const origin = this.player.worldPosition;
       const autoDir = this.acquireAutoFireTarget(origin);
       if (autoDir) {
-        this.fireAt(autoDir, this.spec.auto.freqCost, this.spec.auto.damage);
+        this.fireAt(autoDir, this.spec.auto.freqCost, this.spec.auto.damage, false, origin);
         this.autoCooldown = this.spec.auto.fireInterval;
       }
     }
 
     // 수동(조준) 발사 — 오토와 독립. 보유 시 풀파워(에임 어시스트는 fireManual 내부).
-    if (this.cooldown <= 0 && firing) {
+    if (!this.player.isDead && this.cooldown <= 0 && firing) {
       this.fireManual();
       this.cooldown = this.spec.manual.fireInterval;
     }
@@ -105,7 +105,7 @@ export class FrequencyBeam {
       f.life -= dt;
       const t = Math.max(0, f.life / IMPACT_FLASH_LIFE); // 1 → 0
       f.sprite.material.opacity = t * t; // 빠르게 사그라듦
-      f.sprite.scale.setScalar(6 + (1 - t) * 10); // 터지듯 확장
+      f.sprite.scale.setScalar(Math.min(6 + (1 - t) * 10, f.sprite.userData.maxScale ?? 16)); // 터지듯 확장
       if (f.life <= 0) {
         this.scene.remove(f.sprite);
         f.sprite.material.dispose();
@@ -144,11 +144,13 @@ export class FrequencyBeam {
       transparent: true,
       blending: THREE.NormalBlending,
       depthWrite: false,
-      depthTest: false,
+      depthTest: true,
     });
     const flash = new THREE.Sprite(flashMat);
     flash.position.copy(point);
-    flash.scale.setScalar(6);
+    const maxScale = Math.max(.6, Math.min(16, point.distanceTo(this.player.worldPosition)*.12));
+    flash.userData.maxScale=maxScale;
+    flash.scale.setScalar(Math.min(6,maxScale));
     flash.renderOrder = 998;
     this.scene.add(flash);
     this.flashes.push({ sprite: flash, life: IMPACT_FLASH_LIFE });
@@ -161,11 +163,12 @@ export class FrequencyBeam {
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
-      depthTest: false,
+      depthTest: true,
     });
     const ring = new THREE.Sprite(ringMat);
     ring.position.copy(point);
-    ring.scale.setScalar(6);
+    ring.userData.maxScale=maxScale;
+    ring.scale.setScalar(Math.min(6,maxScale));
     ring.renderOrder = 999; // 검은 섬광 위
     this.scene.add(ring);
     this.flashes.push({ sprite: ring, life: IMPACT_FLASH_LIFE }); // 동일 확장·페이드 애니메이션 재사용
@@ -185,7 +188,7 @@ export class FrequencyBeam {
         transparent: true,
         blending: THREE.NormalBlending,
         depthWrite: false,
-        depthTest: false,
+        depthTest: true,
       });
       const sprite = new THREE.Sprite(sparkMat);
       sprite.position.copy(point);
@@ -212,21 +215,27 @@ export class FrequencyBeam {
 
   /** 좌클릭 수동 발사 — 풀 비용/데미지 + 에임 어시스트(콘 안 적이면 빔 보정). */
   private fireManual() {
-    const origin = this.player.camera.position;
+    const origin = this.player.aimOrigin;
     const aimDir = this.player.getAimDirection().clone();
     const assistDir = this.acquireAssistTarget(origin, aimDir);
     this.fireAt(assistDir ?? aimDir, this.spec.manual.freqCost, this.spec.manual.damage, true);
   }
 
   /** 공통 발사 경로 — 비용 차감(볼리당 1회)·발사음 후 발사관 일제 사격(공유 fireEmitters). */
-  private fireAt(dir: THREE.Vector3, cost: number, baseDamage: number, manual = false) {
+  private fireAt(dir: THREE.Vector3, cost: number, baseDamage: number, manual = false, origin = this.player.aimOrigin) {
     if (!this.player.spendFrequency(cost)) return; // 주파수 부족(볼리당 1회만 소모)
     this.sfx?.beam(); // 발사음(수동/자동 동일) — 실제 발사된 경우에만
     if (manual) this.onManualFired?.(); // 반동 킥 — 조준 사격의 발사감
     fireEmitters(
       { raycaster: this.raycaster, enemies: this.enemies, damageNumbers: this.damageNumbers, beamPool: this.beamPool, world: this.player.gameWorld },
       {
-        origin: this.player.camera.position,
+        origin,
+        onBlocked: manual ? () => { this.player.blockedShotTime=.3; } : undefined,
+        bodyOrigin: this.player.worldPosition,
+        aimMuzzles: this.player.muzzleProvider ? target => {
+          this.player.weaponAimProvider?.(target);
+          return this.player.getMuzzles(this.muzzleOffsets.length)!;
+        } : undefined,
         dir,
         muzzleOffsets: this.muzzleOffsets,
         baseDamage,
@@ -252,19 +261,24 @@ export class FrequencyBeam {
    */
   /** 에임 어시스트 — 조준 콘(assist) 안에서 가장 정렬된 적 방향. 없으면 null. */
   private acquireAssistTarget(origin: THREE.Vector3, aimDir: THREE.Vector3): THREE.Vector3 | null {
-    const dir = bestAlignedDir(origin, aimDir, this.enemies.aliveWorldPositions, this.spec.range, this.assistCos);
+    const world=this.player.gameWorld;
+    const positions=this.enemies.aliveWorldPositions;
+    const dir = bestVisibleAlignedDir(origin, aimDir, positions, this.spec.range, this.assistCos, i => {
+      const p=positions[i];
+      return world.segmentHitsBuilding(origin.x,origin.y,origin.z,p.x,p.y,p.z)<=1;
+    });
     return dir ? new THREE.Vector3(dir.x, dir.y, dir.z) : null;
   }
 
   /**
-   * 오토파이어 조준 — 사거리(spec.auto.range) 안 360°에서 **시야가 확보된**(건물 비차폐) 최근접 적 방향.
+   * 오토파이어 조준 — 사거리(spec.auto.range)와 전방 콘 안에서 **시야가 확보된**(건물 비차폐) 최근접 적 방향.
    * 건물 뒤 적은 자동발사 대상에서 제외(허공 발사 방지). 모두 가려져 있으면 null.
    */
   private acquireAutoFireTarget(origin: THREE.Vector3): THREE.Vector3 | null {
-    const aim = this.player.getAimDirection(); // 콘=360°(cos -1)이라 포함 판정엔 무관, 방향은 origin→적
+    const aim = this.player.getAimDirection(); // 흔들림 없는 전방 조준축
     const positions = this.enemies.aliveWorldPositions;
     const world = this.player.gameWorld;
-    const t = nearestVisibleInCone(origin, aim, positions, this.spec.auto.range, -1, (i) =>
+    const t = nearestVisibleInCone(origin, aim, positions, this.spec.auto.range, Math.cos(THREE.MathUtils.degToRad(this.player.spec.move.mode === "walk" ? 60 : 45)), (i) =>
       world.segmentHitsBuilding(origin.x, origin.y, origin.z, positions[i].x, positions[i].y, positions[i].z) <= 1
     );
     return t ? new THREE.Vector3(t.dir.x, t.dir.y, t.dir.z) : null;

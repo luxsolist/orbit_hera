@@ -18,7 +18,7 @@
   "move": {
     "mode": "fly",
     "speed": 111.11,
-    "accel": 9,
+    "accel": 14,
     "verticalSpeed": 45,
     "ceiling": 1000,
     "rollDeg": 16,

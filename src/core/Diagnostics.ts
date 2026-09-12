@@ -1,3 +1,4 @@
+import {CombatMetrics} from "./CombatMetrics";
 import type * as THREE from "three";
 
 // 온디바이스 진단(특히 iPad: 원격 디버깅이 어려움) — WebGL 컨텍스트 손실/전역 에러/렌더러 자원
@@ -9,6 +10,10 @@ const MAX_LINES = 14;
 
 export class Diagnostics {
   readonly enabled = ENABLED;
+  private combat=new CombatMetrics();
+  private combatEl: HTMLDivElement | null=null;
+  private combatNext=0;
+  private combatLabel="";
   private hbEl: HTMLDivElement | null = null; // 하트비트(프레임#/fps) 전용 줄
   private logEl: HTMLDivElement | null = null;
   private lines: string[] = [];
@@ -29,6 +34,9 @@ export class Diagnostics {
     this.hbEl = document.createElement("div");
     this.hbEl.style.cssText = "color:#ffd86b";
     this.logEl = document.createElement("div");
+    this.combatEl=document.createElement("div");
+    this.combatEl.id="combatMetrics";
+    el.appendChild(this.combatEl);
     el.appendChild(this.hbEl);
     el.appendChild(this.logEl);
     document.body.appendChild(el);
@@ -49,6 +57,26 @@ export class Diagnostics {
       this.hbFrames = 0;
       this.hbLast = now;
     }
+  }
+
+  beginCombat(label:string):void {
+    if(!this.enabled)return;
+    this.combat=new CombatMetrics();this.combatNext=0;this.combatLabel=label;
+    this.renderCombat();
+  }
+  sampleCombat(frameSeconds:number,simulationSeconds:number,kills:number,freqRatio:number):void {
+    if(!this.enabled||document.hidden)return;
+    this.combat.sample(frameSeconds,simulationSeconds,kills,freqRatio);
+    if(this.combat.seconds>=this.combatNext){this.combatNext=this.combat.seconds+1;this.renderCombat();}
+  }
+  combatDeath():void {if(this.enabled){this.combat.died();this.renderCombat();}}
+  private renderCombat():void {
+    if(!this.combatEl)return;
+    const m=this.combat;
+    this.combatEl.textContent=`${this.combatLabel} | 측정 ${m.seconds.toFixed(1)}s / 게임 ${m.simulationSeconds.toFixed(1)}s`+
+      ` | 평균 ${m.fps.toFixed(1)} FPS | p95 ${m.p95FrameMs}ms`+
+      `\n처치 ${m.kills} (${m.killsPerMinute.toFixed(1)}/분) | 주파수 25% 미만 ${m.lowFrequencyPercent.toFixed(1)}%`+
+      ` | 파괴 ${m.deaths} | 첫 파괴 ${m.firstDeathSeconds===null?"미발생":m.firstDeathSeconds.toFixed(1)+"s"}`;
   }
 
   private stamp(): string {

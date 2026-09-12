@@ -54,6 +54,7 @@ export class LensDistortPass extends ShaderPass {
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
     });
+    this.enabled=false;
   }
 
   setAspect(aspect: number): void {
@@ -71,5 +72,6 @@ export class LensDistortPass extends ShaderPass {
       strengths[i] = points[i].strength;
     }
     this.uniforms.uCount.value = n;
+    this.enabled = n > 0;
   }
 }

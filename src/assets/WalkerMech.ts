@@ -43,6 +43,7 @@ export interface WalkerPose {
   aim?: number;
   aimYaw?: number;
   aimPitch?: number;
+  footHeights?: { left: number; right: number };
   crouch?: number;
 }
 export interface WalkerOptions {
@@ -300,7 +301,7 @@ export class WalkerMech extends THREE.Group {
       const x=sweep*stride*walk*(pose.travelX??0)+(pose.legTrailX??0);
       const z=sweep*stride*walk*(pose.travelZ??1)+.025+(pose.legTrailZ??0);
       const air=pose.airborne??0;
-      const y=.14+(u>=stance?Math.sin(swing*Math.PI):0)*(pose.lift??.10)*walk+air*.02-this.pelvis.position.y;
+      const y=.14+(pose.footHeights?.[side<0?"left":"right"]??0)+(u>=stance?Math.sin(swing*Math.PI):0)*(pose.lift??.10)*walk+air*.02-this.pelvis.position.y;
       const upper=WALKER_PROPORTIONS.upperLegLength,lower=WALKER_PROPORTIONS.lowerLegLength,d=Math.min(upper+lower-.001,Math.hypot(x,y,z));
       const knee=-Math.acos(THREE.MathUtils.clamp((d*d-upper*upper-lower*lower)/(2*upper*lower),-1,1));
       leg.hip.rotation.order="ZXY";
@@ -314,6 +315,18 @@ export class WalkerMech extends THREE.Group {
       arm.elbow.rotation.set(0,0,0);
       arm.mantle.rotation.set(0,0,0);
       arm.wrist.rotation.set(0,0,0);
+    }
+    this.updateMatrixWorld(true);
+  }
+
+  /** Both independent weapon mounts track a world-space beam target, leaving torso/legs unchanged. */
+  aimWeaponsAt(target: THREE.Vector3): void {
+    this.updateMatrixWorld(true);
+    for(const arm of Object.values(this.arms)){
+      const origin=arm.shoulder.getWorldPosition(new THREE.Vector3());
+      const parentRotation=arm.shoulder.parent!.getWorldQuaternion(new THREE.Quaternion()).invert();
+      const direction=target.clone().sub(origin).normalize().applyQuaternion(parentRotation);
+      arm.shoulder.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),direction);
     }
     this.updateMatrixWorld(true);
   }

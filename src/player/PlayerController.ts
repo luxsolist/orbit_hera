@@ -207,11 +207,23 @@ export function maxRiseAltitude(standY: number, rise: number, eye: number): numb
 export class PlayerController {
   readonly camera: THREE.PerspectiveCamera;
   readonly spec: DroneSpec;
+  /** Optional presentation camera. Simulation and enemy targets remain at worldPosition. */
+  blockedShotTime = 0;
+  renderCamera?: THREE.PerspectiveCamera;
+  weaponAimProvider?: (target: THREE.Vector3) => void;
+  muzzleProvider?: (count: number) => THREE.Vector3[];
+  get aimOrigin(): THREE.Vector3 { return (this.renderCamera ?? this.camera).position; }
+  get viewPitch(): number { return this.pitch; }
+  get visualRoll(): number { return this.roll; }
+  getMuzzles(count: number): THREE.Vector3[] | undefined { return this.muzzleProvider?.(count); }
+
 
   private yaw = 0;
   private pitch = 0;
   private velocityY = 0;
+  private flyFloor = NaN;
   private grounded = true;
+  private landingImpact = 0;
   private roll = 0; // 비행 드론 좌우 이동 뱅킹(카메라 롤, rad)
   private position = new THREE.Vector3();
   private readonly eye: number; // 시점 높이(spec.body.eyeHeight)
@@ -252,6 +264,8 @@ export class PlayerController {
   onLinkRewind?: (revivedBuildings: number) => void;
 
   private invuln = 0;
+  spawnProtection=0;
+  cancelSpawnProtection():void {this.spawnProtection=0;}
   private recoil = 0; // 발사 반동(시각 피치 오프셋, rad) — kick() 충전, 지수 복귀
   private shakeAmp = 0; // 피격/파문 셰이크 진폭(rad) — shake() 충전, 지수 감쇠
 
@@ -296,7 +310,7 @@ export class PlayerController {
   /** Read-only animation state after collision and gravity have been applied. */
   get motionState() {
     return { velocityX: this.hVel.x, velocityZ: this.hVel.z, velocityY: this.velocityY,
-      grounded: this.grounded, dashing: this.frameDashing, dashPowered: this.framePropelling, dashRemaining: Math.max(0,this.dashTime), jumpThrust: this.jumpThrustTime / .24, airMoveX: this.grounded ? 0 : this._wish.x * this.input.moveScale, airMoveZ: this.grounded ? 0 : this._wish.z * this.input.moveScale, dashDirectionX: this.dashDir.x, dashDirectionZ: this.dashDir.z, dashCooldown: Math.max(0, this.dashCooldown), yaw: this.yaw };
+      grounded: this.grounded, landingSpeed: this.landingImpact, dashing: this.frameDashing, dashPowered: this.framePropelling, dashRemaining: Math.max(0,this.dashTime), jumpThrust: this.jumpThrustTime / .24, airMoveX: this.grounded ? 0 : this._wish.x * this.input.moveScale, airMoveZ: this.grounded ? 0 : this._wish.z * this.input.moveScale, dashDirectionX: this.dashDir.x, dashDirectionZ: this.dashDir.z, dashCooldown: Math.max(0, this.dashCooldown), yaw: this.yaw };
   }
   private frameDashing = false;
   private framePropelling = false;
@@ -318,7 +332,7 @@ export class PlayerController {
 
   /** 카메라가 바라보는 정규화 방향 */
   getAimDirection(target = new THREE.Vector3()): THREE.Vector3 {
-    return this.camera.getWorldDirection(target);
+    return target.set(-Math.sin(this.yaw)*Math.cos(this.pitch), Math.sin(this.pitch), -Math.cos(this.yaw)*Math.cos(this.pitch));
   }
 
   /** 성장 적용(§7.4) — 출격 시작 시 1회(Game). 최대 HP 가산(만충 유지) + 재생률 지정. */
@@ -330,6 +344,7 @@ export class PlayerController {
 
   /** 피해 적용. 머시 무적/사망 중엔 무시. 반환: 실제 적용 여부(접촉 시 적 회복·HUD 연출 게이트). */
   takeDamage(amount: number): boolean {
+    if(this.spawnProtection>0)return false;
     const r = applyDamage(this.hp, this.invuln, amount);
     this.hp = r.hp;
     this.invuln = r.invuln;
@@ -364,6 +379,10 @@ export class PlayerController {
   }
 
   update(dt: number) {
+    if (this.isDead) return;
+    this.spawnProtection=Math.max(0,this.spawnProtection-dt);
+    this.landingImpact=0;
+    this.blockedShotTime=Math.max(0,this.blockedShotTime-dt);
     if (this.invuln > 0) this.invuln -= dt;
     // 반동/셰이크 지수 감쇠 — dt 0(히트스톱)이면 유지(정지 프레임 동안 시각도 정지)
     if (this.recoil > 1e-5) this.recoil *= Math.exp(-RECOIL_DECAY * dt);
@@ -406,6 +425,16 @@ export class PlayerController {
       wishH.set(w.x, 0, w.z);
     }
 
+    // Automatic following slows near its distance band; manual inputs always retain full speed.
+    let followScale = 1;
+    if (this._lockOnTarget && !["KeyW","KeyS","KeyA","KeyD"].some(k=>this.input.isDown(k))) {
+      const target=this._lockOnTarget.group.position;
+      const distance=Math.hypot(target.x-this.position.x,target.z-this.position.z);
+      const error=Math.max(0,Math.abs(distance-(this.spec.lockOn?.followDist??LOCK_FOLLOW_DIST))-(this.spec.lockOn?.band??LOCK_BAND));
+      const response=move.mode==="fly"?move.accel:move.groundAccel;
+      followScale=Math.min(1,error/Math.max(8,move.speed/response*2));
+    }
+
     // --- 회피 대시(평면 버스트) — 스펙에 dash 가 있는 드론만(보행). 비행은 dash 없음 → Shift=하강 ---
     const dash = this.spec.dash;
     if (dash) {
@@ -443,14 +472,14 @@ export class PlayerController {
       let mvx = mv.x, mvy = mv.y, mvz = mv.z;
       const ml = Math.hypot(mvx, mvy, mvz);
       if (ml > 1e-6) { mvx /= ml; mvy /= ml; mvz /= ml; } // 3D 단위 → 방향 무관 동일 최고속
-      const spd = move.speed * this.input.moveScale * dirSpeedMult(mvx, mvz, fwdH); // 방향별 속도(후진 페널티)
+      const spd = move.speed * this.input.moveScale * followScale * dirSpeedMult(mvx, mvz, fwdH); // 방향별 속도(후진 페널티)
       const t = 1 - Math.exp(-move.accel * dt);
       this.hVel.x += (mvx * spd - this.hVel.x) * t;
       this.hVel.z += (mvz * spd - this.hVel.z) * t;
       lookClimb = mvy * spd;
     } else {
       // 보행: 지상/공중 응답 구분
-      const spd = directionalSpeed(wishH.x,wishH.z,fwdH,move.speed,move.backSpeed,move.strafeSpeed) * this.input.moveScale; // 방향별 속도(후진 페널티)
+      const spd = directionalSpeed(wishH.x,wishH.z,fwdH,move.speed,move.backSpeed,move.strafeSpeed) * this.input.moveScale * followScale; // 방향별 속도(후진 페널티)
       const rate = this.grounded ? move.groundAccel : move.airAccel;
       const t = 1 - Math.exp(-rate * dt);
       if(this.dashBraking && dash?.braking){
@@ -521,7 +550,7 @@ export class PlayerController {
       this.position.z = bz;
 
       // 장애물(바위/건물/담장) 통과 불가. feetY 가 윗면 이상이면 디딘 것으로 보고 통과(올라서기/넘기).
-      const resolved = this.world.resolveCollision(bx, bz, this.radius, feetY);
+      const resolved = this.resolveBodyCollision(bx, bz, feetY);
       if (resolved.x !== bx || resolved.z !== bz) {
         const nx = resolved.x - bx;
         const nz = resolved.z - bz;
@@ -540,6 +569,22 @@ export class PlayerController {
       }
     }
     this.clampToZone(); // 미션 교전 구역 경계(원) 안으로 제한
+  }
+
+  /** Extend the flyer's round collision body along its nose/tail without widening the wings. */
+  private resolveBodyCollision(x: number, z: number, feetY: number): {x:number;z:number} {
+    let result=this.world.resolveCollision(x,z,this.radius,feetY);
+    if(this.spec.move.mode!=="fly")return result;
+    const cp=Math.cos(this.pitch),sp=Math.sin(this.pitch);
+    for(let pass=0;pass<2;pass++){
+      for(const distance of [-.8,.8]){
+        const dx=-Math.sin(this.yaw)*cp*distance,dz=-Math.cos(this.yaw)*cp*distance;
+        const probe=this.world.resolveCollision(result.x+dx,result.z+dz,.65,feetY+sp*distance);
+        result={x:probe.x-dx,z:probe.z-dz};
+      }
+      result=this.world.resolveCollision(result.x,result.z,this.radius,feetY);
+    }
+    return result;
   }
 
   /** 보행: 점프(상한 게이트) + 중력(상승 감속/하강 종단) + 착지. */
@@ -566,6 +611,7 @@ export class PlayerController {
 
     const groundY = this.standSurfaceY(this.position.x, this.position.z, prevFeetY) + this.eye;
     if (this.position.y <= groundY) {
+      if(!this.grounded)this.landingImpact=Math.max(0,-this.velocityY);
       this.position.y = groundY;
       this.velocityY = 0;
       this.grounded = true;
@@ -595,7 +641,10 @@ export class PlayerController {
 
     const feetY = this.position.y - this.eye;
     const standY = this.standSurfaceY(this.position.x, this.position.z, feetY);
-    const floorY = standY + this.eye + (move.minAltitude ?? 0); // 지면 + 비행 하한(지상 안전지대 차단)
+    const targetFloor = standY + this.eye + (move.minAltitude ?? 0);
+    this.flyFloor = Number.isFinite(this.flyFloor) && targetFloor > this.flyFloor
+      ? Math.max(standY + this.eye, THREE.MathUtils.lerp(this.flyFloor,targetFloor,1-Math.exp(-dt*6))) : targetFloor;
+    const floorY = this.flyFloor; // 지면 + 비행 하한(지상 안전지대 차단)
     if (this.position.y < floorY) {
       this.position.y = floorY;
       if (this.velocityY < 0) this.velocityY = 0;
@@ -643,10 +692,12 @@ export class PlayerController {
   }
 
   reset() {
+    this.flyFloor=NaN;
     this.hp = this.maxHp;
     this.freq = this.maxFreq;
     this.velocityY = 0;
     this.invuln = 0;
+    this.spawnProtection=0;
     this.hVel.set(0, 0, 0);
     this.grounded = true;
     this.roll = 0;
@@ -661,9 +712,11 @@ export class PlayerController {
   }
 
   /** 인스턴스 리스폰 — 스폰 지점으로 복귀 + 짧은 무적(접촉 즉사 방지). 적/미션은 그대로 진행. */
-  respawn(protectSec = 1.5) {
+  respawn(protectSec = 3, location?: THREE.Vector3) {
     this.reset();
-    this.invuln = protectSec;
+    if(location)this.position.copy(location);
+    this.spawnProtection=protectSec;
+    this.syncCamera();
   }
 
   /** 교전 구역 설정(미션 인스턴스). radius≤0 이면 제한 해제. 중심 미지정 시 현재 위치(=스폰) 기준. */

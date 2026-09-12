@@ -5,6 +5,13 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { LensDistortPass } from "./LensDistortPass";
 
+/** Composer.addPass/setSize overrides constructor resolution, so scale every resize. */
+export class HalfResolutionBloomPass extends UnrealBloomPass {
+  override setSize(width:number,height:number):void {
+    super.setSize(Math.max(1,Math.round(width*.5)),Math.max(1,Math.round(height*.5)));
+  }
+}
+
 /**
  * Bloom 포스트 프로세싱 컴포저.
  * 이미시브/글로우 머티리얼(에너지 빔, 디졸브 경계, 코어)을 발광시켜
@@ -19,7 +26,7 @@ export function createComposer(
   composer.addPass(new RenderPass(scene, camera));
 
   // 블룸 렌더타깃 기준 해상도를 절반으로 — 밉 체인 RT 메모리/대역폭을 1/4 로(특히 iPad VRAM 절감). 시각 차이 미미.
-  const bloom = new UnrealBloomPass(
+  const bloom = new HalfResolutionBloomPass(
     new THREE.Vector2(Math.max(1, window.innerWidth >> 1), Math.max(1, window.innerHeight >> 1)),
     0.85, // strength
     0.6, // radius

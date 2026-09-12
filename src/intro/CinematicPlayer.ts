@@ -66,7 +66,7 @@ export class CinematicPlayer {
     this.skip(); // 클릭 → 부드럽게 페이드아웃
   };
 
-  constructor(renderer: THREE.WebGLRenderer, scenes: CutScene[]) {
+  constructor(private renderer: THREE.WebGLRenderer, scenes: CutScene[]) {
     this.scenes = scenes;
     const size = renderer.getSize(new THREE.Vector2());
     this.camera = new THREE.PerspectiveCamera(60, size.x / Math.max(1, size.y), 0.1, 4000);
@@ -113,6 +113,7 @@ export class CinematicPlayer {
   setSize(w: number, h: number): void {
     this.camera.aspect = w / Math.max(1, h);
     this.camera.updateProjectionMatrix();
+    this.composer.setPixelRatio(this.renderer.getPixelRatio());
     this.composer.setSize(w, h);
   }
 

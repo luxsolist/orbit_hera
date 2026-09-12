@@ -113,6 +113,11 @@ export class BrandSystem {
   private buildingShots: BuildingShot[] = []; // 공성 낙인(buildingBrands) — 건물/랜드마크 표적 유도탄
   private buildingBrands = new Map<string, Brand[]>();
   private countdown: number;
+  unsafeSpawn(x:number,z:number,anchor:{x:number;z:number},seconds=5):boolean {
+    const distance=Math.hypot(x-anchor.x,z-anchor.z);
+    if(this.radius>=0)return distance>=this.radius-8 && distance<=Math.min(this.sweep.maxRadius,this.radius+this.sweep.speed*seconds)+8;
+    return this.countdown<=seconds && distance<=Math.min(this.sweep.maxRadius,this.sweep.speed*(seconds-this.countdown))+8;
+  }
   private radius = -1; // 파면 반경(m). <0 = 비활성(대기)
   private periodMul = 1; // 파문 주기 배수(미션 변조 sweepPeriodMul — <1 = 잦게)
   private glyphMat: THREE.MeshBasicMaterial; // 글리프 공유 재질(색 고정 — 개체별 상태 없음)
@@ -342,6 +347,11 @@ export class BrandSystem {
   }
 
   /** 전투 종료/재입장 — 유도탄·낙인·파면 전부 정리, 주기 재무장. */
+  clearPlayer(index:number):void {
+    for(let i=this.shots.length-1;i>=0;i--)if(this.shots[i].targetIdx===index)this.removeShot(i);
+    if(this.brands[index])this.brands[index].length=0;
+    this.onBrandsChanged?.(index,0);
+  }
   clear(): void {
     for (let i = this.shots.length - 1; i >= 0; i--) this.removeShot(i);
     for (let ti = 0; ti < this.brands.length; ti++) {

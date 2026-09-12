@@ -3,6 +3,7 @@ import type { WalkerMech, WalkerPose } from "./WalkerMech";
 export interface WalkerMotionState {
   velocityX: number; velocityZ: number; velocityY: number;
   dashDirectionX?: number; dashDirectionZ?: number; dashRemaining?: number;
+  landingSpeed?: number;
   grounded: boolean; dashing: boolean; dashPowered?: boolean; yaw: number;
 }
 
@@ -11,6 +12,7 @@ export class WalkerMotionAnimator {
   phase = 0;
   private wasGrounded = true;
   private landingTime = Infinity;
+  private landingStrength = 1;
   private airExtension = 0;
   private dashBlend = 0;
   private legTrailX = 0;
@@ -40,7 +42,7 @@ export class WalkerMotionAnimator {
     const cadence=Math.min(1.25+.55*run,speed/Math.max(.001,4*stride*walk));
     const stance=Math.max(.18,Math.min(.5,2*stride*walk*cadence/Math.max(speed,.001)));
     if(walk>.001)this.phase=(this.phase+dt*cadence*Math.PI*2)%(Math.PI*2);
-    if (state.grounded && !this.wasGrounded) this.landingTime = 0;
+    if (state.grounded && !this.wasGrounded) {this.landingTime = 0;this.landingStrength=state.landingSpeed===undefined?1:Math.max(.35,Math.min(1,.35+state.landingSpeed/40*.65));}
     else if(state.grounded) this.landingTime += dt;
     else this.landingTime = Infinity;
     // Load the suspension over 120ms, then recover over 420ms without a pose snap.
@@ -52,7 +54,7 @@ export class WalkerMotionAnimator {
       lift:.12+.10*Math.min(1,speed/3.2)+.16*run,
       airborne:this.airExtension,
       dash:this.dashBlend, legTrailX:this.legTrailX, legTrailZ:this.legTrailZ,
-      crouch:landing };
+      crouch:landing*this.landingStrength };
   }
   apply(mech: WalkerMech, dt: number, state: WalkerMotionState): void {
     mech.setPose(this.update(dt,state));
