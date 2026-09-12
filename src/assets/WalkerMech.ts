@@ -5,7 +5,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 export const WALKER_ASSET = {
-  id: "android-01", version: 11, droneId: "walker",
+  id: "android-01", version: 12, droneId: "walker",
   units: "metres", up: "+Y", forward: "+Z", origin: "ground-between-feet",
   cameraSocket: "socket_camera", muzzleSocket: "socket_muzzle", leftMuzzleSocket: "socket_muzzle_left",
 } as const;
@@ -213,26 +213,23 @@ export class WalkerMech extends THREE.Group {
       cylinder(mantle,steel,.13,.31,[side*.03,0,0]);
       // Gun carriages replace human upper arms, forearms and hands.
       const elbow=joint(shoulder,name+"_elbow",[side*.13,-.12,.21]);
-      const wrist=joint(elbow,name+"_wrist",[0,0,.73]);
-      block(elbow,frame,[.38,.28,.79],[0,0,.31],"gun_receiver");
-      loft(elbow,armor,[[-.22,.23,.20,-.12],[.38,.21,.19,-.13],[.65,.14,.11,-.10]],[0,.04,.07]);
+      const wrist=joint(elbow,name+"_wrist",[0,.06,1.225]);
+      // Extend the emitter housing 1.5x forward from its fixed rear mounting plane.
+      block(elbow,frame,[.38,.28,1.185],[0,0,.54],"beam_emitter_core");
+      loft(elbow,armor,[[-.15,.23,.20,-.12],[.75,.21,.19,-.13],[1.155,.16,.18,-.14]],[0,.04,0]);
       strut(mantle,steel,.033,[0,-.15,-.05],[side*.11,-.32,.46]);
-      for(const barrelSide of [-1,1]){
-        cylinder(elbow,frame,.068,.59,[barrelSide*.10,-.04,.88],"z");
-        cylinder(elbow,steel,.038,.95,[barrelSide*.10,-.04,1.00],"z");
-        for(const z of [.72,1.03,1.40])cylinder(elbow,frame,.055,.055,[barrelSide*.10,-.04,z],"z");
-        cylinder(elbow,frame,.028,.965,[barrelSide*.10,-.04,1.012],"z");
-      }
-      block(elbow,armor,[.29,.17,.07],[0,-.04,1.29]);
-      cylinder(elbow,sensor,.021,.02,[0,.10,.70],"z");
+      cylinder(elbow,steel,.145,.055,[0,.06,1.17],"z");
+      cylinder(elbow,frame,.13,.009,[0,.06,1.20],"z");
+      const lens=mesh(elbow,new THREE.SphereGeometry(.122,32,16),sensor,[0,.06,1.20],"energy_emitter_lens");
+      lens.scale.z=.18;
       return {shoulder,elbow,wrist,mantle};
     };
     this.arms={left:makeArm(-1),right:makeArm(1)};
     this.sockets={
       camera:socket(this.head,"camera",[0,.03,.085]),
-      muzzle:socket(this.arms.right.elbow,"muzzle",[.10,-.04,1.51]),
-      leftMuzzle:socket(this.arms.left.elbow,"muzzle_left",[-.10,-.04,1.51]),
-      offHand:socket(this.arms.left.elbow,"offhand",[-.10,-.04,1.51]),
+      muzzle:socket(this.arms.right.elbow,"muzzle",[0,.06,1.225]),
+      leftMuzzle:socket(this.arms.left.elbow,"muzzle_left",[0,.06,1.225]),
+      offHand:socket(this.arms.left.elbow,"offhand",[0,.06,1.225]),
       back:socket(this.torso,"back",[0,.25,-.95]),
       focus:socket(this,"focus",[0,1.65,.1]),
     };

@@ -3,7 +3,7 @@
   "assets": [
     {
       "id": "android-01",
-      "version": 11,
+      "version": 12,
       "droneId": "walker",
       "name": "ED-209형 역관절 워커",
       "url": "/models/android-01.glb",
@@ -26,7 +26,7 @@
         "socket_focus",
         "socket_muzzle_left"
       ],
-      "triangles": 7136,
+      "triangles": 7080,
       "meshBatches": 35,
       "proportions": {
         "hipHeight": 2.07,
@@ -56,7 +56,33 @@
         "steel",
         "accent",
         "sensor"
-      ]
+      ],
+      "preview": "/tools/mech-preview.html",
+      "previewLabel": "워커"
+    },
+    {
+      "id": "drone-v1",
+      "version": 8,
+      "droneId": "flyer",
+      "name": "A윙 스타일 경량 비행드론 초안",
+      "url": "/models/drone-v1.glb",
+      "runtimeFactory": "src/assets/FlyerDrone.ts#FlyerDrone",
+      "units": "metres",
+      "up": "+Y",
+      "forward": "+Z",
+      "origin": "flight-centre",
+      "preview": "/tools/flyer-preview.html",
+      "sockets": [
+        "socket_camera",
+        "socket_focus",
+        "socket_muzzle",
+        "socket_muzzle_left",
+        "socket_engine_left",
+        "socket_engine_right",
+        "socket_hover_front",
+        "socket_hover_rear"
+      ],
+      "previewLabel": "플라이어"
     }
   ]
 }

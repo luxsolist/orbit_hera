@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import {BLUE_EXHAUST_LAYERS,createExhaustGeometry,createExhaustMaterial} from "./BlueExhaust";
 import { WALKER_PROPORTIONS, type WalkerMech } from "./WalkerMech";
 
 export interface WalkerThrustState {
@@ -32,8 +33,7 @@ export class WalkerThrusters {
     this.root.name="walker_body_thrusters";mech.torso.add(this.root);
     this.pelvisRoot.name="walker_pelvis_thrusters";mech.pelvis.add(this.pelvisRoot);
     const nozzle=new THREE.TorusGeometry(.105,.032,6,16);
-    const outer=new THREE.CylinderGeometry(.025,.095,1,24,16,true);
-    outer.rotateX(Math.PI/2);outer.translate(0,0,.5);
+    const outer=createExhaustGeometry(.095,1);
     const housing=new THREE.CylinderGeometry(.13,.19,.22,8);
     housing.rotateX(Math.PI/2);housing.translate(0,0,-.08);
     // Shallow rectangular front outlets read as propulsion vents, not a pair of eyes.
@@ -68,22 +68,8 @@ export class WalkerThrusters {
         if(front)mount.add(new THREE.Mesh(frontOpening,mech.getSkinMaterial("frame")));
         const flame=new THREE.Group();flame.visible=false;port.add(flame);
         const shells:THREE.Mesh[]=[];
-        for(const [color,width,length,opacity] of [[0x237eff,1,1,.13],[0x65baff,.67,.90,.20],[0xbceaff,.30,.72,.27]]){
-          const material=new THREE.ShaderMaterial({
-            uniforms:{tint:{value:new THREE.Color(color)},opacity:{value:opacity}},
-            vertexShader:`varying vec2 flameUv; varying vec3 viewNormal; varying vec3 viewPosition;
-              void main(){flameUv=uv;viewNormal=normalMatrix*normal;vec4 p=modelViewMatrix*vec4(position,1.0);viewPosition=p.xyz;gl_Position=projectionMatrix*p;}`,
-            fragmentShader:`uniform vec3 tint;uniform float opacity;varying vec2 flameUv;varying vec3 viewNormal;varying vec3 viewPosition;
-              void main(){
-                float t=flameUv.y;
-                float edge=pow(abs(dot(normalize(viewNormal),normalize(-viewPosition))),0.65);
-                float fade=(1.0-smoothstep(0.12,1.0,t))*smoothstep(0.0,0.035,t);
-                float cells=0.86+0.14*pow(max(0.0,cos(t*37.7)),8.0);
-                vec3 gradient=mix(tint,vec3(0.015,0.12,0.8),smoothstep(0.0,0.9,t));
-                gl_FragColor=vec4(gradient,opacity*edge*fade*cells);
-              }`,
-            transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide,toneMapped:false
-          });
+        for(const [color,width,length,opacity] of BLUE_EXHAUST_LAYERS){
+          const material=createExhaustMaterial(color,opacity);
           this.materials.push(material);
           const shell=new THREE.Mesh(outer,material);shell.scale.set(width*(underside?1.8:front?1.1:1),width*(underside?1.8:front?.4:1),length);shell.userData.opacity=opacity;shell.userData.length=length;
           flame.add(shell);shells.push(shell);

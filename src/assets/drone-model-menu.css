@@ -1,0 +1,8 @@
+.drone-model-menu{height:62px;display:flex;align-items:center;gap:28px;padding:0 28px;background:#0c1721;border-bottom:1px solid #29404d;color:#d9e5ec;font:13px system-ui,sans-serif}
+.drone-model-menu__title{flex-shrink:0;letter-spacing:.07em;font-weight:600}
+.drone-model-menu nav{display:flex;gap:8px;overflow-x:auto;align-items:center;min-width:0;height:100%}
+.drone-model-menu a{display:block;flex-shrink:0;padding:9px 19px;border:1px solid #304653;border-radius:5px;color:#9fb6c4;text-decoration:none;white-space:nowrap}
+.drone-model-menu a:hover,.drone-model-menu a[aria-current=page]{background:#193b4b;border-color:#72c8dc;color:#def7ff}
+.drone-model-menu a:focus-visible{outline:2px solid #a6e9ff;outline-offset:3px}
+body.has-drone-model-menu>main{height:calc(100vh - 62px)}
+@media(max-width:700px){.drone-model-menu{padding:0 14px;gap:14px}.drone-model-menu a{padding:9px 13px}body.has-drone-model-menu>main{height:auto}}
