@@ -45,6 +45,8 @@ export interface WalkerPose {
   aimPitch?: number;
   footHeights?: { left: number; right: number };
   crouch?: number;
+  /** Hip-local targets for world-anchored stance feet. */
+  footTargets?: {left?: {x:number;y:number;z:number};right?: {x:number;y:number;z:number}};
 }
 export interface WalkerOptions {
   skin?: WalkerSkin;
@@ -288,7 +290,7 @@ export class WalkerMech extends THREE.Group {
     const phase=pose.phase??0, walk=THREE.MathUtils.clamp(pose.walk??0,0,1);
     const aim=THREE.MathUtils.clamp(pose.aim??0,0,1), crouch=THREE.MathUtils.clamp(pose.crouch??0,0,1);
     this.pelvis.position.y=WALKER_PROPORTIONS.hipHeight-crouch*.24+(pose.airborne??0)*.14+run*(.035*Math.cos(phase*2)-.045);
-    this.pelvis.rotation.y=Math.sin(phase)*.045*walk;
+    this.pelvis.rotation.y=0; // Keep stance feet stable; torso retains the visual sway.
     this.torso.rotation.set(-.06*run*(pose.travelZ??1)+.04*walk+Math.sin(phase)*.007*(1-walk),THREE.MathUtils.clamp(pose.aimYaw??0,-.8,.8),-Math.sin(phase)*.035*walk);
     this.head.rotation.set(0,0,0);
     for(const [side,leg] of [[-1,this.legs.left],[1,this.legs.right]] as const){
@@ -298,10 +300,12 @@ export class WalkerMech extends THREE.Group {
       const swing=(u-stance)/(1-stance);
       const sweep=u<stance ? 1-2*u/stance : (1-run)*(-1+2*swing)-run*Math.cos(Math.PI*swing);
       const stride=pose.stride??.24;
-      const x=sweep*stride*walk*(pose.travelX??0)+(pose.legTrailX??0);
-      const z=sweep*stride*walk*(pose.travelZ??1)+.025+(pose.legTrailZ??0);
+      let x=sweep*stride*walk*(pose.travelX??0)+(pose.legTrailX??0);
+      let z=sweep*stride*walk*(pose.travelZ??1)+.025+(pose.legTrailZ??0);
       const air=pose.airborne??0;
-      const y=.14+(pose.footHeights?.[side<0?"left":"right"]??0)+(u>=stance?Math.sin(swing*Math.PI):0)*(pose.lift??.10)*walk+air*.02-this.pelvis.position.y;
+      let y=.14+(pose.footHeights?.[side<0?"left":"right"]??0)+(u>=stance?Math.sin(swing*Math.PI):0)*(pose.lift??.10)*walk+air*.02-this.pelvis.position.y;
+      const target=pose.footTargets?.[side<0?"left":"right"];
+      if(target){x=target.x;y=target.y;z=target.z;}
       const upper=WALKER_PROPORTIONS.upperLegLength,lower=WALKER_PROPORTIONS.lowerLegLength,d=Math.min(upper+lower-.001,Math.hypot(x,y,z));
       const knee=-Math.acos(THREE.MathUtils.clamp((d*d-upper*upper-lower*lower)/(2*upper*lower),-1,1));
       leg.hip.rotation.order="ZXY";

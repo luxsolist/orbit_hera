@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import * as THREE from "three";
+import { STREET } from "../src/world/StreetSurface";
 import { SKY_COLOR, LIGHT, EXPOSURE, WALL_COLOR, RUBBLE_COLOR, LANDMARK_COLOR, FOG_NEAR_RATIO, FOG_COLOR, WATER_COLOR } from "../src/world/palette";
 import { GROUND_GREEN, SAND_TAN } from "../src/world/geo";
 
@@ -28,6 +29,8 @@ const unlit = (albedo: number[]) => albedo.map(aces);
 const SNOW = 0xeef4f7;
 const BUILDING_MAX = 0xfafafa; // precinct.buildingBaseColor 의 최고층 색
 const EL: Record<string, number[]> = {
+  "도로": litS(lin(Number.parseInt(STREET.asphalt.slice(1),16)), SUN),
+  "보도": litS(lin(Number.parseInt(STREET.pavement.slice(1),16)), SUN),
   "하늘": unlit(lin(SKY_COLOR)),
   "지형": litS(lin(GROUND_GREEN), SUN),
   "수면": litS(lin(WATER_COLOR), SUN), // 강·호수(폴리곤)와 바다(표고 ≤0)가 같은 색 — 통일됨
@@ -45,7 +48,7 @@ const EL: Record<string, number[]> = {
   "빔(중주파)": unlit(lin(0x60ffff)),
 };
 
-const BACKGROUNDS = ["하늘", "지형", "수면", "포그(원경)", "황토", "눈", "건물(직사광)", "건물(그늘)", "담장"];
+const BACKGROUNDS = ["도로", "보도", "하늘", "지형", "수면", "포그(원경)", "황토", "눈", "건물(직사광)", "건물(그늘)", "담장"];
 /**
  * 계약 대상 = **정보를 나르는 요소 ↔ 그것이 얹히는 배경**.
  * 배경끼리 붙는 것(눈↔건물, 황토↔담장)은 시각적 단조로움이지 정보 손실이 아니므로 제외한다 —

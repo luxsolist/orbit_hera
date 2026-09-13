@@ -127,6 +127,8 @@ export interface MissionModifiers {
 // ─────────────────────────── 명세 ───────────────────────────
 
 export interface MissionSpecV2 {
+  cityId?: string; // Editor city restriction; omitted means all cities.
+  stage?: number; // Campaign chapter / editor grouping.
   spawnMix?: SpawnMixT; // 전장 스폰 구성(§6.8) — 미지정 = "even"
   id: string;
   name: string; // 표시명 "국문 / ENGLISH" — 표면 어휘 규칙 준수(06-missions §7)

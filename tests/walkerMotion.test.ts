@@ -10,7 +10,7 @@ const spec=JSON.parse(readFileSync("public/drones/walker.json","utf8"));
 function fixture(){
  const held=new Set<string>(),pressed=new Set<string>();
  const input={moveScale:1,consumeMouse:()=>({dx:0,dy:0}),isDown:(k:string)=>held.has(k),wasPressed:(k:string)=>pressed.has(k)} as Input;
- const world={spawn:{x:0,z:0,yaw:0},bounds:10000,heightAt:()=>0,topAt:()=>0,resolveCollision:(x:number,z:number)=>({x,z})} as unknown as GameWorld;
+ const world={spawn:{x:0,z:0,yaw:0},bounds:10000,segmentHitsBuilding:()=>Infinity,heightAt:()=>0,topAt:()=>0,resolveCollision:(x:number,z:number)=>({x,z})} as unknown as GameWorld;
  const player=new PlayerController(input,world,1,spec);
  const step=()=>{player.update(1/120);pressed.clear();return player.motionState;};
  return {player,held,pressed,step};
@@ -118,5 +118,42 @@ describe("walker motion driven by game controller",()=>{
       const up=new THREE.Vector3(0,1,0).applyQuaternion(leg.ankle.getWorldQuaternion(new THREE.Quaternion()));expect(up.y).toBeCloseTo(1,4);
     }
   }}finally{mech.dispose();}
+ });
+});
+import {DronePresentation} from '../src/player/DronePresentation';
+describe('walker ground contact regressions',()=>{
+ it.each([1/30,1/60,1/120])('keeps continuous downhill contact at dt=%s without false landings',dt=>{
+  const held=new Set(['KeyW']),pressed=new Set<string>();
+  const input={moveScale:1,consumeMouse:()=>({dx:0,dy:0}),isDown:(k:string)=>held.has(k),wasPressed:(k:string)=>pressed.has(k)} as Input;
+  const height=(_x:number,z:number)=>z*.35;
+  const world={spawn:{x:0,z:0,yaw:0},bounds:10000,heightAt:height,topAt:height,resolveCollision:(x:number,z:number)=>({x,z})} as unknown as GameWorld;
+  const player=new PlayerController(input,world,1,spec);
+  for(let i=0;i<3/dt;i++){
+   player.update(dt);expect(player.motionState.grounded).toBe(true);expect(player.motionState.landingSpeed).toBe(0);
+   expect(player.worldPosition.y-spec.body.eyeHeight).toBeCloseTo(height(player.worldPosition.x,player.worldPosition.z),6);
+  }
+  pressed.add('Space');player.update(dt);expect(player.motionState.grounded).toBe(false);
+ });
+ it.each(['KeyW','KeyS','KeyA','KeyD'])('holds planted feet in world space during %s movement',key=>{
+  const f=fixture(),scene=new THREE.Scene(),view=new DronePresentation(scene,f.player);
+  f.held.add(key);let contacts=0;
+  try{for(let i=0;i<360;i++){
+   f.step();view.update(1/120);
+   const anchors=(view as unknown as {footAnchors:Partial<Record<'left'|'right',THREE.Vector3>>}).footAnchors;
+   const mech=view.model as WalkerMech;
+   for(const side of ['left','right'] as const)if(anchors[side]){
+    const foot=mech.legs[side].ankle.getWorldPosition(new THREE.Vector3());
+    expect(foot.distanceTo(anchors[side]!)).toBeLessThan(.005);contacts++;
+   }
+  }expect(contacts).toBeGreaterThan(30);}finally{view.dispose();}
+ });
+ it('falls off a ledge instead of snapping down to distant ground',()=>{
+  const held=new Set(['KeyW']);
+  const input={moveScale:1,consumeMouse:()=>({dx:0,dy:0}),isDown:(k:string)=>held.has(k),wasPressed:()=>false} as Input;
+  const height=(_x:number,z:number)=>z>-2?0:-10;
+  const world={spawn:{x:0,z:0,yaw:0},bounds:10000,heightAt:height,topAt:height,resolveCollision:(x:number,z:number)=>({x,z})} as unknown as GameWorld;
+  const player=new PlayerController(input,world,1,spec);
+  while(player.worldPosition.z>-2)player.update(1/120);
+  expect(player.motionState.grounded).toBe(false);expect(player.worldPosition.y-spec.body.eyeHeight).toBeGreaterThan(-1);
  });
 });

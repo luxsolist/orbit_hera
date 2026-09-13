@@ -1,3 +1,4 @@
+import {mappedSeoulStreet} from './SeoulStreet';
 import { WalkerThrusters } from "../assets/WalkerThrusters";
 import { WalkerMech } from "../assets/WalkerMech";
 import * as THREE from "three";
@@ -67,12 +68,14 @@ export function atmosphere(scene: THREE.Scene, warm = false) {
 export interface Fragment { mesh: THREE.Mesh; home: THREE.Vector3; spin: number; }
 export interface Street {
   building: THREE.Group; details: THREE.Group; fragments: Fragment[];
-  lamp: THREE.PointLight; lampGlass: THREE.Mesh; masonry: THREE.MeshStandardMaterial;
+  lamp?: THREE.PointLight; lampGlass?: THREE.Mesh; masonry?: THREE.MeshStandardMaterial;
+  damage?:(time:number)=>void;
   dust: THREE.Points;
 }
 
 /** A small authored set: rain-polished lane, tiled eaves, recessed windows, cables and a living lamp. */
 export function street(scene: THREE.Scene, variant = 0): Street {
+  const mapped=mappedSeoulStreet(scene);if(mapped)return mapped;
   atmosphere(scene, variant === 1);
   const stone = material("stone", 0x8f999d, 8);
   const brick = material("brick", variant === 1 ? 0xaaa18c : 0x88786b, 2);
@@ -180,6 +183,7 @@ export class CinematicWalker extends WalkerMech {
   private thrusters?: WalkerThrusters;
   constructor() {
     super({detail:"high"});
+    this.scale.setScalar(1); // Same metre-based asset scale as the playable walker.
     this.thrusters=new WalkerThrusters(this);
   }
   override dispose():void {

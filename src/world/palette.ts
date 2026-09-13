@@ -58,12 +58,12 @@ export const FOG_COLOR = 0xa9a9ac;
 
 /** 조명 — 차분한 톤 = 전체 감광이 아니라 **태양↓ + 반구광 유지**(흐린 날 구조). 그늘이 죽지 않는다. */
 export const LIGHT = {
-  hemiSky: 0xbfdcff,
-  hemiGround: 0x6f7a4a,
-  hemi: 1.3, //  ↑ 1.18 — 태양을 낮춘 만큼 올려 그늘 휘도를 보존(0.281 유지)
-  sunColor: 0xfff3da,
-  sun: 1.0, //   ↓ 2.00 — 직사광 억제(명암 완화 + 건물 블룸 감소)
-  fillColor: 0xaecbe6,
+  hemiSky: 0xd6e2ee,
+  hemiGround: 0x8a8175,
+  hemi: 1.35, // 그늘의 건물색을 보존하는 중성 환경광
+  sunColor: 0xfff1df,
+  sun: 1.2, // 외벽 방향별 명암을 조금 강화하되 환경광보다 약하게
+  fillColor: 0xc3d0de,
   fill: 0.35,
 } as const;
 

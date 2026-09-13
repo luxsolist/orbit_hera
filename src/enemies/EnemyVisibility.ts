@@ -20,6 +20,28 @@ export class EnemyVisibility {
 
   }
 
+  /** Soft energy bodies retain the same main-camera drone visibility corridor. */
+  applySoft(material: THREE.ShaderMaterial): void {
+    Object.assign(material.uniforms,{visibilityEye:this.eye,visibilityEnd:this.end,visibilityDrone:this.drone,visibilityDirection:this.direction,visibilityEnabled:this.enabled});
+    material.vertexShader='varying vec3 visibilityWorld;\n'+material.vertexShader;
+    material.vertexShader=material.vertexShader.replace('tex=uv;', 'visibilityWorld=(modelMatrix*instanceMatrix*vec4(position,1.)).xyz;tex=uv;');
+    material.fragmentShader=`varying vec3 visibilityWorld;
+      uniform vec3 visibilityEye,visibilityEnd,visibilityDrone,visibilityDirection;
+      uniform float visibilityEnabled;\n`+material.fragmentShader;
+    material.fragmentShader=material.fragmentShader.replace('#include <tonemapping_fragment>', `
+      vec3 corridor=visibilityEnd-visibilityEye;
+      float along=clamp(dot(visibilityWorld-visibilityEye,corridor)/max(dot(corridor,corridor),.001),0.,1.);
+      float radial=distance(visibilityWorld,visibilityEye+along*corridor);
+      vec3 rayDirection=normalize(visibilityWorld-visibilityEye);
+      float rayDepth=max(0.,dot(visibilityDrone-visibilityEye,rayDirection));
+      radial=min(radial,distance(visibilityEye+rayDirection*rayDepth,visibilityDrone));
+      vec3 viewDirection=-vec3(viewMatrix[0][2],viewMatrix[1][2],viewMatrix[2][2]);
+      float corridorActive=(1.-step(.05,distance(cameraPosition,visibilityEye)))*step(.999,dot(viewDirection,visibilityDirection));
+      gl_FragColor.a*=1.-.94*(1.-smoothstep(1.8,3.2,radial))*visibilityEnabled*corridorActive;
+      #include <tonemapping_fragment>
+    `);
+  }
+
   apply(material: THREE.MeshBasicMaterial): void {
     material.onBeforeCompile = shader => {
       shader.uniforms.visibilityDirection = this.direction;

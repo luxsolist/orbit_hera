@@ -1,3 +1,5 @@
+// @ts-expect-error — development middleware
+import {assetEditor} from "./scripts/vite-asset-editor.mjs";
 import { defineConfig } from "vite";
 import obfuscator from "vite-plugin-javascript-obfuscator";
 // @ts-expect-error — JS 빌드 헬퍼(타입 선언 없음)
@@ -24,6 +26,7 @@ export default defineConfig({
   plugins: [
     // 맵 청크는 워처/색인을 우회해 디스크에서 직접 서빙(위 watch.ignored 와 한 쌍). 개발 서버 전용.
     serveMapsFromDisk(),
+    assetEditor(),
     // 프로덕션 빌드에서만 우리 소스(src/*)를 난독화. node_modules(three 등)와 생성 데이터는 제외.
     // 보수적 옵션(문자열 배열/식별자 리네임)만 — control-flow flattening·selfDefending 등 위험/무거운 옵션 비활성.
     obfuscator({

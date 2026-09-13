@@ -1,3 +1,5 @@
+import {EnemyPlasmoidRenderer} from './EnemyPlasmoidRenderer';
+import {EliteBossCombat} from './EliteBossCombat';
 import * as THREE from "three";
 import { EnemyVisibility } from "./EnemyVisibility";
 import { CoreEnemy, chooseTarget, buildBoidGrid, recomputeSteer, advanceGlobalPulse, KILL_STAGGER_SEC, CORE_GEO, SHELL_GEOS, MARKER_TELEGRAPH_SEC, type Boid } from "./CoreEnemy";
@@ -175,6 +177,7 @@ export class EnemyManager {
   private spec: PlasmoidSpec;
   private kiterArche: PlasmoidKiterArchetype; // 카이터 공격 파라미터(전 개체 공유)
   private drain: DrainBeams;
+  private plasmoidRenderer: EnemyPlasmoidRenderer;
   private coreInst: THREE.InstancedMesh; // 발광 코어 일괄 렌더(드로우콜 1개)
   // 역할 실루엣(P3 §6.7) — 직무별 셸 InstancedMesh(형태=직무 채널). 레이캐스트는 4개 모두 대상.
   private shellInsts: Record<PlasmoidArchetype, THREE.InstancedMesh>;
@@ -185,6 +188,7 @@ export class EnemyManager {
   private frame = 0; // 프레임 분산 라운드로빈 위상
   private timeSec = 0; // 전투 경과(patrol 궤도 위상 등 시간 기반 행동용)
   private spawnTimer = 0;
+  private combat:EliteBossCombat;
   private peaceful = false; // 탐방 모드 — 웨이브 미시작 + 클리어 시 자동 재시작 억제
   private burstMode = false; // 일괄 스폰 모드 — 웨이브 미사용(미션: 구역 내 N마리 한번에) + 클리어 시 자동 재시작 억제
   private riftAnchor: Vec3 = { x: 0, y: 0, z: 0 }; // 소산 표류 앵커(균열 위치 프록시 — 일괄 스폰 중심). 개체와 공유 참조.
@@ -266,6 +270,12 @@ export class EnemyManager {
     this.rand = rand;
     this.kiterArche = spec.archetypes.kiter;
     this.drain = new DrainBeams(scene);
+    this.combat=new EliteBossCombat(scene,{
+      visible:(a,b)=>world.segmentHitsBuilding(a.x,a.y,a.z,b.x,b.y,b.z)>1,
+      destination:target=>{const spec={...this.spec.archetypes.rusher.leap!,minDist:15,maxDist:25,dyMin:0,dyMax:3};const v=this.pickLeapDest(spec,target);return v?new THREE.Vector3(v.x,v.y,v.z):null;},
+      hit:(player,amount,from)=>{if(player.takeDamage(amount))this.onPlayerHit?.(amount,from);},
+      beam:(a,b,color)=>this.drain.spawn(a,b,color)
+    });
     // 낙인/파문 — 파문이 낙인 붙은 플레이어를 통과하면 피해(머시 무적은 takeDamage 가 거름, 낙인은 소모됨)
     this.brand = new BrandSystem(scene, players, spec.sweep, world.buildings ?? undefined);
     this.brand.onSweepHit = (idx, dmg) => {
@@ -284,13 +294,16 @@ export class EnemyManager {
     // 코어 InstancedMesh — 살아있는/디졸브 개체 코어 일괄 렌더(MeshBasic + instanceColor = 발광).
     this.coreInst = new THREE.InstancedMesh(CORE_GEO, new THREE.MeshBasicMaterial(), INST_CAP);
     this.visibility.apply(this.coreInst.material as THREE.MeshBasicMaterial);
+    this.coreInst.visible = false;
+    this.plasmoidRenderer=new EnemyPlasmoidRenderer(scene,INST_CAP,this.visibility);
     this.coreInst.frustumCulled = false;
     this.coreInst.count = 0;
     scene.add(this.coreInst);
 
     // 셸 InstancedMesh — 살아있는 적 본체 일괄 렌더 + 레이캐스트 대상. 자체발광(MeshBasic — 조명에 탁해지지 않게)
     // + DoubleSide(코앞 적 내부 적중) + 그림자. **직무별 4형태**(P3 §6.7 — 형태=직무 채널 분리).
-    const shellMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+    const shellMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, colorWrite:false, depthWrite:false });
+    shellMat.visible=false; // Retain raycast geometry and instance mapping only.
     this.visibility.apply(shellMat);
     const makeShell = (geo: THREE.BufferGeometry) => {
       const m = new THREE.InstancedMesh(geo, shellMat, INST_CAP);
@@ -314,6 +327,7 @@ export class EnemyManager {
    *  - 코어: 살아있는+디졸브 개체 → 발광색(coreBright). 디졸브 중 셸은 개별 메시(디졸브 셰이더).
    */
   private updateInstances() {
+    this.plasmoidRenderer.update(this.enemies,this.timeSec,e=>this.combat.visualPose(e),this.players[0]?.worldPosition,e=>this.combat.visualEmphasis(e));
     let ci = 0;
     const counts: Record<PlasmoidArchetype, number> = { rusher: 0, kiter: 0, marker: 0 };
     for (const list of this.instanceEnemiesBy.values()) list.length = 0;
@@ -935,6 +949,7 @@ export class EnemyManager {
       if (enemy.markerAimLeft <= 0 &&
         this.world.segmentHitsBuilding(from.x, from.y, from.z, targetPos.x, targetPos.y, targetPos.z) > 1) {
         this.brand.launch(from, targetIdx, enemy, tomb);
+          enemy.visualAttackLeft=.3;enemy.visualRecoverLeft=1.6;
       }
       return;
     }
@@ -953,6 +968,7 @@ export class EnemyManager {
       if (enemy.markerAimLeft <= 0 &&
         this.world.segmentHitsBuilding(from.x, from.y, from.z, targetPos.x, targetPos.y, targetPos.z) > 1) {
         this.brand.launchBuilding(from, buildingId, enemy, tomb);
+          enemy.visualAttackLeft=.3;enemy.visualRecoverLeft=1.6;
       }
       return;
     }
@@ -1220,6 +1236,7 @@ export class EnemyManager {
     this.tickSpawns(dt);
     this.tickReinforce(dt); // 미션 점진 투입(균열 증원) — 웨이브 모드에선 무동작
     this.buildTargets(dt);
+    if(!this.peaceful)this.combat.tick(dt,this.enemies,this.players);
     const targets = this.targets;
 
     // 살아있는 적 스냅샷(분리용) — enemies 의 alive 부분과 같은 순서 → 아래 루프의 bi 와 인덱스 정합.
@@ -1249,9 +1266,13 @@ export class EnemyManager {
         continue;
       }
       const myIdx = bi++;
+      if(this.combat.bossBusy&&(enemy.deployRole==='boss'||enemy.deployRole==='elite')){
+        this.combat.hold(enemy,p,dt);continue;
+      }
       enemy.decayProvoke(dt); // 유발 감쇠 — 분기 전에 1회(모든 행동 경로가 같은 시계를 본다)
       // 진형 행동(hold/patrol/escort) — 피격(provoked) 전까지 어그로 대신 진형 유지 + 기회 공격
       if (enemy.behavior !== "hunt" && !enemy.provoked) {
+        this.combat.cancel(enemy);
         this.formationStep(enemy, p, dt, boids, grid, myIdx);
         continue;
       }
@@ -1267,6 +1288,7 @@ export class EnemyManager {
       const acquireSq = player ? AWARENESS_RADIUS_SQ : 0;
       const loseSq = player ? AWARENESS_LOSE_SQ : 0;
       if (!engagesPlayer(idx >= 0, enemy.targetIndex >= 0, distSq, enemy.provoked, acquireSq, loseSq)) {
+        this.combat.cancel(enemy);
         enemy.targetIndex = -1;
         // 인식이 풀리면 진행 중인 도약 시전도 버린다. 남겨 두면 leapStep 이 호출되지 않아 시전이
         // 얼어붙고, 나중에 재인식했을 때 **플레이어가 떠난 지 한참 된 옛 좌표**로 도약한다.
@@ -1282,6 +1304,7 @@ export class EnemyManager {
       const recompute = recomputeSteer(p.distanceToSquared(t.pos), NEAR_DIST_SQ, this.frame, myIdx, STEER_STRIDE);
       const steer = { vel: t.vel, boids, index: myIdx, grid, recompute };
       // 도주형 = 예측 회피·원거리 드레인 / 추격형 = 예측 요격·접촉. 공격은 공통 attack()(흡수=성장).
+      if(t.player&&this.combat.step(enemy,t.pos,t.player,dt))continue;
       enemy.update(dt, t.pos, 1, steer);
       if (enemy.isKiter) this.clampKiterAltitude(p); // 지면 아래로 가라앉지 않게
       // 러셔 짧은 돌진(P3 §6.7) — 접근 밴드에서 순간 가속으로 카이팅 파훼(내부 쿨다운이 빈도 제한)
@@ -1290,7 +1313,7 @@ export class EnemyManager {
         if (dd > RUSHER_DASH_MIN && dd < RUSHER_DASH_MAX) enemy.startDash();
       }
       // 차원도약 — 이 분기에 도달했다는 건 engagesPlayer 통과, 즉 **플레이어를 인식 중**이라는 뜻이다.
-      if (t.player && (enemy.role === "kiter" || enemy.role === "rusher")) this.leapStep(enemy, p, t.pos, dt);
+      if (t.player && enemy.deployRole!=="boss" && !this.combat.bossBusy && (enemy.role === "kiter" || enemy.role === "rusher")) this.leapStep(enemy, p, t.pos, dt);
       if (enemy.role === "marker") this.markerFire(enemy, p, t.pos, idx, dt);
       else this.attack(enemy, t.pos, p, t.player, null);
     }
@@ -1505,6 +1528,9 @@ export class EnemyManager {
   }
 
   clear() {
+    this.combat.clear();
+    this.plasmoidRenderer.clear();
+    this.plasmoidRenderer.dispose();
     for (const e of this.enemies) {
       this.scene.remove(e.group);
       e.dispose();

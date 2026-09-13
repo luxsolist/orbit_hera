@@ -371,6 +371,8 @@ export class CoreEnemy {
   readonly hitMesh: THREE.Mesh; // 레이캐스트 대상(셸)
   private shellMat: DissolveMaterial;
   // 발광 코어는 메시를 갖지 않고 시각 상태만 보유 — EnemyManager 가 InstancedMesh 로 일괄 렌더(드로우콜 절감).
+  visualRecoverLeft = 0;
+  visualAttackLeft = 0; // Actual attack event, independent of damage outcome.
   coreScale = 1; // 코어 상대 크기(1=정상, 디졸브 시 0으로 수축)
   coreBright = 2.2; // 코어 발광 세기(박동/피격/디졸브로 변동)
   glow = 1; // 강함 비례 발광 배수(강체=청백일수록 ↑) — 셸·코어 인스턴스 색 가산(스폰 시 주입)
@@ -649,6 +651,8 @@ export class CoreEnemy {
   }
 
   update(dt: number, target: THREE.Vector3, speedScale = 1, steer?: SteerInput) {
+    this.visualRecoverLeft=Math.max(0,this.visualRecoverLeft-dt);
+    this.visualAttackLeft=Math.max(0,this.visualAttackLeft-dt);
     this.bobPhase += dt * BOB_RATE;
     const staggered = this.staggerLeft > 0;
     if (staggered) this.staggerLeft = Math.max(0, this.staggerLeft - dt);
@@ -773,6 +777,7 @@ export class CoreEnemy {
   tryAttack(playerPos: THREE.Vector3, range: number, cooldown = 1.0): boolean {
     if (!this.canAttack(playerPos, range)) return false;
     this.attackCooldown = cooldown;
+    if(this.role!=="marker")this.visualAttackLeft=.3;
     return true;
   }
 

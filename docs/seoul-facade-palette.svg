@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520">
+<rect width="960" height="520" fill="#18212b"/>
+<g font-family="sans-serif" fill="white"><text x="24" y="36" font-size="22">SEOUL · 16 sampled facade colors</text>
+<rect x="24" y="62" width="210" height="64" rx="6" fill="#efded3"/><text x="24" y="146" font-size="14">01 웜 아이보리 · #EFDED3</text>
+<rect x="258" y="62" width="210" height="64" rx="6" fill="#b8aba5"/><text x="258" y="146" font-size="14">02 회베이지 · #B8ABA5</text>
+<rect x="492" y="62" width="210" height="64" rx="6" fill="#dbd2cf"/><text x="492" y="146" font-size="14">03 밝은 콘크리트 · #DBD2CF</text>
+<rect x="726" y="62" width="210" height="64" rx="6" fill="#a19da4"/><text x="726" y="146" font-size="14">04 라벤더 그레이 · #A19DA4</text>
+<rect x="24" y="172" width="210" height="64" rx="6" fill="#72818a"/><text x="24" y="256" font-size="14">05 블루 그레이 · #72818A</text>
+<rect x="258" y="172" width="210" height="64" rx="6" fill="#40535c"/><text x="258" y="256" font-size="14">06 짙은 청회색 · #40535C</text>
+<rect x="492" y="172" width="210" height="64" rx="6" fill="#56535a"/><text x="492" y="256" font-size="14">07 차콜 · #56535A</text>
+<rect x="726" y="172" width="210" height="64" rx="6" fill="#a4948d"/><text x="726" y="256" font-size="14">08 토프 · #A4948D</text>
+<rect x="24" y="282" width="210" height="64" rx="6" fill="#e0c4b8"/><text x="24" y="366" font-size="14">09 살구 베이지 · #E0C4B8</text>
+<rect x="258" y="282" width="210" height="64" rx="6" fill="#5c5d5f"/><text x="258" y="366" font-size="14">10 그래파이트 · #5C5D5F</text>
+<rect x="492" y="282" width="210" height="64" rx="6" fill="#797573"/><text x="492" y="366" font-size="14">11 스톤 그레이 · #797573</text>
+<rect x="726" y="282" width="210" height="64" rx="6" fill="#615045"/><text x="726" y="366" font-size="14">12 브라운 · #615045</text>
+<rect x="24" y="392" width="210" height="64" rx="6" fill="#e7dcde"/><text x="24" y="476" font-size="14">13 펄 화이트 · #E7DCDE</text>
+<rect x="258" y="392" width="210" height="64" rx="6" fill="#878e98"/><text x="258" y="476" font-size="14">14 스틸 그레이 · #878E98</text>
+<rect x="492" y="392" width="210" height="64" rx="6" fill="#6d7c84"/><text x="492" y="476" font-size="14">15 회청색 · #6D7C84</text>
+<rect x="726" y="392" width="210" height="64" rx="6" fill="#9f8d94"/><text x="726" y="476" font-size="14">16 더스티 로즈 · #9F8D94</text>
+</g></svg>

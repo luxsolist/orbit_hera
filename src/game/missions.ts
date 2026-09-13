@@ -17,11 +17,12 @@ export function normalizeMissionPool(data: unknown): MissionSpecV2[] {
 }
 
 /** 미션 풀을 받는다. 실패/빈 풀은 내장 DEFAULT_MISSIONS_V2 로 폴백(전투 진입 차단 방지). */
-export async function fetchMissions(): Promise<MissionSpecV2[]> {
+export async function fetchMissions(cityId?:string,stage?:number): Promise<MissionSpecV2[]> {
   try {
     const res = await fetch(`${BASE}missions/index.json`, { cache: "no-cache" });
     if (!res.ok) return DEFAULT_MISSIONS_V2;
-    const pool = normalizeMissionPool(await res.json());
+    const all = normalizeMissionPool(await res.json());
+    const pool=all.filter(m=>!m.cityId||!cityId||m.cityId===cityId).filter(m=>m.stage===undefined||stage===undefined||m.stage===stage);
     return pool.length > 0 ? pool : DEFAULT_MISSIONS_V2;
   } catch {
     return DEFAULT_MISSIONS_V2;

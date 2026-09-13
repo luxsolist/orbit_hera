@@ -222,6 +222,7 @@ export const EXPERIMENT_MISSION_ID = "experiment-strike";
 
 /** 이 장이 지금 이 미션에서 증거를 잘 얻는가 — 선택 가중(전조 콘솔 강조와 동일 논리). */
 export function missionWeight(m: MissionSpecV2, chapter: number): number {
+  if(m.stage!==undefined && m.stage!==chapter)return 0;
   const g = m.goal.type;
   if (m.id === EXPERIMENT_MISSION_ID) return chapter === 5 ? 8 : 0; // 앵커 — 5장에서만 등장·강조
   switch (chapter) {

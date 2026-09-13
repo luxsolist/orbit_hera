@@ -5,12 +5,14 @@ import { atmosphere, box, drone, entity, glow, material, street, type Street } f
 import { observationState, sharedPulse } from "./sequence";
 
 function camera(ctx: SceneCtx, p: number[], target: number[], fov = 48): void {
+  ctx.scene.userData.introCityUpdate?.();
   ctx.camera.fov = fov;
   ctx.camera.updateProjectionMatrix();
   ctx.camera.position.fromArray(p);
   ctx.camera.lookAt(new THREE.Vector3().fromArray(target));
 }
 function damageStreet(set:Street,t:number):void {
+  if(set.damage){set.damage(t);return;}
   const loss=THREE.MathUtils.smoothstep(t,1,4);
   set.details.traverse(o=>{
     if(o instanceof THREE.Mesh && o.position.x<.8) {
@@ -37,7 +39,8 @@ function alley(name:string,duration:number,collapse=false):CutScene {
   },
     update(t,_dt,ctx){
       const shot=collapse?t+9:t;
-      camera(ctx,[3.8-shot*.16,2.3,2-shot*.26],[0,1.7,-9]);
+      if(ctx.scene.userData.introCityAnchor)camera(ctx,[18-shot*.16,42,24-shot*.26],[0,0,0],55);
+      else camera(ctx,[3.8-shot*.16,2.3,2-shot*.26],[0,1.7,-9]);
       set.dust.rotation.y=t*.006;
       if(visitor){
         visitor.visible=collapse || t>=4.5;
@@ -100,10 +103,16 @@ function safety():CutScene {
     },
     update(t,_dt,ctx){
       bot.visible=t>=4;
-      bot.position.z=3-Math.max(0,t-4)*.65;
-      bot.setPose({phase:Math.max(0,t-4)*3.8,walk:THREE.MathUtils.smoothstep(t,4,4.4)});
+      const elapsed=Math.max(0,t-4),distance=elapsed*.65;
+      bot.position.z=3-distance;
+      const ground=(x:number,z:number):number=>ctx.scene.userData.introGroundHeight?.(x,z)??0;
+      bot.position.y=ground(bot.position.x,bot.position.z);
+      // 0.24 m half-stride, half-cycle stance: one gait cycle travels 0.96 m.
+      bot.setPose({phase:distance/.96*Math.PI*2,walk:elapsed>0?1:0,stride:.24,stance:.5,
+        footHeights:{left:ground(bot.position.x+.87,bot.position.z)-bot.position.y,right:ground(bot.position.x-.87,bot.position.z)-bot.position.y}});
       danger.scale.setScalar(sharedPulse(28+t));
-      camera(ctx,[4.8,3.2,9-t*.15],[0,1.8,-2],53);
+      // Wider physical camera distance preserves road/building scale cues without shrinking the model.
+      camera(ctx,[9,6.5+bot.position.y,16-t*.15],[0,1.8+bot.position.y,-2],50);
     },
     dispose(){bot.dispose();}
   };

@@ -3,7 +3,17 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader.js";
 import { LensDistortPass } from "./LensDistortPass";
+
+/** FXAA uses physical render-target pixels; Composer supplies DPR-adjusted sizes. */
+export class EdgeAntialiasPass extends ShaderPass {
+  constructor(){super(FXAAShader);this.material.toneMapped=false;}
+  override setSize(width:number,height:number):void {
+    this.uniforms.resolution.value.set(1/Math.max(1,width),1/Math.max(1,height));
+  }
+}
 
 /** Composer.addPass/setSize overrides constructor resolution, so scale every resize. */
 export class HalfResolutionBloomPass extends UnrealBloomPass {
@@ -30,10 +40,13 @@ export function createComposer(
     new THREE.Vector2(Math.max(1, window.innerWidth >> 1), Math.max(1, window.innerHeight >> 1)),
     0.85, // strength
     0.6, // radius
-    0.75 // threshold — 밝은 하늘은 블룸 제외, 빔/임팩트 등 진짜 발광체만 빛나게
+    scene.userData.paintedCity ? 2.0 : 0.75 // threshold — 밝은 하늘은 블룸 제외, 빔/임팩트 등 진짜 발광체만 빛나게
   );
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
+  // Renderer antialias only covers the default framebuffer, not Composer targets.
+  // Detect edges after tone mapping in display color space; HTML HUD remains untouched.
+  composer.addPass(new EdgeAntialiasPass());
 
   return composer;
 }

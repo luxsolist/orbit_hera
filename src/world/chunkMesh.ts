@@ -1,9 +1,16 @@
+import {applyPaintedMaterials} from './PaintedCityStyle';
+import {addStreetGeometry} from './StreetGeometry';
+import {defaultAppearance,seoulAppearance,type CityAppearance} from './cities';
 // 타일 월드 청크(WorldChunk, 셀-로컬 m) → THREE 메시 + 충돌/높이 등록 데이터.
 // StreamingWorld 의 ChunkIO.build 가 호출하는 동기 메시화 단계(시간예산 빌드 큐 안에서 실행).
 //
 // 좌표: 청크 데이터는 셀-로컬 미터(원점 = 셀 NW). 렌더는 로컬 프레임(= 셀-로컬 − origin)으로 옮겨
 // 플레이어를 원점 근처에 두고 Float32 정밀도를 확보한다(부동 원점 단순화판).
 import * as THREE from "three";
+import {addStreetProps} from "./StreetProps";
+import {paintUrbanGround} from "./UrbanGround";
+import {paintStreets, streetMaterial, STREET} from "./StreetSurface";
+import { facadeStyle, facadeColor, facadeVariant, applyRoofColor, dressBuilding, createFacadeMaterial } from "./BuildingFacade";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { setUniformColor, elevationColor, GROUND_GREEN, SAND_TAN } from "./geo";
 import { buildingBaseColor } from "./precinct";
@@ -51,6 +58,8 @@ export interface ChunkBuild {
 
 // 지형은 청크 전용 베이크 텍스처(map)를 쓴다(아래 bakeSurfaceTexture). terrainMat 은 텍스처 실패 시 폴백(고도 vertexColors).
 const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.97, metalness: 0 });
+const facadeMaterials=new WeakMap<CityAppearance,THREE.MeshStandardMaterial>();
+function facadeMaterial(profile:CityAppearance){let mat=facadeMaterials.get(profile);if(!mat){mat=createFacadeMaterial(profile);facadeMaterials.set(profile,mat);}return mat;}
 const cityMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.82, metalness: 0.05 });
 const wallMat = new THREE.MeshStandardMaterial({ color: WALL_COLOR, flatShading: true, roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
 
@@ -68,15 +77,13 @@ const AREA_COLOR: Record<string, number> = {
 
 // ── 지형 표면 베이크 텍스처 ── 도로/물/면을 별도 지오메트리로 띄우지 않고 지형 표면색으로 구워(=표면이 곧 색)
 // 굴곡과 무관하게 완벽 밀착(z-fighting·뚫림·부유 제거). 페인트 순서 = 기존 레이어 순서(면<물<도로<중앙선).
-const ROAD_CSS = "#44484f";   // 아스팔트
-const CENTER_CSS = "#cdb24a"; // 중앙선(연 노랑)
 const WATER_CSS = `#${WATER_COLOR.toString(16).padStart(6, "0")}`; // 수역(평면 색) — 청록. 근거는 palette.ts
 const SAND_CSS = "#e4d8ba";   // 비초록 지표(SAND_TAN, 연하게)
 const TEX_PER_M = 1;          // 텍스처 해상도(px/m)
 const MAX_TEX = 1024;         // 청크 텍스처 한 변 최대 px(메모리 상한)
 // 차선은 **간선도로만**(폭≥LANE_MIN_W m). OSM 은 한 도로를 방향·램프별 여러 평행 way 로 쪼개므로,
 // 모든 way 에 차선을 그으면 주거로·서비스로·*_link 램프까지 노란 선 다발이 됨. 16=secondary↑(motorway/trunk/primary/secondary)만.
-const LANE_MIN_W = 16;
+
 
 /**
  * 청크 지형 표면 텍스처를 캔버스에 굽는다 — 고도색 베이스(tn×tn ImageData 업스케일) 위에
@@ -90,7 +97,7 @@ export function linearToSrgbByte(v: number): number {
   return Math.round(s * 255);
 }
 
-function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain): THREE.CanvasTexture | null {
+function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain, profile:CityAppearance=defaultAppearance): THREE.CanvasTexture | null {
   if (typeof document === "undefined") return null;
   const { size: tn, cellX0, cellZ0, step } = t;
   const chunkSize = step * (tn - 1);
@@ -135,10 +142,13 @@ function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain): THREE.CanvasTex
   };
   ctx.lineCap = "round"; ctx.lineJoin = "round";
 
+  if(profile.ground.enabled)paintUrbanGround(ctx,chunk.objects?.buildings??[],chunk.objects?.areas??[],sc,cellX0,cellZ0,profile.ground);
+
   // 2) 면 — 비초록(사막/해변/바위/포장)만(식생은 베이스 초록과 동일).
   ctx.fillStyle = SAND_CSS;
-  for (const a of chunk.objects?.areas ?? []) {
+  for (const a of profile.ground.enabled?[]:chunk.objects?.areas ?? []) {
     if (a.p.length / 2 < 3 || AREA_COLOR[a.k] !== SAND_TAN) continue;
+    ctx.fillStyle=a.k==='pavement'?STREET.pavement:SAND_CSS;
     trace(a.p, true); ctx.fill();
   }
   // 3) 수역 — 면(연못/호수)은 구멍(섬·제방) 도려내며 채움(even-odd), 강/하천(w)은 폭 리본 stroke.
@@ -161,19 +171,7 @@ function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain): THREE.CanvasTex
     }
     ctx.fill("evenodd");
   }
-  // 4) 도로(아스팔트).
-  ctx.strokeStyle = ROAD_CSS;
-  for (const r of chunk.objects?.roads ?? []) {
-    if (r.p.length / 2 < 2) continue;
-    trace(r.p, false); ctx.lineWidth = Math.max(1, (r.w ?? 6) * sc); ctx.stroke();
-  }
-  // 5) 차선(노랑) — 간선도로(폭≥LANE_MIN_W)만 가운데 1줄(가늘게). 그 미만(램프·주거로·서비스로)은 생략.
-  ctx.strokeStyle = CENTER_CSS;
-  ctx.lineWidth = Math.max(0.5, 0.2 * sc);
-  for (const r of chunk.objects?.roads ?? []) {
-    if ((r.w ?? 6) < LANE_MIN_W || r.p.length / 2 < 2) continue;
-    trace(r.p, false); ctx.stroke();
-  }
+  if(!profile.street.geometry)paintStreets(ctx,chunk.objects?.roads??[],sc,cellX0,cellZ0,profile.street);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -260,7 +258,10 @@ export function forEachLandmarkNear(
   }
 }
 
-export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: number, originZ: number): ChunkBuild {
+export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: number, originZ: number, appearance:CityAppearance|boolean = defaultAppearance): ChunkBuild {
+  // Boolean compatibility for older standalone review pages. Runtime passes a city profile.
+  const profile=typeof appearance==='boolean'?(appearance?seoulAppearance:defaultAppearance):appearance;
+  const detailedBuildings=profile.buildings.enabled;
   const group = new THREE.Group();
   group.name = `chunk:${chunk.cx}:${chunk.cz}`;
 
@@ -294,9 +295,9 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
     geo.setIndex(idx);
     geo.computeVertexNormals();
-    const tex = bakeSurfaceTexture(chunk, terrain);
+    const tex = bakeSurfaceTexture(chunk, terrain, profile);
     // 텍스처 성공 → 청크 전용 머티리얼(언로드 시 dispose). 실패 → 공유 폴백(고도 vertexColors).
-    const mat = tex ? new THREE.MeshStandardMaterial({ map: tex, roughness: 0.97, metalness: 0 }) : terrainMat;
+    const mat = tex ? streetMaterial(tex,originX,originZ,profile.street) : terrainMat;
     const mesh = new THREE.Mesh(geo, mat);
     mesh.receiveShadow = true;
     group.add(mesh);
@@ -331,7 +332,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     shape.moveTo(local[0], -local[1]);
     for (let i = 1; i < n; i++) shape.lineTo(local[i * 2], -local[i * 2 + 1]);
     shape.closePath();
-    let geo: THREE.ExtrudeGeometry;
+    let geo: THREE.BufferGeometry;
     try {
       geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, steps: 1 });
     } catch {
@@ -345,7 +346,16 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
       const jitter = ((Math.abs(Math.round(cxs / n * 7 + czs / n * 13)) % 100) / 100) || 0.5;
       bcol.setHex(buildingBaseColor(h, null)).offsetHSL(0, 0, (jitter - 0.5) * 0.12);
     }
+    if(detailedBuildings){
+      let area=0;for(let i=0,j=n-1;i<n;j=i++)area+=local[j*2]*local[i*2+1]-local[i*2]*local[j*2+1];
+      const style=b.lm?-1:facadeStyle(h,Math.abs(area)*.5,profile);
+      if(style>=0){
+        bcol.setHex(facadeColor(cxs/n,czs/n,profile));
+      }
+      geo=dressBuilding(geo,local,baseY,style,facadeVariant(cxs/n,czs/n));
+    }
     setUniformColor(geo, bcol);
+    if(detailedBuildings)applyRoofColor(geo,cxs/n,czs/n,profile);
     geo.deleteAttribute("uv");
     const vCount = geo.getAttribute("position").count;
     bGeos.push(geo);
@@ -353,7 +363,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     buildings.push({ poly: local, top, vStart: bVtx, vCount, baseY, ...(b.lm ? { lm: b.lm, ...(b.n ? { n: b.n } : {}) } : {}) });
     bVtx += vCount;
   }
-  const buildingMesh = addMerged(group, bGeos, cityMat, true);
+  const buildingMesh = addMerged(group, bGeos, detailedBuildings ? facadeMaterial(profile) : cityMat, true);
 
   // ── 도로 — 지형 표면 텍스처에 베이크됨(bakeSurfaceTexture). 여기선 미니맵용 폴리라인만 수집. ──
   const roads: ChunkBuild["roads"] = [];
@@ -422,6 +432,11 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     sites.push({ x: st.x - originX, y: st.y, z: st.z - originZ, r: st.r, lm: st.lm, ...(st.n ? { n: st.n } : {}) });
   }
 
+  if(profile.street.geometry && terrain)addStreetGeometry(group,chunk.objects?.roads??[],terrain,originX,originZ,profile.street);
+
+  if(profile.props.enabled && terrain)addStreetProps(group,chunk,chunkSize,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.props);
+
+  if(profile.renderStyle==='painted')applyPaintedMaterials(group);
   return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, walls, roads, water, sites };
 }
 
@@ -434,6 +449,7 @@ export function disposeChunkGroup(group: THREE.Group): void {
     const mesh = o as THREE.Mesh;
     if (mesh.geometry) mesh.geometry.dispose();
     const mat = mesh.material as THREE.MeshStandardMaterial | undefined;
-    if (mat && mat.map) { mat.map.dispose(); mat.dispose(); }
+    if (mat?.map) { mat.map.dispose(); mat.dispose(); }
+    else if(mat?.userData.paintedOwned)mat.dispose();
   });
 }

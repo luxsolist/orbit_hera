@@ -1,3 +1,4 @@
+import {UnrealBloomPass} from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import * as THREE from "three";
 import type { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { createComposer, disposeComposer } from "../fx/postprocessing";
@@ -42,6 +43,7 @@ export class MenuBackground {
     this.cut = this.scenes[(Math.random() * this.scenes.length) | 0];
     this.t = 0;
     this.cut.build(this.ctx);
+    for(const pass of this.composer.passes)if(pass instanceof UnrealBloomPass)pass.threshold=this.scene.userData.paintedCity?2:.75;
   }
 
   update(dt: number): void {
@@ -66,6 +68,7 @@ export class MenuBackground {
   }
 
   private clearScene(): void {
+    this.scene.userData={};
     for (let i = this.scene.children.length - 1; i >= 0; i--) {
       const o = this.scene.children[i];
       this.scene.remove(o);

@@ -492,10 +492,22 @@ export class PlayerController {
       }
     }
 
+    const previousGrounded=this.grounded;
+    const previousTerrain=this.world.heightAt(this.position.x,this.position.z);
+    const previousFeet=this.position.y-this.eye;
     this.moveHorizontal(dt); // 서브스테핑 충돌 해소(고속 터널링 방지)
 
     // --- 수직(이동 형태별) ---
-    if (move.mode === "walk") this.updateWalkVertical(dt, move.jump);
+    if (move.mode === "walk") {
+      // Follow continuous terrain down slopes without repeated fall/landing transitions.
+      const terrain=this.world.heightAt(this.position.x,this.position.z);
+      const travel=Math.hypot(this.hVel.x,this.hVel.z)*dt;
+      const terrainDrop=previousTerrain-terrain;
+      if(previousGrounded && this.velocityY<=0 && Math.abs(previousFeet-previousTerrain)<.06
+        && terrainDrop>=0 && terrainDrop<=Math.min(1.2,travel*.8+.025)
+        && !this.input.wasPressed("Space"))this.position.y=terrain+this.eye;
+      this.updateWalkVertical(dt, move.jump);
+    }
     else this.updateFlyVertical(dt, move, lookClimb);
     // 하드리밋 — 발밑 지면 +5km(지면 상대, 고지대 지형 대응). 비행 천장(maxRiseAltitude)보다 위의 백스톱.
     this.position.y = Math.min(this.position.y, this.world.heightAt(this.position.x, this.position.z) + HARD_CEILING + this.eye);

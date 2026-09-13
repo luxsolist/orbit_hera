@@ -21,6 +21,8 @@ export class DronePresentation {
   private yaw: number;
   private lastPosition = new THREE.Vector3(Infinity, Infinity, Infinity);
   private alternate = 0;
+  private footAnchors: Partial<Record<'left'|'right',THREE.Vector3>> = {};
+  private footOffsets={left:0,right:0};
   private disposed = false;
   private mats: { material: THREE.MeshStandardMaterial; opacity: number; transparent: boolean; emissive: THREE.Color; intensity: number }[] = [];
   private shield=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),new THREE.MeshBasicMaterial({color:0x65ccff,transparent:true,opacity:.14,wireframe:true,depthWrite:false}));
@@ -100,7 +102,7 @@ export class DronePresentation {
     const p = this.player, pos = p.worldPosition, state = p.motionState;
     const walker = this.model instanceof WalkerMech;
     reset ||= this.lastPosition.distanceToSquared(pos) > 10000;
-    if (reset) { this.yaw = p.viewYaw; this.animator = new WalkerMotionAnimator(); }
+    if (reset) { this.footAnchors={};this.footOffsets={left:0,right:0}; this.yaw = p.viewYaw; this.animator = new WalkerMotionAnimator(); }
     const delta = Math.atan2(Math.sin(p.viewYaw-this.yaw),Math.cos(p.viewYaw-this.yaw));
     this.yaw += delta * (reset ? 1 : 1-Math.exp(-dt*12));
     // Keep the pelvis inside the torso articulation range after a fast mouse turn.
@@ -109,19 +111,28 @@ export class DronePresentation {
     if (this.model instanceof WalkerMech) {
       this.model.position.y -= p.spec.body.eyeHeight;
       this.model.rotation.set(0, this.yaw+Math.PI, 0);
-      const pose={...this.animator.update(dt,{...state,yaw:this.yaw}), aim:1,
+      const actual=dt>0&&!reset?{velocityX:(pos.x-this.lastPosition.x)/dt,velocityZ:(pos.z-this.lastPosition.z)/dt}:{velocityX:0,velocityZ:0};
+      const pose={...this.animator.update(dt,{...state,...actual,yaw:this.yaw}), aim:1,
         aimYaw:Math.atan2(Math.sin(p.viewYaw-this.yaw),Math.cos(p.viewYaw-this.yaw)), aimPitch:p.viewPitch};
       this.model.setPose(pose);
-      if(state.grounded){
-        const heights={left:0,right:0};
-        for(const side of ["left","right"] as const){
-          const foot=this.model.legs[side].ankle.getWorldPosition(new THREE.Vector3());
-          const ground=p.gameWorld.heightAt(foot.x,foot.z),roof=p.gameWorld.topAt(foot.x,foot.z);
-          const surface=roof>ground && roof<=this.model.position.y+.4?roof:ground;
-          heights[side]=THREE.MathUtils.clamp(surface-this.model.position.y,-.35,.35);
-        }
-        this.model.setPose({...pose,footHeights:heights});
+      const targets:Partial<Record<'left'|'right',THREE.Vector3>>={};
+      for(const [index,side] of ['left','right'].entries()){
+        const key=side as 'left'|'right',leg=this.model.legs[key];
+        const foot=leg.ankle.getWorldPosition(new THREE.Vector3());
+        const ground=p.gameWorld.heightAt(foot.x,foot.z),roof=p.gameWorld.topAt(foot.x,foot.z);
+        const surface=roof>ground&&roof<=this.model.position.y+.4?roof:ground;
+        const desired=state.grounded?THREE.MathUtils.clamp(surface-this.model.position.y,-.55,.55):0;
+        this.footOffsets[key]+=(desired-this.footOffsets[key])*(reset?1:1-Math.exp(-dt*20));
+        const u=(((pose.phase??0)/(Math.PI*2)+index*.5)%1+1)%1;
+        const planted=state.grounded&&!state.dashing&&(pose.walk??0)>.1&&u<(pose.stance??.5);
+        if(planted){
+          if(!this.footAnchors[key])this.footAnchors[key]=foot.clone().setY(surface+.14);
+          const local=leg.hip.parent!.worldToLocal(this.footAnchors[key]!.clone()).sub(leg.hip.position);
+          // Release at unreachable edges instead of pulling a leg through the ground.
+          if(local.length()<2.29)targets[key]=local;else delete this.footAnchors[key];
+        }else delete this.footAnchors[key];
       }
+      this.model.setPose({...pose,footHeights:this.footOffsets,footTargets:targets});
       this.thrusters!.update(dt,state);
     } else {
       const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(p.viewPitch,p.viewYaw,0,"YXZ"));

@@ -1,3 +1,4 @@
+import {prepareSeoulStreet} from '../intro/SeoulStreet';
 import {selectSpawn} from "../player/SpawnPlanner";
 import {renderPixelRatio} from "./renderQuality";
 import { DronePresentation } from "../player/DronePresentation";
@@ -132,6 +133,9 @@ export class Game {
   private wallParams: { sx: number; sz: number; y0: number; y1: number } | null = null; // 벽 재생성 파라미터
   private tornDown = false; // pagehide 정리 1회 가드
   private intro?: CinematicPlayer;
+  private menuBgLoading=false;
+  private menuBgGeneration=0;
+  private menuBgRetryAt=0;
   private menuBg?: MenuBackground; // 메뉴 배경: 랜덤 인트로 장면
   private overlay: HTMLElement;
   private overlayTitle: HTMLElement;
@@ -190,14 +194,17 @@ export class Game {
   }
 
   /** 메뉴의 인트로 버튼 → 시네마틱 재생. 종료/스킵(클릭)·Esc(즉시) 시 메뉴로 복귀. */
-  private playIntro() {
+  private async playIntro() {
     if (this.state !== "menu" || this.intro) return;
-    this.state = "intro";
+    this.state = "loading";
     this.clearMenuBg();
     this.overlay.classList.add("is-hidden");
     this.setPlayActive(false);
     try {
+      await prepareSeoulStreet();
+      if(this.tornDown)return;
       this.intro = new CinematicPlayer(this.renderer, introScenes());
+      this.state="intro";
     } catch {
       this.showMenu(); // 생성 실패 시 곧장 메뉴
     }
@@ -211,6 +218,7 @@ export class Game {
 
   /** 메뉴 배경(랜덤 인트로 장면) 정리 — 메뉴 이탈(전장 선택/인트로 재생) 시 호출. */
   private clearMenuBg() {
+    this.menuBgGeneration++;this.menuBgLoading=false;this.menuBgRetryAt=0;
     this.overlay.classList.remove("overlay--scene");
     this.menu.closeAllPopups();
     if (this.menuBg) {
@@ -353,7 +361,7 @@ export class Game {
     const brackets = new TargetBrackets(this.scene);
     const killBurst = new KillBurst(this.scene); // 처치 파편 + 환수 실선(타격감 ③④)
     // 이 플레이타임의 미션 — 탐방은 FREE_ROAM, 전투는 **챕터 가중 선택**(캠페인 §9 — 규칙 기반 감독).
-    const pool = peaceful ? [] : await fetchMissions().catch(() => DEFAULT_MISSIONS_V2);
+    const pool = peaceful ? [] : await fetchMissions(id,campaignStore.load().chapter).catch(() => DEFAULT_MISSIONS_V2);
     const mission = peaceful
       ? FREE_ROAM_V2
       : pickCampaignMission(pool, campaignStore.load(), Math.random()) ?? pickMissionV2(pool, Math.random());
@@ -692,12 +700,19 @@ export class Game {
     }
 
     if (this.state === "menu") {
-      if (!this.menuBg) {
-        this.menuBg = new MenuBackground(this.renderer, menuScenes());
-        this.overlay.classList.add("overlay--scene");
-        this.diag.snapshot(this.renderer, "menuBg+"); // 메뉴 배경 컴포저 생성 직후
+      if (!this.menuBg && !this.menuBgLoading && performance.now()>=this.menuBgRetryAt) {
+        this.menuBgLoading=true;
+        const generation=this.menuBgGeneration;
+        void prepareSeoulStreet().then(()=>{
+          if(this.tornDown || this.state!=="menu" || generation!==this.menuBgGeneration)return;
+          this.menuBg = new MenuBackground(this.renderer, menuScenes());
+          this.overlay.classList.add("overlay--scene");
+          this.diag.snapshot(this.renderer, "menuBg+");
+        }).catch(error=>{
+          if(generation===this.menuBgGeneration){this.menuBgRetryAt=performance.now()+5000;console.warn("서울 메뉴 배경 로딩 실패, 재시도 예정",error);}
+        }).finally(()=>{if(generation===this.menuBgGeneration)this.menuBgLoading=false;});
       }
-      this.menuBg.update(dt); // 랜덤 인트로 장면을 배경으로 렌더
+      this.menuBg?.update(dt); // 랜덤 인트로 장면을 배경으로 렌더
       return;
     }
 

@@ -164,6 +164,7 @@ export class CinematicPlayer {
 
     this.overlay.update(this.elapsed);
     this.audio?.update(this.elapsed);
+    for(const pass of this.composer.passes)if(pass instanceof UnrealBloomPass)pass.threshold=this.scene.userData.paintedCity?2:1.1;
     this.composer.render();
     this.updateFade();
   }
@@ -183,6 +184,7 @@ export class CinematicPlayer {
 
   private clearScene(): void {
     this.scenes[this.idx].dispose?.(this.ctx);
+    this.scene.userData={};this.scene.environmentIntensity=.45;
     for (let i = this.scene.children.length - 1; i >= 0; i--) {
       const o = this.scene.children[i];
       this.scene.remove(o);

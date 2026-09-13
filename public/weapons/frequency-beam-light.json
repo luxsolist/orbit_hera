@@ -28,9 +28,5 @@
     "refDist": 1000,
     "maxMult": 4.0,
     "minMult": 0.1
-  },
-  "zeno": {
-    "slowPerSec": 0.3,
-    "freezeAfter": 2.0
   }
 }

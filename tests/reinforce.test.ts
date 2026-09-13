@@ -57,7 +57,7 @@ describe("EnemyManager — 균열 증원(동시 상한) 통합", () => {
     } as any;
     const player = {
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
-      spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
+      spec: { move: { mode: "walk" }, vitals: { maxHp: 120 } }, takeDamage: () => false, heal: () => {},
     } as any;
     return new EnemyManager(scene, world, [player], NO_PHASE);
   };
@@ -120,7 +120,7 @@ describe("deploy 모델(훅 ①) — roster/horde 투입기", () => {
     } as any;
     const player = {
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
-      spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
+      spec: { move: { mode: "walk" }, vitals: { maxHp: 120 } }, takeDamage: () => false, heal: () => {},
     } as any;
     return new EnemyManager(scene, world, [player], NO_PHASE);
   };
@@ -161,7 +161,7 @@ describe("엣지 가드 — 낙인탄 시야·분출 상한·랜드마크 폴백
   }) as any;
   const makePlayer = (mode: "walk" | "fly" = "walk") => ({
     worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
-    spec: { move: { mode } }, takeDamage: () => false, heal: () => {},
+    spec: { move: { mode }, vitals: { maxHp: mode === "fly" ? 60 : 120 } }, takeDamage: () => false, heal: () => {},
   }) as any;
   const tick = (em: EnemyManager, frames: number) => { for (let i = 0; i < frames; i++) em.update(1 / 60); };
 
@@ -247,7 +247,7 @@ describe("어그로 성향(훅 ④) — building/landmark 직행, provoked 만 �
     } as any;
     const player = {
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
-      spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
+      spec: { move: { mode: "walk" }, vitals: { maxHp: 120 } }, takeDamage: () => false, heal: () => {},
     } as any;
     return new EnemyManager(scene, world, [player], NO_PHASE);
   };
@@ -346,7 +346,7 @@ describe("진형/행동(조합 정립) — formationPos·hold/patrol/escort", ()
     } as any;
     const player = {
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
-      spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
+      spec: { move: { mode: "walk" }, vitals: { maxHp: 120 } }, takeDamage: () => false, heal: () => {},
     } as any;
     return new EnemyManager(scene, world, [player], NO_PHASE);
   };
@@ -360,7 +360,7 @@ describe("진형/행동(조합 정립) — formationPos·hold/patrol/escort", ()
     } as any;
     const player = {
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
-      spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
+      spec: { move: { mode: "walk" }, vitals: { maxHp: 120 } }, takeDamage: () => false, heal: () => {},
     } as any;
     return new EnemyManager(scene, world, [player], NO_PHASE, rng(seed));
   };
@@ -433,7 +433,7 @@ describe("보스 행동(훅 ⑤) — 호위 방패·잡몹 분출·회복 링크
     } as any;
     const player = {
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
-      spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
+      spec: { move: { mode: "walk" }, vitals: { maxHp: 120 } }, takeDamage: () => false, heal: () => {},
     } as any;
     return new EnemyManager(scene, world, [player], NO_PHASE);
   };
@@ -516,7 +516,7 @@ describe("다중 투영 보스(§2.6) — HP 공유·동반 소산·처치 크�
     } as any;
     const player = {
       worldPosition: new THREE.Vector3(0, 2, 0), isDead: false,
-      spec: { move: { mode: "walk" } }, takeDamage: () => false, heal: () => {},
+      spec: { move: { mode: "walk" }, vitals: { maxHp: 120 } }, takeDamage: () => false, heal: () => {},
     } as any;
     return new EnemyManager(scene, world, [player], NO_PHASE);
   };

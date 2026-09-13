@@ -1,3 +1,4 @@
+import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import * as THREE from "three";
 import type { Vec3 } from "../core/math";
 import { turnToward, type CoreEnemy } from "./CoreEnemy";
@@ -19,7 +20,10 @@ const GLYPH_PULSE = 0.25; // 글리프 맥동 진폭
 const GLYPH_PULSE_RATE = 9; // 글리프 맥동 속도(rad/s)
 const GLYPH_SPIN = 3.5; // 글리프 자전 속도(rad/s)
 // 낙인 글리프 — "붉은 글리프 결정화"(§6.1). 캔버스 텍스처 대신 발광 팔면체 결정(헤드리스 안전).
-const GLYPH_GEO = new THREE.OctahedronGeometry(0.8, 0);
+const GLYPH_GEO = (()=>{
+  const arcs=Array.from({length:3},(_,i)=>new THREE.TorusGeometry(.8,.075,8,24,Math.PI*.48).rotateZ(i*Math.PI*2/3));
+  const geometry=mergeGeometries(arcs);arcs.forEach(g=>g.dispose());return geometry;
+})();
 const RING_HEIGHT = 500; // 파면 실린더 높이(m)
 const RING_OPACITY = 0.22; // 파면 최대 불투명도 — 플레이테스트: 통과 중 전 화면 적색 워시가 과하지 않게
 const SWEEP_COLOR = 0xff2418; // 파면/글리프 — 낙인 계열 적색(소거 낙인의 붉은 글리프)

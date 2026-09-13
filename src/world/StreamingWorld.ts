@@ -1,3 +1,5 @@
+import {addPaintedSky} from './PaintedCityStyle';
+import {cityAppearance,defaultAppearance} from './cities';
 // 스트리밍 전장 — 전지구 타일 월드(maps/<lat>/<lon>/) 를 플레이어 주변만 청크 단위로 로드/언로드.
 // 모놀리식 World 의 대체 구현(GameWorld 동일 표면): JSON 1장 전체 대신 1024m 청크를 ChunkStreamer 로
 // 스트리밍하고, heightAt/충돌은 로드된 청크 레지스트리에서 질의한다.
@@ -54,6 +56,7 @@ export class StreamingWorld implements GameWorld {
   private readonly present: Set<string>; // 존재하는 청크(tiles.json) — fetch 404 회피
   private readonly streamer: ChunkStreamer;
   private readonly sky: SkyEnvironment;
+  private paintedSky?: THREE.Mesh;
 
   // 로드된 청크 레지스트리(질의 계층)
   private readonly terrainReg = new Map<string, ChunkTerrain>(); // heightAt
@@ -69,7 +72,10 @@ export class StreamingWorld implements GameWorld {
   private vx = 0;
   private vz = 0;
 
-  private constructor(scene: THREE.Scene, manifest: TilesManifest, lat: number, lon: number, _yaw: number, mapId?: string) {
+  private appearance = defaultAppearance;
+
+  private constructor(scene: THREE.Scene, manifest: TilesManifest, lat: number, lon: number, _yaw: number, mapId?: string, exact=false) {
+    this.appearance = cityAppearance(mapId);
     this.cell = manifest.cell;
     this.chunkSize = manifest.chunkSize;
     this.block = manifest.block ?? CHUNK_BLOCK;
@@ -80,7 +86,7 @@ export class StreamingWorld implements GameWorld {
     // 셀 공유(오사카↔나라·홍콩↔선전) 대비 — **자기 도시 청크에서만** 고른다.
     // 이걸 빠뜨리면 파일은 멀쩡한데 "나라를 골랐는데 오사카에서 시작"한다.
     // 스트리밍 자체는 제한하지 않는다(옆 도시로 이어지는 지형은 정상) — 작전구역이 5km 로 묶는다.
-    const sc = pickSpawnChunk(chunksOwnedBy(manifest.chunks, mapId), Math.random);
+    const sc = exact ? null : pickSpawnChunk(chunksOwnedBy(manifest.chunks, mapId), Math.random);
     if (sc) {
       this.originX = (sc.cx + 0.5) * this.chunkSize;
       this.originZ = (sc.cz + 0.5) * this.chunkSize;
@@ -95,7 +101,9 @@ export class StreamingWorld implements GameWorld {
 
     this.streamer = new ChunkStreamer(this.makeIO(), STREAM_CFG(this.chunkSize));
     // 포그 far = 청크 로드 반경 — 둘이 어긋나면 경계가 드러나거나 교전 사거리가 흐려진다.
-    this.sky = new SkyEnvironment(scene, this.spawn, STREAM_CFG(this.chunkSize).fineRadius);
+    this.sky = new SkyEnvironment(scene, this.spawn, STREAM_CFG(this.chunkSize).fineRadius,this.appearance.environment);
+    if(this.appearance.renderStyle==='painted')this.paintedSky=addPaintedSky(scene);
+    scene.userData.paintedCity=this.appearance.renderStyle==='painted';
     scene.add(this.group);
   }
 
@@ -103,11 +111,11 @@ export class StreamingWorld implements GameWorld {
    * 스트리밍 전장 생성 — tiles.json 로드 → 인스턴스 구성 → 스폰 주변 지형 프리로드(지표면 확보).
    * (lat,lon)=스폰 위경도, yaw=시작 방위, mapId=스트림 카탈로그 id(셀 공유 시 스폰 범위 한정).
    */
-  static async create(scene: THREE.Scene, lat: number, lon: number, yaw = 0, mapId?: string): Promise<StreamingWorld> {
+  static async create(scene: THREE.Scene, lat: number, lon: number, yaw = 0, mapId?: string, exact=false): Promise<StreamingWorld> {
     const cell: Cell = [Math.floor(lat), Math.floor(lon)];
     const manifest = await fetchTiles(cell);
     if (!manifest) throw new Error(`타일 매니페스트 없음: maps/${cell[0]}/${cell[1]}/tiles.json`);
-    const w = new StreamingWorld(scene, manifest, lat, lon, yaw, mapId);
+    const w = new StreamingWorld(scene, manifest, lat, lon, yaw, mapId, exact);
     await w.preloadSpawn();
     return w;
   }
@@ -121,7 +129,7 @@ export class StreamingWorld implements GameWorld {
       },
       build: (req: ChunkReq, raw: unknown): ChunkHandle => {
         if (!raw) return { cx: req.cx, cz: req.cz, group: null, hasObjects: false, buildingMesh: null };
-        const cb = buildChunkMesh(raw as WorldChunk, this.chunkSize, this.originX, this.originZ);
+        const cb = buildChunkMesh(raw as WorldChunk, this.chunkSize, this.originX, this.originZ, this.appearance);
         const key = chunkKey(cb.cx, cb.cz);
         this.group.add(cb.group);
         if (cb.terrain) this.terrainReg.set(key, cb.terrain);
@@ -270,9 +278,11 @@ export class StreamingWorld implements GameWorld {
     return this.streamer.loadedCount;
   }
 
+  geoPosition(x:number,z:number){return {lat:this.cell[0]+1-(z+this.originZ)/111320,lon:this.cell[1]+(x+this.originX)/(111320*Math.cos((this.cell[0]+.5)*Math.PI/180))};}
   /** 맵 전환/종료 — 청크·그룹 전체 해제. */
   dispose(): void {
     this.streamer.dispose();
+    if(this.paintedSky){this.paintedSky.removeFromParent();this.paintedSky.geometry.dispose();(this.paintedSky.material as THREE.Material).dispose();}
     this.terrainReg.clear();
     this.objReg.clear();
   }

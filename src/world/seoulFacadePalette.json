@@ -1,0 +1,187 @@
+{
+  "source": "https://commons.wikimedia.org/wiki/File:Seoul_Buildings_city_view_366107.jpg",
+  "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Seoul_Buildings_city_view_366107.jpg",
+  "author": "Tranmautritam",
+  "date": "2016-11-11",
+  "width": 4768,
+  "height": 2416,
+  "method": "Per-channel median of manually selected facade rectangles; source image sRGB, no exposure correction. Coordinates in original image pixels.",
+  "colors": [
+    {
+      "name": "웜 아이보리",
+      "hex": "#efded3",
+      "region": [
+        3495,
+        1515,
+        19,
+        12
+      ],
+      "pixels": 228
+    },
+    {
+      "name": "회베이지",
+      "hex": "#b8aba5",
+      "region": [
+        3592,
+        1529,
+        16,
+        9
+      ],
+      "pixels": 144
+    },
+    {
+      "name": "밝은 콘크리트",
+      "hex": "#dbd2cf",
+      "region": [
+        2857,
+        1238,
+        23,
+        9
+      ],
+      "pixels": 207
+    },
+    {
+      "name": "라벤더 그레이",
+      "hex": "#a19da4",
+      "region": [
+        3190,
+        1171,
+        12,
+        40
+      ],
+      "pixels": 480
+    },
+    {
+      "name": "블루 그레이",
+      "hex": "#72818a",
+      "region": [
+        1502,
+        971,
+        23,
+        47
+      ],
+      "pixels": 1081
+    },
+    {
+      "name": "짙은 청회색",
+      "hex": "#40535c",
+      "region": [
+        4109,
+        1280,
+        28,
+        28
+      ],
+      "pixels": 784
+    },
+    {
+      "name": "차콜",
+      "hex": "#56535a",
+      "region": [
+        4246,
+        1438,
+        12,
+        33
+      ],
+      "pixels": 396
+    },
+    {
+      "name": "토프",
+      "hex": "#a4948d",
+      "region": [
+        4572,
+        1355,
+        14,
+        16
+      ],
+      "pixels": 224
+    },
+    {
+      "name": "살구 베이지",
+      "hex": "#e0c4b8",
+      "region": [
+        3911,
+        1259,
+        21,
+        12
+      ],
+      "pixels": 252
+    },
+    {
+      "name": "그래파이트",
+      "hex": "#5c5d5f",
+      "region": [
+        3983,
+        1441,
+        19,
+        12
+      ],
+      "pixels": 228
+    },
+    {
+      "name": "스톤 그레이",
+      "hex": "#797573",
+      "region": [
+        4035,
+        1473,
+        16,
+        9
+      ],
+      "pixels": 144
+    },
+    {
+      "name": "브라운",
+      "hex": "#615045",
+      "region": [
+        3031,
+        1487,
+        12,
+        12
+      ],
+      "pixels": 144
+    },
+    {
+      "name": "펄 화이트",
+      "hex": "#e7dcde",
+      "region": [
+        4610,
+        1289,
+        21,
+        16
+      ],
+      "pixels": 336
+    },
+    {
+      "name": "스틸 그레이",
+      "hex": "#878e98",
+      "region": [
+        2470,
+        1141,
+        12,
+        9
+      ],
+      "pixels": 108
+    },
+    {
+      "name": "회청색",
+      "hex": "#6d7c84",
+      "region": [
+        3255,
+        1196,
+        14,
+        30
+      ],
+      "pixels": 420
+    },
+    {
+      "name": "더스티 로즈",
+      "hex": "#9f8d94",
+      "region": [
+        4319,
+        1282,
+        12,
+        30
+      ],
+      "pixels": 360
+    }
+  ]
+}
