@@ -132,9 +132,20 @@ function surfaceMaterial(color:string,layer:number,wear=0):THREE.MeshStandardMat
 }
 const cache=new WeakMap<CityAppearance['street'],THREE.MeshStandardMaterial[]>();
 /** Layered opaque footprints form road unions at intersections, with no curb across the carriageway. */
-export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,ox:number,oz:number,colors:CityAppearance['street']):void {
+export interface StreetMeshData {layer:number;position:Float32Array;normal:Float32Array;coord:Float32Array}
+export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,ox:number,oz:number,colors:CityAppearance['street'],prepared?:StreetMeshData[]):void {
  let materials=cache.get(colors);
  if(!materials){materials=[colors.curb,colors.pavement,colors.curb,colors.asphalt,colors.center,colors.marking,colors.curb].map((c,i)=>surfaceMaterial(c,i,colors.wearStrength??0));cache.set(colors,materials);}
+ const attach=(data:StreetMeshData)=>{
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.BufferAttribute(data.position,3));
+  geometry.setAttribute('normal',new THREE.BufferAttribute(data.normal,3));
+  geometry.setAttribute('streetCoord',new THREE.BufferAttribute(data.coord,2));
+  const i=data.layer,mesh=new THREE.Mesh(geometry,materials![i]);
+  mesh.name=['street_outer_edge','street_pavement','street_curb','street_asphalt','street_center_lines','street_lane_lines','street_raised_curbs'][i];
+  mesh.userData.streetLayer=i;mesh.receiveShadow=true;mesh.renderOrder=i+1;group.add(mesh);
+ };
+ if(prepared){for(const data of prepared)attach(data);return;}
  const buffers:number[][]=Array.from({length:7},()=>[]);
  const add=(layer:number,poly:Point[])=>{const data=terrainFootprint(poly,t,ox,oz);for(const value of data)buffers[layer].push(value);};
  const {segments,nearby}=streetSegments(roads);
@@ -185,8 +196,25 @@ export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,
  }
  buffers.forEach((positions,i)=>{
   if(!positions.length)return;
-  const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.computeVertexNormals();
-  const coords:number[]=[];for(let k=0;k<positions.length;k+=3)coords.push(positions[k]+ox,positions[k+2]+oz);geometry.setAttribute('streetCoord',new THREE.Float32BufferAttribute(coords,2));
-  const mesh=new THREE.Mesh(geometry,materials![i]);mesh.name=['street_outer_edge','street_pavement','street_curb','street_asphalt','street_center_lines','street_lane_lines','street_raised_curbs'][i];mesh.receiveShadow=true;mesh.renderOrder=i+1;group.add(mesh);
+  const geometry=new THREE.BufferGeometry();
+  const position=new Float32Array(positions);
+  geometry.setAttribute('position',new THREE.BufferAttribute(position,3));geometry.computeVertexNormals();
+  const coord=new Float32Array(position.length/3*2);
+  for(let k=0,j=0;k<position.length;k+=3,j+=2){coord[j]=position[k]+ox;coord[j+1]=position[k+2]+oz;}
+  attach({layer:i,position,normal:geometry.getAttribute('normal').array as Float32Array,coord});
+  geometry.dispose();buffers[i]=[];
  });
+}
+
+/** Road markings and raised kerbs are subpixel at long range; keep the actual road surface. */
+export function updateStreetDetail(group:THREE.Group,x:number,z:number):void {
+ for(const child of group.children){
+  const mesh=child as THREE.Mesh,layer=mesh.userData.streetLayer;
+  if(layer===undefined||layer<4)continue;
+  if(!mesh.geometry.boundingBox)mesh.geometry.computeBoundingBox();
+  const box=mesh.geometry.boundingBox!;
+  const distance=Math.hypot(Math.max(box.min.x-x,0,x-box.max.x),Math.max(box.min.z-z,0,z-box.max.z));
+  const limit=mesh.visible?850:700;
+  mesh.visible=distance<limit;
+ }
 }

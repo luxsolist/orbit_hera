@@ -1,0 +1,367 @@
+{
+ "version": 1,
+ "cell": [
+  37,
+  126
+ ],
+ "radiusM": 500,
+ "chunks": [
+  "83_45",
+  "83_46",
+  "84_45",
+  "84_46",
+  "84_44",
+  "85_44",
+  "85_45",
+  "86_44",
+  "86_45",
+  "85_46",
+  "86_46",
+  "83_47",
+  "84_47",
+  "82_46",
+  "82_47",
+  "82_45",
+  "83_48",
+  "84_48",
+  "86_47",
+  "87_45",
+  "87_46",
+  "87_47",
+  "87_44",
+  "85_47",
+  "85_48",
+  "90_52",
+  "90_53",
+  "91_52",
+  "91_53",
+  "92_52",
+  "92_53",
+  "88_45",
+  "88_46",
+  "88_47",
+  "84_49",
+  "85_49",
+  "94_52",
+  "94_53",
+  "95_52",
+  "95_53",
+  "89_45",
+  "89_46",
+  "89_47",
+  "83_51",
+  "83_52",
+  "84_51",
+  "84_52",
+  "85_51",
+  "85_52",
+  "83_49",
+  "83_50",
+  "84_50",
+  "83_53",
+  "83_54",
+  "84_53",
+  "84_54",
+  "85_53",
+  "85_54",
+  "83_44"
+ ],
+ "targets": [
+  {
+   "id": "seoul-0",
+   "name": "경복궁",
+   "lat": 37.579754,
+   "lon": 126.9766818,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9698880,37.5743641,126.9834756,37.5851439",
+   "sha256": "c615e059bffed573c3b1776cc49c0ef813e8398e0a4762504a6445584b0ba58c"
+  },
+  {
+   "id": "seoul-1",
+   "name": "창덕궁",
+   "lat": 37.5823872,
+   "lon": 126.9917013,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9849075,37.5769973,126.9984951,37.5877771",
+   "sha256": "c156fc330dedea2752f719b58b293510ab7594c896342d76c4a5d19381d13283"
+  },
+  {
+   "id": "seoul-2",
+   "name": "창경궁",
+   "lat": 37.5802456,
+   "lon": 126.9948331,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9880393,37.5748557,127.0016269,37.5856355",
+   "sha256": "9f3bd1111f286a9abaa2ac1382449797ddf170fd38595e772711429c297b0904"
+  },
+  {
+   "id": "seoul-3",
+   "name": "덕수궁",
+   "lat": 37.5661668,
+   "lon": 126.9751703,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9683765,37.5607769,126.9819641,37.5715567",
+   "sha256": "428abad62884a0b3ac042426aedab7d4060d3ba202eba944f9b27c1daa1e4be0"
+  },
+  {
+   "id": "seoul-4",
+   "name": "경희궁",
+   "lat": 37.5709397,
+   "lon": 126.9681024,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9613086,37.5655498,126.9748962,37.5763296",
+   "sha256": "097c34cca6022b630a943e860b95a12329ff87703ebf1935c8eacf8c93cc6cce"
+  },
+  {
+   "id": "seoul-5",
+   "name": "종묘",
+   "lat": 37.5749525,
+   "lon": 126.9938788,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9870850,37.5695626,127.0006726,37.5803424",
+   "sha256": "396eb3336576a7c9a365a23363f455382c0fd4c910e38b9533014ec3b3ae1268"
+  },
+  {
+   "id": "seoul-6",
+   "name": "사직단",
+   "lat": 37.575615,
+   "lon": 126.9673195,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9605257,37.5702251,126.9741133,37.5810049",
+   "sha256": "64b94bad7da84e4f38559ccfc33fe9284bfd0c668e512f4acb090922a832e6d4"
+  },
+  {
+   "id": "seoul-7",
+   "name": "숭례문(남대문)",
+   "lat": 37.559992,
+   "lon": 126.9753556,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9685618,37.5546021,126.9821494,37.5653819",
+   "sha256": "0f53e4b50ce40e038534c94a7e3afb21016dd94e04619117d1d338a9366ba859"
+  },
+  {
+   "id": "seoul-8",
+   "name": "흥인지문(동대문)",
+   "lat": 37.5721409,
+   "lon": 127.0090295,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=127.0022357,37.5667510,127.0158233,37.5775308",
+   "sha256": "55652d36c117fec84cc568d5e923f19086dec7c6447ce9999b54280f507b85a5"
+  },
+  {
+   "id": "seoul-9",
+   "name": "한양도성",
+   "lat": 37.5878696,
+   "lon": 127.0039579,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9971641,37.5824797,127.0107517,37.5932595",
+   "sha256": "031b52a917ef5e9e9f603b78ee129396270cdb2b573b3201bd6089a9ee966291"
+  },
+  {
+   "id": "seoul-10",
+   "name": "북촌한옥마을",
+   "lat": 37.5823919,
+   "lon": 126.9858648,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9790710,37.5770020,126.9926586,37.5877818",
+   "sha256": "da6514067e96fd2a1bef177948f561bbfdf83001513b46cef72286fa16074bd7"
+  },
+  {
+   "id": "seoul-11",
+   "name": "인사동",
+   "lat": 37.5735445,
+   "lon": 126.9855646,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9787708,37.5681546,126.9923584,37.5789344",
+   "sha256": "a4cb5ad07bb3fa6baff8a0efb3bf592c319125d15cfedc1c9ccf753b0e4834e8"
+  },
+  {
+   "id": "seoul-12",
+   "name": "명동성당",
+   "lat": 37.5631588,
+   "lon": 126.9871556,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9803618,37.5577689,126.9939494,37.5685487",
+   "sha256": "9637126e4819102744f25aa5aa83b2b941a3bc90295155b5ba757a0061ab6c85"
+  },
+  {
+   "id": "seoul-13",
+   "name": "조계사",
+   "lat": 37.5739085,
+   "lon": 126.9821283,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9753345,37.5685186,126.9889221,37.5792984",
+   "sha256": "e5b8c25b144399d4d2e61ffc8b8b21fddd05d4534a666d45465889c46a719ed8"
+  },
+  {
+   "id": "seoul-14",
+   "name": "봉은사",
+   "lat": 37.5141869,
+   "lon": 127.0602411,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=127.0534473,37.5087970,127.0670349,37.5195768",
+   "sha256": "6790062983350620b243ee3bdda7d6a80193bf9c64b2325a8bca9297529e352e"
+  },
+  {
+   "id": "seoul-15",
+   "name": "동묘",
+   "lat": 37.5723419,
+   "lon": 127.015659,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=127.0088652,37.5669520,127.0224528,37.5777318",
+   "sha256": "06695faae4a3b4c0c8a88777b6207f404cd0aa70697d8f3420eafbf78e5248bd"
+  },
+  {
+   "id": "seoul-16",
+   "name": "남산(N서울타워)",
+   "lat": 37.551199595,
+   "lon": 126.988221445,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9814277,37.5458097,126.9950152,37.5565895",
+   "sha256": "22aecaa3b23f4450a50a9416e51c1949ba3e9448b883a9eac788adec285020bc"
+  },
+  {
+   "id": "seoul-17",
+   "name": "롯데월드타워",
+   "lat": 37.5125537,
+   "lon": 127.102679,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=127.0958852,37.5071638,127.1094728,37.5179436",
+   "sha256": "08cef472d263ea48bf58464267fb4187f799a3c5ef4c5776fe454a2c8213c639"
+  },
+  {
+   "id": "seoul-18",
+   "name": "광화문광장",
+   "lat": 37.5727628,
+   "lon": 126.9768613,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9700675,37.5673729,126.9836551,37.5781527",
+   "sha256": "b4f48f16344ba68811feaf37e1c9f348cd88be059b03e39a291e23e4762d921f"
+  },
+  {
+   "id": "seoul-19",
+   "name": "서울광장",
+   "lat": 37.5654862,
+   "lon": 126.9779899,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9711961,37.5600963,126.9847837,37.5708761",
+   "sha256": "6e86cb22e160dd3c008bc33ccb37104bafbe7ace889023a0206db396474d243d"
+  },
+  {
+   "id": "seoul-20",
+   "name": "청계천",
+   "lat": 37.5722871,
+   "lon": 127.0367285,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=127.0299347,37.5668972,127.0435223,37.5776770",
+   "sha256": "4f329ae4f2529b5b3272eec86db9cef18029e9575f0d9f4165d6cd4afa4403aa"
+  },
+  {
+   "id": "seoul-21",
+   "name": "국립중앙박물관",
+   "lat": 37.523953,
+   "lon": 126.9803196,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9735258,37.5185631,126.9871134,37.5293429",
+   "sha256": "eb8fc9346585cf51a27ddce0087cd1e9901e63d074d964f058f0575c3ebcbaf4"
+  },
+  {
+   "id": "seoul-22",
+   "name": "전쟁기념관",
+   "lat": 37.5359715,
+   "lon": 126.9772916,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9704978,37.5305816,126.9840854,37.5413614",
+   "sha256": "97b97ab10d8897960468ba2fc78efa8a1e41dc503e8b4bd22217675b3f11ba98"
+  },
+  {
+   "id": "seoul-23",
+   "name": "국립서울현충원",
+   "lat": 37.5031081,
+   "lon": 126.9803481,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9735543,37.4977182,126.9871419,37.5084980",
+   "sha256": "9785f98a885b6b6c6e2518d74a6197069bf0e35fe98373316e52b6d68732082b"
+  },
+  {
+   "id": "seoul-24",
+   "name": "탑골공원",
+   "lat": 37.5711768,
+   "lon": 126.9886477,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9818539,37.5657869,126.9954415,37.5765667",
+   "sha256": "568855cba3812c838be3973ff04779ea06a45943d73c38ba08a8e3f7d41d3ad5"
+  },
+  {
+   "id": "seoul-25",
+   "name": "서울역(구역사)",
+   "lat": 37.5560719,
+   "lon": 126.9723599,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9655661,37.5506820,126.9791537,37.5614618",
+   "sha256": "fe11e5cd5f8a00052fb4f3fbd12a49a4bc5bc0fa6c51d798c80cdaf48478ad1d"
+  },
+  {
+   "id": "geunjeongjeon",
+   "name": "근정전",
+   "lat": 37.5785462,
+   "lon": 126.97699175,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9701980,37.5731563,126.9837855,37.5839361",
+   "sha256": "66018ccfb447bb9291ab102418a681275184e57b2c588830578e2093cf87712b"
+  },
+  {
+   "id": "gwanghwamun",
+   "name": "광화문",
+   "lat": 37.5759283,
+   "lon": 126.97681614999999,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9700224,37.5705384,126.9836099,37.5813182",
+   "sha256": "e1763377d942b61628dcfb6e5de4cdec05565bbd9dcfb2adee53bdcfa5bbe681"
+  },
+  {
+   "id": "gyeonghoeru",
+   "name": "경회루",
+   "lat": 37.579750250000004,
+   "lon": 126.97596665,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9691729,37.5743604,126.9827604,37.5851401",
+   "sha256": "e4d93cceafd66c4e49a5055ec6015ad371f2b9a6e440ed1f0144669dc88b69de"
+  },
+  {
+   "id": "statue-sejong",
+   "name": "세종대왕 동상",
+   "lat": 37.572861660079056,
+   "lon": 126.97687531702987,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9700815,37.5674718,126.9836691,37.5782515",
+   "sha256": "beb4d08bd2a98782102085659928b2b921df1483309cc5fece5b52afa74531ee"
+  },
+  {
+   "id": "statue-yi",
+   "name": "이순신 장군 동상",
+   "lat": 37.57096622349982,
+   "lon": 126.97695466073813,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9701609,37.5655764,126.9837484,37.5763561",
+   "sha256": "d96be3930e10be30e51ead8498c8fb715d28c59d461d1a5255e48dc85ea9a2c9"
+  },
+  {
+   "id": "blue-house",
+   "name": "청와대",
+   "lat": 37.58663277039167,
+   "lon": 126.97617255847094,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9693788,37.5812429,126.9829663,37.5920226",
+   "sha256": "c3ca0614976c024905f5d4fde4d30b96cf6028f0a3a5ea3847a7c9751a73920b"
+  },
+  {
+   "id": "folk-museum",
+   "name": "국립민속박물관",
+   "lat": 37.58158426158822,
+   "lon": 126.97906293641495,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9722692,37.5761944,126.9858567,37.5869741",
+   "sha256": "66729dcdd593d002d5d9c5c49d9ffc1d951018c1d8e65877bd19cb1208fb954d"
+  },
+  {
+   "id": "mmca",
+   "name": "국립현대미술관 서울관",
+   "lat": 37.579015091627745,
+   "lon": 126.98070648465762,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9739127,37.5736252,126.9875003,37.5844050",
+   "sha256": "7493695efd95c56062054a752e34084132b1e54f8b32dd7a6a98bdecb9bc3e49"
+  },
+  {
+   "id": "sejong-center",
+   "name": "세종문화회관",
+   "lat": 37.57232267337406,
+   "lon": 126.9756058176976,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9688120,37.5669328,126.9823996,37.5777125",
+   "sha256": "ce7454f784c81ddac7d94abf2cd672025731054b3514399a081636e1927edc68"
+  },
+  {
+   "id": "dongsipjagak",
+   "name": "동십자각",
+   "lat": 37.576113546532525,
+   "lon": 126.97942565050988,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9726319,37.5707237,126.9862194,37.5815034",
+   "sha256": "860379e2df825e8f2208c116d425b80cc1d33d042da0139b1c28727be77b3cdf"
+  },
+  {
+   "id": "jogyesa",
+   "name": "조계사",
+   "lat": 37.57413726194754,
+   "lon": 126.98202132325176,
+   "source": "https://api.openstreetmap.org/api/0.6/map?bbox=126.9752275,37.5687474,126.9888151,37.5795271",
+   "sha256": "d1c9753fd7ad34b744f3b5ee527ae6fddad7a82483354a0b7bea6637c780e99a"
+  }
+ ]
+}

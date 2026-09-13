@@ -48,9 +48,15 @@ export class StructureBuilder {
   }
 
   /** 부품(Part) → 비인덱스 BufferGeometry(로컬 변환 반영, 병합 일관성 위해 uv 제거). */
-  private partGeometry(part: Part): THREE.BufferGeometry | null {
+  partGeometry(part: Part): THREE.BufferGeometry | null {
     let g: THREE.BufferGeometry;
     switch (part.g) {
+      case "mesh":
+        if(!part.vertices?.length || part.vertices.length % 9 !== 0 || !part.vertices.every(Number.isFinite))return null;
+        g=new THREE.BufferGeometry();
+        g.setAttribute('position',new THREE.Float32BufferAttribute(part.vertices,3));
+        g.computeVertexNormals();
+        break;
       case "box":
         g = new THREE.BoxGeometry(part.s![0], part.s![1], part.s![2]);
         break;

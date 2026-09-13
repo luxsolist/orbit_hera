@@ -24686,14 +24686,15 @@
     "nameEn": "N Seoul Tower",
     "cls": "relay",
     "note": "서울 상징 타워",
-    "lat": 37.5349513,
-    "lon": 126.9870892,
-    "geocodeStrategy": "bounded",
+    "lat": 37.551199595,
+    "lon": 126.988221445,
+    "geocodeStrategy": "reviewed-building-footprint",
     "geocodeSource": {
-     "osmType": "node",
-     "osmId": 14007758601,
-     "displayName": "Viewpoint of the N Seoul Tower, 녹사평대로, 용산동4가, 이태원2동, 용산구, 서울특별시, 04345, 대한민국",
-     "importance": 7.29800869763793e-05
+     "osmType": "way",
+     "osmId": 370286010,
+     "displayName": "N Seoul Tower tower footprint (not Noksapyeong viewpoint)",
+     "url": "https://www.openstreetmap.org/way/370286010",
+     "reviewedAt": "2026-09-13"
     }
    },
    {

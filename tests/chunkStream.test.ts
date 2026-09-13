@@ -137,3 +137,39 @@ describe("ChunkStreamer — fetch → 예산 빌드 → 언로드 → 캐시", (
     expect(disposed.length).toBeGreaterThan(0);
   });
 });
+
+
+describe("ChunkStreamer memory bounds", () => {
+  it("does not refetch queued chunks while builds are paused", async () => {
+    const {io} = fakeIO(); let fetches = 0;
+    io.fetch = async () => { fetches++; return {}; };
+    const s = new ChunkStreamer(io, {...CFG, buildBudgetMs:0, maxConcurrentFetch:2});
+    for(let i=0;i<10;i++){s.update(view());await flush();}
+    expect(fetches).toBe(2); expect(s.pendingCount).toBe(2);
+    s.dispose();
+  });
+  it("drops stale queued data after travelling to another location", async () => {
+    const {io}=fakeIO();const built:string[]=[];
+    io.build=(req)=>{built.push(req.key);return req.key;};
+    const s=new ChunkStreamer(io,CFG,()=>0);
+    s.update(view());await flush();s.update(view({x:100000}));
+    expect(built).toEqual([]);
+    await flush();s.update(view({x:100000}));expect(built.length).toBeGreaterThan(0);
+    s.dispose();
+  });
+  it("ignores fetches completing after disposal and future updates", async () => {
+    const {io}=fakeIO();let finish!:(value:unknown)=>void;
+    io.fetch=()=>new Promise(resolve=>{finish=resolve;});
+    const s=new ChunkStreamer(io,{...CFG,maxConcurrentFetch:1});
+    s.update(view());s.dispose();finish({});await flush();s.update(view());
+    expect(s.pendingCount).toBe(0);expect(s.loadedCount).toBe(0);
+  });
+});
+
+it("deactivates cached chunks and reactivates them without rebuilding",async()=>{
+ const {io}=fakeIO();const events:boolean[]=[];io.setActive=(_,active)=>events.push(active);
+ const s=new ChunkStreamer(io,{...CFG,maxConcurrentFetch:1000,maxCached:1000},()=>0);
+ s.update(view());await flush();s.update(view());const loaded=s.loadedCount;
+ s.update(view({x:100000}));expect(events.filter(v=>!v)).toHaveLength(loaded);
+ s.update(view());expect(events.filter(Boolean)).toHaveLength(loaded);s.dispose();
+});

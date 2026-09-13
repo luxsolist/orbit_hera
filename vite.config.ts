@@ -31,7 +31,8 @@ export default defineConfig({
     // 보수적 옵션(문자열 배열/식별자 리네임)만 — control-flow flattening·selfDefending 등 위험/무거운 옵션 비활성.
     obfuscator({
       apply: "build",
-      exclude: [/node_modules/, /\.nuxt/, /worldLand/],
+      // Preserve Vite worker URL placeholders until asset URLs are resolved.
+      exclude: [/node_modules/, /\.nuxt/, /worldLand/, /StreetPreparation\.ts$/],
       options: {
         compact: true,
         identifierNamesGenerator: "hexadecimal",

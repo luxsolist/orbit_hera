@@ -1,3 +1,4 @@
+import {repairRoadGrades} from './repair-road-grades.mjs';
 // 전지구 타일 월드 빌드 — 섹션형 맵(OSM 오브젝트) + 하이트맵(.bin, DEM 지형)을 합쳐
 // 위경도 정수도 셀 디렉터리 안에 1024m 청크 파일로 분할 저장. 한 청크 파일 = 지형+오브젝트(+추후 지하).
 //
@@ -148,10 +149,10 @@ for (const b of objects.buildings ?? []) {
   if (!inExt(cx, cz)) continue; // 청크로는 커버리지 안만 기록
   // lm(얽힘 택소노미)·n(표시명)은 랜드마크로 승격된 건물만 보유 — 런타임 StreamingWorld 가
   // 이 필드를 보고 registerBuilding 대신 랜드마크로 등록한다(일반 건물엔 없어서 용량 영향 없음).
-  chunk(cx, cz).buildings.push({ p: rp, ...(b.h != null ? { h: b.h } : {}), ...(b.lm ? { lm: b.lm } : {}), ...(b.lm && b.n ? { n: b.n } : {}) });
+  chunk(cx, cz).buildings.push({ p: rp, ...Object.fromEntries(["osmId", "heightSource", "heightTag", "levelsTag"].filter(k => b[k] != null).map(k => [k, b[k]])), ...(b.h != null ? { h: b.h } : {}), ...(b.lm ? { lm: b.lm } : {}), ...(b.lm && b.n ? { n: b.n } : {}) });
 }
 // 도로: 폴리라인을 청크 경계로 클립해 **연속 조각**으로 저장(2점 분할 폐기) → 연속 리본·중앙선, 끊김 방지.
-for (const r of objects.roads ?? []) binPolyline(reproj(r.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).roads.push({ p: piece, ...(r.w != null ? { w: r.w } : {}) }); });
+for (const r of objects.roads ?? []) binPolyline(reproj(r.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).roads.push({ p: piece, ...Object.fromEntries(['bridge','tunnel','layer'].filter(k=>r[k]!=null).map(k=>[k,r[k]])), ...(r.w != null ? { w: r.w } : {}) }); });
 // 담장/울타리: 동일하게 폴리라인 클립으로 연속 조각 저장.
 for (const wl of objects.walls ?? []) binPolyline(reproj(wl.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).walls.push({ p: piece, ...(wl.h != null ? { h: wl.h } : {}), ...(wl.w != null ? { w: wl.w } : {}) }); });
 // 수역: 면(polygon)은 청크별 클립(드레이프 정확) + 멀티폴리곤 구멍(holes)도 같은 청크 rect 로 클립해 보존(섬·제방 도려냄),
@@ -281,7 +282,7 @@ let li = 0;
 for (const lm of objects.landmarks ?? []) {
   const [la, lo] = toLL(lm.x, lm.z); const [x, z] = toCell(la, lo);
   let name = lm.id ?? lm.type ?? `landmark${li}`; if (lmIdx[name]) name = `${name}-${++li}`;
-  lmIdx[name] = { mapId: id, lat: la, lon: lo, cell: [cellLat, cellLon], cx: ci(x), cz: ci(z) };
+  lmIdx[name] = { ...(lm.name ? { name: lm.name } : {}), mapId: id, lat: la, lon: lo, cell: [cellLat, cellLon], cx: ci(x), cz: ci(z) };
 }
 writeFileSync(lmPath, JSON.stringify(lmIdx, null, 1));
 
@@ -319,3 +320,6 @@ if (totalLandmarks === 0) console.error(`  ⚠ 랜드마크 0 — guard/aggro:la
 
 console.error(`wrote ${cellDir}/: ${entries.length} chunks (${entries.filter((e) => e.objects).length} w/objects, ${entries.filter((e) => e.terrain).length} w/terrain), chunkSize=${C}m`);
 console.error(`  + tiles.json, landmarks.json (${Object.keys(lmIdx).length} total)`);
+
+// Regenerate sparse road-grade overlays from the complete shared cell after baking.
+repairRoadGrades({cellFilter:`${cellLat}/${cellLon}`});

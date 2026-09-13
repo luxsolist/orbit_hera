@@ -93,18 +93,18 @@ const HAND = [
     ],
     // cls = 얽힘 유형(택소노미 — src/world/entanglement.ts, docs/spec/06-missions.md §8)
     landmarks: [
-      { type: "geunjeongjeon", x: 0, z: -189, cls: "deep-roots" },
-      { type: "gwanghwamun", x: -9, z: 234, cls: "deep-roots" },
-      { type: "gyeonghoeru", x: -95, z: -235, cls: "deep-roots" },
-      { type: "statue-sejong", x: -11, z: 572, cls: "memorial" },
-      { type: "statue-yi", x: -4, z: 783, cls: "memorial" },
+      { type: "geunjeongjeon", name: "근정전", x: -0.728, z: -60.803, rot: -0.04768, cls: "deep-roots" },
+      { type: "gwanghwamun", name: "광화문", x: -16.22, z: 230.622, rot: -0.02653, cls: "deep-roots" },
+      { type: "gyeonghoeru", name: "경회루", x: -91.166, z: -194.838, rot: -0.034212, cls: "deep-roots" },
+      { type: "statue-sejong", name: "세종대왕 동상", x: -11, z: 572, cls: "memorial" },
+      { type: "statue-yi", name: "이순신 장군 동상", x: -4, z: 783, cls: "memorial" },
       // 주변 명소(실측 위치)
-      { type: "blue-house", x: -73, z: -961, cls: "deep-roots" }, // 청와대
-      { type: "folk-museum", x: 182, z: -399, cls: "archive" }, // 국립민속박물관(5층 목탑)
-      { type: "mmca", x: 327, z: -113, cls: "archive" }, // 국립현대미술관 서울관
-      { type: "sejong-center", x: -123, z: 632, rot: 1.571, cls: "resonance" }, // 세종문화회관(세종대로 동향)
-      { type: "dongsipjagak", x: 214, z: 210, cls: "deep-roots" }, // 동십자각
-      { type: "jogyesa", x: 443, z: 430, cls: "ritual" }, // 조계사
+      { type: "blue-house", name: "청와대", x: -73, z: -961, cls: "deep-roots" }, // 청와대
+      { type: "folk-museum", name: "국립민속박물관", x: 182, z: -399, cls: "archive" }, // 국립민속박물관(5층 목탑)
+      { type: "mmca", name: "국립현대미술관 서울관", x: 327, z: -113, cls: "archive" }, // 국립현대미술관 서울관
+      { type: "sejong-center", name: "세종문화회관", x: -123, z: 632, rot: 1.571, cls: "resonance" }, // 세종문화회관(세종대로 동향)
+      { type: "dongsipjagak", name: "동십자각", x: 214, z: 210, cls: "deep-roots" }, // 동십자각
+      { type: "jogyesa", name: "조계사", x: 443, z: 430, cls: "ritual" }, // 조계사
     ],
   },
   // 레거시 manhattan/osaka/paris(스트리밍 이전 monolithic)는 카탈로그 비노출·미사용이라 제거됨.

@@ -1,36 +1,39 @@
 {
  "geunjeongjeon": {
   "mapId": "gyeongbokgung",
-  "lat": 37.579697808120734,
-  "lon": 126.977,
+  "lat": 37.5785462,
+  "lon": 126.97699175,
   "cell": [
    37,
    126
   ],
   "cx": 84,
-  "cz": 45
+  "cz": 45,
+  "name": "근정전"
  },
  "gwanghwamun": {
   "mapId": "gyeongbokgung",
-  "lat": 37.57589795185052,
-  "lon": 126.9768979866608,
+  "lat": 37.5759283,
+  "lon": 126.97681614999999,
   "cell": [
    37,
    126
   ],
   "cx": 84,
-  "cz": 46
+  "cz": 46,
+  "name": "광화문"
  },
  "gyeonghoeru": {
   "mapId": "gyeongbokgung",
-  "lat": 37.58011103126123,
-  "lon": 126.97592319253067,
+  "lat": 37.579750250000004,
+  "lon": 126.97596665,
   "cell": [
    37,
    126
   ],
   "cx": 84,
-  "cz": 45
+  "cz": 45,
+  "name": "경회루"
  },
  "statue-sejong": {
   "mapId": "gyeongbokgung",
@@ -41,7 +44,8 @@
    126
   ],
   "cx": 84,
-  "cz": 46
+  "cz": 46,
+  "name": "세종대왕 동상"
  },
  "statue-yi": {
   "mapId": "gyeongbokgung",
@@ -52,7 +56,8 @@
    126
   ],
   "cx": 84,
-  "cz": 46
+  "cz": 46,
+  "name": "이순신 장군 동상"
  },
  "blue-house": {
   "mapId": "gyeongbokgung",
@@ -63,7 +68,8 @@
    126
   ],
   "cx": 84,
-  "cz": 44
+  "cz": 44,
+  "name": "청와대"
  },
  "folk-museum": {
   "mapId": "gyeongbokgung",
@@ -74,7 +80,8 @@
    126
   ],
   "cx": 84,
-  "cz": 45
+  "cz": 45,
+  "name": "국립민속박물관"
  },
  "mmca": {
   "mapId": "gyeongbokgung",
@@ -85,7 +92,8 @@
    126
   ],
   "cx": 84,
-  "cz": 45
+  "cz": 45,
+  "name": "국립현대미술관 서울관"
  },
  "sejong-center": {
   "mapId": "gyeongbokgung",
@@ -96,7 +104,8 @@
    126
   ],
   "cx": 84,
-  "cz": 46
+  "cz": 46,
+  "name": "세종문화회관"
  },
  "dongsipjagak": {
   "mapId": "gyeongbokgung",
@@ -107,7 +116,8 @@
    126
   ],
   "cx": 84,
-  "cz": 46
+  "cz": 46,
+  "name": "동십자각"
  },
  "jogyesa": {
   "mapId": "gyeongbokgung",
@@ -118,6 +128,7 @@
    126
   ],
   "cx": 84,
-  "cz": 46
+  "cz": 46,
+  "name": "조계사"
  }
 }

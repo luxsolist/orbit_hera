@@ -112,6 +112,8 @@ export function pickSpawnChunk(chunks: ChunkEntry[], rand: () => number, R = 2, 
 
 /** 1024m 월드 청크 — 지형(DEM)+오브젝트(OSM)+지하. 좌표는 셀-로컬 m(원점=셀 NW). */
 export interface WorldChunk {
+  palaceSite?: boolean;
+  seoulDetail?: import("./cities/SeoulDetail").SeoulDetail;
   cx: number;
   cz: number;
   terrain: { size: number; seaLevel: number; heights: number[] }; // size×size row-major(평지=size 0)
@@ -133,6 +135,8 @@ export interface TilesManifest {
 
 /** 랜드마크 → 위치(위경도 + 셀 + 청크). */
 export interface LandmarkLoc {
+  /** 관리 화면 표시명. 인덱스 키는 모델/위치 조회용 식별자로 유지한다. */
+  name?: string;
   mapId: string;
   lat: number;
   lon: number;

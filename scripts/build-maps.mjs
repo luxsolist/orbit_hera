@@ -10,7 +10,7 @@ import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
 import { MAPS } from "./maps.config.mjs";
 import { RECIPES } from "./landmarks.mjs";
-import { projFns, buildingHeightInfo, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius, buildNameIndex, matchCuratedByName, applyBlocklist, BLOCK_MATCH_M } from "./osm.mjs";
+import { projFns, buildingHeightInfo, buildingHeightProvenance, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius, buildNameIndex, matchCuratedByName, applyBlocklist, BLOCK_MATCH_M } from "./osm.mjs";
 
 // 레시피가 있는 랜드마크는 부품 목록(structure)으로 베이킹, 나머지는 그대로(타입별 빌더).
 function bakeLandmarks(landmarks) {
@@ -21,6 +21,7 @@ function bakeLandmarks(landmarks) {
     return {
       type: "structure",
       id: lm.type,
+      ...(lm.name ? { name: lm.name } : {}),
       x: lm.x,
       z: lm.z,
       ...(lm.rot ? { rot: lm.rot } : {}),
@@ -111,7 +112,7 @@ function processOSM(osm, proj) {
   };
   // 건물 footprint: 정리(연속중복 제거 + 자기교차는 볼록껍질 복구) + 면적 필터 + 동일 footprint 중복 제거(z-fighting 방지).
   const seenB = new Set();
-  const addBuilding = (t, flat) => {
+  const addBuilding = (t, flat, osmId) => {
     const cp = sanitizeRing(flat, true);
     if (!cp || ringArea(cp) < 12) return;
     const n = cp.length / 2; let cx = 0, cz = 0;
@@ -122,7 +123,7 @@ function processOSM(osm, proj) {
     const { h, estimated } = buildingHeightInfo(t);
     // 얽힘 택소노미 승격 — 분류·이름·면적 3조건 통과 건물만 랜드마크(osm.landmarkFrom). 나머지는 일반 건물.
     const lm = landmarkFrom(t, ringArea(cp));
-    buildings.push({ p: cp, h, ...(lm ? { lm: lm.cls, n: lm.n } : {}) });
+    buildings.push({ p: cp, h, ...buildingHeightProvenance(t, osmId), ...(lm ? { lm: lm.cls, n: lm.n } : {}) });
     bEst.push(estimated);
   };
   // 면(폴리곤) 분류 — 수역/녹지·자연 면. 닫힌 면만(선형 제외). 자기교차면 드롭(복구 안 함 — 큰 concave 왜곡 방지).
@@ -147,7 +148,7 @@ function processOSM(osm, proj) {
       // 멀티폴리곤 outer 들을 개별 면으로(건물 관계 = 건물).
       const isBld = !!t.building;
       for (const poly of relationPolys(el, proj)) {
-        if (isBld) addBuilding(t, poly.outer); // 건물은 압출이라 구멍 무시(outer 만)
+        if (isBld) addBuilding(t, poly.outer, `${el.type}/${el.id}`); // 건물은 압출이라 구멍 무시(outer 만)
         else classifyArea(t, poly.outer, poly.holes); // 수역 구멍 보존
       }
       continue;
@@ -156,7 +157,7 @@ function processOSM(osm, proj) {
     const flat = wayFlat(el);
     if (flat.length < 4) continue;
     if (t.building) {
-      addBuilding(t, flat);
+      addBuilding(t, flat, `${el.type}/${el.id}`);
     } else if (t.barrier) {
       const w = wallSpec(t);
       const wp = w && sanitizePolyline(flat);
@@ -165,7 +166,7 @@ function processOSM(osm, proj) {
       // 차도만 수집(보도/오솔길/계단 등 보행로 제외). 스무딩은 stroke 병합 후 일괄(연속 곡선).
       if (!isVehicularHighway(t.highway)) continue;
       const rp = sanitizePolyline(flat);
-      if (rp) roads.push({ p: rp, w: roadWidth(t.highway) });
+      if (rp) roads.push({ p: rp, w: roadWidth(t.highway), bridge: !!t.bridge && t.bridge !== 'no', tunnel: !!t.tunnel && t.tunnel !== 'no', layer: Number(t.layer) || 0 });
     } else if (t.waterway === "river" || t.waterway === "stream" || t.waterway === "canal") {
       // 강/하천 중심선(선형) — 지표 노출 판정(수계 연결성)은 수집 후 surfaceWaterways 로 일괄.
       const wl = sanitizePolyline(flat);

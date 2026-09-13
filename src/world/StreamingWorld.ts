@@ -1,3 +1,5 @@
+import {StreetPreparation} from './StreetPreparation';
+import {updateStreetDetail,type StreetMeshData} from './StreetGeometry';
 import {addPaintedSky} from './PaintedCityStyle';
 import {cityAppearance,defaultAppearance} from './cities';
 // 스트리밍 전장 — 전지구 타일 월드(maps/<lat>/<lon>/) 를 플레이어 주변만 청크 단위로 로드/언로드.
@@ -14,7 +16,7 @@ import { CollisionWorld } from "./CollisionWorld";
 import { BuildingCombat } from "./BuildingCombat";
 import { SkyEnvironment } from "./SkyEnvironment";
 import { cellLocalOf, pickSpawnChunk, chunksOwnedBy, CHUNK_BLOCK, type Cell, type TilesManifest, type WorldChunk } from "./chunkManifest";
-import { fetchTiles, fetchWorldChunk } from "./mapLocator";
+import { fetchCityTiles, manifestChunkAt, fetchWorldChunk } from "./mapLocator";
 import { ChunkStreamer, chunkIndex, type ChunkIO, type ChunkReq, type ChunkConfig } from "./chunkStream";
 import { buildChunkMesh, disposeChunkGroup, sampleChunkHeight, chunkTerrainEntry, forEachLandmarkNear, type ChunkTerrain, type ChunkBuild } from "./chunkMesh";
 
@@ -31,7 +33,7 @@ const STREAM_CFG = (fineSize: number): ChunkConfig => ({
   hysteresis: 600,
   buildBudgetMs: 8, // 프레임당 동기 빌드 예산(무거운 도심 청크 1개는 1회 히치 허용)
   maxConcurrentFetch: 6,
-  maxCached: 48,
+  maxCached: 4,
 });
 
 /** ChunkStreamer 가 보관하는 청크 핸들 — 빌드 결과(없으면 group=null=존재X 청크). */
@@ -40,6 +42,8 @@ interface ChunkHandle {
   cz: number;
   group: THREE.Group | null;
   hasObjects: boolean;
+  data?: ChunkBuild;
+  active?: boolean;
   buildingMesh: THREE.Mesh | null; // 건물 전투 등록 해제용(언로드 시)
 }
 
@@ -73,6 +77,7 @@ export class StreamingWorld implements GameWorld {
   private vz = 0;
 
   private appearance = defaultAppearance;
+  private readonly streetPreparation = new StreetPreparation();
 
   private constructor(scene: THREE.Scene, manifest: TilesManifest, lat: number, lon: number, _yaw: number, mapId?: string, exact=false) {
     this.appearance = cityAppearance(mapId);
@@ -99,9 +104,13 @@ export class StreamingWorld implements GameWorld {
     this.collision.finalize(); // 빈 충돌 세계(초기)
     this.buildings.attachCollision(this.collision);
 
-    this.streamer = new ChunkStreamer(this.makeIO(), STREAM_CFG(this.chunkSize));
-    // 포그 far = 청크 로드 반경 — 둘이 어긋나면 경계가 드러나거나 교전 사거리가 흐려진다.
-    this.sky = new SkyEnvironment(scene, this.spawn, STREAM_CFG(this.chunkSize).fineRadius,this.appearance.environment);
+    const streamConfig = STREAM_CFG(this.chunkSize);
+    const viewFar = streamConfig.fineRadius;
+    // Keep the visible horizon, but preload one extra tile ring for both game and viewers.
+    streamConfig.fineRadius += this.chunkSize;
+    this.streamer = new ChunkStreamer(this.makeIO(), streamConfig);
+    // 추가 선로딩 영역은 기존 가시거리 바깥에 유지한다.
+    this.sky = new SkyEnvironment(scene, this.spawn, viewFar,this.appearance.environment);
     if(this.appearance.renderStyle==='painted')this.paintedSky=addPaintedSky(scene);
     scene.userData.paintedCity=this.appearance.renderStyle==='painted';
     scene.add(this.group);
@@ -112,24 +121,32 @@ export class StreamingWorld implements GameWorld {
    * (lat,lon)=스폰 위경도, yaw=시작 방위, mapId=스트림 카탈로그 id(셀 공유 시 스폰 범위 한정).
    */
   static async create(scene: THREE.Scene, lat: number, lon: number, yaw = 0, mapId?: string, exact=false): Promise<StreamingWorld> {
-    const cell: Cell = [Math.floor(lat), Math.floor(lon)];
-    const manifest = await fetchTiles(cell);
-    if (!manifest) throw new Error(`타일 매니페스트 없음: maps/${cell[0]}/${cell[1]}/tiles.json`);
+    const manifest = await fetchCityTiles(lat,lon,mapId);
+    if(exact){
+      const p=manifestChunkAt(manifest,lat,lon);
+      if(!manifest.chunks.some(c=>c.cx===p.cx&&c.cz===p.cz))
+        throw new Error(`선택한 도시의 지도 범위 밖입니다: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+    }
     const w = new StreamingWorld(scene, manifest, lat, lon, yaw, mapId, exact);
-    await w.preloadSpawn();
+    try { await w.preloadSpawn(); } catch (error) { w.dispose(); throw error; }
     return w;
   }
 
   /** ChunkStreamer 주입 IO — fetch(존재 청크만)/build(메시화+등록)/dispose(해제+등록해제). */
   private makeIO(): ChunkIO {
     return {
-      fetch: (req: ChunkReq) => {
+      fetch: async (req: ChunkReq) => {
         if (!this.present.has(chunkKey(req.cx, req.cz))) return Promise.resolve(null); // 미존재 → 네트워크 생략
-        return fetchWorldChunk(this.cell, req.cx, req.cz, this.block);
+        const chunk = await fetchWorldChunk(this.cell, req.cx, req.cz, this.block);
+        if (!chunk) return null;
+        const terrain = chunkTerrainEntry(chunk, this.chunkSize);
+        const streets = this.appearance.street.geometry && terrain ? await this.streetPreparation.prepare(chunk.objects?.roads ?? [], terrain, this.originX, this.originZ, this.appearance.street) : undefined;
+        return {chunk, streets};
       },
       build: (req: ChunkReq, raw: unknown): ChunkHandle => {
         if (!raw) return { cx: req.cx, cz: req.cz, group: null, hasObjects: false, buildingMesh: null };
-        const cb = buildChunkMesh(raw as WorldChunk, this.chunkSize, this.originX, this.originZ, this.appearance);
+        const {chunk, streets} = raw as {chunk:WorldChunk;streets?:StreetMeshData[]};
+        const cb = buildChunkMesh(chunk, this.chunkSize, this.originX, this.originZ, this.appearance, streets);
         const key = chunkKey(cb.cx, cb.cz);
         this.group.add(cb.group);
         if (cb.terrain) this.terrainReg.set(key, cb.terrain);
@@ -153,7 +170,24 @@ export class StreamingWorld implements GameWorld {
         for (const st of cb.sites) {
           this.buildings.registerSite(key, st.x, st.y, st.z, st.r, st.lm, st.n);
         }
-        return { cx: cb.cx, cz: cb.cz, group: cb.group, hasObjects, buildingMesh: cb.buildingMesh };
+        return { cx: cb.cx, cz: cb.cz, group: cb.group, hasObjects, buildingMesh: cb.buildingMesh, data: cb, active: true };
+      },
+      setActive: (h, active) => {
+        const handle = h as ChunkHandle, cb = handle.data;
+        if (!cb || handle.active === active) return;
+        handle.active = active;
+        const key = chunkKey(cb.cx, cb.cz);
+        if (active) {
+          this.group.add(cb.group);
+          if (cb.terrain) this.terrainReg.set(key, cb.terrain);
+          if (handle.hasObjects) this.objReg.set(key, cb);
+        } else {
+          cb.group.removeFromParent();
+          this.terrainReg.delete(key);
+          this.objReg.delete(key);
+        }
+        this.buildings.setChunkActive(cb.buildingMesh, key, active);
+        if (cb.buildings.length || cb.walls.length) this.collisionDirty = true;
       },
       dispose: (h: unknown) => {
         const handle = h as ChunkHandle;
@@ -257,6 +291,7 @@ export class StreamingWorld implements GameWorld {
       this.rebuildCollision();
       this.collisionDirty = false;
     }
+    for (const child of this.group.children) if (child instanceof THREE.Group) updateStreetDetail(child, px, pz);
     this.sky.update(px, pz);
   }
 
@@ -281,9 +316,11 @@ export class StreamingWorld implements GameWorld {
   geoPosition(x:number,z:number){return {lat:this.cell[0]+1-(z+this.originZ)/111320,lon:this.cell[1]+(x+this.originX)/(111320*Math.cos((this.cell[0]+.5)*Math.PI/180))};}
   /** 맵 전환/종료 — 청크·그룹 전체 해제. */
   dispose(): void {
+    this.streetPreparation.dispose();
     this.streamer.dispose();
     if(this.paintedSky){this.paintedSky.removeFromParent();this.paintedSky.geometry.dispose();(this.paintedSky.material as THREE.Material).dispose();}
     this.terrainReg.clear();
     this.objReg.clear();
+    this.group.removeFromParent();
   }
 }

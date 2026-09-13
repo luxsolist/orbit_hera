@@ -1,6 +1,6 @@
 import {it,expect} from 'vitest';
 import * as THREE from 'three';
-import {terrainFootprint,addStreetGeometry,junctions} from '../src/world/StreetGeometry';
+import {terrainFootprint,addStreetGeometry,junctions,updateStreetDetail,type StreetMeshData} from '../src/world/StreetGeometry';
 import {seoulAppearance} from '../src/world/cities';
 import type {ChunkTerrain} from '../src/world/chunkMesh';
 const terrain:ChunkTerrain={size:2,step:10,cellX0:0,cellZ0:0,heights:new Float32Array([0,4,8,20])};
@@ -49,4 +49,15 @@ it('clears intersection paint, adds approach crossings and keeps raised curbs ou
  const asphalt=group.getObjectByName('street_asphalt') as THREE.Mesh<THREE.BufferGeometry,THREE.MeshStandardMaterial>;
  expect(asphalt.material.color.getHexString()).toBe('555b61');
  for(const child of group.children)(child as THREE.Mesh).geometry.dispose();
+});
+
+it('reuses prepared buffers and restores nearby road details',()=>{
+ const source=new THREE.Group();addStreetGeometry(source,[{p:[0,50,100,50],w:16}],{...terrain,step:100},0,0,seoulAppearance.street);
+ const data:StreetMeshData[]=source.children.map(child=>{const m=child as THREE.Mesh;return {layer:m.userData.streetLayer,position:m.geometry.getAttribute('position').array as Float32Array,normal:m.geometry.getAttribute('normal').array as Float32Array,coord:m.geometry.getAttribute('streetCoord').array as Float32Array};});
+ const target=new THREE.Group();addStreetGeometry(target,[],terrain,0,0,seoulAppearance.street,data);
+ expect(target.children.length).toBe(source.children.length);
+ for(let i=0;i<target.children.length;i++)expect((target.children[i] as THREE.Mesh).geometry.getAttribute('position').array).toBe(data[i].position);
+ updateStreetDetail(target,2000,2000);expect(target.getObjectByName('street_raised_curbs')!.visible).toBe(false);expect(target.getObjectByName('street_asphalt')!.visible).toBe(true);
+ updateStreetDetail(target,50,50);expect(target.getObjectByName('street_raised_curbs')!.visible).toBe(true);
+ for(const group of [source,target])for(const child of group.children)(child as THREE.Mesh).geometry.dispose();
 });

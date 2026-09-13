@@ -311,6 +311,21 @@ export class BuildingCombat {
     }
   }
 
+  /** Keep HP and destruction animation state while excluding cached chunks from queries. */
+  setChunkActive(mesh: THREE.Mesh | null, owner: string, enabled: boolean): void {
+    const entries = [...(mesh ? this.byMesh.get(mesh) ?? [] : []), ...(this.byOwner.get(owner) ?? [])];
+    for (const e of entries) {
+      if (enabled) {
+        if (e.state === "intact" && !this.byId.has(e.id)) this.addIntact(e);
+        if ((e.state === "flash" || e.state === "collapsing") && !this.active.includes(e)) this.active.push(e);
+      } else {
+        this.removeIntact(e);
+        const i = this.active.indexOf(e);
+        if (i >= 0) this.active.splice(i, 1);
+      }
+    }
+  }
+
   /** 청크 언로드 — 그 메시에 속한 건물 등록 해제(파괴 이력·잔해 더미는 유지). */
   unregisterMesh(mesh: THREE.Mesh): void {
     const list = this.byMesh.get(mesh);

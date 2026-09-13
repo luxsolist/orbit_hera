@@ -112,6 +112,7 @@ export interface ChunkIO {
   fetch(req: ChunkReq): Promise<unknown>;
   build(req: ChunkReq, raw: unknown): unknown;
   dispose(handle: unknown): void;
+  setActive?(handle: unknown, active: boolean): void;
 }
 
 /**
@@ -122,6 +123,8 @@ export class ChunkStreamer {
   private built = new Map<string, unknown>(); // key → handle(빌드 완료)
   private fetching = new Set<string>(); // fetch 진행 중
   private ready: { req: ChunkReq; raw: unknown }[] = []; // fetch 완료·빌드 대기
+  private disposed = false;
+  private wanted = new Set<string>();
   private cache = new Map<string, unknown>(); // 언로드 보관(LRU; Map 삽입순)
 
   constructor(
@@ -132,7 +135,11 @@ export class ChunkStreamer {
 
   /** 매 프레임 호출. */
   update(view: ViewState): void {
+    if (this.disposed) return;
+    const desired = desiredLoad(view, this.cfg);
     const keep = keepSet(view, this.cfg);
+    this.wanted = new Set([...keep, ...desired.map(r => r.key)]);
+    this.ready = this.ready.filter(item => this.wanted.has(item.req.key));
     // 1) keep 밖 언로드 → LRU 캐시
     for (const [key, handle] of this.built) {
       if (!keep.has(key)) {
@@ -141,15 +148,16 @@ export class ChunkStreamer {
       }
     }
     // 2) 로드 대상 enqueue(우선순위순). 캐시 히트는 즉시 복귀, 아니면 fetch(동시 상한).
-    for (const req of desiredLoad(view, this.cfg)) {
-      if (this.built.has(req.key) || this.fetching.has(req.key)) continue;
+    for (const req of desired) {
+      if (this.built.has(req.key) || this.fetching.has(req.key) || this.ready.some(item => item.req.key === req.key)) continue;
       const cached = this.cache.get(req.key);
       if (cached !== undefined) {
         this.cache.delete(req.key);
         this.built.set(req.key, cached);
+        this.io.setActive?.(cached, true);
         continue;
       }
-      if (this.fetching.size >= this.cfg.maxConcurrentFetch) break;
+      if (this.pendingCount >= this.cfg.maxConcurrentFetch) continue;
       this.startFetch(req);
     }
     // 3) 시간예산 내 동기 빌드
@@ -159,7 +167,10 @@ export class ChunkStreamer {
   private startFetch(req: ChunkReq): void {
     this.fetching.add(req.key);
     Promise.resolve(this.io.fetch(req)).then(
-      (raw) => { this.fetching.delete(req.key); this.ready.push({ req, raw }); },
+      (raw) => {
+        this.fetching.delete(req.key);
+        if (!this.disposed && this.wanted.has(req.key)) this.ready.push({ req, raw });
+      },
       () => { this.fetching.delete(req.key); } // 실패 → 다음 프레임 재시도
     );
   }
@@ -174,6 +185,7 @@ export class ChunkStreamer {
   }
 
   private toCache(key: string, handle: unknown): void {
+    this.io.setActive?.(handle, false);
     this.cache.set(key, handle);
     while (this.cache.size > this.cfg.maxCached) {
       const oldest = this.cache.keys().next().value as string | undefined;
@@ -195,6 +207,8 @@ export class ChunkStreamer {
 
   /** 전체 해제(맵 전환/종료). */
   dispose(): void {
+    this.disposed = true;
+    this.wanted.clear();
     for (const h of this.built.values()) this.io.dispose(h);
     for (const h of this.cache.values()) this.io.dispose(h);
     this.built.clear();

@@ -2,6 +2,16 @@
 // 모든 좌표는 로컬 미터(1 unit = 1m, 북 = -Z, 원점 = meta.lat0/lon0).
 
 export interface Ring {
+  /** Reviewed replacement asset; attached only by the matching city patch. */
+  landmarkModel?: string;
+  statueModel?: string;
+  palaceBuildingId?: string;
+  seoulArchitecture?: import("./cities/SeoulDetail").DetailBuilding;
+  /** Optional audit provenance; absent in older baked tiles. */
+  osmId?: string;
+  heightSource?: 'osm-height' | 'levels-estimate' | 'type-estimate' | 'default-estimate' | 'neighbor-estimate';
+  heightTag?: string;
+  levelsTag?: string;
   p: number[]; // [x0,z0,x1,z1,...]
   h?: number; // 건물/담장 높이(m)
   w?: number; // 도로 폭 / 담장 두께 / 하천 폭(m)
@@ -49,7 +59,8 @@ export interface MatDef {
 
 /** 데이터 구동 랜드마크용 — 부품(프리미티브) 1개. g=모양, m=재질 인덱스. */
 export interface Part {
-  g: "box" | "cyl" | "cone" | "plane" | "hiproof" | "strut";
+  g: "box" | "cyl" | "cone" | "plane" | "hiproof" | "strut" | "mesh";
+  vertices?: number[]; // custom non-indexed triangle mesh
   m: number;
   p?: number[]; // [x,y,z] 로컬 위치
   rx?: number; // 로컬 X 회전(Euler XYZ)

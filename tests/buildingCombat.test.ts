@@ -79,3 +79,12 @@ describe("BuildingCombat — 랜드마크", () => {
     expect(bc.destroyedBuildings).toBe(0);
   });
 });
+
+it("cached buildings retain partial HP and remain untargetable while inactive",()=>{
+ const bc=new BuildingCombat(),mesh=makeMesh(8);bc.registerBuilding(mesh,0,8,SQUARE,0,20);
+ const id=bc.nearestTarget(0,0,100)!.id;bc.damage(id,319);
+ bc.setChunkActive(mesh,'chunk',false);expect(bc.nearestTarget(0,0,100)).toBeNull();expect(bc.damage(id,1)).toBe('none');
+ bc.setChunkActive(mesh,'chunk',true);expect(bc.damage(id,1)).toBe('destroyed');
+ bc.setChunkActive(mesh,'chunk',false);bc.setChunkActive(mesh,'chunk',true);
+ expect(bc.nearestTarget(0,0,100)).toBeNull();expect(bc.destroyedBuildings).toBe(1);
+});

@@ -43,13 +43,24 @@ export function buildingHeightInfo(t = {}) {
 /** OSM building 태그 → 높이(m)만. (buildingHeightInfo 의 h) */
 export function buildingHeight(t = {}) { return buildingHeightInfo(t).h; }
 
+/** OSM tags are source claims, not survey certification; levels/types remain estimates. */
+export function buildingHeightProvenance(t = {}, osmId) {
+  const hv = firstNum(t.height), lv = firstNum(t['building:levels']);
+  const source = hv > 0 && hv <= BUILDING_H_MAX ? 'osm-height'
+    : lv > 0 && lv <= BUILDING_LVL_MAX ? 'levels-estimate'
+    : buildingHeightInfo(t).estimated ? 'default-estimate' : 'type-estimate';
+  return { ...(osmId ? { osmId } : {}), heightSource: source,
+    ...(source === 'osm-height' ? { heightTag: String(t.height) } : {}),
+    ...(source === 'levels-estimate' ? { levelsTag: String(t['building:levels']) } : {}) };
+}
+
 /**
  * 높이 미상(estimated) 건물의 h 를 **주변 실측(seed) 건물 높이의 반경 내 중앙값**으로 추정 — in-place.
  * buildings: [{p:[x,z,...], h}], estimated: boolean[](buildings 와 동일 정렬). 좌표는 평면 m.
  * 공간 그리드(셀=radius)로 근사 O(n). 반경 radius(m) 내 seed 가 minNeighbors↑ 면 중앙값(이상치 강인)으로 대체, 아니면 기본값 유지.
  * estimated 끼리는 서로 seed 가 되지 않아(전파 드리프트 방지) 결과가 입력 순서에 무관.
  */
-export function interpolateBuildingHeights(buildings, estimated, { radius = 220, minNeighbors = 3 } = {}) {
+export function interpolateBuildingHeights(buildings, estimated, { radius = 220, minNeighbors = 3, maxSeedHeight = 150 } = {}) {
   const n = buildings.length;
   if (!n) return buildings;
   const cx = new Float64Array(n), cz = new Float64Array(n);
@@ -59,8 +70,13 @@ export function interpolateBuildingHeights(buildings, estimated, { radius = 220,
     cx[i] = sx / m; cz[i] = sz / m;
   }
   const cell = radius, grid = new Map(), key = (gx, gz) => `${gx}_${gz}`;
-  for (let i = 0; i < n; i++) { // seed(실측)만 색인
-    if (estimated[i]) continue;
+  const seedKeys = new Set();
+  for (let i = 0; i < n; i++) { // only independent, ordinary-height reference buildings
+    if (estimated[i] || !Number.isFinite(buildings[i].h) || buildings[i].h <= 0 || buildings[i].h > maxSeedHeight) continue;
+    // Duplicate/overlapping references must not gain extra votes in the median.
+    const seedKey = `${Math.round(cx[i]/10)}:${Math.round(cz[i]/10)}:${Math.round(buildings[i].h)}`;
+    if(seedKeys.has(seedKey)) continue;
+    seedKeys.add(seedKey);
     const k = key(Math.floor(cx[i] / cell), Math.floor(cz[i] / cell));
     let arr = grid.get(k); if (!arr) grid.set(k, arr = []); arr.push(i);
   }
@@ -77,7 +93,10 @@ export function interpolateBuildingHeights(buildings, estimated, { radius = 220,
       out[i] = hs.length % 2 ? hs[mid] : (hs[mid - 1] + hs[mid]) / 2;
     } else out[i] = NaN; // 주변 seed 부족 → 기본값 유지
   }
-  for (let i = 0; i < n; i++) if (estimated[i] && Number.isFinite(out[i])) buildings[i].h = Math.round(out[i] * 10) / 10;
+  for (let i = 0; i < n; i++) if (estimated[i] && Number.isFinite(out[i])) {
+    buildings[i].h = Math.round(out[i] * 10) / 10;
+    if (buildings[i].heightSource) buildings[i].heightSource = 'neighbor-estimate';
+  }
   return buildings;
 }
 
@@ -249,6 +268,8 @@ export function relationPolys(el, proj) {
   const outerWays = [], innerWays = [];
   for (const m of el.members ?? []) {
     if (m.type !== "way" || !m.geometry) continue;
+    // Building relations contain level/roof parts: only the outline is a footprint.
+    if (el.tags?.type === "building" && m.role !== "outline") continue;
     const flat = [];
     for (const g of m.geometry) { const [x, z] = proj(g.lat, g.lon); flat.push(x, z); }
     if (flat.length >= 4) (m.role === "inner" ? innerWays : outerWays).push(flat);

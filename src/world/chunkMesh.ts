@@ -1,5 +1,9 @@
+import {statueGeometry} from './cities/GwanghwamunStatues';
+import {seoulArchitectureGeometry,paintSeoulDetail,addSeoulLandscape} from './cities/SeoulDetail';
+import {palaceSiteBuilding,paintPalaceGround,addPalaceLandscape,inPalace} from './cities/PalaceSite';
+import {palaceGeometry} from './cities/Gyeongbokgung';
 import {applyPaintedMaterials} from './PaintedCityStyle';
-import {addStreetGeometry} from './StreetGeometry';
+import {addStreetGeometry,type StreetMeshData} from './StreetGeometry';
 import {defaultAppearance,seoulAppearance,type CityAppearance} from './cities';
 // 타일 월드 청크(WorldChunk, 셀-로컬 m) → THREE 메시 + 충돌/높이 등록 데이터.
 // StreamingWorld 의 ChunkIO.build 가 호출하는 동기 메시화 단계(시간예산 빌드 큐 안에서 실행).
@@ -173,6 +177,8 @@ function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain, profile:CityAppe
   }
   if(!profile.street.geometry)paintStreets(ctx,chunk.objects?.roads??[],sc,cellX0,cellZ0,profile.street);
 
+  if(chunk.seoulDetail)paintSeoulDetail(ctx,chunk.seoulDetail,sc,cellX0,cellZ0);
+  if(chunk.palaceSite)paintPalaceGround(ctx,sc,cellX0,cellZ0);
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.flipY = false;        // UV v=j/(tn-1) 와 직접 매핑(상단 행=북쪽).
@@ -209,6 +215,42 @@ export function sampleChunkHeight(t: ChunkTerrain | null, cellX: number, cellZ: 
   const ha = h[j * s + i], hb = h[j * s + i + 1], hc = h[(j + 1) * s + i], hd = h[(j + 1) * s + i + 1];
   // 셀을 b-c 대각(fx+fz=1)으로 분할: (a,b,c) 하측 / (b,c,d) 상측
   return fx + fz <= 1 ? ha + (hb - ha) * fx + (hc - ha) * fz : hd + (hb - hd) * (1 - fz) + (hc - hd) * (1 - fx);
+}
+
+/** Exact boundary extrema on the piecewise-linear terrain, plus interior grid peaks.
+ * No terrain deformation: road heights and player grounding remain identical.
+ */
+export function buildingGroundRange(t: ChunkTerrain | null, poly: number[]): {min:number;max:number} {
+  if (!t || poly.length < 6) return {min:0,max:0};
+  let min=Infinity,max=-Infinity;
+  const take=(x:number,z:number)=>{const h=sampleChunkHeight(t,x,z);min=Math.min(min,h);max=Math.max(max,h);};
+  for(let i=0;i<poly.length;i+=2){
+    const j=(i+2)%poly.length,ax=poly[i],az=poly[i+1],dx=poly[j]-ax,dz=poly[j+1]-az;
+    const cuts=[0,1];
+    const cross=(a:number,d:number,origin:number)=>{
+      if(Math.abs(d)<1e-9)return;
+      const lo=Math.max(0,Math.ceil((Math.min(a,a+d)-origin)/t.step));
+      const hi=Math.min(t.size-1,Math.floor((Math.max(a,a+d)-origin)/t.step));
+      for(let k=lo;k<=hi;k++){const u=(origin+k*t.step-a)/d;if(u>0&&u<1)cuts.push(u);}
+    };
+    cross(ax,dx,t.cellX0);cross(az,dz,t.cellZ0);cuts.sort((a,b)=>a-b);
+    for(let k=0;k<cuts.length;k++){
+      const u=cuts[k];take(ax+dx*u,az+dz*u);
+      if(k===0||Math.abs(dx+dz)<1e-9)continue;
+      const v=cuts[k-1],mid=(u+v)/2;
+      const gx=Math.floor((ax+dx*mid-t.cellX0)/t.step),gz=Math.floor((az+dz*mid-t.cellZ0)/t.step);
+      const diag=(t.cellX0+t.cellZ0+(gx+gz+1)*t.step-ax-az)/(dx+dz);
+      if(diag>v&&diag<u)take(ax+dx*diag,az+dz*diag);
+    }
+  }
+  // An interior peak can pierce a roof even with a low perimeter.
+  const xs=poly.filter((_,i)=>i%2===0),zs=poly.filter((_,i)=>i%2===1);
+  const inside=(x:number,z:number)=>{let hit=false;for(let i=0,j=poly.length-2;i<poly.length;j=i,i+=2){if((poly[i+1]>z)!==(poly[j+1]>z)&&x<(poly[j]-poly[i])*(z-poly[i+1])/(poly[j+1]-poly[i+1])+poly[i])hit=!hit;}return hit;};
+  for(let z=Math.max(0,Math.ceil((Math.min(...zs)-t.cellZ0)/t.step));z<=Math.min(t.size-1,Math.floor((Math.max(...zs)-t.cellZ0)/t.step));z++)
+    for(let x=Math.max(0,Math.ceil((Math.min(...xs)-t.cellX0)/t.step));x<=Math.min(t.size-1,Math.floor((Math.max(...xs)-t.cellX0)/t.step));x++){
+      const px=t.cellX0+x*t.step,pz=t.cellZ0+z*t.step;if(inside(px,pz))take(px,pz);
+    }
+  return {min,max};
 }
 
 /** 셀-로컬 폴리 [x,z,...] → 로컬 프레임(− origin) 새 배열. */
@@ -258,7 +300,7 @@ export function forEachLandmarkNear(
   }
 }
 
-export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: number, originZ: number, appearance:CityAppearance|boolean = defaultAppearance): ChunkBuild {
+export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: number, originZ: number, appearance:CityAppearance|boolean = defaultAppearance, streets?:StreetMeshData[]): ChunkBuild {
   // Boolean compatibility for older standalone review pages. Runtime passes a city profile.
   const profile=typeof appearance==='boolean'?(appearance?seoulAppearance:defaultAppearance):appearance;
   const detailedBuildings=profile.buildings.enabled;
@@ -316,18 +358,52 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     const local = localize(p, originX, originZ);
     let cxs = 0, czs = 0;
     for (let i = 0; i < n; i++) { cxs += p[i * 2]; czs += p[i * 2 + 1]; }
-    // 경사 대응: footprint 각 꼭짓점의 지표면을 샘플해 최저점까지 base 를 내려 틈을 메운다.
-    // 옥상(top)은 중심 지표면 + 높이 기준(건물끼리 처마선 일관). depth = top − base.
+    // Sample every terrain triangle crossed by the boundary, not only corners.
     const groundY = sampleChunkHeight(terrain, cxs / n, czs / n);
-    let minGround = groundY;
-    for (let i = 0; i < n; i++) {
-      const g = sampleChunkHeight(terrain, p[i * 2], p[i * 2 + 1]);
-      if (g < minGround) minGround = g;
-    }
-    const baseY = minGround - 0.6; // 최저 지표 아래 0.6m 스커트(완전 밀착)
-    const top = groundY + h;
+    const contact = buildingGroundRange(terrain, p);
+    const baseY = Math.min(groundY, contact.min) - 0.6;
+    // Keep the existing roof except when terrain would penetrate it.
+    const top = Math.max(groundY + h, contact.max + Math.min(h, 2.8));
     const depth = top - baseY;
 
+    if(b.statueModel){
+      const statue=statueGeometry(b.statueModel,originX,originZ,contact.max);
+      if(statue){
+        if(detailedBuildings)dressBuilding(statue,local,contact.max,-1);
+        statue.computeBoundingBox();const vCount=statue.getAttribute('position').count;
+        bGeos.push(statue);buildings.push({poly:local,top:statue.boundingBox!.max.y,baseY:contact.max,vStart:bVtx,vCount,lm:b.lm,n:b.n});bVtx+=vCount;continue;
+      }
+    }
+    if(b.landmarkModel){
+      const palace=palaceGeometry(b.landmarkModel,originX,originZ,contact.max,contact.min-.6);
+      if(palace){
+        if(detailedBuildings)dressBuilding(palace,local,contact.max,-1);
+        palace.computeBoundingBox();const roof=palace.boundingBox!.max.y;
+        const vCount=palace.getAttribute('position').count;
+        bGeos.push(palace);buildings.push({poly:local,top:roof,baseY:contact.min-.6,vStart:bVtx,vCount,lm:b.lm,n:b.n});bVtx+=vCount;
+        continue;
+      }
+    }
+
+    if(b.seoulArchitecture){
+      const asset=seoulArchitectureGeometry(b,originX,originZ,contact.max,contact.min-.6);
+      if(asset){
+        if(detailedBuildings)dressBuilding(asset,local,contact.max,-1);
+        asset.computeBoundingBox();const vCount=asset.getAttribute('position').count;
+        bGeos.push(asset);buildings.push({poly:local,top:asset.boundingBox!.max.y,baseY:contact.min-.6,vStart:bVtx,vCount,lm:b.lm,n:b.n});bVtx+=vCount;
+        continue;
+      }
+    }
+
+    if(b.palaceBuildingId){
+      const palace=palaceSiteBuilding(b.palaceBuildingId,originX,originZ,baseY,b);
+      if(palace){
+        if(detailedBuildings)dressBuilding(palace,local,baseY,-1);
+        palace.computeBoundingBox();const vCount=palace.getAttribute('position').count;
+        bGeos.push(palace);buildings.push({poly:local,top:palace.boundingBox!.max.y,baseY,vStart:bVtx,vCount,lm:b.lm,n:b.n});bVtx+=vCount;
+        continue;
+      }
+    }
     const shape = new THREE.Shape();
     shape.moveTo(local[0], -local[1]);
     for (let i = 1; i < n; i++) shape.lineTo(local[i * 2], -local[i * 2 + 1]);
@@ -340,7 +416,8 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     }
     geo.rotateX(-Math.PI / 2);
     geo.translate(0, baseY, 0);
-    if (b.lm) {
+    const palaceContext=(!!chunk.palaceSite&&inPalace(cxs/n,czs/n))||!!chunk.seoulDetail;
+    if (b.lm&&!palaceContext) {
       bcol.copy(LANDMARK_GLOW); // 높이·지터 무관 고정 — 랜드마크는 한 부류로 읽혀야 한다
     } else {
       const jitter = ((Math.abs(Math.round(cxs / n * 7 + czs / n * 13)) % 100) / 100) || 0.5;
@@ -348,7 +425,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     }
     if(detailedBuildings){
       let area=0;for(let i=0,j=n-1;i<n;j=i++)area+=local[j*2]*local[i*2+1]-local[i*2]*local[j*2+1];
-      const style=b.lm?-1:facadeStyle(h,Math.abs(area)*.5,profile);
+      const style=b.lm&&!palaceContext?-1:facadeStyle(h,Math.abs(area)*.5,profile);
       if(style>=0){
         bcol.setHex(facadeColor(cxs/n,czs/n,profile));
       }
@@ -432,10 +509,12 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     sites.push({ x: st.x - originX, y: st.y, z: st.z - originZ, r: st.r, lm: st.lm, ...(st.n ? { n: st.n } : {}) });
   }
 
-  if(profile.street.geometry && terrain)addStreetGeometry(group,chunk.objects?.roads??[],terrain,originX,originZ,profile.street);
+  if(profile.street.geometry && terrain)addStreetGeometry(group,chunk.objects?.roads??[],terrain,originX,originZ,profile.street,streets);
 
   if(profile.props.enabled && terrain)addStreetProps(group,chunk,chunkSize,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.props);
 
+  if(chunk.seoulDetail&&terrain)addSeoulLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
+  if(chunk.palaceSite&&terrain)addPalaceLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
   if(profile.renderStyle==='painted')applyPaintedMaterials(group);
   return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, walls, roads, water, sites };
 }
