@@ -212,7 +212,7 @@ export class Game {
 
   start() {
     this.clock.start();
-    this.renderer.setAnimationLoop(() => this.diag.guard(() => { this.diag.tick(); this.frame(); }));
+    this.renderer.setAnimationLoop(() => this.diag.guard(() => { this.diag.tick(); this.diag.beginFrame(this.renderer); this.frame(); this.diag.endFrame(this.renderer,this.session?.world.performanceMetrics); }));
     this.maybeAutoRedeploy(); // 미션 재시작(reload) → 저장된 전장으로 바로 재출격
   }
 

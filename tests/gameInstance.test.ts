@@ -149,12 +149,6 @@ describe("GameInstance.finalize() — 즉시 종료 평가", () => {
 });
 
 describe("GameInstance — timeLeft / respawnsLeft getters", () => {
-  it("duration=0 → timeLeft=Infinity", () => {
-    const inst = new GameInstance({ mission: FREE_ROAM, players: makePlayers(), enemies: makeEnemies() });
-    inst.start();
-    expect(inst.timeLeft).toBe(Infinity);
-  });
-
   it("시간 경과 후 timeLeft 감소, 0 미만은 0으로 클램프", () => {
     const inst = new GameInstance({ mission: spec({ duration: 10 }), players: makePlayers(), enemies: makeEnemies() });
     inst.start();

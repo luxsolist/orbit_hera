@@ -21,6 +21,7 @@ export interface MinimapSink {
 
 /** 플레이/충돌/표현이 의존하는 전장 표면(모놀리식·스트리밍 공통). */
 export interface GameWorld {
+  readonly performanceMetrics?: import("../core/RenderMetrics").WorldRenderMetrics;
   /** 씬에 추가된 월드 메시 루트. */
   readonly group: THREE.Group;
   /** 플레이어 스폰(로컬 미터). */

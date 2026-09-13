@@ -1,3 +1,4 @@
+import {execFileSync} from 'node:child_process';
 import {repairRoadGrades} from './repair-road-grades.mjs';
 // 전지구 타일 월드 빌드 — 섹션형 맵(OSM 오브젝트) + 하이트맵(.bin, DEM 지형)을 합쳐
 // 위경도 정수도 셀 디렉터리 안에 1024m 청크 파일로 분할 저장. 한 청크 파일 = 지형+오브젝트(+추후 지하).
@@ -323,3 +324,6 @@ console.error(`  + tiles.json, landmarks.json (${Object.keys(lmIdx).length} tota
 
 // Regenerate sparse road-grade overlays from the complete shared cell after baking.
 repairRoadGrades({cellFilter:`${cellLat}/${cellLon}`});
+
+// Rebind source attributes after Seoul map rebuilds; unknown buildings retain natural facade fallback.
+if(cellLat===37&&cellLon===126)execFileSync("python3",["scripts/build-seoul-landmark-appearance.py"],{stdio:"inherit"});

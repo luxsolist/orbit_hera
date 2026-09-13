@@ -14,7 +14,9 @@
     "build:map": "node scripts/build-pipeline.mjs",
     "gen:cities": "node scripts/gen-city-config.mjs",
     "audit:landmarks": "node scripts/audit-landmarks.mjs",
-    "validate:world": "node scripts/validate-world.mjs"
+    "validate:world": "node scripts/validate-world.mjs",
+    "test:fast": "vitest run --project fast",
+    "test:extended": "vitest run --project extended"
   },
   "dependencies": {
     "three": "^0.169.0"

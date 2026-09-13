@@ -44,7 +44,19 @@ it('paints both cities without changing collision geometry or shared legacy mate
   const painted=buildChunkMesh(chunk,200,0,0,profile);
   expect(painted.buildings).toEqual(legacy.buildings);
   const mat=painted.buildingMesh!.material as THREE.Material;
-  expect(mat.customProgramCacheKey()).toContain('painted-reference-defined-v4');
+  expect(mat.customProgramCacheKey()).not.toBe((legacy.buildingMesh!.material as THREE.Material).customProgramCacheKey());
+  // Exercise the shader hook and day/night binding, independent of cache version labels.
+  const shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader} as any;
+  mat.onBeforeCompile(shader,{} as any);
+  expect(shader.uniforms.cityDetail).toBeDefined(); // Original facade hook survives cloning.
+  expect(shader.fragmentShader).toContain('nightGlazing');
+  expect(shader.fragmentShader).toContain('clearPaint');
+  const scene=new THREE.Scene();
+  for(const night of [0,1,0]){
+   scene.userData.cityNight=night;
+   painted.buildingMesh!.onBeforeRender({} as any,scene,new THREE.PerspectiveCamera(),painted.buildingMesh!.geometry,mat,null as any);
+   expect(shader.uniforms.cityNight.value).toBe(night);
+  }
   expect(mat).not.toBe(legacy.buildingMesh!.material);
   const dispose=vi.spyOn(mat,'dispose');disposeChunkGroup(painted.group);expect(dispose).toHaveBeenCalled();
  }

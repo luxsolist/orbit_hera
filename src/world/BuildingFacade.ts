@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import {citySurfaceMaps} from './CitySurfaceMaps';
 import {seoulAppearance,type CityAppearance} from './cities';
 
+/** Gameplay landmark status must not override Seoul's architectural materials. */
+export function landmarkHighlightEnabled(profile:CityAppearance):boolean{return !profile.id.startsWith('seoul');}
+
 /** Visual archetypes inferred from dimensions, not authoritative building-use data. */
 export function facadeStyle(height: number, area: number, profile:CityAppearance=seoulAppearance): number {
   if (height >= profile.buildings.officeHeight) return 2; // office curtain wall
@@ -66,6 +69,7 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
   shader.fragmentShader=Object.keys(maps).map(name=>`uniform sampler2D ${name};`).join('\n')+'\n'+'uniform vec3 cityDetail; varying float fVariant; varying vec3 fPosition; varying float fKind; varying float fFace;\n'+shader.fragmentShader;
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
     float glazing=0.0;
+    float nightGlazing=0.0;
     vec2 surfaceUv=(fFace>1.5?fPosition.xz:vec2(fFace<.5?fPosition.z:fPosition.x,fPosition.y))/4.0;
     if(fFace<1.5 && fKind<.5)surfaceUv=vec2(fFace<.5?fPosition.z:fPosition.x,fPosition.y)/vec2(1.92,1.76);
     vec3 surfaceColor=vec3(1.0),surfaceNormal=vec3(0.0,0.0,1.0);
@@ -97,6 +101,14 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
         vec2 windowMask=1.0-smoothstep(limit-aa,limit+aa,cell);
         float detail=1.0-smoothstep(.25,.65,max(aa.x,aa.y));
         glazing=windowMask.x*windowMask.y*detail*step(1.4,fPosition.y);
+        // Night visibility uses one low-rise world-space pitch for every archetype.
+        // Dense office windows must not extinguish sooner than masonry windows.
+        vec2 nightReference=vec2(fFace<.5?fPosition.z:fPosition.x,fPosition.y)/vec2(3.1*cityDetail.y,3.2);
+        float nightDetail=1.0-smoothstep(.25,.65,max(fwidth(nightReference.x),fwidth(nightReference.y)));
+        // Preserve average luminous coverage when individual panes become subpixel.
+        float unresolved=smoothstep(.25,.65,max(aa.x,aa.y));
+        float nightCoverage=mix(windowMask.x*windowMask.y,4.0*limit.x*limit.y,unresolved);
+        nightGlazing=nightCoverage*nightDetail*step(1.4,fPosition.y);
         float variation=fract(sin(dot(floor(grid),vec2(12.9898,78.233)))*43758.5453);
         vec3 glass=mix(vec3(.23,.32,.38),vec3(.42,.51,.56),variation*.5);
         // Preserve sampled paint hue: texture supplies relative luminance, not a second paint color.
@@ -142,6 +154,7 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
         float loadingDoor=industrial*groundFloor*opening*front;
         diffuseColor.rgb*=1.0-loadingDoor*.14;
         glazing=max(glazing,shopMask);
+        nightGlazing=max(nightGlazing,shopMask);
 
       }
     }
@@ -160,6 +173,6 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
     }
   `);
  };
- material.customProgramCacheKey=()=> 'city-facades-architectural-v6';
+ material.customProgramCacheKey=()=> 'city-facades-architectural-v7';
  return material;
 }

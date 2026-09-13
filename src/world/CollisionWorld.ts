@@ -15,7 +15,12 @@ type Wall = { x0: number; x1: number; z0: number; z1: number; top: number };
  * 균일 격자(SpatialGrid)로 브로드페이즈 → 플레이어 주변 후보만 검사.
  * 미니맵 등 외부 표현은 forEach*Near 로 (내부 배열을 노출하지 않고) 근처 형상만 방문.
  */
+export interface CollisionSnapshot {circles:Circle[];boxes:OBB[];tris:Tri[];walls:Wall[];}
 export class CollisionWorld {
+  snapshot():CollisionSnapshot {return {circles:this.circles,boxes:this.boxes,tris:this.tris,walls:this.walls};}
+  static fromSnapshot(data:CollisionSnapshot):CollisionWorld {
+    const c=new CollisionWorld();c.circles.push(...data.circles);c.boxes.push(...data.boxes);c.tris.push(...data.tris);c.walls.push(...data.walls);c.finalize();return c;
+  }
   private readonly circles: Circle[] = [];
   private readonly boxes: OBB[] = [];
   private readonly tris: Tri[] = [];

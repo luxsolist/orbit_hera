@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { latLonDistanceM, neighborChunks, cellChunkOf } from "../src/world/mapLocator";
+import { describe, it, expect, vi } from "vitest";
+import { latLonDistanceM, neighborChunks, cellChunkOf, fetchWorldChunk } from "../src/world/mapLocator";
 
 // 전지구 타일 월드 위치 조회의 순수 로직.
 
@@ -40,4 +40,10 @@ describe("neighborChunks — 스트리밍 로드 창", () => {
   it("반경 2 → 5×5 = 25칸", () => {
     expect(neighborChunks(0, 0, 2).length).toBe(25);
   });
+});
+
+it('resolves worker map and patch URLs from the page base rather than the worker assets folder',async()=>{
+ const urls:string[]=[];
+ vi.stubGlobal('fetch',async(url:string)=>{urls.push(url);return {ok:false};});
+ try{await fetchWorldChunk([35,129],1,2,16,'https://example.test/game/');expect(urls.length).toBeGreaterThan(0);expect(urls.every(u=>u.startsWith('https://example.test/game/maps/'))).toBe(true);expect(urls.some(u=>u.includes('/assets/'))).toBe(false);}finally{vi.unstubAllGlobals();}
 });

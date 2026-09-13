@@ -1,3 +1,4 @@
+import {RenderMetrics,type WorldRenderMetrics} from './RenderMetrics';
 import {CombatMetrics} from "./CombatMetrics";
 import type * as THREE from "three";
 
@@ -10,6 +11,9 @@ const MAX_LINES = 14;
 
 export class Diagnostics {
   readonly enabled = ENABLED;
+  private renderMetrics?:RenderMetrics;
+  beginFrame(renderer:THREE.WebGLRenderer){this.renderMetrics?.begin(renderer);}
+  endFrame(renderer:THREE.WebGLRenderer,world?:WorldRenderMetrics){this.renderMetrics?.end(renderer,world);}
   private combat=new CombatMetrics();
   private combatEl: HTMLDivElement | null=null;
   private combatNext=0;
@@ -40,6 +44,7 @@ export class Diagnostics {
     el.appendChild(this.hbEl);
     el.appendChild(this.logEl);
     document.body.appendChild(el);
+    this.renderMetrics=new RenderMetrics(el);
     this.log("diag on — WebGL/에러/메모리/하트비트 추적");
   }
 

@@ -132,7 +132,7 @@ function surfaceMaterial(color:string,layer:number,wear=0):THREE.MeshStandardMat
 }
 const cache=new WeakMap<CityAppearance['street'],THREE.MeshStandardMaterial[]>();
 /** Layered opaque footprints form road unions at intersections, with no curb across the carriageway. */
-export interface StreetMeshData {layer:number;position:Float32Array;normal:Float32Array;coord:Float32Array}
+export interface StreetMeshData {layer:number;position:Float32Array;normal:Float32Array;coord:Float32Array;bounds?:{min:number[];max:number[];center:number[];radius:number}}
 export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,ox:number,oz:number,colors:CityAppearance['street'],prepared?:StreetMeshData[]):void {
  let materials=cache.get(colors);
  if(!materials){materials=[colors.curb,colors.pavement,colors.curb,colors.asphalt,colors.center,colors.marking,colors.curb].map((c,i)=>surfaceMaterial(c,i,colors.wearStrength??0));cache.set(colors,materials);}
@@ -141,6 +141,7 @@ export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,
   geometry.setAttribute('position',new THREE.BufferAttribute(data.position,3));
   geometry.setAttribute('normal',new THREE.BufferAttribute(data.normal,3));
   geometry.setAttribute('streetCoord',new THREE.BufferAttribute(data.coord,2));
+  if(data.bounds){const b=data.bounds;geometry.boundingBox=new THREE.Box3(new THREE.Vector3().fromArray(b.min),new THREE.Vector3().fromArray(b.max));geometry.boundingSphere=new THREE.Sphere(new THREE.Vector3().fromArray(b.center),b.radius);}
   const i=data.layer,mesh=new THREE.Mesh(geometry,materials![i]);
   mesh.name=['street_outer_edge','street_pavement','street_curb','street_asphalt','street_center_lines','street_lane_lines','street_raised_curbs'][i];
   mesh.userData.streetLayer=i;mesh.receiveShadow=true;mesh.renderOrder=i+1;group.add(mesh);
@@ -210,11 +211,18 @@ export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,
 export function updateStreetDetail(group:THREE.Group,x:number,z:number):void {
  for(const child of group.children){
   const mesh=child as THREE.Mesh,layer=mesh.userData.streetLayer;
-  if(layer===undefined||layer<4)continue;
+  const smallProp=['street_lights','street_tree_trunks'].includes(mesh.name);
+  if(!smallProp&&(layer===undefined||layer<4))continue;
   if(!mesh.geometry.boundingBox)mesh.geometry.computeBoundingBox();
   const box=mesh.geometry.boundingBox!;
   const distance=Math.hypot(Math.max(box.min.x-x,0,x-box.max.x),Math.max(box.min.z-z,0,z-box.max.z));
-  const limit=mesh.visible?850:700;
+  const limit=smallProp?(mesh.visible?1200:1050):(mesh.visible?850:700);
   mesh.visible=distance<limit;
  }
+}
+
+/** Transferable road arrays for either worker pipeline. */
+export function prepareStreetMeshes(roads:Road[],terrain:ChunkTerrain,ox:number,oz:number,colors:CityAppearance['street']):StreetMeshData[]{
+ const group=new THREE.Group();addStreetGeometry(group,roads,terrain,ox,oz,colors);
+ return group.children.map(child=>{const mesh=child as THREE.Mesh,g=mesh.geometry;g.computeBoundingBox();g.computeBoundingSphere();const data={bounds:{min:g.boundingBox!.min.toArray(),max:g.boundingBox!.max.toArray(),center:g.boundingSphere!.center.toArray(),radius:g.boundingSphere!.radius},layer:mesh.userData.streetLayer as number,position:g.getAttribute('position').array as Float32Array,normal:g.getAttribute('normal').array as Float32Array,coord:g.getAttribute('streetCoord').array as Float32Array};g.dispose();return data;});
 }

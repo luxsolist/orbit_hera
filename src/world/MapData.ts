@@ -6,6 +6,7 @@ export interface Ring {
   landmarkModel?: string;
   statueModel?: string;
   palaceBuildingId?: string;
+  landmarkAppearance?: import("./cities/SeoulLandmarkAppearance").LandmarkAppearance;
   seoulArchitecture?: import("./cities/SeoulDetail").DetailBuilding;
   /** Optional audit provenance; absent in older baked tiles. */
   osmId?: string;

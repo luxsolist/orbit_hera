@@ -191,7 +191,7 @@ export class BuildingCombat {
    */
   registerBuilding(
     mesh: THREE.Mesh, vStart: number, vCount: number, poly: number[], baseY: number, topY: number,
-    lm?: { cls: EntanglementClass; name?: string }
+    lm?: { cls: EntanglementClass; name?: string }, active=true
   ): void {
     const n = poly.length / 2;
     if (n < 3) return;
@@ -224,7 +224,7 @@ export class BuildingCombat {
     };
     this.addToMesh(mesh, e);
     if (this.destroyed.has(id)) this.restoreRubbleBuilding(e);
-    else this.addIntact(e);
+    else if(active)this.addIntact(e);
   }
 
   /**

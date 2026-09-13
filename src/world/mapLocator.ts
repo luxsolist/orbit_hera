@@ -1,3 +1,5 @@
+import {applySeoulLandmarkAppearance,type LandmarkAppearancePatch} from './cities/SeoulLandmarkAppearance';
+import landmarkAppearanceIndex from './cities/seoul-landmark-appearance-index.json';
 import {applyRoadGradePatch,type RoadGradePatch} from './RoadGradePatch';
 import {correctGwanghwamunRoadGrade} from './cities/GwanghwamunRoadGrade';
 import {correctGwanghwamunStatues} from './cities/GwanghwamunStatues';
@@ -31,9 +33,9 @@ export function neighborChunks(cx: number, cz: number, r: number): Array<[number
 
 const BASE = (): string => (typeof import.meta !== "undefined" && import.meta.env?.BASE_URL) || "/";
 
-async function fetchJson<T>(path: string): Promise<T | null> {
+async function fetchJson<T>(path: string, baseUrl?:string): Promise<T | null> {
   try {
-    const res = await fetch(`${BASE()}${path}`, { cache: "no-cache" });
+    const res = await fetch(baseUrl?new URL(path,baseUrl).href:`${BASE()}${path}`, { cache: "no-cache" });
     return res.ok ? ((await res.json()) as T) : null;
   } catch {
     return null;
@@ -74,22 +76,24 @@ export async function fetchWorldChunkAt(lat: number, lon: number, chunkSize = 10
 
 /** 청크 좌표로 직접 로드. block=매니페스트 블록 크기(경로 <bx>_<bz>/ 계산). */
 const seoulChunks=new Set(seoulIndex.chunks);
+const landmarkAppearanceChunks=new Set(landmarkAppearanceIndex.chunks);
 let roadGradeIndex:Promise<{cells:Record<string,string[]>}|null>|undefined;
-async function fetchRoadGrade(cell:Cell,key:string){
- roadGradeIndex??=fetchJson<{cells:Record<string,string[]>}>('maps/road-grade/index.json');
+async function fetchRoadGrade(cell:Cell,key:string,baseUrl?:string){
+ roadGradeIndex??=fetchJson<{cells:Record<string,string[]>}>('maps/road-grade/index.json',baseUrl);
  const index=await roadGradeIndex,cellKey=cell.join('/');
- return index?.cells?.[cellKey]?.includes(key)?fetchJson<RoadGradePatch>(`maps/road-grade/${cellKey}/${key}.json`):null;
+ return index?.cells?.[cellKey]?.includes(key)?fetchJson<RoadGradePatch>(`maps/road-grade/${cellKey}/${key}.json`,baseUrl):null;
 }
-export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?: number): Promise<WorldChunk | null> => {
+export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?: number, baseUrl?:string): Promise<WorldChunk | null> => {
   const key=`${cx}_${cz}`;
-  const [raw,detail,roadGrade]=await Promise.all([
-    fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block)),
-    cell[0]===37&&cell[1]===126&&seoulChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/seoul/${key}.json`):Promise.resolve(null),
-    fetchRoadGrade(cell,key),
+  const [raw,detail,roadGrade,appearance]=await Promise.all([
+    fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block),baseUrl),
+    cell[0]===37&&cell[1]===126&&seoulChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/seoul/${key}.json`,baseUrl):Promise.resolve(null),
+    fetchRoadGrade(cell,key,baseUrl),
+    cell[0]===37&&cell[1]===126&&landmarkAppearanceChunks.has(key)?fetchJson<LandmarkAppearancePatch>(`maps/landmark-appearance/seoul/${key}.json`,baseUrl):Promise.resolve(null),
   ]);
   if(!raw)return null;
   const chunk=correctPalaceSite(cell,correctGyeongbokgungChunk(cell,correctJamsilChunk(cell,applyRoadGradePatch(raw,roadGrade))));
-  return correctGwanghwamunRoadGrade(cell,correctGwanghwamunStatues(cell,detail?applySeoulDetail(cell,chunk,detail):chunk));
+  return applySeoulLandmarkAppearance(cell,correctGwanghwamunRoadGrade(cell,correctGwanghwamunStatues(cell,detail?applySeoulDetail(cell,chunk,detail):chunk)),appearance);
 };
 
 /** 랜드마크 이름 → 위치(위경도/셀/청크). */

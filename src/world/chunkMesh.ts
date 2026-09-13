@@ -1,3 +1,4 @@
+import {landmarkRoof} from './cities/SeoulLandmarkAppearance';
 import {statueGeometry} from './cities/GwanghwamunStatues';
 import {seoulArchitectureGeometry,paintSeoulDetail,addSeoulLandscape} from './cities/SeoulDetail';
 import {palaceSiteBuilding,paintPalaceGround,addPalaceLandscape,inPalace} from './cities/PalaceSite';
@@ -14,7 +15,7 @@ import * as THREE from "three";
 import {addStreetProps} from "./StreetProps";
 import {paintUrbanGround} from "./UrbanGround";
 import {paintStreets, streetMaterial, STREET} from "./StreetSurface";
-import { facadeStyle, facadeColor, facadeVariant, applyRoofColor, dressBuilding, createFacadeMaterial } from "./BuildingFacade";
+import { landmarkHighlightEnabled, facadeStyle, facadeColor, facadeVariant, applyRoofColor, dressBuilding, createFacadeMaterial } from "./BuildingFacade";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { setUniformColor, elevationColor, GROUND_GREEN, SAND_TAN } from "./geo";
 import { buildingBaseColor } from "./precinct";
@@ -63,7 +64,7 @@ export interface ChunkBuild {
 // 지형은 청크 전용 베이크 텍스처(map)를 쓴다(아래 bakeSurfaceTexture). terrainMat 은 텍스처 실패 시 폴백(고도 vertexColors).
 const terrainMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.97, metalness: 0 });
 const facadeMaterials=new WeakMap<CityAppearance,THREE.MeshStandardMaterial>();
-function facadeMaterial(profile:CityAppearance){let mat=facadeMaterials.get(profile);if(!mat){mat=createFacadeMaterial(profile);facadeMaterials.set(profile,mat);}return mat;}
+export function facadeMaterial(profile:CityAppearance){let mat=facadeMaterials.get(profile);if(!mat){mat=createFacadeMaterial(profile);facadeMaterials.set(profile,mat);}return mat;}
 const cityMat = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 0.82, metalness: 0.05 });
 const wallMat = new THREE.MeshStandardMaterial({ color: WALL_COLOR, flatShading: true, roughness: 0.95, metalness: 0, side: THREE.DoubleSide });
 
@@ -101,20 +102,24 @@ export function linearToSrgbByte(v: number): number {
   return Math.round(s * 255);
 }
 
+function makeSurfaceCanvas(w:number,h:number): HTMLCanvasElement | OffscreenCanvas {
+ return typeof document === "undefined" ? new OffscreenCanvas(w,h) : Object.assign(document.createElement("canvas"),{width:w,height:h});
+}
+
 function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain, profile:CityAppearance=defaultAppearance): THREE.CanvasTexture | null {
-  if (typeof document === "undefined") return null;
+  if (typeof document === "undefined" && typeof OffscreenCanvas === "undefined") return null;
   const { size: tn, cellX0, cellZ0, step } = t;
   const chunkSize = step * (tn - 1);
   const texSize = Math.min(MAX_TEX, Math.max(256, Math.round(chunkSize * TEX_PER_M)));
-  const canvas = document.createElement("canvas");
+  const canvas = makeSurfaceCanvas(texSize, texSize);
   canvas.width = texSize; canvas.height = texSize;
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d") as CanvasRenderingContext2D | null;
   if (!ctx) return null;
 
   // 1) 고도색 베이스 — tn×tn ImageData 를 작은 캔버스에 그려 전체로 부드럽게 업스케일.
-  const small = document.createElement("canvas");
+  const small = makeSurfaceCanvas(tn, tn);
   small.width = tn; small.height = tn;
-  const sctx = small.getContext("2d");
+  const sctx = small.getContext("2d") as CanvasRenderingContext2D | null;
   if (!sctx) return null;
   const img = sctx.createImageData(tn, tn);
   const col = new THREE.Color();
@@ -300,7 +305,7 @@ export function forEachLandmarkNear(
   }
 }
 
-export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: number, originZ: number, appearance:CityAppearance|boolean = defaultAppearance, streets?:StreetMeshData[]): ChunkBuild {
+export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: number, originZ: number, appearance:CityAppearance|boolean = defaultAppearance, streets?:StreetMeshData[], preparing=false): ChunkBuild {
   // Boolean compatibility for older standalone review pages. Runtime passes a city profile.
   const profile=typeof appearance==='boolean'?(appearance?seoulAppearance:defaultAppearance):appearance;
   const detailedBuildings=profile.buildings.enabled;
@@ -341,6 +346,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     // 텍스처 성공 → 청크 전용 머티리얼(언로드 시 dispose). 실패 → 공유 폴백(고도 vertexColors).
     const mat = tex ? streetMaterial(tex,originX,originZ,profile.street) : terrainMat;
     const mesh = new THREE.Mesh(geo, mat);
+    mesh.name="chunk_terrain";
     mesh.receiveShadow = true;
     group.add(mesh);
   }
@@ -350,7 +356,10 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
   const bGeos: THREE.BufferGeometry[] = [];
   const bcol = new THREE.Color();
   let bVtx = 0; // 병합 누적 정점 수 — 건물별 정점 범위(병합은 입력 순서 보존) 추적
-  for (const b of chunk.objects?.buildings ?? []) {
+  const sourceBuildings=chunk.objects?.buildings??[];
+  const blockKey=(b:typeof sourceBuildings[number])=>{const xs=b.p.filter((_,i)=>i%2===0),zs=b.p.filter((_,i)=>i%2===1);return `${Math.floor(((Math.min(...xs)+Math.max(...xs))/2-originX)/256)}:${Math.floor(((Math.min(...zs)+Math.max(...zs))/2-originZ)/256)}`;};
+  const orderedBuildings=preparing?[...sourceBuildings].sort((a,b)=>blockKey(a).localeCompare(blockKey(b))):sourceBuildings;
+  for (const b of orderedBuildings) {
     const p = b.p;
     const n = p.length / 2;
     if (n < 3) continue;
@@ -404,20 +413,28 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
         continue;
       }
     }
+    const roof=landmarkRoof(b,local,baseY,top);
     const shape = new THREE.Shape();
     shape.moveTo(local[0], -local[1]);
     for (let i = 1; i < n; i++) shape.lineTo(local[i * 2], -local[i * 2 + 1]);
     shape.closePath();
+    for(const ring of b.holes??[]){
+      if(ring.length<6)continue;const hole=new THREE.Path(),q=localize(ring,originX,originZ);
+      hole.moveTo(q[0],-q[1]);for(let i=2;i<q.length;i+=2)hole.lineTo(q[i],-q[i+1]);hole.closePath();shape.holes.push(hole);
+    }
     let geo: THREE.BufferGeometry;
     try {
-      geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, steps: 1 });
+      geo = new THREE.ExtrudeGeometry(shape, { depth:depth-(roof?.height??0), bevelEnabled: false, steps: 1 });
     } catch {
       continue;
     }
     geo.rotateX(-Math.PI / 2);
     geo.translate(0, baseY, 0);
+    const bodyVertices=geo.getAttribute('position').count;
+    if(roof){geo.deleteAttribute('uv');const body=geo;geo=mergeGeometries([body,roof.geometry],false)!;body.dispose();roof.geometry.dispose();}
     const palaceContext=(!!chunk.palaceSite&&inPalace(cxs/n,czs/n))||!!chunk.seoulDetail;
-    if (b.lm&&!palaceContext) {
+    const highlight=b.lm&&!palaceContext&&landmarkHighlightEnabled(profile);
+    if (highlight) {
       bcol.copy(LANDMARK_GLOW); // 높이·지터 무관 고정 — 랜드마크는 한 부류로 읽혀야 한다
     } else {
       const jitter = ((Math.abs(Math.round(cxs / n * 7 + czs / n * 13)) % 100) / 100) || 0.5;
@@ -425,14 +442,20 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     }
     if(detailedBuildings){
       let area=0;for(let i=0,j=n-1;i<n;j=i++)area+=local[j*2]*local[i*2+1]-local[i*2]*local[j*2+1];
-      const style=b.lm&&!palaceContext?-1:facadeStyle(h,Math.abs(area)*.5,profile);
+      let style=highlight?-1:facadeStyle(h,Math.abs(area)*.5,profile);
+      if(!highlight&&b.landmarkAppearance?.wallMaterial==='glass')style=2;
+      if(!highlight&&b.landmarkAppearance?.wallMaterial==='brick')style=0;
       if(style>=0){
         bcol.setHex(facadeColor(cxs/n,czs/n,profile));
       }
+      if(b.landmarkAppearance?.wallColor)bcol.set(b.landmarkAppearance.wallColor);
       geo=dressBuilding(geo,local,baseY,style,facadeVariant(cxs/n,czs/n));
+      if(roof){const faces=geo.getAttribute('facadeFace');for(let i=bodyVertices;i<faces.count;i++)faces.setX(i,2);}
     }
     setUniformColor(geo, bcol);
-    if(detailedBuildings)applyRoofColor(geo,cxs/n,czs/n,profile);
+    if(detailedBuildings){applyRoofColor(geo,cxs/n,czs/n,profile);
+      if(b.landmarkAppearance?.roofColor){const colors=geo.getAttribute('color'),faces=geo.getAttribute('facadeFace'),color=new THREE.Color(b.landmarkAppearance.roofColor);for(let i=0;i<colors.count;i++)if(faces.getX(i)===2)colors.setXYZ(i,color.r,color.g,color.b);}
+    }
     geo.deleteAttribute("uv");
     const vCount = geo.getAttribute("position").count;
     bGeos.push(geo);
@@ -441,6 +464,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     bVtx += vCount;
   }
   const buildingMesh = addMerged(group, bGeos, detailedBuildings ? facadeMaterial(profile) : cityMat, true);
+  if(buildingMesh)buildingMesh.name="chunk_buildings";
 
   // ── 도로 — 지형 표면 텍스처에 베이크됨(bakeSurfaceTexture). 여기선 미니맵용 폴리라인만 수집. ──
   const roads: ChunkBuild["roads"] = [];
@@ -509,13 +533,13 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     sites.push({ x: st.x - originX, y: st.y, z: st.z - originZ, r: st.r, lm: st.lm, ...(st.n ? { n: st.n } : {}) });
   }
 
-  if(profile.street.geometry && terrain)addStreetGeometry(group,chunk.objects?.roads??[],terrain,originX,originZ,profile.street,streets);
+  if(!preparing && profile.street.geometry && terrain)addStreetGeometry(group,chunk.objects?.roads??[],terrain,originX,originZ,profile.street,streets);
 
   if(profile.props.enabled && terrain)addStreetProps(group,chunk,chunkSize,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.props);
 
   if(chunk.seoulDetail&&terrain)addSeoulLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
   if(chunk.palaceSite&&terrain)addPalaceLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
-  if(profile.renderStyle==='painted')applyPaintedMaterials(group);
+  if(!preparing && profile.renderStyle==='painted')applyPaintedMaterials(group);
   return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, walls, roads, water, sites };
 }
 
@@ -528,7 +552,7 @@ export function disposeChunkGroup(group: THREE.Group): void {
     const mesh = o as THREE.Mesh;
     if (mesh.geometry) mesh.geometry.dispose();
     const mat = mesh.material as THREE.MeshStandardMaterial | undefined;
-    if (mat?.map) { mat.map.dispose(); mat.dispose(); }
+    if (mat?.map) { const image=mat.map.image; if(typeof ImageBitmap!=="undefined" && image instanceof ImageBitmap)image.close(); mat.map.dispose(); mat.dispose(); }
     else if(mat?.userData.paintedOwned)mat.dispose();
   });
 }

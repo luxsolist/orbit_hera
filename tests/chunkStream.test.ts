@@ -173,3 +173,33 @@ it("deactivates cached chunks and reactivates them without rebuilding",async()=>
  s.update(view({x:100000}));expect(events.filter(v=>!v)).toHaveLength(loaded);
  s.update(view());expect(events.filter(Boolean)).toHaveLength(loaded);s.dispose();
 });
+
+describe('separate preparation and activation',()=>{
+ it('prepares the extra ring without activation and reuses it on approach',async()=>{
+  const built=new Map<string,{active:boolean}>(),fetches=new Map<string,number>();
+  const io:ChunkIO={fetch:async r=>{fetches.set(r.key,(fetches.get(r.key)??0)+1);return r.key;},build:(r,_raw,active=true)=>{const h={active};built.set(r.key,h);return h;},setActive:(h,on)=>{(h as {active:boolean}).active=on;},dispose:()=>{}};
+  const cfg={...CFG,fineRadius:3624,activeRadius:1200,activeHysteresis:128,coarseRadius:0,prefetchLead:0,maxConcurrentFetch:100};
+  const s=new ChunkStreamer(io,cfg,()=>0);s.update(view());await flush();s.update(view());
+  const key='fine:2:0',handle=built.get(key)!;expect(handle).toBeDefined();expect(handle.active).toBe(false);expect(s.metrics.prepared).toBeGreaterThan(0);
+  s.update(view({x:1800}));expect(handle.active).toBe(true);expect(fetches.get(key)).toBe(1);
+  s.update(view());expect(handle.active).toBe(false);expect(built.get(key)).toBe(handle);
+  s.dispose();expect(s.metrics.active).toBe(0);expect(s.metrics.prepared).toBe(0);
+ });
+ it('keeps visible coverage even with a large forward prediction',async()=>{
+  const {io}=fakeIO();const s=new ChunkStreamer(io,{...CFG,fineRadius:3624,activeRadius:2600,coarseRadius:0,maxConcurrentFetch:100},()=>0);
+  s.update(view({vx:4000}));await flush();s.update(view({vx:4000}));expect(s.metrics.active).toBeGreaterThan(0);s.dispose();
+ });
+});
+
+
+describe('incremental preparation',()=>{
+ it('spreads assembly over frames and discards a cancelled partial build',async()=>{
+  let clock=0,steps=0,cancelled=false,activated=0;
+  const controllerSignals:AbortSignal[]=[];
+  const config={...CFG,fineRadius:800,coarseRadius:0,hysteresis:0,maxConcurrentFetch:1,buildBudgetMs:4};
+  const io:ChunkIO={fetch:async(_req,signal)=>{controllerSignals.push(signal!);return {};},build:()=>{throw Error('sync path');},dispose:()=>{},setActive:()=>activated++,buildIncremental:function*(){let complete=false;try{for(let i=0;i<8;i++){steps++;clock+=3;yield;}complete=true;return {};}finally{if(!complete)cancelled=true;}}};
+  const streamer=new ChunkStreamer(io,config,()=>clock),v=view({x:512,z:512});
+  streamer.update(v);await flush();streamer.update(v);expect(steps).toBe(2);expect(activated).toBe(0);
+  streamer.update(view({x:100000,z:100000}));expect(cancelled).toBe(true);expect(streamer.loadedCount).toBe(0);streamer.dispose();
+ });
+});

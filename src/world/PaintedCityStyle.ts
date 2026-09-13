@@ -32,7 +32,7 @@ export function applyPaintedMaterials(group:THREE.Group):void {
     const isFacade=shader.fragmentShader.includes('float glazing=0.0;');
     if(isFacade)shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
       float room=fract(sin(dot(floor(fPosition/vec3(3.0,3.0,3.0)),vec3(12.9898,78.233,37.719))+fVariant*113.0)*43758.5453);
-      totalEmissiveRadiance+=vec3(1.0,.68,.29)*glazing*step(.64,room)*cityNight*1.5;
+      totalEmissiveRadiance+=vec3(1.0,.68,.29)*nightGlazing*step(.64,room)*cityNight*1.5;
     `);
     shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`
      float luminance=dot(outgoingLight,vec3(.2126,.7152,.0722));
@@ -50,7 +50,7 @@ export function applyPaintedMaterials(group:THREE.Group):void {
      #include <opaque_fragment>
     `);
    };
-   material.customProgramCacheKey=()=>key+'-painted-reference-defined-v4';
+   material.customProgramCacheKey=()=>key+'-painted-reference-defined-v5';
    return material;
   };
   const previous=object.onBeforeRender;

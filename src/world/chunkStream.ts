@@ -14,6 +14,8 @@ export type Lod = "fine" | "coarse";
 export interface ChunkConfig {
   fineSize: number; // 세밀(건물) 청크변(m)
   coarseSize: number; // 거친 지형 타일변(m)
+  activeRadius?: number; // Optional fine-chunk activation radius, independent of preparation.
+  activeHysteresis?: number;
   fineRadius: number; // 세밀 로드 반경(m)
   coarseRadius: number; // 거친 로드 반경(m)
   fineMaxAltitude: number; // 이 고도(m) 초과 시 세밀 청크 스트리밍 중단(건물 생략)
@@ -109,20 +111,28 @@ export function keepSet(view: ViewState, cfg: ChunkConfig): Set<string> {
 
 /** 청크 입출력 훅(주입) — fetch=비동기 로드, build=동기 메시화(예산 내), dispose=해제. */
 export interface ChunkIO {
-  fetch(req: ChunkReq): Promise<unknown>;
-  build(req: ChunkReq, raw: unknown): unknown;
+  fetch(req: ChunkReq, signal?:AbortSignal): Promise<unknown>;
+  buildIncremental?(req:ChunkReq,raw:unknown):Generator<void,unknown>;
+  discardRaw?(raw:unknown):void;
+  prioritize?(keys:string[]):void;
+  build(req: ChunkReq, raw: unknown, active?: boolean): unknown;
   dispose(handle: unknown): void;
   setActive?(handle: unknown, active: boolean): void;
 }
 
 /**
  * 청크 스트리머 — 매 프레임 update(view)로 원하는 집합 산출 → 언로드(→LRU) → 프리페치 큐 → 예산 빌드.
- * fetch(비동기)와 build(동기·시간예산)를 분리해 청크 크기·속도와 무관하게 히치를 제거한다.
+ * fetch/preparation and cooperative assembly are separate; a synchronous fallback step can still exceed the budget.
  */
 export class ChunkStreamer {
   private built = new Map<string, unknown>(); // key → handle(빌드 완료)
-  private fetching = new Set<string>(); // fetch 진행 중
-  private ready: { req: ChunkReq; raw: unknown }[] = []; // fetch 완료·빌드 대기
+  private fetching = new Set<string>();
+  private controllers=new Map<string,AbortController>(); // fetch 진행 중
+  private ready: { req: ChunkReq; raw: unknown; iterator?:Generator<void,unknown> }[] = []; // fetch 완료·빌드 대기
+  private active = new Set<string>();
+  private currentView?: ViewState;
+  private lastBuildMs=0;
+  private maxBuildMs=0;
   private disposed = false;
   private wanted = new Set<string>();
   private cache = new Map<string, unknown>(); // 언로드 보관(LRU; Map 삽입순)
@@ -136,16 +146,32 @@ export class ChunkStreamer {
   /** 매 프레임 호출. */
   update(view: ViewState): void {
     if (this.disposed) return;
+    this.currentView=view;this.lastBuildMs=0;
     const desired = desiredLoad(view, this.cfg);
+    // Visible coverage must remain available even when prediction points far ahead.
+    if(this.cfg.activeRadius!==undefined){
+      const local=desiredLoad({...view,vx:0,vz:0},this.cfg);
+      const keys=new Set(desired.map(r=>r.key));
+      for(const r of local)if(!keys.has(r.key)&&this.shouldActivate(r.key))desired.push(r);
+      desired.sort((a,b)=>Number(this.shouldActivate(b.key))-Number(this.shouldActivate(a.key))||a.priority-b.priority);
+    }
     const keep = keepSet(view, this.cfg);
     this.wanted = new Set([...keep, ...desired.map(r => r.key)]);
-    this.ready = this.ready.filter(item => this.wanted.has(item.req.key));
+    this.io.prioritize?.(desired.map(r=>r.key));
+    for(const [key,controller] of this.controllers)if(!this.wanted.has(key)){this.controllers.delete(key);this.fetching.delete(key);controller.abort();}
+    this.ready = this.ready.filter(item => {if(this.wanted.has(item.req.key))return true;item.iterator?.return(undefined);this.io.discardRaw?.(item.raw);return false;});
+    const priority=new Map(desired.map((r,i)=>[r.key,i]));
+    for(const item of this.ready)item.req.priority=priority.get(item.req.key)??Infinity;
     // 1) keep 밖 언로드 → LRU 캐시
     for (const [key, handle] of this.built) {
       if (!keep.has(key)) {
-        this.built.delete(key);
+        this.built.delete(key);this.active.delete(key);
         this.toCache(key, handle);
       }
+    }
+    for(const [key,handle] of this.built){
+      const active=this.shouldActivate(key);
+      if(active!==this.active.has(key)){this.io.setActive?.(handle,active);if(active)this.active.add(key);else this.active.delete(key);}
     }
     // 2) 로드 대상 enqueue(우선순위순). 캐시 히트는 즉시 복귀, 아니면 fetch(동시 상한).
     for (const req of desired) {
@@ -154,7 +180,7 @@ export class ChunkStreamer {
       if (cached !== undefined) {
         this.cache.delete(req.key);
         this.built.set(req.key, cached);
-        this.io.setActive?.(cached, true);
+        const active=this.shouldActivate(req.key);this.io.setActive?.(cached, active);if(active)this.active.add(req.key);
         continue;
       }
       if (this.pendingCount >= this.cfg.maxConcurrentFetch) continue;
@@ -166,23 +192,42 @@ export class ChunkStreamer {
 
   private startFetch(req: ChunkReq): void {
     this.fetching.add(req.key);
-    Promise.resolve(this.io.fetch(req)).then(
+    const controller=new AbortController();this.controllers.set(req.key,controller);
+    Promise.resolve(this.io.fetch(req,controller.signal)).then(
       (raw) => {
-        this.fetching.delete(req.key);
-        if (!this.disposed && this.wanted.has(req.key)) this.ready.push({ req, raw });
+        if(this.controllers.get(req.key)!==controller){this.io.discardRaw?.(raw);return;}
+        this.controllers.delete(req.key);this.fetching.delete(req.key);
+        if (!this.disposed && this.wanted.has(req.key)) this.ready.push({ req, raw });else this.io.discardRaw?.(raw);
       },
-      () => { this.fetching.delete(req.key); } // 실패 → 다음 프레임 재시도
+      () => { if(this.controllers.get(req.key)===controller){this.controllers.delete(req.key);this.fetching.delete(req.key);} } // 실패 → 다음 프레임 재시도
     );
   }
 
   private drainBuilds(): void {
     const start = this.now();
+    this.ready.sort((a,b)=>Number(this.shouldActivate(b.req.key))-Number(this.shouldActivate(a.req.key))||a.req.priority-b.req.priority);
     while (this.ready.length && this.now() - start < this.cfg.buildBudgetMs) {
-      const { req, raw } = this.ready.shift()!;
-      if (this.built.has(req.key)) continue;
-      this.built.set(req.key, this.io.build(req, raw));
+      const item=this.ready[0],{req,raw}=item;
+      if (this.built.has(req.key)){this.ready.shift();this.io.discardRaw?.(raw);continue;}
+      const active=this.shouldActivate(req.key),before=this.now();
+      let handle:unknown,done=true;
+      if(this.io.buildIncremental){
+        item.iterator??=this.io.buildIncremental(req,raw);
+        const result=item.iterator.next();done=!!result.done;handle=result.value;
+      }else handle=this.io.build(req,raw,active);
+      if(done){this.ready.shift();this.built.set(req.key,handle);if(this.io.buildIncremental)this.io.setActive?.(handle,active);if(active)this.active.add(req.key);}
+      const elapsed=Math.max(0,this.now()-before);this.lastBuildMs+=elapsed;this.maxBuildMs=Math.max(this.maxBuildMs,elapsed);
     }
   }
+
+  private shouldActivate(key:string):boolean {
+    if(this.cfg.activeRadius===undefined||!this.currentView)return true;
+    const [lod,x,z]=key.split(':');if(lod!=='fine')return true;
+    const size=this.cfg.fineSize,cx=Number(x)*size,cz=Number(z)*size,v=this.currentView;
+    const distance=Math.hypot(Math.max(cx-v.x,0,v.x-cx-size),Math.max(cz-v.z,0,v.z-cz-size));
+    return distance<=this.cfg.activeRadius+(this.active.has(key)?this.cfg.activeHysteresis??128:0);
+  }
+  get metrics(){return {active:this.active.size,prepared:this.built.size-this.active.size,cached:this.cache.size,pending:this.pendingCount,buildMs:this.lastBuildMs,maxBuildMs:this.maxBuildMs};}
 
   private toCache(key: string, handle: unknown): void {
     this.io.setActive?.(handle, false);
@@ -211,9 +256,11 @@ export class ChunkStreamer {
     this.wanted.clear();
     for (const h of this.built.values()) this.io.dispose(h);
     for (const h of this.cache.values()) this.io.dispose(h);
-    this.built.clear();
+    this.built.clear();this.active.clear();
     this.cache.clear();
+    for(const controller of this.controllers.values())controller.abort();this.controllers.clear();
     this.fetching.clear();
+    for(const item of this.ready){item.iterator?.return(undefined);this.io.discardRaw?.(item.raw);}
     this.ready.length = 0;
   }
 }

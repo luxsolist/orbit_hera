@@ -25,7 +25,7 @@ const DEVICES: { name: string; w: number; h: number }[] = [
   { name: "Z Fold5 (cover, narrow-tall)", w: 904, h: 374 },
   { name: "Z Fold5 (main, near-square)", w: 884, h: 768 },
   // ── 아이패드 ──
-  { name: "iPad mini", w: 1024, h: 768 },
+  { name: "iPad mini / PC 4:3 1024", w: 1024, h: 768 },
   { name: "iPad 10.2", w: 1080, h: 810 },
   { name: "iPad Air", w: 1180, h: 820 },
   { name: "iPad Pro 11", w: 1194, h: 834 },
@@ -37,7 +37,6 @@ const DEVICES: { name: string; w: number; h: number }[] = [
   // ── PC 화면비 ──
   { name: "PC 1:1 small", w: 800, h: 800 },
   { name: "PC 1:1 large", w: 1080, h: 1080 },
-  { name: "PC 4:3 1024", w: 1024, h: 768 },
   { name: "PC 4:3 1600", w: 1600, h: 1200 },
   { name: "PC 16:9 1366", w: 1366, h: 768 },
   { name: "PC 16:9 1920", w: 1920, h: 1080 },
@@ -53,7 +52,7 @@ const overlap = (a: Rect, b: Rect): boolean =>
 const withinScreen = (r: Rect, L: HudLayout): boolean =>
   r.x >= -EPS && r.y >= -EPS && right(r) <= L.screen.w + EPS && bottom(r) <= L.screen.h + EPS;
 
-describe("hudLayoutRects — 화면비 28종 컴포넌트 배치 무결성", () => {
+describe(`hudLayoutRects — 해상도 ${DEVICES.length}종 컴포넌트 배치 무결성`, () => {
   for (const d of DEVICES) {
     describe(`${d.name} (${d.w}×${d.h})`, () => {
       const L = hudLayoutRects(d.w, d.h);

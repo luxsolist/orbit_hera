@@ -133,13 +133,20 @@ describe("Sfx — 오디오 그래프 회귀", () => {
     expect(graphOf((s) => s.barrage(1))).not.toBe(graphOf((s) => s.barrage(10)));
   });
 
-  it("음소거는 마스터 게인을 0 으로 — 그래프는 그대로 조립된다", () => {
-    // 구현 확인(2026-08-26): setEnabled(false) 는 조기 반환이 아니라 master.gain = 0 이다.
-    // 즉 음소거 중에도 노드는 매번 만들어진다(무해하지만 낭비 — 개선 여지로 남겨둔다).
-    const muted = graphOf((s) => { s.setEnabled(false); s.beam(); });
-    expect(muted.length).toBeGreaterThan(0);
-    expect(graphOf((s) => { s.setEnabled(false); s.beam(); }))
-      .toBe(graphOf((s) => { s.setEnabled(false); s.beam(); })); // 결정적
+  it("음소거 시 출력 게인이 0이고 해제하면 원래 음량으로 복원된다", () => {
+    const getLog = installFakeAudio();
+    const sfx = new Sfx(0.5);
+    sfx.resume();
+    const output = getLog().find(r => r.kind === "Comp" && r.connects.includes("dest"))!;
+    const master = getLog().find(r => r.kind === "Gain" && r.connects.includes(`Comp#${output.id}`))!;
+    const gain = () => Number(master.props.filter(p => p.startsWith("gain=")).slice(-1)[0].split("=")[1]);
+    expect(gain()).toBe(0.5);
+    sfx.setEnabled(false);
+    expect(gain()).toBe(0);
+    sfx.beam();
+    expect(gain()).toBe(0);
+    sfx.setEnabled(true);
+    expect(gain()).toBe(0.5);
   });
 
   // ── 스냅샷: 리팩토링이 그래프를 바꾸지 않았음을 고정 ──────────────────────

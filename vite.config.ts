@@ -32,7 +32,7 @@ export default defineConfig({
     obfuscator({
       apply: "build",
       // Preserve Vite worker URL placeholders until asset URLs are resolved.
-      exclude: [/node_modules/, /\.nuxt/, /worldLand/, /StreetPreparation\.ts$/],
+      exclude: [/node_modules/, /\.nuxt/, /worldLand/, /ChunkPreparation\.ts$/],
       options: {
         compact: true,
         identifierNamesGenerator: "hexadecimal",
