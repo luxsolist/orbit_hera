@@ -82,12 +82,12 @@ export function sampleLeapOffset(spec: PlasmoidLeapSpec, rand: () => number): Le
  * 0.13~0.2초마다 자동 타격한다. 3초 창이면 오토만으로 15~23 발이 들어가 **플레이어가 아무것도
  * 하지 않아도 100% 취소**된다 — 메커닉이 존재하지 않게 된다. 취소의 실체는 수동 조준 사격이다:
  * pinned(W2 참조 핀)는 수동 명중 전용이고(FrequencyBeam 이 observe 를 manual 일 때만 전달),
- * zenoFrozen(W1)·staggered(동료 처치)·phased 도 같은 문법을 공유한다.
+ * staggered(동료 처치)·phased 도 같은 문법을 공유한다.
  */
 export function leapInterrupted(
-  zenoFrozen: boolean, staggered: boolean, pinned: boolean, phased: boolean,
+  staggered: boolean, pinned: boolean, phased: boolean,
 ): boolean {
-  return zenoFrozen || staggered || pinned || phased;
+  return staggered || pinned || phased;
 }
 
 /**

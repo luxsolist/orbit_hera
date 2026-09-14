@@ -242,7 +242,6 @@ export class FrequencyBeam {
         falloff: this.spec.falloff,
         range: this.spec.range,
         style: this.style,
-        zeno: this.spec.zeno, // 관측 고정(W1) — 수동·오토 공통(오토 = 백그라운드 관측 스레드)
         // 관측 펄스(§2.2)·관측 계류(W2)는 **수동 조준 사격만** — 오토는 위상 이탈을 못 붙잡는다
         observe: manual ? { decohere: this.spec.manual.decohere, pinSec: this.spec.manual.pinSec } : undefined,
 

@@ -97,8 +97,9 @@ end      → 결과 패널 → 재시작(reload 재출격)
   은 PlayerController 게이지 회복 배수, `sweepPeriodMul` 은 BrandSystem 파문 주기 배수.
   신규 미션 8종: 호위 붕괴·성숙체·쌍생·정예 소탕·이중 전선·최후 저지선·해일·옅은 장(총 18미션).
   체계 정본·패턴 카탈로그는 [06-missions](../spec/06-missions.md), 테스트는 [tests/missionV2.test.ts](../../tests/missionV2.test.ts).
-- **결과 채점(공명 점수)** — 종료 패널이 `EnemyManager.stats`(근원 격파·파문 무상 통과·관측 고정)를 집계해
-  `정화×10 + 근원 격파×25 + 무상 통과×40 + 관측 고정×5 + 성공 보너스 500` 을 표시(`Game.endMission`).
+- **결과 채점(공명 점수)** — 종료 패널이 `EnemyManager.stats`(근원 격파·파문 무상 통과)를 집계해
+  `정화×10 + 근원 격파×25 + 무상 통과×40 + 성공 보너스 500` 을 표시(`Game.endMission`).
+  관측 고정 항(`zenoFreezes×5`)은 2026-09-14 기제 제거와 함께 삭제됐다.
   "어떻게 싸웠는가"의 가시화 — 서사편 §7 W5(공명 각인)의 선행 형태이며 표면 어휘 규칙(§8.2)을 따른다.
   인스턴스가 매 프레임 시스템에서 집계해 만든다(부수효과 없음).
 - **`evaluateMission(spec, rt) → {status, progress, reason}`** — `status`는 `active|success|failed`.

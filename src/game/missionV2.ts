@@ -17,7 +17,6 @@ export type MissionGoal =
   | { type: "purge-all" } //                                  투입 전량 격멸(로스터전)
   | { type: "survive"; seconds: number } //                   시간 생존
   | { type: "guard"; target: "landmarks" | "buildings"; hold: number } // 대상 사수 + 유지 시간(s)
-  | { type: "suture"; gauge: number } //                      봉합 게이지(다단계 — 물리편 §2.4)
   | { type: "score"; target: number } //                      공명 점수 목표
   | { type: "experiment"; targets: number; hold: number } //  동시 조사 실험(§9 5장 앵커) — targets기 동시 관측을 hold초 유지
   | { type: "free-roam" }; //                                 탐방 — 목표/종료 없음
@@ -185,7 +184,7 @@ export function toLegacy(v2: MissionSpecV2): MissionSpec | null {
       if (v2.fail.maxBuildingLoss <= 0) return null; // 건물 사수엔 한도가 곧 판정 기준
       return { ...base, kind: "defend-buildings", duration: v2.goal.hold, maxBuildingLoss: v2.fail.maxBuildingLoss };
     default:
-      return null; // purge-role / purge-all / suture / score — 훅 ①③⑤⑥ 대기
+      return null; // purge-role / purge-all / score — 훅 ①③⑤⑥ 대기
   }
 }
 
@@ -269,7 +268,7 @@ export function deployRoleCredits(d: MissionDeploy, role: RosterUnit["role"]): n
 /**
  * v2 평가(순수) — **fail 4종을 goal 과 무관하게 동시 평가**(훅 ②: "격멸 + 건물 ≤N" 성립).
  * v1 의 마감 프레임 의미론 유지: 격멸형은 목표 달성이 동시 실패보다 우선, 생존/사수형은 실패 우선.
- * 실패 우선순위: 랜드마크 → 건물 → 리스폰 → 시간(격멸형 한정). 미구동 goal(purge-role/all·suture·
+ * 실패 우선순위: 랜드마크 → 건물 → 리스폰 → 시간(격멸형 한정). 미구동 goal(purge-role/all·
  * score)은 active 고정 — 풀 편입은 runnableV2 가 거른다(훅 ③⑤⑥ 대기).
  */
 /**
@@ -375,7 +374,6 @@ export function missionObjectiveTextV2(spec: MissionSpecV2, revealed = false): s
     case "free-roam": return "탐방 / EXPLORE";
     case "purge-role": return `${deployRoleName(g.role, revealed)} 전멸 — ${deployRoleCredits(spec.deploy, g.role)}기 / HUNT`;
     case "purge-all": return `전량 격멸 — ${deployKillCredits(spec.deploy)}기 / CLEAR`;
-    case "suture": return `균열 봉합 / SUTURE`;
     case "score": return `공명 ${g.target} 달성 / RESONATE`;
     case "experiment": return `동시 조사 — ${g.targets}기를 ${g.hold}초 붙들어라 / OBSERVE`;
   }
@@ -427,7 +425,7 @@ const SUPPORTED_MODIFIERS = new Set<keyof MissionModifiers>([
  * deploy 전 모델(phased 는 훅 ⑥ — 페이즈 1개 이상) × 지원 변조(aggro·zoneShrink·freqRegenMul·
  * sweepPeriodMul — buildingBrands 는 커터 단계 대기). purge-role(훅 ③)은 직무 구성이 결정적인
  * 투입에서 대상 직무 크레딧 > 0 일 때만. purge-all × 분출(emit)은 목표치가 깨지므로 불가.
- * suture·score goal 은 대기(각인/봉합 콘텐츠 단계).
+ * score goal 은 대기(각인 콘텐츠 단계).
  */
 export function runnableV2(spec: MissionSpecV2): boolean {
   const g = spec.goal;
@@ -449,7 +447,6 @@ export function runnableV2(spec: MissionSpecV2): boolean {
 /** 결과 화면 채점 입력(EnemyManager.stats 부분집합) — 표면 어휘 독해는 implements/08. */
 export interface CombatScoreStats {
   markerKills: number; //      근원 격파
-  zenoFreezes: number; //      관측 고정(동결 진입 수)
   sweepCleanPasses: number; // 파문 무상 통과
 }
 
@@ -458,7 +455,7 @@ export interface CombatScoreStats {
  * 실패 유형이 다양할수록(정화·근원 격파·무상 통과·관측 고정) 점수가 오른다.
  */
 export function resonanceScore(kills: number, st: CombatScoreStats, success: boolean): number {
-  return kills * 10 + st.markerKills * 25 + st.sweepCleanPasses * 40 + st.zenoFreezes * 5 + (success ? 500 : 0);
+  return kills * 10 + st.markerKills * 25 + st.sweepCleanPasses * 40 + (success ? 500 : 0);
 }
 
 /** 미션 풀에서 u∈[0,1) 비례로 하나 선택(순수 — 난수 주입). 빈 풀은 탐방으로 폴백. */

@@ -108,12 +108,20 @@
 
 | 항목 | WALKER(보행) | FLYER(비행) |
 | :--- | :--- | :--- |
-| `speed` | 19.44 (≒70 km/h) | 111.11 (≒400 km/h) |
+| `speed` | 13.89 (=50 km/h) | 111.11 (≒400 km/h) |
+| `backSpeed` / `strafeSpeed` | 6.94 / 4 | 없음(전방향 동일) |
+| 이동 응답 | `groundAccel` 18 / `airAccel` 10 | `accel` 14 |
 | `maxHp` | 120 | 60 |
 | `maxFreq` / `freqRegen` | 120 / 28 | 90 / 16 |
-| 수직 | 점프 `jump.velocity` 28, `maxRiseHeight` 100 | `verticalSpeed` 45, `ceiling` 1000, `minAltitude` 18, `spawnHeight` 100 |
-| 대시 | `dash{192, 0.16, 2.0}` | 없음 |
+| 수직 | 점프 `jump{velocity 27.78, riseGravity 28, fallGravity 36, fallTerminal 40, maxRiseHeight 100, allowAirJump}` | `verticalSpeed` 45, `ceiling` 1000, `minAltitude` 18, `spawnHeight` 100 |
+| 대시 | `dash{83.33, 0.65, 2.0}` + `backSpeed`/`strafeSpeed` 83.33 · `acceleration` 240 · `braking` 300 · `hopVelocity` 0 | 없음 |
+| 락온 | `lockOn{followDist 60, band 12}` | `lockOn{followDist 24, band 12}` |
+| 링크 리와인드 | `{freqCost 55, cooldown 40, rewindSec 4, radius 130}` | `{42, 40, 4, 110}` |
 | 무기 | primary `frequency-beam-heavy` / special `special-barrage` | primary `frequency-beam-light` / special `special-overdrive` |
+
+> 2026-09-12 3인칭 통합에서 워커 최고속을 19.44→13.89 로 낮추고 대시를 192·0.16 s → 83.33·0.65 s 로
+> 바꿨다(짧은 순간이동형 → 긴 활강형). 같은 날 이동 응답 계수를 지상 4→18, 공중 2→10, 플라이어
+> 9→14 로 올렸다. 배경·측정은 [12-third-person](../spec/12-third-person.md).
 
 ## 모바일 컨트롤 (MobileControls)
 

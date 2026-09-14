@@ -18,8 +18,8 @@
 
 ### 아키타입 — 행동을 드론에서 분리
 - **카이터 = "모기 플라즈모이드 / SKEETER"**(공중형, `PlasmoidKiterArchetype`): `keepDist` 거리를 유지하되 **keepDist 구(球) 위 개체 고유 방위(`homeDir`)** 로 향해 무리가 xy·z 모두 고르게 분산하고, 사거리에서 **드레인 빔**(`drainDamage`/`drainInterval`)으로 원거리 공격. `homeDir`은 매 프레임 **구면 랜덤워크로 표류**해 한 마리도 죽기 전까지 xyz 전 방향으로 자유 유영(`HOME_WANDER`). 너무 가까우면 직접 도주(`KITER_FLEE_LEAD` 예측 리드), 플레이어 원돌기엔 **수직 회피**(개체별 위/아래 무작위 = `homeDir.y` 부호; `orbitRef`/`evadeGain`). 상공(`spawnAlt` 80–300m)에 소수(`countBase 3`, `countCap 4`) 등장. 튜닝: 속도 `speed 89`↔`speedMin 67`(플라이어 최고속 −20%~−40%), `turnRateDeg 100`, `keepDist 35`, `keepBand 12`, `attackRange 95`, `drainDamage 3.0`, `drainInterval 1.5`. **차원도약**(원거리 — 관측 파기) 보유: 아래 참조.
-- **러셔 = "거머리 플라즈모이드 / LEECH"**(지상형, `PlasmoidRusherArchetype`): 적극 **접근**해 **접촉**으로 흡수(`spec.contact`). 속도 `speed 17`↔`speedMin 12`(워커 최고속 19.44보다 약간 느려 공격할 틈을 줌). 지표(`spawnAlt` 0–60m)에 `countBase 2`, `countCap 3` 등장. **차원도약**(근접 — 회피 강제) 보유: 아래 참조.
-- **마커 = "소인체 플라즈모이드 / BRANDER"**(중공형, `PlasmoidMarkerArchetype` — 서사편 §6.1 ① MARK): 카이터형 유영(`turnRateDeg 90`/`keepDist 70`/`keepBand 18`, 회피 옵션 없음)으로 중거리를 맴돌며 **낙인 유도탄**(`tomb`: `projSpeed 22`, `projTurnRateDeg 70`, `projTtl 14`, `fireRange 220`, `fireInterval 7`)을 발사. 명중해도 무피해 — **낙인**만 부착되고(표적당 상한 5), 주기적 **심판 파문**이 지나갈 때 낙인 1개당 `sweepDamage 18` 피해(최대 90 — 워커는 만피에서 생존, 플라이어는 방치 시 치명). 카운터: 느린 유도탄 회피(선회 캡이라 스트레이프로 흘림) / **근원 마커 격파**(그 개체의 낙인·유도탄 소산) / 관측 고정(W1)으로 장전 동결. 물량은 전원 비례(`countBase 1`, `countCap 2`), 중고도(`spawnAlt` 40–160m). 차원도약 없음(구성 축과 직교). 접촉·드레인 없음. 건물 낙인은 `modifiers.buildingBrands`(공성 낙인)로 구현돼 있다.
+- **러셔 = "거머리 플라즈모이드 / LEECH"**(지상형, `PlasmoidRusherArchetype`): 적극 **접근**해 **접촉**으로 흡수(`spec.contact`). 속도 `speed 17`↔`speedMin 12`(**워커 전진 13.89 보다 빠르다** — 2026-09-12 워커 감속 이후 후진 백페달로는 못 뿌리치고 대시·점프·엄폐가 회피 수단). 지표(`spawnAlt` 0–60m)에 `countBase 2`, `countCap 3` 등장. **차원도약**(근접 — 회피 강제) 보유: 아래 참조.
+- **마커 = "소인체 플라즈모이드 / BRANDER"**(중공형, `PlasmoidMarkerArchetype` — 서사편 §6.1 ① MARK): 카이터형 유영(`turnRateDeg 90`/`keepDist 70`/`keepBand 18`, 회피 옵션 없음)으로 중거리를 맴돌며 **낙인 유도탄**(`tomb`: `projSpeed 22`, `projTurnRateDeg 70`, `projTtl 14`, `fireRange 220`, `fireInterval 7`)을 발사. 명중해도 무피해 — **낙인**만 부착되고(표적당 상한 5), 주기적 **심판 파문**이 지나갈 때 낙인 1개당 `sweepDamage 18` 피해(최대 90 — 워커는 만피에서 생존, 플라이어는 방치 시 치명). 카운터: 느린 유도탄 회피(선회 캡이라 스트레이프로 흘림) / **근원 마커 격파**(그 개체의 낙인·유도탄 소산). 물량은 전원 비례(`countBase 1`, `countCap 2`), 중고도(`spawnAlt` 40–160m). 차원도약 없음(구성 축과 직교). 접촉·드레인 없음. 건물 낙인은 `modifiers.buildingBrands`(공성 낙인)로 구현돼 있다.
 - 공통 베이스(`PlasmoidArchetypeBase`): `name`(표시명 "국문 / ENGLISH"), `spawnAltMin/spawnAltMax`, `countBase/countCap`. 스폰 시 각 개체에 `archetypeName`·`targetIndex`·`role`(직무 — 공격 경로 분기)이 실린다.
 
 ### "분리형" 모델 — 체력 ↔ 보이는 크기 디커플링
@@ -98,8 +98,11 @@
 - 미세 상하 흔들림(`BOB_AMPLITUDE=0.4`, `BOB_RATE=2`, 누적 없는 진동)으로 부유감.
 
 ### 전투
-- `applyFrequencyHit(damage)` — HP 차감, 0 이하면 `dissolving` 전이(처치 true 반환). 피격 시 발광/플래시.
-- `tryAttack(playerPos, range, cooldown=1.0)` — 사거리 안 + 쿨다운 0이면 공격 true. `cooldown`으로 접촉(1s)↔카이터 드레인 간격(`drainInterval`)을 분기.
+- `applyFrequencyHit(damage, observe?)` — HP 차감, 0 이하면 `dissolving` 전이(처치 true 반환). 피격 시 발광/플래시.
+  `observe.decohere` 는 위상 이탈 개체를 강제 실체화(없으면 이탈 중 개체에 **무효**), `observe.pinSec` 는 재이탈 봉쇄(W2).
+- `canAttack(playerPos, range)` / `tryAttack(playerPos, range, cooldown=1.0)` — **판정과 쿨다운 소모를 분리**했다.
+  `canAttack` 는 상태(경직·동결·위상·도약 회복)·사거리만 보고, `tryAttack` 이 통과 시에만 쿨다운을 적는다.
+  분리 이유: 매니저가 **건물 차폐를 쿨다운 소모 없이** 먼저 걸러야 벽이 열리는 즉시 재시도할 수 있다(아래 `attack`).
 - 상태: `alive → dissolving → dead`(디졸브 완료). `dead`는 매니저가 정리.
 - `tagEnemy(mesh, enemy)` / `getEnemy(obj)` — 레이캐스트 적중 메쉬 → 적 역참조(userData 한 곳 캡슐화).
 
@@ -130,9 +133,29 @@
 ### 매 프레임 군집 조향 + 공격 (`update`)
 - 프레임 시작 시 표적 스냅샷·살아있는 적 스냅샷(`boids`)·어그로 부하(`load`)를 갱신하고, alive 적에 `{vel, boids, index}`를 `steer`로 넘긴다. 디졸브 중인 적은 비주얼만 진행.
 - **표적 우선순위 — 인식 범위(awareness) 히스테리시스:** **기본은 건물 공격**. 플레이어가 **인식 반경(`AWARENESS_RADIUS=200m`)** 안에 들면 그 적은 **플레이어 공격으로 전환**하고, **한번 인식하면 `AWARENESS_LOSE_RADIUS=360m`까지 계속 추격**(히스테리시스: "들어오면 계속, 벗어나면 건물 복귀"). 전환 판정은 `enemy.targetIndex>=0 ? LOSE : AWARENESS` 제곱거리 비교. 건물 공격은 주변(`BUILDING_SEEK_R=700m`) 최근접 건물(`nearestTarget`/`damage` → [BuildingCombat](../../src/world/BuildingCombat.ts), 체력·붕괴·**검정 잔해**는 [03-world](03-world.md#건물-전투-buildingcombat)). 둘 다 공통 `attack()`. 건물이 파괴되면 점진 적색 → 번쩍 → 슬로우 붕괴 → 검정 잔해로 전이.
-- **공통 공격 `attack(enemy, targetPos, from, player, buildingId)`:** 아키타입·표적(플레이어/건물) 공통 단일 경로. `tryAttack(targetPos, range, cooldown)` 통과 시 표적에 피해 → 적중하면 **`enemy.grow(amount)`(흡수=성장 — 러셔·카이터 동일)**. 카이터=고정 `drainDamage`·`DrainBeams.spawn(from→targetPos)`, 러셔=`contactDamage(spec, enemy.maxHp)`·빔 없음. 플레이어 피해 시 `onPlayerHit`, 건물이 이 타격으로 파괴되면 true 반환(호출부가 표적 해제).
+- **공통 공격 `attack(enemy, targetPos, from, player, buildingId)`:** 아키타입·표적(플레이어/건물) 공통 단일 경로.
+  **차폐 게이트(2026-09-12)** — 플레이어 표적일 때 `canAttack`(사거리·쿨다운·상태) → `world.segmentHitsBuilding(from→target)`
+  → `tryAttack` 순서다. 벽에 막힌 공격은 **쿨다운을 소모하지 않아** 경로가 열리는 즉시 재시도하고, 공격 불가
+  상태에서는 차폐 조회 자체를 건너뛴다(적 2,000기 규모에서 조회 1회). 접촉(러셔)·드레인(카이터) 모두 적용되며,
+  플라즈모이드의 **건물 통과 이동 자체는 유지**된다 — 통과해 들어와야 때릴 수 있다. `tryAttack(targetPos, range, cooldown)` 통과 시 표적에 피해 → 적중하면 **`enemy.grow(amount)`(흡수=성장 — 러셔·카이터 동일)**. 카이터=고정 `drainDamage`·`DrainBeams.spawn(from→targetPos)`, 러셔=`contactDamage(spec, enemy.maxHp)`·빔 없음. 플레이어 피해 시 `onPlayerHit`, 건물이 이 타격으로 파괴되면 true 반환(호출부가 표적 해제).
 - **카이터:** 이동 후 `clampKiterAltitude`(지면 위 `KITER_GROUND_CLEARANCE=1.5m` ~ `KITER_CEILING=1020m`로 클램프 — 가라앉음·천장 돌파 방지) 후 `attack`.
 - 드레인 빔은 [DrainBeams](../../src/fx/DrainBeams.ts)(가산발광 풀, 적→표적)로 분리. `update`에서 페이드/정리.
+
+### 정예·보스 전용 공격 ([EliteBossCombat](../../src/enemies/EliteBossCombat.ts), 2026-09-13)
+
+`deployRole` 이 `elite`/`boss` 인 개체는 위 공통 `attack` 경로 **대신** 전용 상태기를 탄다(핸들러가 true 를
+반환하면 매니저는 기존 접촉·대시·도약을 돌리지 않는다). 수치는 `ELITE_COMBAT`/`BOSS_BLAST` 상수:
+
+- **정예** — 18 m 이내 예고 돌진(피해 14), 25–70 m 예고 원거리 사격(피해 8, 쿨다운 3.5 s). 예고 1.2 s 동안
+  방향이 고정돼 옆 이동·차폐로 회피한다. 18 m 밖에서는 예고 1.5 s 뒤 플레이어로부터 15–25 m 지점으로
+  차원이동(재사용 7.5 s, 도착 후 1 s 유예, 이동 자체의 접촉 피해 없음). 도착점은 지도 경계·차폐 검사를 통과한 곳만.
+- **보스** — 55 m 안에 플레이어가 있으면 반경 30 m·예고 3 s 의 광역 폭발을 충전한다. **구형 거리 판정**이라
+  공중도 포함하고, +X 방향 90°(`safeHalfAngle` π/4) 부채꼴이 안전 방향이다. 경고 구체의 열린 방향과 판정이
+  일치한다. 폭발은 **건물 차폐를 통과**한다. 피해 `min(24, maxHp×0.25)` = 워커 24 / 플라이어 15(레벨업 HP
+  증가를 따라가지 않는다). 공격 후 2.5 s 회복, 이후 15 s 재사용.
+- **직렬화** — 공유 HP·쌍생 보스도 한 번에 하나만 광역 공격. 정예가 예고 중이면 보스 충전을 미루고, 보스
+  충전·회복과 직후 1 s 동안 정예는 공격하지 않는다. 보스의 기존 차원도약은 비활성(광역 중심이 튀지 않게).
+- 배경·검증 범위는 [전투 개편 — 정예·보스 공격](../combat-elite-boss.md).
 
 ### 웨이브 (`startNextWave`)
 - 인원 × 전장 구성 비중(`mixShares`)으로 `pendingRusher`/`pendingKiter` 예산 산정. 마커는 구성 축과 **직교** — 어느 구성에서도 전원 비례로 따로 얹힌다(낙인탄은 지상·공중 모두를 위협).
@@ -170,6 +193,8 @@
   즉시·증원 없음**: `DeployUnit{role, count, hp}` 배열, 유닛 그룹마다 전장 링 위 클러스터 배치(반경
   `ROSTER_CLUSTER_R` 70m — 편대가 한 덩어리로 읽힘; 진형 필드는 조합 정립 단계). role `elite` = 고체력
   러셔(색·크기는 HP 가 결정 — 청백), `boss` = 다중 투영 그룹 ×count(`bossProjections` 인자로 투영 수 지정).
+  두 직무는 2026-09-13 부터 **전용 공격 키트**를 갖는다([EliteBossCombat](../../src/enemies/EliteBossCombat.ts) —
+  정예 예고 돌진/원거리 사격/차원이동, 보스 광역 폭발. 아래 §정예·보스 전용 공격).
 - 공통 준비는 `beginMissionDeploy`(리셋·구성 스냅샷·균열 앵커 이격). MP 스케일: 비보스 물량·상한 ×인원,
   보스 그룹은 팀 공유. 테스트: [tests/reinforce.test.ts](../../tests/reinforce.test.ts).
 
@@ -188,9 +213,9 @@
 
 - **낙인 유도탄** — 마커가 발사(`launch`). 느린 호밍(순수 `homingStep` — `turnToward` 재사용, 선회 캡이라 회피 가능). 명중 시 표적 드론에 **낙인 부착(무피해)**, 붉은 팔면체 글리프 결정(§6.1 "붉은 글리프 결정화" — 캔버스 텍스처 없는 헤드리스 안전 메시)이 맥동·자전하며 날아온다.
 - **심판 파문**(내부 id `sweep`) — 개체가 아닌 **전장 이벤트**. `SweepSpec{period 30, speed 250, warnSec 5, maxRadius 1600}` 주기로 균열 앵커(`riftAnchor` — 일괄 스폰 중심 또는 전투 개시 지점)에서 붉은 원통 파면이 확장. **낙인 붙은 표적만** 파면 교차([prevR, curR) 반개구간 — 진앙 포함, 균열 중심 면제 없음) 시 낙인 1개당 `sweepDamage` 피해(순수 `sweepCrossed`/`brandDamage`), 통과와 함께 낙인 소모(머시 무적이어도 소모). 낙인 없으면 무해한 전장 박자.
-- **카운터 연동** — `notifyDead(enemy)`(`registerKill` 에서 호출): 격파된 마커의 유도탄·낙인 일괄 소산("마커 우선 격파"). 관측 고정(W1) 동결은 `tryAttack` 게이트로 장전 자체를 인터럽트. 빔 조사로 낙인 소각(W4 복구 사격)은 미구현 🔭(커터 폐지와 함께 보류 — 아래 "폐지" 절).
+- **카운터 연동** — `notifyDead(enemy)`(`registerKill` 에서 호출): 격파된 마커의 유도탄·낙인 일괄 소산("마커 우선 격파"). 경직·위상 이탈이 `markerFire` 게이트로 장전을 캔슬한다(관측 고정 동결은 2026-09-14 제거). 빔 조사로 낙인 소각(W4 복구 사격)은 미구현 🔭(커터 폐지와 함께 보류 — 아래 "폐지" 절).
 - **HUD** — `warnLeft`(예고 잔여 s / 파면 중 0 / 그 외 null)·`brandCount(idx)` 를 `EnemyManager.sweepWarnLeft`/`brandCount()` 로 노출, `Game` 이 매 프레임 폴링해 `HUD.setReckoning` 표시("낙인 ×n — 근원을 격파하라" / "심판 파문 도래 Ns"). 표면 어휘는 §8.2 준수(sweep/tomb/marker 는 코드 전용).
-- 테스트: [tests/reckoning.test.ts](../../tests/reckoning.test.ts) (호밍 선회 캡·파면 교차·낙인 무피해/소모·근원 소산·예고), [tests/zeno.test.ts](../../tests/zeno.test.ts) (관측 고정).
+- 테스트: [tests/reckoning.test.ts](../../tests/reckoning.test.ts) (호밍 선회 캡·파면 교차·낙인 무피해/소모·근원 소산·예고).
 
 ## 재정립 2단계 + 대위상 세트 (P2~P3, 2026-08)
 
@@ -239,9 +264,10 @@
 [leap.ts](../../src/enemies/leap.ts)(순수 — 표본 추출·게이트) + `EnemyManager.leapStep`(구동).
 **플레이어를 인식 중인**(engagesPlayer 통과) 거머리·모기만. 텔레그래프 → 인터럽트 없으면 순간이동.
 
-- **정반대 목적**: 모기 = **원거리 도약**(관측 고정 W1 의 노출 누적을 끊는다 — 붙들고만 있으면 이기는
-  고정 교전을 깬다) / 거머리 = **근접 도약**(속도 17 대 워커 19.44 라 뒷걸음질만으로 성립하던 영구
-  회피를 깬다).
+- **정반대 목적**: 모기 = **원거리 도약**(거리를 벌려 교전을 리셋 — 도입 당시엔 관측 고정 노출을 끊는
+  것이 본체였으나 그 기제는 2026-09-14 제거됐다) / 거머리 = **근접 도약**(도입 당시 속도 17 대 워커
+  19.44 로 뒷걸음질 영구 회피가 성립했기 때문. 워커가 13.89 로 내려온 지금은 평속만으로도 따라잡히므로
+  도약은 거리 압축 수단으로 남는다).
 - **착지점은 발동 `lockSec`(1s) 전에 확정**된다. 그 전까지는 매 프레임 플레이어를 따라가고, 예고선이
   멈추는 순간이 신호이며 그때부터 lockSec 이 회피 창이다. 시전 시작 시점에 굳히면 텔레그래프 3초
   동안 플레이어가 40~50m 를 벗어나 **늘 빗나간다**(실측).
@@ -252,7 +278,7 @@
 - **발동 거리 창**(`triggerMin`/`triggerMax`) — 도약이 **상황을 실제로 바꿀 때만**. 없으면 정반대
   동작이 난다: 거머리가 접촉 거리(평균 3m)에서 도약해 12~25m 링으로 **물러났다**(접근이 아니라 후퇴).
   거머리는 45m 이상일 때만, 모기는 120m 이하일 때만.
-- **인터럽트**(`leapInterrupted`) — `isZenoFrozen`·`isStaggered`·`isPinned`·`isPhased`. **피해가 아니다**:
+- **인터럽트**(`leapInterrupted`) — `isStaggered`·`isPinned`·`isPhased`(관측 고정 동결은 2026-09-14 제거). **피해가 아니다**:
   360° 오토파이어가 3초에 15~23발을 입력 없이 넣으므로 "맞으면 취소"면 플레이어 개입 없이 100%
   취소돼 메커닉이 죽는다. 취소의 실체는 **수동 조준 사격**(pin 은 manual 전용).
 - **동시 상한**(`concurrentCap`) — 루프 **전에** 시전 중인 수를 미리 센다. 순회하며 증가시키면
@@ -300,7 +326,7 @@
 ### 절단체(커터 / SEVERER) — 서사편 §6.3 의존성 절단
 
 - **행동**: 건물 상단 접근 → 부착(`attachRange 22`) → 절단 채널(`severSec 5`) → 납치 개시 → 부양 동반.
-  채널은 관측 고정(W1)·경직·위상 이탈이 정지시킨다("붙들면 인터럽트"). 탐색 반경 `seekRange 900`.
+  채널은 경직·위상 이탈이 정지시킨다(관측 고정은 2026-09-14 제거). 탐색 반경 `seekRange 900`.
 - **납치**(BuildingCombat `abducting` 상태): 부양 + 창백한 틴트, 고도 200 도달 시 **소거**(잔해 없는
   반출 — 붕괴가 아니다). 병합 메시는 정점 이동, Group 랜드마크는 변환으로 부양.
 - **카운터 2종**: 격추 시 **재안착**(하강 전환 → intact 복원) / **W4 복구 사격**(`manual.mend` — 수동 빔이

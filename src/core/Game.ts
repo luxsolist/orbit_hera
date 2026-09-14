@@ -958,7 +958,7 @@ export class Game {
       const report: MissionReport = {
         cityId: this.currentCity.id, missionId: s.instance.mission.id,
         goalType: s.instance.mission.goal.type, success,
-        kills, zenoFreezes: s.enemies.stats.zenoFreezes,
+        kills,
         cityLat: this.currentCity.lat, cityLon: this.currentCity.lon,
       };
       let after = applyMissionResult(before, report, Math.random());
@@ -987,7 +987,7 @@ export class Game {
       const score = resonanceScore(kills, st, success); // 순수 공식(missionV2) — 테스트 가드
       // 재독 문법(6장 이후, §9.4) — "정화 n체"가 아니라 "절단된 투영 / 본체 1 / 봉합도"로 읽는다.
       if (revealed(campaignStore.load())) sub = `${outcome.reason} · ${sutureReadout(kills, score)}`;
-      sub += `\n근원 격파 ${st.markerKills} · 파문 무상 통과 ${st.sweepCleanPasses}/${sweepTotal} · 관측 고정 ${st.zenoFreezes}`;
+      sub += `\n근원 격파 ${st.markerKills} · 파문 무상 통과 ${st.sweepCleanPasses}/${sweepTotal}`;
       sub += `\n공명 점수 ${score}`;
     }
     if (convergenceNow) sub += "\n표류 벡터 교점 수렴 — 서태평양 해구. 모든 소산이 한 곳으로 흐른다.";

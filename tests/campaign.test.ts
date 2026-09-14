@@ -12,7 +12,7 @@ import type { MissionSpecV2 } from "../src/game/missionV2";
 
 const report = (over: Partial<MissionReport> = {}): MissionReport => ({
   cityId: "seoul-stream", missionId: "purge-01", goalType: "purge", success: true,
-  kills: 30, zenoFreezes: 0, cityLat: 37.58, cityLon: 126.98, ...over,
+  kills: 30, cityLat: 37.58, cityLon: 126.98, ...over,
 });
 
 const mission = (id: string, goalType: string, count = 30): MissionSpecV2 => ({
@@ -33,8 +33,8 @@ describe("증거 적립·챕터 전진", () => {
 
   it("트랙별 이득 — 방어=열지도, 대량 처치=박자, 격멸=방향, 재방어=불멸성", () => {
     expect(evidenceGains(report({ goalType: "guard", missionId: "deep-roots", kills: 0 }), false)).toEqual({ heatmap: 22 });
-    const g = evidenceGains(report({ kills: 70, zenoFreezes: 6 }), false);
-    expect(g.pulse).toBe(22 + 4); // 대형 격멸 + 경직 관측 보너스
+    const g = evidenceGains(report({ kills: 70 }), false);
+    expect(g.pulse).toBe(22); // 대형 격멸(관측 고정 보너스는 2026-09-14 기제 제거와 함께 삭제)
     expect(g.drift).toBe(16);
     expect(evidenceGains(report({ goalType: "survive", kills: 10 }), true)).toEqual({ immortal: 20 });
     expect(evidenceGains(report({ success: false, kills: 99 }), true)).toEqual({}); // 실패는 무적립

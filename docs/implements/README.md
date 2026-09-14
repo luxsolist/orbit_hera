@@ -25,7 +25,7 @@
 | [02-input-and-player.md](02-input-and-player.md) | 입력(Pointer Lock/키보드) · 보행/비행 컨트롤러 · 충돌 서브스테핑 · 모바일 컨트롤 |
 | [03-world.md](03-world.md) | World/StreamingWorld 빌더 · 청크 스트리밍(표면 베이크 텍스처·수역 구멍·건물 높이 보간) · TerrainField · SkyEnvironment · CollisionWorld · 특수 권역(precinct) · 건물 전투(체력·검정 잔해·파괴) |
 | [04-weapons.md](04-weapons.md) | 드론별 빔(중주파/경주파·듀얼 발사관) · 특수(살포/오버드라이브 스트림) · 360°오토+수동조준 · 데미지/감쇠/쿨다운 · 공유 발사·상태기계 · 절차적 사운드 |
-| [05-enemies.md](05-enemies.md) | 플라즈모이드 **온도(T) 데이터 시스템** · **직무 아키타입**(러셔/카이터/**소인체**) · **낙인+심판 파문**(BrandSystem) · **다중 투영 보스**(HP 공유) · **투입기 4종**(pyramid 점진 증원/horde/roster/boss — 분출·회복 링크·소유 파문·호위 방패) · 관측 고정(zeno) · 멀티타깃 어그로/어그로 변조 매니저 |
+| [05-enemies.md](05-enemies.md) | 플라즈모이드 **온도(T) 데이터 시스템** · **직무 아키타입**(러셔/카이터/**소인체**) · **낙인+심판 파문**(BrandSystem) · **다중 투영 보스**(HP 공유) · **투입기 4종**(pyramid 점진 증원/horde/roster/boss — 분출·회복 링크·소유 파문·호위 방패) · 멀티타깃 어그로/어그로 변조 매니저 |
 | [06-ui-menu-intro.md](06-ui-menu-intro.md) | 세계지도 메뉴(근접 점 클러스터링 + 확대 지도 드릴다운 · 탐방 모드 토글) · HUD(조준선 둘레 적방향 화살표 · 미션 배너) · 미니맵/후방뷰 · 인트로 컷씬/절차적 배경음악 · 메뉴 배경 · FX |
 | [07-build-test-tooling.md](07-build-test-tooling.md) | Vite(소스맵 hidden + 난독화) · 테스트 스위트 · e2e · 월드맵 생성기 |
 | [08-game-instance-mission.md](08-game-instance-mission.md) | 게임 인스턴스 · **미션 v2 3축 체계**(승리/실패/투입 — 복합 실패·purge-role·페이즈 드라이버·변조 4종) · deploy 매핑(runDeploy) · 결과 채점(공명 점수) · 리스폰 예산 · MP 확장 지점 — 체계 정본은 [../spec/06-missions.md](../spec/06-missions.md) |
@@ -63,7 +63,7 @@ src/
     weapons.ts               무기 카탈로그/스펙 fetch
   enemies/
     PlasmoidSpec.ts          온도(T)→색/체력/크기/속도 + 직무 아키타입(rusher/kiter/marker) + 피라미드 배분(순수)
-    CoreEnemy.ts             플라즈모이드(직무 거동·3D 추적·디졸브·공유 체력 풀·관측 고정 노출) + 순수 조향/제논 헬퍼
+    CoreEnemy.ts             플라즈모이드(직무 거동·3D 추적·디졸브·공유 체력 풀·위상/계류) + 순수 조향 헬퍼
     EnemyManager.ts          투입기 4종(pyramid/horde/roster/boss)·균열 증원·보스 행동(분출/회복 링크/소유 파문/호위 방패)·어그로 변조·직무별 처치 집계
     BrandSystem.ts           낙인 유도탄 + 심판 파문(전장 이벤트 — 주기/파면/무상 통과 집계)
     plasmoids.ts             적 카탈로그/스펙 fetch

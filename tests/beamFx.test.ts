@@ -83,7 +83,6 @@ function harness(opts: {
   bt?: number;           // segmentHitsBuilding 반환(생략 = Infinity = 건물 없음)
   killOnHit?: boolean;   // applyFrequencyHit 가 true(처치) 반환
   muzzleOffsets?: number[];
-  zeno?: { slowPerSec: number; freezeAfter: number }; // 관측 고정(W1) 스펙 전달
   damageMul?: number;    // 호위 방패 감쇄(표시 데미지 반영 검증)
 }) {
   const spawned: { from: THREE.Vector3; to: THREE.Vector3 }[] = [];
@@ -92,7 +91,6 @@ function harness(opts: {
   const kills: unknown[] = [];
   const provoked: unknown[] = [];
   const onHits: THREE.Vector3[] = [];
-  const zenoed: unknown[] = [];
   const enemyHits: boolean[] = [];
 
   const hit = opts.hitDist !== undefined
@@ -101,7 +99,6 @@ function harness(opts: {
   const enemy = {
     state: "alive",
     damageMul: opts.damageMul ?? 1,
-    applyZeno: (z: unknown) => zenoed.push(z),
     applyFrequencyHit: (d: number) => { applied.push(d); return !!opts.killOnHit; },
   };
 
@@ -121,12 +118,11 @@ function harness(opts: {
     falloff: { refDist: 1000, maxMult: 1.5, minMult: 0.3 },
     range: 3000,
     style: { beamColor: 0, glowColor: 0, radius: 1, glowScale: 1 },
-    zeno: opts.zeno,
     onHit: (end) => onHits.push(end.clone()),
     onEnemyHit: (killed) => enemyHits.push(killed),
   };
   fireEmitters(ctx, shot);
-  return { spawned, dmgs, applied, kills, provoked, onHits, enemy, zenoed, enemyHits };
+  return { spawned, dmgs, applied, kills, provoked, onHits, enemy, enemyHits };
 }
 
 describe("fireEmitters — 건물 시야 차폐", () => {
@@ -211,19 +207,7 @@ describe("fireEmitters — 건물 시야 차폐", () => {
   });
 });
 
-describe("fireEmitters — 관측 고정(zeno)·처치 콜백·방패 감쇄 표시", () => {
-  it("zeno 스펙이 명중한 적에게 전달된다(W1 — 지속 조사 노출)", () => {
-    const z = { slowPerSec: 0.4, freezeAfter: 1.2 };
-    const r = harness({ hitDist: 200, zeno: z });
-    expect(r.zenoed).toEqual([z]);
-  });
-
-  it("zeno 미지정/미스/차폐면 applyZeno 호출 없음", () => {
-    expect(harness({ hitDist: 200 }).zenoed).toHaveLength(0); // 스펙 없음
-    expect(harness({ zeno: { slowPerSec: 0.4, freezeAfter: 1.2 } }).zenoed).toHaveLength(0); // 미스
-    expect(harness({ hitDist: 200, zeno: { slowPerSec: 0.4, freezeAfter: 1.2 }, bt: 100 / 3000 }).zenoed).toHaveLength(0); // 차폐
-  });
-
+describe("fireEmitters — 처치 콜백·방패 감쇄 표시", () => {
   it("onEnemyHit(killed) — 명중 시 처치 여부와 함께 호출(히트스톱 훅), 미스면 없음", () => {
     expect(harness({ hitDist: 200 }).enemyHits).toEqual([false]);
     expect(harness({ hitDist: 200, killOnHit: true }).enemyHits).toEqual([true]);

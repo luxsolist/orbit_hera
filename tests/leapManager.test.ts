@@ -167,22 +167,6 @@ describe("차원도약 — 실제 이동", () => {
     }
   });
 
-  it("도약이 관측 노출을 끊는다 — 붙들고 있던 지속조사가 리셋", () => {
-    const em = makeManager(5);
-    em.setLeapMuls(0, 1); // 도약 비활성 — 여기선 노출 누적/리셋만 격리 검증
-    em.start(true);
-    tick(em, 60 * 30);
-    const ks = alive(em, "kiter");
-    expect(ks.length).toBeGreaterThan(0);
-    const e = ks[0];
-    const Z = { slowPerSec: 0.4, freezeAfter: 1.2 };
-    // 동결까지 1.2초 노출이 필요 — 60fps 면 72프레임. 여유를 둬 100프레임 지속 조사.
-    for (let i = 0; i < 100; i++) { e.applyZeno(Z); em.update(1 / 60); }
-    expect(e.isZenoFrozen).toBe(true); // 붙들고 있으면 동결
-    e.resetZenoExposure(); // = 도약이 하는 일
-    expect(e.isZenoFrozen).toBe(false);
-    expect(e.zenoMul).toBe(1);
-  });
 });
 
 describe("난이도 노브", () => {

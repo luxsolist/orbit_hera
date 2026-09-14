@@ -38,18 +38,27 @@ CORE의 전투 드론·무기·전장은 모두 **런타임에 내려받는 JSON
 | `vitals.freqRegen` | number | 초당 주파수 회복 |
 | `view.fov` | number | 시야각(도) |
 | `view.mouseSensitivity` | number | 라디안/픽셀 |
-| `dash` | object? | `{ speed, duration, cooldown }` — **없으면 대시 불가**(비행 드론) |
+| `dash` | object? | `{ speed, duration, cooldown, backSpeed?, strafeSpeed?, acceleration?, braking?, hopVelocity? }` — **없으면 대시 불가**(비행 드론). 방향별 속도 미지정 시 `speed` 를 쓰고, `acceleration`/`braking` 은 대시 진입·종료 응답, `hopVelocity` 는 대시 시 수직 성분(0=평면 대시) |
 | `move` | `WalkMove \| FlyMove` | 이동 형태(아래) |
 | `actions` | `ActionButton[]` | 모바일 동작 버튼(최대 2개) |
 | `weapons.primary` | string | 기본 무기 id (`public/weapons/<id>.json` 참조) |
 | `weapons.special` | string | 특수 무기 id |
 
-**`WalkMove`** (`mode: "walk"`): `speed`, `groundAccel`, `airAccel`, `jump{ velocity, riseGravity,
-fallGravity, fallTerminal, maxRiseHeight, coyoteTime }`.
+**`WalkMove`** (`mode: "walk"`): `speed`, `backSpeed?`, `strafeSpeed?`, `groundAccel`, `airAccel`,
+`jump{ velocity, riseGravity, fallGravity, fallTerminal, maxRiseHeight, coyoteTime, allowAirJump? }`.
+`backSpeed`/`strafeSpeed` 미지정 시 `speed` 와 같다(후진·횡이동 페널티 없음). `groundAccel`/`airAccel` 은
+속도 지수 보간 계수(1/s)로, 목표속 90% 도달 시간 = `ln(10)/계수`. `allowAirJump` 는 기본 허용이며 `false`
+로만 공중 재점프를 막는다 — 허용이어도 `maxRiseHeight`(디딘 지면 대비) 아래에서만 가능한 **고도 상한제**다.
 
 **`FlyMove`** (`mode: "fly"`): `speed`, `accel`, `verticalSpeed`, `ceiling`(지면 대비 최대 고도),
 `rollDeg`(좌우 이동 뱅킹 각), `spawnHeight`(지면 대비 스폰 고도, ceiling 내로 클램프),
 `minAltitude?`(비행 하한 고도 — 지면 대비, 지상 안전지대로 못 내려오게. 없으면 0).
+
+**`lockOn?`**: `{ followDist, band }` — 락온 자동 추적의 유지 거리와 밴드 — `dist > followDist + band` 면 접근, `dist < followDist − band` 면 후퇴, 그 사이(유지 구간)는 추적 이동 없음.
+없으면 코드 기본값(`followDist 50`, `band 8`).
+
+**`linkRewind?`**: `{ freqCost, cooldown, rewindSec, radius }` — 링크 리와인드(물리편 §2.8.3). 자기 위치·HP 와
+반경 내 최근 파괴 건물/랜드마크를 `rewindSec` 전으로 되돌린다. 없으면 그 드론은 미보유. 키 `KeyR`(데스크탑 전용).
 
 **`ActionButton`**: `{ label, key, desc }` — `key`는 `KeyboardEvent.code`. 모바일 버튼을 누르는 동안
 그 키를 합성(hold). 배열 순서 = `[ACT1(우상), ACT2(우하=엄지 홈)]`.
@@ -81,7 +90,6 @@ fallGravity, fallTerminal, maxRiseHeight, coyoteTime }`.
 | `manual{ damage, freqCost, fireInterval, assistConeDeg }` | 좌클릭 수동 사격(에임 어시스트 콘) |
 | `auto{ damage, freqCost, fireInterval, range }` | 근거리 360° 오토파이어(콘 없음 — 최근접 소프트락) |
 | `falloff{ refDist, maxMult, minMult }` | 거리 비례 위력(아래 [02](02-drones-weapons.md#데미지-모델)) |
-| `zeno?{ slowPerSec, freezeAfter, graceSec? }` | **관측 고정(W1)** — 같은 대상 지속 조사 시 감속→동결. 노출 1초당 `slowPerSec` 감속, 노출 `freezeAfter`s 이상이면 완전 정지(이동·공격 게이트). 히트 간격이 `graceSec`(기본 0.5s) 이내면 "지속 조사". 수동·오토 공통 적용 |
 
 오토와 수동은 **독립 쿨다운**으로 같은 프레임에 동시 발사 가능하다(`auto.coneDeg`는 360° 전환으로 제거됨).
 
@@ -116,7 +124,6 @@ fallGravity, fallTerminal, maxRiseHeight, coyoteTime }`.
 | `beamLifetime` | 빔 잔상 수명 s |
 | `colorBeam`, `colorGlow` | 빔/글로우 색 |
 | `falloff{ refDist, maxMult, minMult }` | 거리 비례 위력(특수는 일반보다 완만) |
-| `zeno?{ slowPerSec, freezeAfter, graceSec? }` | 관측 고정(W1) — BeamSpec 과 동일. 오버드라이브 = 풀 스로틀 단일 관측(강한 값 권장) |
 
 특수무기(`barrage`/`stream`)는 공통 `SpecialWeapon` 인터페이스(update/reset/cooldownReady/
 cooldownRemainingSec/isActive)로 구동되며, 쿨다운은 **게이지 소진(사용 종료) 후부터** 시작한다.

@@ -65,10 +65,9 @@ describe("toLegacy — 현 엔진 미지원 조합은 null(훅 도입 대기)", 
     expect(toLegacy({ ...base, fail: { ...base.fail, maxBuildingLoss: 3 } })).toBeNull();
   });
 
-  it("purge-role / purge-all / suture / score — null (훅 ③⑤⑥)", () => {
+  it("purge-role / purge-all / score — null (훅 ③⑤⑥)", () => {
     expect(toLegacy({ ...base, goal: { type: "purge-role", role: "marker" } })).toBeNull();
     expect(toLegacy({ ...base, goal: { type: "purge-all" } })).toBeNull();
-    expect(toLegacy({ ...base, goal: { type: "suture", gauge: 100 } })).toBeNull();
     expect(toLegacy({ ...base, goal: { type: "score", target: 3000 } })).toBeNull();
   });
 
@@ -280,14 +279,14 @@ describe("v2 런타임 부속 — duration/runnable/로더 정규화", () => {
 });
 
 describe("resonanceScore — 결과 화면 공명 점수(순수)", () => {
-  const st = { markerKills: 2, zenoFreezes: 4, sweepCleanPasses: 3 };
+  const st = { markerKills: 2, sweepCleanPasses: 3 };
   it("가중 합산 + 성공 보너스 500", () => {
-    // 30×10 + 2×25 + 3×40 + 4×5 = 300+50+120+20 = 490 (+500)
-    expect(resonanceScore(30, st, false)).toBe(490);
-    expect(resonanceScore(30, st, true)).toBe(990);
+    // 30×10 + 2×25 + 3×40 = 300+50+120 = 470 (+500)
+    expect(resonanceScore(30, st, false)).toBe(470);
+    expect(resonanceScore(30, st, true)).toBe(970);
   });
   it("무전과 실패 = 0", () => {
-    expect(resonanceScore(0, { markerKills: 0, zenoFreezes: 0, sweepCleanPasses: 0 }, false)).toBe(0);
+    expect(resonanceScore(0, { markerKills: 0, sweepCleanPasses: 0 }, false)).toBe(0);
   });
 });
 
@@ -415,8 +414,7 @@ describe("missionObjectiveTextV2 — 목표 유형별 문안", () => {
       { fail: { ...base.fail, maxLandmarkLoss: 3 } })).toContain("≤2");
   });
 
-  it("suture / score / experiment — 대기 콘텐츠도 문안은 존재", () => {
-    expect(withGoal({ type: "suture" } as never)).toContain("SUTURE");
+  it("score / experiment — 대기 콘텐츠도 문안은 존재", () => {
     expect(withGoal({ type: "score", target: 1000 } as never)).toContain("RESONATE");
     expect(withGoal({ type: "experiment", targets: 2, hold: 3 } as never)).toContain("OBSERVE");
   });

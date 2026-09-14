@@ -233,7 +233,7 @@ export class EnemyManager {
   onSweepPass?: (branded: boolean) => void; // 심판 파문이 플레이어 위치를 통과(화면 펄스·저음)
 
   // 전투 채점 집계(결과 화면) — 표면 어휘만(§8.2): 근원 격파·파문 무상 통과·관측 고정
-  readonly stats = { markerKills: 0, zenoFreezes: 0, sweepHits: 0, sweepCleanPasses: 0, buildingBrandHits: 0 };
+  readonly stats = { markerKills: 0, sweepHits: 0, sweepCleanPasses: 0, buildingBrandHits: 0 };
   // 역행체(P3 §6.6) — 최근 격파 기록(역행 시 부활 후보). W2 계류 중 격파는 확정 — 역행 불능(§9.2).
   // 역행 부활 대기열 — 시전 완료가 update 순회 중 일어나므로 스폰은 다음 프레임 서두로 지연
   // (순회 중 push 는 boids/steer 인덱스 정합을 깨뜨린다).
@@ -936,14 +936,14 @@ export class EnemyManager {
 
   /**
    * 마커(소인체) 공격 — 사거리·시야(건물 비차폐)·쿨다운 통과 시 **장전 조준선(텔레그래프)** 후
-   * 낙인 유도탄 발사(P3 §6.7 — 발사 전 0.7s 조준선으로 회피/인터럽트 여지). 관측 고정(zeno) 동결·
-   * 경직·위상 이탈은 장전을 캔슬한다 — "빔을 붙들고 있는 것만으로 장전 인터럽트"(W1).
+   * 낙인 유도탄 발사(P3 §6.7 — 발사 전 0.7s 조준선으로 회피/인터럽트 여지). 경직·위상 이탈은
+   * 장전을 캔슬한다(관측 고정 동결은 2026-09-14 기제 제거로 사라졌다).
    */
   private markerFire(enemy: CoreEnemy, from: THREE.Vector3, targetPos: THREE.Vector3, targetIdx: number, dt: number): void {
     const tomb = this.spec.archetypes.marker.tomb;
     // 장전 중 — 점멸 조준선 + 만료 시 발사(차폐되면 불발). 붙들리면 캔슬.
     if (enemy.markerAimLeft > 0) {
-      if (enemy.isZenoFrozen || enemy.isStaggered || enemy.isPhased) { enemy.markerAimLeft = 0; return; }
+      if (enemy.isStaggered || enemy.isPhased) { enemy.markerAimLeft = 0; return; }
       enemy.markerAimLeft -= dt;
       if ((this.frame & 3) === 0) this.drain.spawn(from, targetPos, enemy.color); // 점멸 조준선
       if (enemy.markerAimLeft <= 0 &&
@@ -962,7 +962,7 @@ export class EnemyManager {
   private markerFireBuilding(enemy: CoreEnemy, from: THREE.Vector3, targetPos: THREE.Vector3, buildingId: string, dt: number): void {
     const tomb = this.spec.archetypes.marker.tomb;
     if (enemy.markerAimLeft > 0) {
-      if (enemy.isZenoFrozen || enemy.isStaggered || enemy.isPhased) { enemy.markerAimLeft = 0; return; }
+      if (enemy.isStaggered || enemy.isPhased) { enemy.markerAimLeft = 0; return; }
       enemy.markerAimLeft -= dt;
       if ((this.frame & 3) === 0) this.drain.spawn(from, targetPos, enemy.color);
       if (enemy.markerAimLeft <= 0 &&
@@ -1006,7 +1006,7 @@ export class EnemyManager {
     const role = enemy.role === "kiter" ? "kiter" : "rusher";
     const spec = role === "kiter" ? this.spec.archetypes.kiter.leap : this.spec.archetypes.rusher.leap;
     if (!spec) return;
-    const interrupted = leapInterrupted(enemy.isZenoFrozen, enemy.isStaggered, enemy.isPinned, enemy.isPhased);
+    const interrupted = leapInterrupted(enemy.isStaggered, enemy.isPinned, enemy.isPhased);
 
     if (enemy.leapCastLeft > 0) {
       if (interrupted || !enemy.leapTarget) { // 취소 — 짧은 재정렬 후 재시도(완전 리셋은 과한 보상)
@@ -1040,7 +1040,6 @@ export class EnemyManager {
         this.onLeap?.({ x: from.x, y: from.y, z: from.z }, { x: t.x, y: t.y, z: t.z }, enemy.color, this.strengthOf(enemy));
         p.set(t.x, t.y, t.z); // 도약 — 위치만 옮긴다(HP·상태 불변)
         enemy.coreBright = 7; // 착지 섬광 — 다음 프레임부터 박동으로 감쇠
-        enemy.resetZenoExposure(); // 관측 파기: 도약의 본체. 붙들고 있던 노출이 끊긴다
         enemy.leapRecover = spec.recoverSec;
         enemy.leapTarget = null;
         enemy.leapLocked = false;
@@ -1202,10 +1201,6 @@ export class EnemyManager {
       if (enemy.sharedPool.hp <= 0) enemy.forceDissolve();
       else enemy.hp = enemy.sharedPool.hp;
     }
-    // 관측 고정 집계 — 동결 진입 1회만(래치). 결과 화면 "관측 고정 n" 채점.
-    if (enemy.isZenoFrozen) {
-      if (!enemy.zenoLatch) { enemy.zenoLatch = true; this.stats.zenoFreezes++; }
-    } else enemy.zenoLatch = false;
     // 준위 강등(P3 §2.3) — HP 경계 하향 통과: 색 강등(적색 쪽) + 짧은 경직 + 전이 방출 펄스
     if (enemy.kkColors) {
       const lv = kkLevelOf(enemy.hp, enemy.maxHp);
@@ -1561,7 +1556,6 @@ export class EnemyManager {
     this.healFxCd = 0;
     this.shieldGroups = [];
     this.stats.markerKills = 0;
-    this.stats.zenoFreezes = 0;
     this.stats.sweepHits = 0;
     this.stats.sweepCleanPasses = 0;
     for (const k of Object.keys(this.roleKills) as (keyof typeof this.roleKills)[]) this.roleKills[k] = 0;

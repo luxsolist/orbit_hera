@@ -92,7 +92,7 @@ export class EliteBossCombat {
      this.hooks.beam(pos,end,e.color);pos.copy(end);
     }
    }else if(s.kind==='leap'){
-    if(this.hooks.visible(s.aim,target)&&s.aim.distanceTo(target)>=12){this.hooks.beam(pos,s.aim,e.color);pos.copy(s.aim);e.resetZenoExposure();}
+    if(this.hooks.visible(s.aim,target)&&s.aim.distanceTo(target)>=12){this.hooks.beam(pos,s.aim,e.color);pos.copy(s.aim);}
     s.leapCd=ELITE_COMBAT.leapCooldown;
    }
    this.remove(s.fx);s.fx=undefined;

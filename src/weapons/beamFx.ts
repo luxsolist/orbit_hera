@@ -2,7 +2,7 @@ import * as THREE from "three";
 import type { EnemyManager } from "../enemies/EnemyManager";
 import type { DamageNumbers } from "../fx/damageNumbers";
 import type { GameWorld } from "../world/GameWorld";
-import { damageForDistance, type DamageFalloff, type ZenoSpec } from "./WeaponSpec";
+import { damageForDistance, type DamageFalloff } from "./WeaponSpec";
 
 // 무기 공용 발광 빔 FX — 글로우 텍스처 + 빔(실린더)·임팩트 글로우 스프라이트 + 발사관 일제 사격.
 // FrequencyBeam(시안)·SpecialBarrage(호박색)가 색/반경만 달리해 공유한다.
@@ -131,7 +131,6 @@ export interface EmitterShot {
   falloff: DamageFalloff;
   range: number;
   style: BeamStyle;
-  zeno?: ZenoSpec; // 관측 고정(W1) — 적중마다 대상 노출 갱신(지속 조사 감속→동결)
   observe?: { decohere?: boolean; pinSec?: number }; // 수동 관측 사격(W2/§2.2) — 실체화 강제·관측 계류
   onBlocked?: () => void;
   onHit?: (endPoint: THREE.Vector3, hit: THREE.Intersection, dir: THREE.Vector3) => void;
@@ -192,7 +191,6 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
       ctx.damageNumbers.spawn(endPoint, dmg * (enemy.damageMul ?? 1)); // 표시 = 실제 적용치(호위 방패 감쇄 반영)
       shot.onHit?.(endPoint, hit!, shot.dir);
       ctx.enemies.provokeNear(enemy); // 피격 유발 인식 — 반경 내 개체(피격 개체 포함)도 플레이어 추격
-      if (shot.zeno) enemy.applyZeno(shot.zeno); // 관측 고정(W1) — 붙들고 있으면 감속→동결
       const killed = enemy.applyFrequencyHit(dmg, shot.observe);
       if (killed) ctx.enemies.registerKill(enemy);
       shot.onEnemyHit?.(killed);

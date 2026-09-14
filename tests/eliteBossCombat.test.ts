@@ -1,7 +1,7 @@
 import {it,expect,vi} from 'vitest';
 import * as THREE from 'three';
 import {EliteBossCombat,insideBossBlast,BOSS_BLAST} from '../src/enemies/EliteBossCombat';
-const enemy=(role:string,pos=new THREE.Vector3())=>({deployRole:role,state:'alive',isPhased:false,isStaggered:false,group:{position:pos},color:0xff0000,update:vi.fn(),resetZenoExposure:vi.fn()} as any);
+const enemy=(role:string,pos=new THREE.Vector3())=>({deployRole:role,state:'alive',isPhased:false,isStaggered:false,group:{position:pos},color:0xff0000,update:vi.fn()} as any);
 function setup(){const hit=vi.fn();const scene=new THREE.Scene();const combat=new EliteBossCombat(scene,{visible:()=>true,destination:t=>t.clone().add(new THREE.Vector3(20,0,0)),hit,beam:vi.fn()});const player={isDead:false,spec:{vitals:{maxHp:120}},worldPosition:new THREE.Vector3(-10,0,0)} as any;return {hit,scene,combat,player};}
 it('blast has exact sphere boundary and a safe wedge at ground and flight altitudes',()=>{
  const o=new THREE.Vector3();expect(insideBossBlast(new THREE.Vector3(-30,0,0),o)).toBe(true);

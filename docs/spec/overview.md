@@ -120,7 +120,7 @@
 ### 8. 하이브리드 시스템: RTS & 핵앤슬래시
 - **에너지 주파수 공략:** 특정 주파수 빔을 주사하여 적을 쪼그라뜨리고 소멸(Dissolve)시키는 타격 메커니즘 *(현행 구현 기준)*.
   - *(차원 해석)* 빔은 물리 탄이 아니라 표적 투영의 KK 고유 진동수에 공명시켜 **결맞음을 강제로 무너뜨리는(유도 결어긋남) 장 무기**다. 히트스캔인 이유(발사관–표적 사이 위상 정합 유도장은 즉시 작용), 디졸브(결맞음 붕괴 → 투영이 막에서 뜯겨 모드 소산), 주파수 게이지(드론 공진기의 결맞음 예산)가 전부 여기서 나온다([차원 명세 §1.6](05-dimensional-cosmology.md)).
-  - *(재정립 방향)* 결어긋남을 일으키는 것은 곧 **관측** — 무기 체계의 정본 확장은 **관측 병기**([서사편 §7](../private/05x-narrative-truth.md) ⚠️🔭): "죽이는 무기"에서 **붙들고(관측 고정)·고정하고(관측 계류)·되찾는(복구 사격) 무기**로 무게중심 이동.
+  - *(재정립 방향)* 결어긋남을 일으키는 것은 곧 **관측** — 무기 체계의 정본 확장은 **관측 병기**([서사편 §7](../private/05x-narrative-truth.md) ⚠️🔭): "죽이는 무기"에서 **고정하고(관측 계류)·되찾는(복구 사격) 무기**로 무게중심 이동. 붙드는 역할이던 관측 고정(W1)은 2026-09-14 폐기 → 특수무기 **무력화**로 대체 예정([13-무력화 체계](13-neutralize.md), 미구현).
 - **외계 행성 개척 (RTS):** 자원이 한정된 달, 화성, 목성(부유식 기지) 등에서 자원 채굴 및 생산 시설을 빌드업하여 상위 무기 해금.
 - **목성형 가스 행성:** 지표면이 없는 환경에서 '부유식 요새' 항로를 결정하고 대기 에너지를 수집하는 특수 전략 요소.
 - *(서사 배치)* 행성 개척 콘텐츠는 큰 서사의 **2막**이 무대이며, 위상은 **확장 콘텐츠(선택적 증폭)** — v1 캠페인은 지구만으로 엔딩까지 완주 가능하도록 설계된다. 막 구조와 각 행성의 서사적 의미는 [서사편 §5](../private/05x-narrative-truth.md)(⚠️전체 스포일러 — 비공개 문서) 참조.
@@ -163,19 +163,27 @@ src/
     mission.ts / missionV2.ts  # 미션 v1 계약 / v2 3축 체계(승리·실패·투입·변조 — 정본 06-missions)
     missions.ts        # 미션 풀 fetch/정규화(v1 수용, 폴백 DEFAULT_MISSIONS_V2)
   player/
-    PlayerController.ts # 보행/비행 FPS 컨트롤러(방향별 속도·비행 하한고도·작전구역 클램프)
+    PlayerController.ts # 보행/비행 컨트롤러(방향별 속도·비행 하한고도·작전구역 클램프) — 물리 기준 좌표
+    DronePresentation.ts # 3인칭 기체 렌더·실제 렌즈 좌표·피격 발광(화면 카메라는 여기)
+    ThirdPersonCamera.ts # 후방 카메라 추종·장애물 축소/복귀
+    SpawnPlanner.ts      # 안전 스폰/리스폰 후보 탐색(위험·파문·지지면·옥상 여유)
+    DroneSpec.ts / progression.ts
   weapons/
     FrequencyBeam.ts   # 빔(360°오토+수동, 듀얼 발사관)
     SpecialBarrage.ts / SpecialStream.ts  # 특수(콘 살포 / 오버드라이브)
     beamFx.ts(공유 발사·글로우) / DrainCycle.ts(소진형 상태기계) / targeting.ts
   enemies/
     PlasmoidSpec.ts    # 온도(T)→색/체력/크기/속도 + 직무 아키타입(러셔/카이터/소인체) + 피라미드 배분
-    CoreEnemy.ts / EnemyManager.ts        # 직무 거동·공유 체력·관측 고정 / 투입기 4종·균열 증원·보스 행동
+    CoreEnemy.ts / EnemyManager.ts        # 직무 거동·공유 체력·위상/계류 / 투입기 4종·균열 증원·보스 행동
     BrandSystem.ts     # 낙인 유도탄 + 심판 파문(전장 이벤트 — 서사편 §6.1 ① 구현)
+    EliteBossCombat.ts # 정예 예고 돌진/원거리 사격/차원이동 · 보스 광역 폭발(전용 상태기)
+    EnemyPlasmoidRenderer.ts # 직무별 플라즈모이드 외형 인스턴스 배치(셸은 레이캐스트 프록시로 유지)
+    EnemyVisibility.ts # 근접 개체의 화면 점유 억제(디더링 투과 — 판정·피격 범위 불변)
   world/  World.ts, StreamingWorld.ts, TerrainField.ts, CollisionWorld.ts, precinct.ts, BuildingCombat.ts, entanglement.ts(얽힘 택소노미) …
   fx/     dissolve.ts, postprocessing.ts, damageNumbers.ts, TargetBrackets.ts, DrainBeams.ts, EnergyWall.ts
   intro/  CinematicPlayer.ts, scenes.ts, helpers.ts, CinematicAudio.ts, MenuBackground.ts
   ui/     MenuScreen.ts, HUD.ts, Minimap.ts, RearView.ts
+  core/RenderMetrics.ts  # 게임·도시 뷰어 공통 성능 표시(FPS/p95·제출 삼각형·타일 상태)
 public/{drones,weapons,maps,enemies,missions}/  # 런타임 데이터(JSON)
 ```
 
@@ -190,9 +198,9 @@ v3.0 1차 마일스톤은 **"게임이 돌아간다"**를 체감하는 최소 �
 - [x] 외계 코어 적 유닛 — 박동 애니메이션, 플레이어 추적 AI, 웨이브 스폰
 - [x] 원격 접속 HUD(체력/주파수 게이지/크로스헤어/처치 수)
 
-**다음 단계(로드맵):** 전투 체계 재정립 **1단계 완료**(낙인+심판 파문·관측 고정 W1·점진 투입·다중 투영
+**다음 단계(로드맵):** 전투 체계 재정립 **1단계 완료**(낙인+심판 파문·점진 투입·다중 투영
 보스 — [서사편 §6.10/§7.5](../private/05x-narrative-truth.md) ⚠️) + **미션 v2 3축 체계·패턴 18종 가동**
 ([06-missions](06-missions.md)). 이후: 재정립 2단계(관측 계류 W2·복구 사격 W4·건물 낙인/커터·준위 강등)
-→ 계시 콘텐츠(동시 타격 실험 → 보상 보스) → 봉합전·부유 요새 → Link Swap(기체 전환)·무인 병기 분화
+→ 계시 콘텐츠(동시 타격 실험 → 보상 보스) → 무력화 체계(특수무기·보스 패턴) → 1막 클라이맥스 재설계·부유 요새 → Link Swap(기체 전환)·무인 병기 분화
 → 전 세계 도시 확대(얽힘 택소노미 기반 미션 자동 생성 — 06-missions §8) → RTS 빌드업 → 온라인 협동.
 *(실지형 스트리밍은 완료 — §5.)*

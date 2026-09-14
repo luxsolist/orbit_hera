@@ -93,15 +93,14 @@ describe("sampleLeapOffset — 착지 오프셋 표본", () => {
 // 취소는 "피해"가 아니라 상태다. 오토파이어가 3초에 15~23발을 입력 없이 넣으므로 "맞으면 취소"면
 // 플레이어 개입 없이 100% 취소돼 메커닉이 죽는다 — 역행체 시전과 같은 인터럽트 목록을 쓴다.
 describe("leapInterrupted — 텔레그래프 취소 조건", () => {
-  it("동결·경직·계류·위상 중 하나라도 참이면 취소", () => {
-    expect(leapInterrupted(true, false, false, false)).toBe(true); // W1 동결
-    expect(leapInterrupted(false, true, false, false)).toBe(true); // 동료 처치 경직
-    expect(leapInterrupted(false, false, true, false)).toBe(true); // W2 계류(수동 명중)
-    expect(leapInterrupted(false, false, false, true)).toBe(true); // 위상 이탈
+  it("경직·계류·위상 중 하나라도 참이면 취소", () => {
+    expect(leapInterrupted(true, false, false)).toBe(true); // 동료 처치 경직
+    expect(leapInterrupted(false, true, false)).toBe(true); // W2 계류(수동 명중)
+    expect(leapInterrupted(false, false, true)).toBe(true); // 위상 이탈
   });
 
   it("아무 상태도 아니면 취소되지 않는다 — 단순 피격만으로는 안 끊긴다", () => {
-    expect(leapInterrupted(false, false, false, false)).toBe(false);
+    expect(leapInterrupted(false, false, false)).toBe(false);
   });
 });
 

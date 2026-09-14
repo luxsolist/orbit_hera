@@ -82,7 +82,6 @@ export interface MissionReport {
   goalType: string; //   MissionGoal["type"]
   success: boolean;
   kills: number;
-  zenoFreezes: number;
   cityLat: number; //    표류 벡터 기록용(도시 위경도)
   cityLon: number;
 }
@@ -95,7 +94,7 @@ const GAIN = 16; //        정공법 1회 이득 — 장당 6~7회 수렴(계시
 const GAIN_STRONG = 22; // 장 취지에 정확히 부합(대형 격멸·유서 깊은 랜드마크 방어 등)
 
 const isPurge = (g: string): boolean => g === "purge" || g === "purge-all" || g === "purge-role";
-const isGuard = (g: string): boolean => g === "guard" || g === "suture";
+const isGuard = (g: string): boolean => g === "guard";
 
 /**
  * 미션 1회의 증거 이득(트랙별) — 순수. 한 미션이 여러 트랙에 걸칠 수 있다(대량 격멸=박자+방향).
@@ -107,7 +106,7 @@ export function evidenceGains(r: MissionReport, wasReDefense: boolean): Partial<
   if (isGuard(r.goalType)) {
     g.heatmap = /deep-roots|guard-landmark|bodyguard/.test(r.missionId) ? GAIN_STRONG : GAIN;
   }
-  if (r.kills >= 20) g.pulse = (r.kills >= 60 ? GAIN_STRONG : GAIN) + Math.min(6, Math.floor(r.zenoFreezes / 3) * 2);
+  if (r.kills >= 20) g.pulse = r.kills >= 60 ? GAIN_STRONG : GAIN;
   if (isPurge(r.goalType)) g.drift = GAIN;
   if (wasReDefense) g.immortal = GAIN + 4;
   return g;
