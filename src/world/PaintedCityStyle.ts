@@ -1,3 +1,4 @@
+import type {PaintedSkyColors} from './cities/types';
 import * as THREE from 'three';
 /** Clone city materials, leaving shared source materials untouched. */
 export function applyPaintedMaterials(group:THREE.Group):void {
@@ -58,15 +59,15 @@ export function applyPaintedMaterials(group:THREE.Group):void {
   object.material=Array.isArray(object.material)?object.material.map(convert):convert(object.material);
  });
 }
-export function addPaintedSky(scene:THREE.Scene):THREE.Mesh {
+export function addPaintedSky(scene:THREE.Scene,colors?:PaintedSkyColors):THREE.Mesh {
  const sky=new THREE.Mesh(new THREE.SphereGeometry(2200,32,16),new THREE.ShaderMaterial({
- side:THREE.BackSide,depthWrite:false,uniforms:{daylight:{value:1},twilight:{value:0}},
+ side:THREE.BackSide,depthWrite:false,uniforms:{daylight:{value:1},twilight:{value:0},horizon:{value:new THREE.Vector3(...(colors?.horizon??[.65,.80,.94]))},zenith:{value:new THREE.Vector3(...(colors?.zenith??[.20,.48,.83]))}},
  vertexShader:'varying vec3 skyDirection;void main(){skyDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
- fragmentShader:`uniform float daylight;uniform float twilight;varying vec3 skyDirection;
+ fragmentShader:`uniform vec3 horizon;uniform vec3 zenith;uniform float daylight;uniform float twilight;varying vec3 skyDirection;
  float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
  float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
  void main(){vec3 d=normalize(skyDirection);float h=max(0.0,d.y);
- vec3 sky=mix(vec3(.65,.80,.94),vec3(.20,.48,.83),smoothstep(0.0,.8,h));
+ vec3 sky=mix(horizon,zenith,smoothstep(0.0,.8,h));
  vec2 uv=d.xz/(h+.24)*2.5;float n=noise(uv)*.50+noise(uv*2.1)*.25+noise(uv*4.0)*.14+noise(uv*9.0)*.075+noise(uv*19.0)*.035;
  float clouds=smoothstep(.50,.64,n)*smoothstep(.02,.17,h);
  sky=mix(sky,vec3(1.12,1.06,.92),clouds*.85);sky=mix(vec3(.025,.045,.095),sky,daylight);sky=mix(sky,vec3(.66,.30,.20),twilight*(1.0-smoothstep(0.0,.5,h))*.6);gl_FragColor=vec4(sky,1.0);

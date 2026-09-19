@@ -1,3 +1,4 @@
+import {busanBridgeGeometry,busanBridgeApproachGeometry,type BusanBridge,type BusanBridgeApproach} from './BusanBridges';
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {StructureBuilder} from '../StructureBuilder';
@@ -8,17 +9,26 @@ import type {Cell,WorldChunk} from '../chunkManifest';
 
 export interface DetailBuilding {
  id:string;p:number[];holes:number[][];name:string;h:number|null;kind:string;roof:string;modelFootprint?:number[];
+ wallColor?:string;
  heightSource:Ring['heightSource']|null;heightTag?:string|null;levelsTag?:string|null;
 }
 interface Surface {id:string;p:number[];holes:number[][];kind:string;level?:number;levelSource?:string}
 interface Path {id:string;p:number[];width:number;bridge:boolean;tunnel:boolean;surface:string}
 export interface SeoulDetail {
+ bridges?:BusanBridge[];
+ bridgeApproaches?:BusanBridgeApproach[];
+ roadReplacements?:{p:number[];pieces:number[][]}[];
  buildings:DetailBuilding[];remove?:number[][];areas:Surface[];water:Surface[];paths:Path[];
  walls:{id:string;p:number[];h:number}[];trees:number[][];terrain:number[][];
 }
 /** Immutable, exact baked-footprint binding. Unknown heights stay unknown; no neighbor-height propagation. */
 export function applySeoulDetail(cell:Cell,raw:WorldChunk,detail:SeoulDetail):WorldChunk {
- if(cell[0]!==37||cell[1]!==126||raw.seoulDetail)return raw;
+ if(cell[0]!==37||cell[1]!==126)return raw;
+ return applyRegionalDetail(raw,detail,true);
+}
+/** Shared immutable detail binding used by Seoul and Busan. Legacy field names preserve worker compatibility. */
+export function applyRegionalDetail(raw:WorldChunk,detail:SeoulDetail,protectPalace=false):WorldChunk {
+ if(raw.seoulDetail)return raw;
  if(!['buildings','areas','paths','walls','water','trees','terrain'].every(k=>Array.isArray(detail[k as keyof SeoulDetail])))return raw;
  const byShape=new Map(detail.buildings.map(b=>[JSON.stringify(b.p),b]));
  const removed=new Set((detail.remove??[]).map(p=>JSON.stringify(p)));
@@ -27,6 +37,7 @@ export function applySeoulDetail(cell:Cell,raw:WorldChunk,detail:SeoulDetail):Wo
   const d=byShape.get(JSON.stringify(b.p));if(!d)return b;
   return {...b,...(d.h!=null?{h:d.h}:{}),osmId:d.id,...(d.heightSource?{heightSource:d.heightSource}:{}),
    ...(d.heightTag?{heightTag:d.heightTag}:{}),...(d.levelsTag?{levelsTag:d.levelsTag}:{}),
+   ...(d.wallColor?{landmarkAppearance:{p:b.p,source:'https://www.openstreetmap.org/'+d.id,height:null,levels:null,roofShape:'flat',roofHeight:null,wallColor:d.wallColor,roofColor:null,wallMaterial:null,buildingType:null,status:'photo-palette-estimate'}}:{}),
    ...(d.kind?{seoulArchitecture:d}:{}),...(d.name?{n:d.name}:{})};
  });
  // Replace only source-aligned wall segments, then use the same walls for visual and collision geometry.
@@ -45,9 +56,11 @@ export function applySeoulDetail(cell:Cell,raw:WorldChunk,detail:SeoulDetail):Wo
  const heights=raw.terrain.heights.slice();
  for(const [i,y] of detail.terrain)if(Number.isInteger(i)&&i>=0&&i<heights.length&&Number.isFinite(y)){
   const n=raw.terrain.size,x=raw.cx*1024+(i%n)*1024/(n-1),z=raw.cz*1024+Math.floor(i/n)*1024/(n-1);
-  if(!inPalace(x,z))heights[i]=y;
+  if(!protectPalace||!inPalace(x,z))heights[i]=y;
  }
- return {...raw,seoulDetail:detail,terrain:{...raw.terrain,heights},objects:{...raw.objects,buildings,walls}};
+ const roadReplacements=new Map((detail.roadReplacements??[]).map(r=>[JSON.stringify(r.p),r.pieces]));
+ const roads=raw.objects.roads.flatMap(r=>{const pieces=roadReplacements.get(JSON.stringify(r.p));return pieces?pieces.map(p=>({...r,p})):[r];});
+ return {...raw,seoulDetail:detail,terrain:{...raw.terrain,heights},objects:{...raw.objects,buildings,walls,roads}};
 }
 const builder=new StructureBuilder();
 function shape(p:number[],holes:number[][],ox:number,oz:number){
@@ -92,7 +105,39 @@ export function seoulArchitectureGeometry(b:Ring,ox:number,oz:number,base:number
   }
  };
  const extrude=(hh:number,color:string)=>{const g=new THREE.ExtrudeGeometry(shape(b.p,b.holes??[],ox,oz),{depth:hh,bevelEnabled:false});g.rotateX(-Math.PI/2);g.translate(0,base,0);add(g,color,false);};
- if(d.kind==='n-tower'){
+ if(d.kind==='busan-tower'){
+  // Total height is published; shaft/deck dimensions are photo-proportioned.
+  const r=Math.max(3.5,Math.min(W,D,6));
+  cyl(r*1.45,r*1.65,3,1.5,'#c6c8bd',8);cyl(r*.72,r,94,50,'#e0e4db',32);
+  cyl(r*2,r*.72,4,99,'#d1d8d1',8);cyl(r*2,r*2,8,105,'#728f99',8);
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;box(.45,8,.45,Math.cos(a)*r*2,105,Math.sin(a)*r*2,'#c2a49b');}
+  cyl(r*2.15,r*2.15,1,109.5,'#e6e6d9',8);cyl(r*1.35,r*2.15,4,112,'#d0d9d3',8);
+  cyl(r*.7,r*1.35,2,115,'#e1e3d6',8);cyl(.2,r*.7,4,118,'#d5dcdb',8);
+ }else if(d.kind==='busan-pavilion'){
+  const r=Math.min(W,D);cyl(r,r,1,.5,'#beb9a9',8);
+  for(const level of [0,1]){const q=level?.77:1,y=1+level*4.5;
+   for(let i=0;i<8;i++){const a=i*Math.PI/4;cyl(.20,.23,2.8,y+1.4,'#8c5145',8,Math.cos(a)*r*q*.8,Math.sin(a)*r*q*.8);}
+   cyl(r*q*1.1,r*q, .4,y+2.8,'#4e6661',8);cyl(r*q*.2,r*q*1.1,1.4,y+3.7,'#58666a',8);
+  }
+ }else if(d.kind==='busan-museum'){
+  // Keep all courtyard holes; stepped eaves follow the mapped polygon rather than a bounding box.
+  extrude(h*.78,'#c9c6b7');
+  const g=new THREE.ExtrudeGeometry(shape(b.p,b.holes??[],ox,oz),{depth:h*.22,bevelEnabled:false});g.rotateX(-Math.PI/2);g.translate(0,base+h*.78,0);add(g,'#698b7c',false);
+  for(let i=0;i<b.p.length;i+=2){const j=(i+2)%b.p.length,dx=b.p[j]-b.p[i],dz=b.p[j+1]-b.p[i+1],n=Math.floor(Math.hypot(dx,dz)/5);
+   for(let k=1;k<n;k++){const g=new THREE.BoxGeometry(.6,h*.75,.6);g.translate(b.p[i]+dx*k/n-ox,base+h*.375,b.p[i+1]+dz*k/n-oz);add(g,'#e0daca',false);}
+  }
+ }else if(d.kind==='busan-jagalchi'){
+  // Original footprint preserved; three gull-wing roof sections use photographic proportions.
+  extrude(h*.60,'#99b1b8');
+  for(let y=4;y<h*.6;y+=4)box(W*2,.22,D*2,0,y,0,'#dce0d9');
+  for(let xx=-W;xx<=W;xx+=Math.max(3,W/20))for(const sign of [-1,1])box(.18,h*.59,.22,xx,h*.30,sign*D,'#d9dfdb');
+  for(let section=0;section<3;section++){
+   const verts:number[]=[],left=-W+section*W*2/3,span=W*2/3;
+   const at=(u:number,z:number)=>[left+span*u,h*(.64+section*.07)+h*.22*Math.pow(Math.abs(u*2-1),1.6),z];
+   for(let j=0;j<16;j++){const a=at(j/16,-D*1.03),b=at((j+1)/16,-D*1.03),c=at((j+1)/16,D*1.03),d=at(j/16,D*1.03);verts.push(...a,...c,...b,...a,...d,...c,...b,...c,...a,...c,...d,...a);}
+   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.computeVertexNormals();add(g,'#d0dcda');
+  }
+ }else if(d.kind==='n-tower'){
   const r=6.2;extrude(8,'#b3b5ad');cyl(r*.7,r,h*.43,h*.215,'#d0d2cc');
   cyl(r*2.8,r*2.1,h*.035,h*.43,'#a9b8bd');cyl(r*2.8,r*2.8,h*.045,h*.47,'#526f7c');cyl(r*1.1,r*2.8,h*.025,h*.505,'#d9dad2');
   cyl(.5,r*.65,h*.48,h*.76,'#c6c9c7');for(let i=0;i<5;i++)cyl(r*(.7-i*.09),r*(.7-i*.09),.6,h*(.61+i*.07),'#89928f');
@@ -138,6 +183,8 @@ export function paintSeoulDetail(ctx:CanvasRenderingContext2D,detail:SeoulDetail
 export function addSeoulLandscape(group:THREE.Group,chunk:WorldChunk,ox:number,oz:number,height:(x:number,z:number)=>number){
  const d=chunk.seoulDetail;if(!d)return;const geos:THREE.BufferGeometry[]=[];
  const add=(g:THREE.BufferGeometry,color:string)=>{const v=g.index?g.toNonIndexed():g;if(v!==g)g.dispose();v.deleteAttribute('uv');setUniformColor(v,new THREE.Color(color));geos.push(v);};
+ for(const bridge of d.bridges??[])geos.push(busanBridgeGeometry(bridge,ox,oz));
+ for(const approach of d.bridgeApproaches??[])geos.push(busanBridgeApproachGeometry(approach,ox,oz));
  const owned=(x:number,z:number)=>Math.floor(x/1024)===chunk.cx&&Math.floor(z/1024)===chunk.cz;
  for(const a of d.water){if(a.level==null)continue;const xs=a.p.filter((_,i)=>i%2===0),zs=a.p.filter((_,i)=>i%2===1),x=xs.reduce((a,v)=>a+v,0)/xs.length,z=zs.reduce((a,v)=>a+v,0)/zs.length;if(!owned(x,z))continue;const g=new THREE.ShapeGeometry(shape(a.p,a.holes,ox,oz));g.rotateX(-Math.PI/2);g.translate(0,a.level+.03,0);add(g,'#7faaa6');}
  for(const [x,z] of d.trees){const y=height(x,z),h=9+Math.abs(Math.sin(x+z))*5;const crown=new THREE.IcosahedronGeometry(h*.58,1);crown.translate(x-ox,y+h*.75,z-oz);add(crown,'#648159');const trunk=new THREE.CylinderGeometry(.16,.25,h*.6,5);trunk.translate(x-ox,y+h*.3,z-oz);add(trunk,'#796954');}

@@ -1,5 +1,5 @@
 import {seoulStudyTarget,SEOUL_STUDY_URL} from '../world/SeoulStudyLocation';
-import {cityDateAtHour,solarState} from '../world/CityTime';
+import {cityDateAtHour,solarState,scanBestElevation} from '../world/CityTime';
 import * as THREE from 'three';
 import {buildChunkMesh,disposeChunkGroup} from '../world/chunkMesh';
 import {seoulAppearance} from '../world/cities';
@@ -44,7 +44,7 @@ async function start(){
   document.getElementById('timeLive')!.classList.toggle('active',hour===undefined);render();
  }
  // Find the morning/evening solar elevation for today's season instead of assuming a fixed sunset hour.
- function twilightHour(morning:boolean){let best=morning?6:18,error=Infinity;for(let h=morning?3:12;h<(morning?12:24);h+=.05){const e=Math.abs(solarState(cityDateAtHour(new Date(),h,'Asia/Seoul'),paintedSeoul.environment.clock!).elevation-3);if(e<error){error=e;best=h;}}return best;}
+ function twilightHour(morning:boolean){return scanBestElevation(morning?3:12,morning?12:24,.05,h=>solarState(cityDateAtHour(new Date(),h,'Asia/Seoul'),paintedSeoul.environment.clock!).elevation,(_,e)=>Math.abs(e-3));}
  document.getElementById('timeLive')!.onclick=()=>timeChange();
  document.getElementById('timeMorning')!.onclick=()=>timeChange(twilightHour(true));
  document.getElementById('timeDay')!.onclick=()=>timeChange(12);

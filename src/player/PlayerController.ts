@@ -245,6 +245,7 @@ export class PlayerController {
 
   // 상태값(HUD 연동) — 스펙에서 초기화
   maxHp: number;
+  teleportRevision=0; // Swept hazards must not interpret respawn/rewind as physical movement.
   hp: number;
   maxFreq: number;
   freq: number;
@@ -350,6 +351,12 @@ export class PlayerController {
     this.invuln = r.invuln;
     if (r.applied) this.sinceHit = 0; // 재생 정지 리셋 — 교전 중엔 회복 안 됨(§7.4)
     return r.applied;
+  }
+
+  /** Continuous field exposure bypasses hit mercy, but respects respawn protection. */
+  takeEnvironmentalDamage(amount:number):boolean {
+    if(this.spawnProtection>0||this.isDead||!Number.isFinite(amount)||amount<=0)return false;
+    this.hp=Math.max(0,this.hp-amount);this.sinceHit=0;return true;
   }
 
   get isDead(): boolean {
@@ -537,6 +544,7 @@ export class PlayerController {
       const at = historyLookup(this.posHistory, this.posClock, lr.rewindSec);
       if (at) {
         this.position.set(at.x, at.y, at.z);
+        this.teleportRevision++;
         this.hp = Math.min(this.maxHp, at.hp);
       }
       const revived = this.world.buildings?.undoDestructionNear(this.position.x, this.position.z, lr.radius, lr.rewindSec) ?? 0;
@@ -704,6 +712,7 @@ export class PlayerController {
   }
 
   reset() {
+    this.teleportRevision++;
     this.flyFloor=NaN;
     this.hp = this.maxHp;
     this.freq = this.maxFreq;

@@ -1,3 +1,5 @@
+import {cityDateForPreset,type CityTimePreset} from '../world/CityTime';
+import {cityAppearance} from '../world/cities';
 import {RenderMetrics} from '../core/RenderMetrics';
 import * as THREE from 'three';
 import {StreamingWorld} from '../world/StreamingWorld';
@@ -6,7 +8,7 @@ import type {LandmarkIndex} from '../world/chunkManifest';
 const AIR_ENTRY_HEIGHT=100; // 지면 기준 높이(m)
 const AIR_SPEED_MULTIPLIER=2;
 export async function mountCityViewer(host:HTMLElement){
- host.innerHTML='<div class="workspace"><div class="stage" tabindex="0" aria-label="도시 1인칭 탐색"></div><aside class="panel"><h2>도시 탐색</h2><label>도시<select id="city"></select></label><label>랜드마크<select id="landmark"><option value="">랜드마크 선택</option></select></label><label>위도<input id="lat" type="number" step="any"></label><label>경도<input id="lon" type="number" step="any"></label><button id="goto">위경도로 이동</button><div class="row"><button id="walk">1인칭 보행</button><button id="fly">공중 탐색</button></div><p>화면을 드래그해 시선을 돌립니다.<br>WASD / 방향키: 이동 · Shift: 빠르게<br>공중 탐색: Q 하강 / E 상승 · 기본 48m/s, 빠르게 320m/s<br>진입 높이: 지면 위 100m<br>보행은 지면 높이와 건물 충돌을 반영합니다.</p><div class="status" id="cityStatus">도시 목록 로딩 중…</div></aside></div>';
+ host.innerHTML='<div class="workspace"><div class="stage" tabindex="0" aria-label="도시 1인칭 탐색"></div><aside class="panel"><h2>도시 탐색</h2><label>도시<select id="city"></select></label><label>시간대<select id="cityTime"><option value="live">현재 시간</option><option value="twilight">아침/저녁</option><option value="day">낮</option><option value="night">밤</option></select></label><label>랜드마크<select id="landmark"><option value="">랜드마크 선택</option></select></label><label>위도<input id="lat" type="number" step="any"></label><label>경도<input id="lon" type="number" step="any"></label><button id="goto">위경도로 이동</button><div class="row"><button id="walk">1인칭 보행</button><button id="fly">공중 탐색</button></div><p>화면을 드래그해 시선을 돌립니다.<br>WASD / 방향키: 이동 · Shift: 빠르게<br>공중 탐색: Q 하강 / E 상승 · 기본 48m/s, 빠르게 320m/s<br>진입 높이: 지면 위 100m<br>보행은 지면 높이와 건물 충돌을 반영합니다.</p><div class="status" id="cityStatus">도시 목록 로딩 중…</div></aside></div>';
  const stage=host.querySelector<HTMLElement>('.stage')!,status=host.querySelector<HTMLElement>('#cityStatus')!;
  const field=(id:string)=>host.querySelector<HTMLInputElement>('#'+id)!;
  const city=host.querySelector<HTMLSelectElement>('#city')!,landmark=host.querySelector<HTMLSelectElement>('#landmark')!;
@@ -34,10 +36,17 @@ export async function mountCityViewer(host:HTMLElement){
  try{const r=await fetch('/api/editor/landmarks');if(r.ok)Object.assign(index,await r.json());}catch{}
  for(const c of catalog)city.add(new Option(c.name,c.id));
  const selected=()=>catalog.find(c=>c.id===city.value)!;
+ const time=host.querySelector<HTMLSelectElement>('#cityTime')!;
+ function applyTime(){
+  if(!world)return;
+  const c=selected(),clock=cityAppearance(c.id).environment.clock??{latitude:c.lat!,longitude:c.lon!,timeZone:'UTC'};
+  world.setTime(cityDateForPreset(new Date(),time.value as CityTimePreset,clock),clock);
+ }
+ time.onchange=applyTime;
  function landmarks(){const c=selected();landmark.replaceChildren(new Option('랜드마크 선택',''));for(const [name,l] of Object.entries(index)){const nearest=catalog.reduce((a,b)=>Math.hypot((b.lat!-l.lat), (b.lon!-l.lon)*Math.cos(l.lat*Math.PI/180))<Math.hypot((a.lat!-l.lat),(a.lon!-l.lon)*Math.cos(l.lat*Math.PI/180))?b:a);if(l.mapId===c.id||l.mapId===c.id.replace('-stream','')||(nearest.id===c.id&&Math.hypot(c.lat!-l.lat,c.lon!-l.lon)<.4))landmark.add(new Option(l.name??name,name));}}
  async function go(lat:number,lon:number){if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>85||Math.abs(lon)>180){status.textContent='올바른 위도(-85~85), 경도(-180~180)를 입력하세요.';return;}
  const n=++request;stopFlightTest();metrics.reset();held.clear();status.textContent='지도 로딩 중…';world?.dispose();world=undefined;scene.clear();scene.background=new THREE.Color('#bcd9eb');scene.fog=null;
- try{const next=await StreamingWorld.create(scene,lat,lon,0,selected().id,true);if(dead||n!==request){next.dispose();next.group.removeFromParent();return;}world=next;camera.position.set(0,world.heightAt(0,0)+(flying?AIR_ENTRY_HEIGHT:1.7),0);yaw=0;pitch=flying?-.7:0;field('lat').value=String(lat);field('lon').value=String(lon);status.textContent=selected().name+' · 지도 로드 완료';}catch(e){if(n===request)status.textContent='지도를 불러오지 못했습니다: '+String(e);}}
+ try{const next=await StreamingWorld.create(scene,lat,lon,0,selected().id,true);if(dead||n!==request){next.dispose();next.group.removeFromParent();return;}world=next;applyTime();camera.position.set(0,world.heightAt(0,0)+(flying?AIR_ENTRY_HEIGHT:1.7),0);yaw=0;pitch=flying?-.7:0;field('lat').value=String(lat);field('lon').value=String(lon);status.textContent=selected().name+' · 지도 로드 완료';}catch(e){if(n===request)status.textContent='지도를 불러오지 못했습니다: '+String(e);}}
  city.onchange=()=>{landmarks();go(selected().lat!,selected().lon!);};landmark.onchange=()=>{const l=index[landmark.value];if(l)go(l.lat,l.lon);};host.querySelector<HTMLButtonElement>('#goto')!.onclick=()=>go(+field('lat').value,+field('lon').value);
  host.querySelector<HTMLButtonElement>('#walk')!.onclick=()=>{flying=false;if(world)camera.position.y=world.heightAt(camera.position.x,camera.position.z)+1.7;pitch=0;stage.focus();};host.querySelector<HTMLButtonElement>('#fly')!.onclick=()=>{if(!flying&&world)camera.position.y=world.heightAt(camera.position.x,camera.position.z)+AIR_ENTRY_HEIGHT;flying=true;pitch=-.6;stage.focus();};
  stage.addEventListener('keydown',e=>{stopFlightTest();if(['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','ShiftLeft','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();held.add(e.code);}},{signal:events.signal});window.addEventListener('keyup',e=>held.delete(e.code),{signal:events.signal});stage.addEventListener('blur',()=>{stopFlightTest();held.clear();},{signal:events.signal});

@@ -153,16 +153,24 @@ export function fireEmitters(ctx: EmitterContext, shot: EmitterShot): void {
     const target = shot.origin.clone().addScaledVector(shot.dir, distance);
     // At contact range the camera-facing shell can sit beside/behind a lens.
     // Converge toward the selected enemy's centre, then trace each lens normally.
-    if(hit && hit.distance<=distance){
-      const enemy=ctx.enemies.enemyFromHit(hit);
-      if(enemy?.group)target.copy(enemy.group.position);
-    }
+    const selectedEnemy = hit && hit.distance<=distance ? ctx.enemies.enemyFromHit(hit) : undefined;
+    if(selectedEnemy?.group)target.copy(selectedEnemy.group.position);
     for (const muzzle of shot.aimMuzzles?.(target) ?? shot.physicalMuzzles ?? []) {
       const body=shot.bodyOrigin;
       if(body && ctx.world.segmentHitsBuilding(body.x,body.y,body.z,muzzle.x,muzzle.y,muzzle.z)<=1) {shot.onBlocked?.();continue;}
       const dir = target.clone().sub(muzzle);
       // Never fire backwards through the drone at a wall between camera and body.
-      if (dir.dot(shot.dir) <= 0) {shot.onBlocked?.();continue;}
+      if (dir.dot(shot.dir) <= 0) {
+        // A large contact enemy can surround the lens: its centre is behind the
+        // muzzle, but its shell is still directly ahead. Trace that forward shell
+        // rather than rejecting the shot or firing backwards through our body.
+        ctx.raycaster.set(muzzle, shot.dir);
+        const forwardHit = ctx.raycaster.intersectObjects(ctx.enemies.hitMeshes, false)[0];
+        if (!selectedEnemy || !forwardHit || forwardHit.distance > shot.range || ctx.enemies.enemyFromHit(forwardHit) !== selectedEnemy) {
+          shot.onBlocked?.();continue;
+        }
+        dir.copy(shot.dir);
+      }
       fireEmitters(ctx, {...shot, origin: muzzle, dir: dir.normalize(), muzzleOffsets: [0], physicalMuzzles: undefined, aimMuzzles: undefined, exactOrigin: true});
     }
     return;

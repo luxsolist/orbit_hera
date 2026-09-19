@@ -1,3 +1,4 @@
+import {busanBridgeStreets} from './cities/BusanBridges';
 import {landmarkRoof} from './cities/SeoulLandmarkAppearance';
 import {statueGeometry} from './cities/GwanghwamunStatues';
 import {seoulArchitectureGeometry,paintSeoulDetail,addSeoulLandscape} from './cities/SeoulDetail';
@@ -161,7 +162,7 @@ function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain, profile:CityAppe
     trace(a.p, true); ctx.fill();
   }
   // 3) 수역 — 면(연못/호수)은 구멍(섬·제방) 도려내며 채움(even-odd), 강/하천(w)은 폭 리본 stroke.
-  ctx.fillStyle = WATER_CSS; ctx.strokeStyle = WATER_CSS;
+  ctx.fillStyle = profile.ground.waterColor ?? WATER_CSS; ctx.strokeStyle = profile.ground.waterColor ?? WATER_CSS;
   for (const w of chunk.objects?.water ?? []) {
     const n = w.p.length / 2;
     if (n < 2) continue;
@@ -533,7 +534,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     sites.push({ x: st.x - originX, y: st.y, z: st.z - originZ, r: st.r, lm: st.lm, ...(st.n ? { n: st.n } : {}) });
   }
 
-  if(!preparing && profile.street.geometry && terrain)addStreetGeometry(group,chunk.objects?.roads??[],terrain,originX,originZ,profile.street,streets);
+  if(!preparing && profile.street.geometry && terrain)addStreetGeometry(group,chunk.objects?.roads??[],terrain,originX,originZ,profile.street,streets,busanBridgeStreets(chunk.seoulDetail));
 
   if(profile.props.enabled && terrain)addStreetProps(group,chunk,chunkSize,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.props);
 

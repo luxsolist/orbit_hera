@@ -421,6 +421,7 @@ export class CoreEnemy {
   private phaseCfg: { cooldown: number; duration: number } | null = null;
   private phaseTimer = 0;
   private phasedOut = false;
+  spawning=false; // Protected formation/transit from a gravity rift.
   private pinLeft = 0; // W2 관측 계류 — 수동 명중의 참조 핀. 남아있는 동안 위상 이탈 불가
 
   constructor(position: THREE.Vector3, appearance: CoreAppearance, speed = 4.5) {
@@ -470,7 +471,7 @@ export class CoreEnemy {
 
   /** 위상 이탈 중인가 — 일반 무기 무효·공격 불가·자동발사/어시스트/브래킷 제외(§2.1). */
   get isPhased(): boolean {
-    return this.phasedOut && this.state === "alive";
+    return (this.phasedOut || this.spawning) && this.state === "alive";
   }
 
   /** 강제 결어긋남(§2.2 관측 펄스) — 실체화 + 실체 쿨다운 재시작. */
@@ -486,7 +487,7 @@ export class CoreEnemy {
    * 위상 이탈 중 + decohere 없음 = 무효(호출부 fireEmitters 가 걸러 여기 오지 않는 게 정상 경로).
    */
   applyFrequencyHit(damage: number, obs?: { decohere?: boolean; pinSec?: number }): boolean {
-    if (this.state !== "alive") return false;
+    if (this.state !== "alive" || this.spawning) return false;
     if (this.phasedOut) {
       if (!obs?.decohere) return false; // 일반 무기 무효 — 벌크 밖(§2.1)
       this.materialize(); //               관측 펄스 — 관측된 것은 숨지 못한다(§2.2)

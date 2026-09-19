@@ -25,3 +25,34 @@ export function cityDateAtHour(now:Date,hour:number,timeZone:string):Date {
  for(let i=0;i<3;i++){const q=parts(new Date(guess));guess+=target-Date.UTC(+q.year,+q.month-1,+q.day,+q.hour,+q.minute,+q.second);}
  return new Date(guess);
 }
+
+/**
+ * Scan `x` over `[start,end)` in `step` increments, keeping whichever minimizes `score(x,elevation)`
+ * (return `undefined` from `score` to skip an instant — e.g. to restrict to the descending sun).
+ * Domain-agnostic over `x` so callers can scan either ms instants or civil hours with the same loop —
+ * shared by `cityDateForPreset` here and `twilightHour` in CityStylePreview.ts (both "closest to a
+ * target solar elevation" searches that used to be independent, driftable implementations).
+ */
+export function scanBestElevation(
+ start:number,end:number,step:number,elevationAt:(x:number)=>number,score:(x:number,elevation:number)=>number|undefined,
+):number {
+ let best=start,error=Infinity;
+ for(let x=start;x<end;x+=step){
+  const s=score(x,elevationAt(x));
+  if(s!==undefined && s<error){error=s;best=x;}
+ }
+ return best;
+}
+
+export type CityTimePreset = 'live' | 'twilight' | 'day' | 'night';
+/** Pick representative solar conditions on the city's current date, including seasonal sunset changes. */
+export function cityDateForPreset(now:Date,preset:CityTimePreset,clock:CityClock):Date|undefined {
+ if(preset==='live')return undefined;
+ const start=+cityDateAtHour(now,0,clock.timeZone),end=+cityDateAtHour(now,24,clock.timeZone);
+ const instant=scanBestElevation(start,end,300000,x=>solarState(new Date(x),clock).elevation,(x,elevation)=>{
+  // The combined morning/evening preview uses the descending (evening) sun.
+  if(preset==='twilight' && solarState(new Date(x+300000),clock).elevation>elevation)return undefined;
+  return preset==='day'?-elevation:preset==='night'?elevation:Math.abs(elevation-3);
+ });
+ return new Date(instant);
+}

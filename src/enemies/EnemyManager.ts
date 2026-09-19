@@ -1,3 +1,4 @@
+import {GravityRifts} from './GravityRifts';
 import {EnemyPlasmoidRenderer} from './EnemyPlasmoidRenderer';
 import {EliteBossCombat} from './EliteBossCombat';
 import * as THREE from "three";
@@ -189,6 +190,23 @@ export class EnemyManager {
   private timeSec = 0; // 전투 경과(patrol 궤도 위상 등 시간 기반 행동용)
   private spawnTimer = 0;
   private combat:EliteBossCombat;
+  private gravityRifts?:GravityRifts;
+  private gravityRiftsEnabled=false;
+  /** Gameplay opts in; standalone AI previews may retain their local spawn fixtures. */
+  enableGravityRifts(){this.gravityRiftsEnabled=true;}
+  onGravityWarning?:()=>void;
+  get gravityWarning(){return this.gravityRifts?.warning??'';}
+  get gravitySites(){return this.gravityRifts?.sites??[];}
+  private departFromRift(enemy:CoreEnemy){
+    if(!this.gravityRiftsEnabled)return;
+    if(!this.gravityRifts){
+      this.gravityRifts=new GravityRifts(this.scene,this.world,this.players,this.rand);
+      this.gravityRifts.onLeap=(a,b,c,s)=>this.onLeap?.(a,b,c,s);
+      this.gravityRifts.onHit=(amount,source)=>this.onPlayerHit?.(amount,source);
+      this.gravityRifts.onWarning=()=>this.onGravityWarning?.();
+    }
+    this.gravityRifts.enqueue(enemy,this.zoneR>0?this.zoneCx:this.riftAnchor.x,this.zoneR>0?this.zoneCz:this.riftAnchor.z,this.zoneR);
+  }
   private peaceful = false; // 탐방 모드 — 웨이브 미시작 + 클리어 시 자동 재시작 억제
   private burstMode = false; // 일괄 스폰 모드 — 웨이브 미사용(미션: 구역 내 N마리 한번에) + 클리어 시 자동 재시작 억제
   private riftAnchor: Vec3 = { x: 0, y: 0, z: 0 }; // 소산 표류 앵커(균열 위치 프록시 — 일괄 스폰 중심). 개체와 공유 참조.
@@ -417,13 +435,14 @@ export class EnemyManager {
    * 위상 이탈 중인 개체 목록(중력 렌즈 왜곡 §2.7.1 — 배경 일렁임 소스). 질량-에너지는 그대로라
    * 시각적으로만 숨을 뿐, 그 자리는 렌즈처럼 배경을 왜곡한다. 카메라 근접순 정렬(LENS_MAX_POINTS 컷).
    */
-  phasedMarkers(cameraPos: THREE.Vector3): { x: number; y: number; z: number; radiusWorld: number; strength: number }[] {
-    const out: { x: number; y: number; z: number; radiusWorld: number; strength: number; d: number }[] = [];
+  phasedMarkers(cameraPos: THREE.Vector3): { x: number; y: number; z: number; radiusWorld: number; strength: number; volume?:boolean }[] {
+    const out: { x: number; y: number; z: number; radiusWorld: number; strength: number; volume?:boolean; d: number }[] = [];
     for (const e of this.enemies) {
       if (e.state !== "alive" || !e.isPhased) continue;
       const p = e.group.position;
       out.push({ x: p.x, y: p.y, z: p.z, radiusWorld: e.group.scale.x, strength: 1, d: p.distanceToSquared(cameraPos) });
     }
+    for(const source of this.gravityRifts?.lenses??[]){const d=cameraPos.distanceToSquared(new THREE.Vector3(source.x,source.y,source.z));out.push({...source,d});}
     out.sort((a, b) => a.d - b.d);
     return out;
   }
@@ -716,6 +735,7 @@ export class EnemyManager {
       e.driftAnchor = this.riftAnchor;
       e.kkColors = kkLevelColors(this.spec, ap.temp); // 준위 강등 — 공유 풀 미러 HP 로 전 투영 동시 강등
       e.applySilhouette(SHELL_GEOS.rusher);
+      this.departFromRift(e);
       this.enemies.push(e);
       group.push(e);
     }
@@ -859,6 +879,7 @@ export class EnemyManager {
       const s = strength(this.spec, app.maxHp);
       if (phaseRoll(ph, s, this.rand())) enemy.enablePhase(phaseTimings(ph, s), this.rand());
     }
+    this.departFromRift(enemy);
     this.enemies.push(enemy);
     // 살아있는 동안은 셸 InstancedMesh 로 렌더 — 그룹(개별 메시)은 디졸브 시작 시에만 씬에 추가.
     return enemy;
@@ -1230,6 +1251,7 @@ export class EnemyManager {
     this.world.buildings?.update(dt); // 건물 피격 틴트/붕괴 연출 진행
     this.tickSpawns(dt);
     this.tickReinforce(dt); // 미션 점진 투입(균열 증원) — 웨이브 모드에선 무동작
+    this.gravityRifts?.update(dt);
     this.buildTargets(dt);
     if(!this.peaceful)this.combat.tick(dt,this.enemies,this.players);
     const targets = this.targets;
@@ -1261,6 +1283,7 @@ export class EnemyManager {
         continue;
       }
       const myIdx = bi++;
+      if(enemy.spawning)continue;
       if(this.combat.bossBusy&&(enemy.deployRole==='boss'||enemy.deployRole==='elite')){
         this.combat.hold(enemy,p,dt);continue;
       }
@@ -1406,7 +1429,7 @@ export class EnemyManager {
 
   /** 첫 살아있는 보스 투영(분출·소유 파문 호스트). 없으면 null. */
   private firstAliveBoss(): CoreEnemy | null {
-    for (const g of this.bossGroups) for (const e of g) if (e.state === "alive") return e;
+    for (const g of this.bossGroups) for (const e of g) if (e.state === "alive" && !e.spawning) return e;
     return null;
   }
 
@@ -1457,7 +1480,7 @@ export class EnemyManager {
       if (this.healFxCd > 0) this.healFxCd -= dt;
       const reps: { pool: NonNullable<CoreEnemy["sharedPool"]>; e: CoreEnemy }[] = [];
       for (const g of this.bossGroups) {
-        const live = g.find((e) => e.state === "alive");
+        const live = g.find((e) => e.state === "alive" && !e.spawning);
         if (live?.sharedPool && live.sharedPool.hp > 0) reps.push({ pool: live.sharedPool, e: live });
       }
       const r2 = this.bossHealLink.range * this.bossHealLink.range;
@@ -1523,6 +1546,7 @@ export class EnemyManager {
   }
 
   clear() {
+    this.gravityRifts?.dispose();this.gravityRifts=undefined;
     this.combat.clear();
     this.plasmoidRenderer.clear();
     this.plasmoidRenderer.dispose();
@@ -1571,7 +1595,7 @@ export class EnemyManager {
    * 락온 키를 눌렀을 때 Game 이 호출한다. 없으면 null.
    */
   bestTargetInView(origin: THREE.Vector3, aimDir: THREE.Vector3, coneDeg = 30, maxDist = LOCK_ACQUIRE_RANGE): CoreEnemy | null {
-    const alive = this.enemies.filter((e) => e.state === "alive");
+    const alive = this.enemies.filter((e) => e.state === "alive" && !e.isPhased);
     const positions = alive.map((e) => {
       const p = e.group.position;
       return { x: p.x, y: p.y, z: p.z };

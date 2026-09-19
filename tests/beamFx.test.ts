@@ -226,3 +226,21 @@ describe("fireEmitters — 처치 콜백·방패 감쇄 표시", () => {
     expect(r.applied).toEqual([150]); // applyFrequencyHit 에는 원값(내부에서 ×damageMul)
   });
 });
+
+
+describe("contact enemy around a physical lens", () => {
+  function contact(radius:number, wall=false) {
+    const mesh=new THREE.Mesh(new THREE.SphereGeometry(radius,32,24),new THREE.MeshBasicMaterial({side:THREE.DoubleSide}));
+    mesh.position.set(0,0,-1);mesh.updateMatrixWorld(true);
+    const damage:number[]=[], beams:THREE.Vector3[]=[];
+    const enemy={group:{position:mesh.position},applyFrequencyHit:(d:number)=>{damage.push(d);return false;}};
+    const ctx={raycaster:new THREE.Raycaster(),enemies:{hitMeshes:[mesh],enemyFromHit:()=>enemy,provokeNear:()=>{}},damageNumbers:{spawn:()=>{}},beamPool:{spawn:(_from:THREE.Vector3,to:THREE.Vector3)=>beams.push(to.clone())},world:{segmentHitsBuilding:(x:number,y:number,z:number)=>wall&&z===-2?.001:Infinity}} as unknown as EmitterContext;
+    fireEmitters(ctx,{origin:new THREE.Vector3(),bodyOrigin:new THREE.Vector3(),dir:new THREE.Vector3(0,0,-1),physicalMuzzles:[new THREE.Vector3(0,0,-2)],muzzleOffsets:[0],baseDamage:45,falloff:{refDist:1000,maxMult:1.5,minMult:.3},range:100,style:{beamColor:0,glowColor:0,radius:1,glowScale:1}});
+    mesh.geometry.dispose();mesh.material.dispose();return {damage,beams};
+  }
+  it("hits the forward shell when an enemy encloses the lens even though its centre is behind it",()=>{
+    const r=contact(2);expect(r.damage).toEqual([67.5]);expect(r.beams[0].z).toBeCloseTo(-3);
+  });
+  it("does not turn backwards to hit a small enemy behind the lens",()=>{expect(contact(.3).damage).toEqual([]);});
+  it("still stops at a wall in front of an enclosed lens",()=>{expect(contact(2,true).damage).toEqual([]);});
+});

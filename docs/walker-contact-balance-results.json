@@ -1,0 +1,330 @@
+[
+  {
+    "status": "미션 success",
+    "drone": "walker",
+    "mode": "stationary",
+    "seed": 19,
+    "viewport": [
+      1280,
+      720,
+      1.0000000298023224
+    ],
+    "start": [
+      0,
+      45.19664779457117,
+      0
+    ],
+    "seconds": 41.457200000002885,
+    "wallSeconds": 43.08140000000589,
+    "hp": 10,
+    "maxHp": 120,
+    "damage": 110,
+    "remaining": [],
+    "activeEnemies": 0,
+    "visibleEnemies": 0,
+    "kills": 9,
+    "shots": 85,
+    "firstActive": 8.221300000004472,
+    "firstShot": 8.221300000004472,
+    "firstHit": 10.447699999995525,
+    "firstKill": 8.918100000001491,
+    "fps": 40.31902398714439,
+    "p95": 32,
+    "lowFrequencyPercent": 0,
+    "riftExposureSeconds": 0,
+    "position": [
+      0,
+      45.19664779457117,
+      0
+    ],
+    "sites": [
+      {
+        "x": -431.49141807358245,
+        "y": 432.7947634605257,
+        "z": -85.90529165873457,
+        "r": 100
+      },
+      {
+        "x": -390.4771032525595,
+        "y": 940.0874609401526,
+        "z": -578.9948463348858,
+        "r": 100
+      }
+    ]
+  },
+  {
+    "status": "미션 success",
+    "drone": "walker",
+    "mode": "strafe",
+    "seed": 19,
+    "autoDamageMultiplier": 1,
+    "spawnRadius": 180,
+    "viewport": [
+      1280,
+      720,
+      1.0000000298023224
+    ],
+    "start": [
+      0,
+      45.19664779457117,
+      0
+    ],
+    "seconds": 22.168599999994058,
+    "wallSeconds": 24.624499999999994,
+    "hp": 108,
+    "maxHp": 120,
+    "damage": 12,
+    "remaining": [],
+    "activeEnemies": 0,
+    "visibleEnemies": 0,
+    "kills": 9,
+    "shots": 46,
+    "firstActive": 8.230099999994042,
+    "firstShot": 8.230099999994042,
+    "firstHit": 10.538400000005971,
+    "firstKill": 8.953799999997022,
+    "fps": 27.655383865662255,
+    "p95": 49,
+    "lowFrequencyPercent": 0,
+    "riftExposureSeconds": 0,
+    "position": [
+      -13.555055169773574,
+      45.106212113008404,
+      -35.16998248768477
+    ],
+    "sites": [
+      {
+        "x": -431.49141807358245,
+        "y": 432.7947634605257,
+        "z": -85.90529165873457,
+        "r": 100
+      },
+      {
+        "x": -390.4771032525595,
+        "y": 940.0874609401526,
+        "z": -578.9948463348858,
+        "r": 100
+      }
+    ]
+  },
+  {
+    "status": "미션 success",
+    "drone": "walker",
+    "mode": "strafe",
+    "seed": 19,
+    "autoDamageMultiplier": 1.1,
+    "spawnRadius": 180,
+    "viewport": [
+      1280,
+      720,
+      1.0000000298023224
+    ],
+    "start": [
+      0,
+      45.19664779457117,
+      0
+    ],
+    "seconds": 22.27419999999555,
+    "wallSeconds": 24.329200000002984,
+    "hp": 108,
+    "maxHp": 120,
+    "damage": 12,
+    "remaining": [],
+    "activeEnemies": 0,
+    "visibleEnemies": 0,
+    "kills": 9,
+    "shots": 45,
+    "firstActive": 8.222399999983603,
+    "firstShot": 8.222399999983603,
+    "firstHit": 10.502899999983619,
+    "firstKill": 8.923699999980627,
+    "fps": 30.90935994606924,
+    "p95": 38,
+    "lowFrequencyPercent": 0,
+    "riftExposureSeconds": 0,
+    "position": [
+      -22.476845141437263,
+      45.133195746781254,
+      -17.815341413483807
+    ],
+    "sites": [
+      {
+        "x": -431.49141807358245,
+        "y": 432.7947634605257,
+        "z": -85.90529165873457,
+        "r": 100
+      },
+      {
+        "x": -390.4771032525595,
+        "y": 940.0874609401526,
+        "z": -578.9948463348858,
+        "r": 100
+      }
+    ]
+  },
+  {
+    "status": "미션 success",
+    "drone": "walker",
+    "mode": "strafe",
+    "seed": 23,
+    "autoDamageMultiplier": 1,
+    "spawnRadius": 400,
+    "viewport": [
+      1280,
+      720,
+      1.0000000298023224
+    ],
+    "start": [
+      0,
+      45.19664779457117,
+      0
+    ],
+    "seconds": 21.468500000014892,
+    "wallSeconds": 23.197900000005937,
+    "hp": 120,
+    "maxHp": 120,
+    "damage": 0,
+    "remaining": [],
+    "activeEnemies": 0,
+    "visibleEnemies": 0,
+    "kills": 9,
+    "shots": 46,
+    "firstActive": 8.205499999999999,
+    "firstShot": 8.41360000000149,
+    "firstHit": null,
+    "firstKill": 9.066200000002981,
+    "fps": 28.580173205325927,
+    "p95": 43,
+    "lowFrequencyPercent": 0,
+    "riftExposureSeconds": 0,
+    "position": [
+      -17.743249373375967,
+      45.07615138248264,
+      10.662468561539132
+    ],
+    "sites": [
+      {
+        "x": 530.9591263704864,
+        "y": 431.4531159841224,
+        "z": -159.93979476037916,
+        "r": 100
+      },
+      {
+        "x": -186.76219481480882,
+        "y": 816.081602557707,
+        "z": -551.3113236900442,
+        "r": 100
+      }
+    ]
+  },
+  {
+    "status": "미션 success",
+    "drone": "walker",
+    "mode": "strafe",
+    "seed": 23,
+    "autoDamageMultiplier": 1.1,
+    "spawnRadius": 400,
+    "viewport": [
+      1280,
+      720,
+      1.0000000298023224
+    ],
+    "start": [
+      0,
+      45.19664779457117,
+      0
+    ],
+    "seconds": 21.524400000013454,
+    "wallSeconds": 23.675399999998522,
+    "hp": 120,
+    "maxHp": 120,
+    "damage": 0,
+    "remaining": [],
+    "activeEnemies": 0,
+    "visibleEnemies": 0,
+    "kills": 9,
+    "shots": 45,
+    "firstActive": 8.21580000001192,
+    "firstShot": 8.42970000001043,
+    "firstHit": null,
+    "firstKill": 9.126800000026826,
+    "fps": 25.384998775101476,
+    "p95": 55,
+    "lowFrequencyPercent": 0,
+    "riftExposureSeconds": 0,
+    "position": [
+      -13.169891993664168,
+      45.18243877733369,
+      -1.5479317830599648
+    ],
+    "sites": [
+      {
+        "x": 530.9591263704864,
+        "y": 431.4531159841224,
+        "z": -159.93979476037916,
+        "r": 100
+      },
+      {
+        "x": -186.76219481480882,
+        "y": 816.081602557707,
+        "z": -551.3113236900442,
+        "r": 100
+      }
+    ]
+  },
+  {
+    "status": "미션 success",
+    "drone": "flyer",
+    "mode": "strafe",
+    "seed": 23,
+    "autoDamageMultiplier": 1,
+    "spawnRadius": 400,
+    "viewport": [
+      1280,
+      720,
+      1.0000000298023224
+    ],
+    "start": [
+      0,
+      142.99664779457117,
+      0
+    ],
+    "seconds": 12.423699999988095,
+    "wallSeconds": 14.262099999994062,
+    "hp": 60,
+    "maxHp": 60,
+    "damage": 0,
+    "remaining": [],
+    "activeEnemies": 0,
+    "visibleEnemies": 0,
+    "kills": 9,
+    "shots": 27,
+    "firstActive": 8.22089999999851,
+    "firstShot": 8.657399999998512,
+    "firstHit": null,
+    "firstKill": 8.844399999998512,
+    "fps": 27.55554932304244,
+    "p95": 45,
+    "lowFrequencyPercent": 0,
+    "riftExposureSeconds": 0,
+    "position": [
+      -259.31457354769464,
+      151.60821199100766,
+      -14.372807244662193
+    ],
+    "sites": [
+      {
+        "x": 530.9591263704864,
+        "y": 431.4531159841224,
+        "z": -159.93979476037916,
+        "r": 100
+      },
+      {
+        "x": -186.76219481480882,
+        "y": 816.081602557707,
+        "z": -551.3113236900442,
+        "r": 100
+      }
+    ]
+  }
+]

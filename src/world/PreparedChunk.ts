@@ -1,3 +1,4 @@
+import {busanBridgeStreets} from './cities/BusanBridges';
 import * as THREE from 'three';
 import {buildChunkMesh,facadeMaterial,type ChunkBuild} from './chunkMesh';
 import {CollisionWorld,type CollisionSnapshot} from './CollisionWorld';
@@ -21,7 +22,7 @@ export interface PreparedChunk {
 export function prepareChunk(chunk:WorldChunk,size:number,ox:number,oz:number,profile:CityAppearance):PreparedChunk {
  const start=performance.now(),cb=buildChunkMesh(chunk,size,ox,oz,profile,undefined,true);
  const geometry=performance.now()-start,roadStart=performance.now();
- const streets=profile.street.geometry&&cb.terrain?prepareStreetMeshes(chunk.objects?.roads??[],cb.terrain,ox,oz,profile.street):[];
+ const streets=profile.street.geometry&&cb.terrain?prepareStreetMeshes(chunk.objects?.roads??[],cb.terrain,ox,oz,profile.street,busanBridgeStreets(chunk.seoulDetail)):[];
  const streetMs=performance.now()-roadStart,collisionStart=performance.now(),collision=new CollisionWorld();
  for(const b of cb.buildings)collision.addFootprintBox(b.poly,.3,b.top);
  for(const w of cb.walls)collision.addWallBox(w.x0,w.x1,w.z0,w.z1,w.top);

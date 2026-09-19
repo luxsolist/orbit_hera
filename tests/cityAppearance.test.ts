@@ -1,8 +1,9 @@
+import {paintedRome} from '../src/world/cities/rome';
 import {paintedSeoul,paintedBusan} from '../src/world/cities/painted';
 import {it,expect,vi} from 'vitest';
 import * as THREE from 'three';
 import {cityAppearance,seoulAppearance,defaultAppearance,type CityAppearance} from '../src/world/cities';
-import {facadeStyle,createFacadeMaterial} from '../src/world/BuildingFacade';
+import {facadeStyle,createFacadeMaterial,landmarkHighlightEnabled} from '../src/world/BuildingFacade';
 import {buildChunkMesh,disposeChunkGroup} from '../src/world/chunkMesh';
 import {addStreetProps,streetPropSites} from '../src/world/StreetProps';
 import type {WorldChunk} from '../src/world/chunkManifest';
@@ -11,6 +12,9 @@ const other:CityAppearance={...seoulAppearance,id:'test-city',buildings:{...seou
 it('resolves city IDs and leaves unconfigured cities on legacy appearance',()=>{
  expect(cityAppearance('seoul-stream')).toBe(paintedSeoul);
  expect(cityAppearance('busan-stream')).toBe(paintedBusan);
+ expect(cityAppearance('rome-stream')).toBe(paintedRome);
+ expect(landmarkHighlightEnabled(paintedRome)).toBe(false);
+ expect(landmarkHighlightEnabled(defaultAppearance)).toBe(true);
  expect(cityAppearance()).toBe(defaultAppearance);
  expect(defaultAppearance.buildings.enabled).toBe(false);expect(defaultAppearance.props.enabled).toBe(false);
 });
@@ -38,9 +42,9 @@ it('binds facade detail settings separately per material',()=>{
  expect(b.fragmentShader).toContain('uniform vec3 cityDetail;');
 });
 
-it('paints both cities without changing collision geometry or shared legacy materials',()=>{
+it('paints configured cities without changing collision geometry or shared legacy materials',()=>{
  const legacy=buildChunkMesh(chunk,200,0,0,seoulAppearance);
- for(const profile of [paintedSeoul,paintedBusan]){
+ for(const profile of [paintedSeoul,paintedBusan,paintedRome]){
   const painted=buildChunkMesh(chunk,200,0,0,profile);
   expect(painted.buildings).toEqual(legacy.buildings);
   const mat=painted.buildingMesh!.material as THREE.Material;

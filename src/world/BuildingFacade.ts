@@ -3,7 +3,7 @@ import {citySurfaceMaps} from './CitySurfaceMaps';
 import {seoulAppearance,type CityAppearance} from './cities';
 
 /** Gameplay landmark status must not override Seoul's architectural materials. */
-export function landmarkHighlightEnabled(profile:CityAppearance):boolean{return !profile.id.startsWith('seoul');}
+export function landmarkHighlightEnabled(profile:CityAppearance):boolean{return profile.buildings.landmarkHighlight ?? !profile.id.startsWith('seoul');}
 
 /** Visual archetypes inferred from dimensions, not authoritative building-use data. */
 export function facadeStyle(height: number, area: number, profile:CityAppearance=seoulAppearance): number {

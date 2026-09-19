@@ -1,3 +1,4 @@
+import type {CityClock} from './CityTime';
 import {ChunkPreparation} from './ChunkPreparation';
 import {assembleChunk,discardPreparedChunk,type PreparedChunk} from './PreparedChunk';
 import {ChunkCollisionWorld} from './ChunkCollisionWorld';
@@ -67,6 +68,10 @@ export class StreamingWorld implements GameWorld {
   private readonly sky: SkyEnvironment;
   private paintedSky?: THREE.Mesh;
 
+  /** Viewer overrides use the same sky and lighting updates as gameplay. */
+  setTime(date?:Date,clock?:CityClock){this.sky.setTime(date,clock);}
+
+
   // 로드된 청크 레지스트리(질의 계층)
   private readonly terrainReg = new Map<string, ChunkTerrain>(); // heightAt
   private readonly objReg = new Map<string, { buildings: ChunkBuild["buildings"]; walls: ChunkBuild["walls"]; roads: ChunkBuild["roads"]; water: number[][] }>();
@@ -119,7 +124,7 @@ export class StreamingWorld implements GameWorld {
     this.streamer = new ChunkStreamer(this.makeIO(), streamConfig);
     // 추가 선로딩 영역은 기존 가시거리 바깥에 유지한다.
     this.sky = new SkyEnvironment(scene, this.spawn, viewFar,this.appearance.environment);
-    if(this.appearance.renderStyle==='painted')this.paintedSky=addPaintedSky(scene);
+    if(this.appearance.renderStyle==='painted')this.paintedSky=addPaintedSky(scene,this.appearance.environment.paintedSky);
     scene.userData.paintedCity=this.appearance.renderStyle==='painted';
     scene.add(this.group);
   }

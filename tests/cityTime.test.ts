@@ -1,5 +1,5 @@
 import {it,expect} from 'vitest';
-import {solarState,cityDateAtHour} from '../src/world/CityTime';
+import {solarState,cityDateAtHour,cityDateForPreset} from '../src/world/CityTime';
 import {paintedSeoul,paintedBusan} from '../src/world/cities/painted';
 const city=paintedSeoul.environment.clock!;
 it('maps Korean civil time across UTC dates',()=>{
@@ -17,4 +17,18 @@ it('reflects Busan latitude/longitude and transitions continuously',()=>{
  const date=new Date('2026-09-13T09:30:00Z'),a=solarState(date,city),b=solarState(date,paintedBusan.environment.clock!);
  expect(a.elevation).not.toBe(b.elevation);
  const next=solarState(new Date(+date+1000),city);expect(Math.abs(next.night-a.night)).toBeLessThan(.01);
+});
+
+it('viewer presets restore live time and select clear day/night and seasonal evening conditions',()=>{
+ for(const clock of [city,paintedBusan.environment.clock!])for(const month of ['06','12']){
+  const now=new Date(`2026-${month}-21T03:00:00Z`);
+  expect(cityDateForPreset(now,'live',clock)).toBeUndefined();
+  expect(solarState(cityDateForPreset(now,'day',clock)!,clock).dayLight).toBe(1);
+  expect(solarState(cityDateForPreset(now,'night',clock)!,clock).night).toBe(1);
+  const evening=cityDateForPreset(now,'twilight',clock)!;
+  const state=solarState(evening,clock);
+  expect(Math.abs(state.elevation-3)).toBeLessThan(1);
+  expect(state.twilight).toBeGreaterThan(.9);
+  expect(solarState(new Date(+evening+300000),clock).elevation).toBeLessThan(state.elevation);
+ }
 });

@@ -3,6 +3,13 @@ import type {ChunkTerrain} from './chunkMesh';
 import type {CityAppearance} from './cities';
 type Point=[number,number];
 type Road={p:number[];w?:number};
+/** Two left/right world-space road cross sections; elevated roads share ground street layers. */
+export interface ElevatedStreet {a:number[];b:number[];distance?:number}
+function roadStripes(w:number,len:number,phase:number,stripe:(offset:number,start:number,end:number,layer:number)=>void){
+ if(w>=16){stripe(-.22,0,len,4);stripe(.22,0,len,4);}
+ if(w>=22)for(let d=-((phase%11+11)%11);d<len;d+=11){const a=Math.max(0,d),b=Math.min(d+4,len);if(b>a){stripe(-3.5,a,b,5);stripe(3.5,a,b,5);}}
+}
+
 /** Clip a convex footprint against each actual terrain triangle, avoiding bilinear height drift. */
 export function terrainFootprint(poly:Point[],t:ChunkTerrain,ox:number,oz:number):number[]{
  const output:number[]=[],n=t.size,step=t.step;
@@ -133,7 +140,7 @@ function surfaceMaterial(color:string,layer:number,wear=0):THREE.MeshStandardMat
 const cache=new WeakMap<CityAppearance['street'],THREE.MeshStandardMaterial[]>();
 /** Layered opaque footprints form road unions at intersections, with no curb across the carriageway. */
 export interface StreetMeshData {layer:number;position:Float32Array;normal:Float32Array;coord:Float32Array;bounds?:{min:number[];max:number[];center:number[];radius:number}}
-export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,ox:number,oz:number,colors:CityAppearance['street'],prepared?:StreetMeshData[]):void {
+export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,ox:number,oz:number,colors:CityAppearance['street'],prepared?:StreetMeshData[],elevated:ElevatedStreet[]=[]):void {
  let materials=cache.get(colors);
  if(!materials){materials=[colors.curb,colors.pavement,colors.curb,colors.asphalt,colors.center,colors.marking,colors.curb].map((c,i)=>surfaceMaterial(c,i,colors.wearStrength??0));cache.set(colors,materials);}
  const attach=(data:StreetMeshData)=>{
@@ -166,8 +173,7 @@ export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,
     for(const j of joins){const lo=j.distance-j.clearance-7,hi=j.distance+j.clearance+7;pieces=pieces.flatMap(([a,b])=>b<=lo||a>=hi?[[a,b]]:[[a,Math.min(b,lo)],[Math.max(a,hi),b]].filter(([a,b])=>b>a));}
     for(const [a,b] of pieces)rectangle(a,b,offset-.09,offset+.09,layer);
    };
-   if(w>=16){stripe(-.22,0,len,4);stripe(.22,0,len,4);}
-   if(w>=22)for(let d=0;d<len;d+=11){stripe(-3.5,d,Math.min(d+4,len),5);stripe(3.5,d,Math.min(d+4,len),5);}
+   roadStripes(w,len,0,stripe);
    // Zebra and stop lines on sufficiently long approaches. Placement is inferred, not surveyed.
    if(w>=6&&w<=24)for(const j of joins)for(const sign of [-1,1]){
     const center=j.distance+sign*(j.clearance+3),start=center-1.5,end=center+1.5;
@@ -194,6 +200,22 @@ export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,
      }
     }
    }
+ }
+ // Bridge decks use exactly the same material, grain coordinates and paint layers as ground roads.
+ for(const s of elevated){
+  const width=(r:number[])=>Math.hypot(r[3]-r[0],r[5]-r[2]);
+  const wa=width(s.a),wb=width(s.b),len=Math.hypot((s.b[0]+s.b[3]-s.a[0]-s.a[3])/2,(s.b[2]+s.b[5]-s.a[2]-s.a[5])/2);
+  if(len<.01||wa<=0||wb<=0)continue;
+  const point=(t:number,side:number,edge=false)=>{
+   const row=s.a.map((v,i)=>v+(s.b[i]-v)*t),w=wa+(wb-wa)*t;
+   const f=edge?side:.5-side/w;
+   return [row[0]+(row[3]-row[0])*f-ox,row[1]+(row[4]-row[1])*f,row[2]+(row[5]-row[2])*f-oz];
+  };
+  const quad=(layer:number,a:number[],b:number[],c:number[],d:number[])=>{for(const p of [a,b,c,a,c,d])buffers[layer].push(...p);};
+  quad(3,point(0,0,true),point(1,0,true),point(1,1,true),point(0,1,true));
+  roadStripes(Math.min(wa,wb),len,s.distance??0,(offset,start,end,layer)=>{
+   quad(layer,point(start/len,offset+.09),point(end/len,offset+.09),point(end/len,offset-.09),point(start/len,offset-.09));
+  });
  }
  buffers.forEach((positions,i)=>{
   if(!positions.length)return;
@@ -222,7 +244,7 @@ export function updateStreetDetail(group:THREE.Group,x:number,z:number):void {
 }
 
 /** Transferable road arrays for either worker pipeline. */
-export function prepareStreetMeshes(roads:Road[],terrain:ChunkTerrain,ox:number,oz:number,colors:CityAppearance['street']):StreetMeshData[]{
- const group=new THREE.Group();addStreetGeometry(group,roads,terrain,ox,oz,colors);
+export function prepareStreetMeshes(roads:Road[],terrain:ChunkTerrain,ox:number,oz:number,colors:CityAppearance['street'],elevated:ElevatedStreet[]=[]):StreetMeshData[]{
+ const group=new THREE.Group();addStreetGeometry(group,roads,terrain,ox,oz,colors,undefined,elevated);
  return group.children.map(child=>{const mesh=child as THREE.Mesh,g=mesh.geometry;g.computeBoundingBox();g.computeBoundingSphere();const data={bounds:{min:g.boundingBox!.min.toArray(),max:g.boundingBox!.max.toArray(),center:g.boundingSphere!.center.toArray(),radius:g.boundingSphere!.radius},layer:mesh.userData.streetLayer as number,position:g.getAttribute('position').array as Float32Array,normal:g.getAttribute('normal').array as Float32Array,coord:g.getAttribute('streetCoord').array as Float32Array};g.dispose();return data;});
 }

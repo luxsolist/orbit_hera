@@ -1,3 +1,5 @@
+import busanIndex from './cities/busan-detail-index.json';
+import {applyBusanDetail} from './cities/BusanDetail';
 import {applySeoulLandmarkAppearance,type LandmarkAppearancePatch} from './cities/SeoulLandmarkAppearance';
 import landmarkAppearanceIndex from './cities/seoul-landmark-appearance-index.json';
 import {applyRoadGradePatch,type RoadGradePatch} from './RoadGradePatch';
@@ -76,6 +78,7 @@ export async function fetchWorldChunkAt(lat: number, lon: number, chunkSize = 10
 
 /** 청크 좌표로 직접 로드. block=매니페스트 블록 크기(경로 <bx>_<bz>/ 계산). */
 const seoulChunks=new Set(seoulIndex.chunks);
+const busanChunks=new Set(busanIndex.chunks);
 const landmarkAppearanceChunks=new Set(landmarkAppearanceIndex.chunks);
 let roadGradeIndex:Promise<{cells:Record<string,string[]>}|null>|undefined;
 async function fetchRoadGrade(cell:Cell,key:string,baseUrl?:string){
@@ -85,14 +88,16 @@ async function fetchRoadGrade(cell:Cell,key:string,baseUrl?:string){
 }
 export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?: number, baseUrl?:string): Promise<WorldChunk | null> => {
   const key=`${cx}_${cz}`;
-  const [raw,detail,roadGrade,appearance]=await Promise.all([
+  const [raw,detail,roadGrade,appearance,busanDetail]=await Promise.all([
     fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block),baseUrl),
     cell[0]===37&&cell[1]===126&&seoulChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/seoul/${key}.json`,baseUrl):Promise.resolve(null),
     fetchRoadGrade(cell,key,baseUrl),
     cell[0]===37&&cell[1]===126&&landmarkAppearanceChunks.has(key)?fetchJson<LandmarkAppearancePatch>(`maps/landmark-appearance/seoul/${key}.json`,baseUrl):Promise.resolve(null),
+    cell[0]===35&&cell[1]===129&&busanChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/busan/${key}.json`,baseUrl):Promise.resolve(null),
   ]);
   if(!raw)return null;
-  const chunk=correctPalaceSite(cell,correctGyeongbokgungChunk(cell,correctJamsilChunk(cell,applyRoadGradePatch(raw,roadGrade))));
+  const source=busanDetail?applyBusanDetail(cell,raw,busanDetail):raw;
+  const chunk=correctPalaceSite(cell,correctGyeongbokgungChunk(cell,correctJamsilChunk(cell,applyRoadGradePatch(source,roadGrade))));
   return applySeoulLandmarkAppearance(cell,correctGwanghwamunRoadGrade(cell,correctGwanghwamunStatues(cell,detail?applySeoulDetail(cell,chunk,detail):chunk)),appearance);
 };
 

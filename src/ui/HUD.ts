@@ -19,6 +19,17 @@ export const KILL_PULSE_MIN_STRENGTH = 0.35;
  */
 export class HUD {
   private root: HTMLElement;
+  private gravityWarning?:HTMLDivElement;
+  setGravityWarning(text:string){
+    if(!this.gravityWarning){
+      this.gravityWarning=document.createElement('div');
+      this.gravityWarning.setAttribute('role','status');
+      this.gravityWarning.style.cssText='position:absolute;top:29%;left:50%;transform:translateX(-50%);max-width:85%;padding:8px 14px;background:#11182ddd;color:#bde8ff;border:1px solid #9ed7ff;border-radius:6px;text-align:center;pointer-events:none;font-size:14px';
+      this.root.append(this.gravityWarning);
+    }
+    if(this.gravityWarning.textContent!==text)this.gravityWarning.textContent=text;
+    this.gravityWarning.style.display=text?'block':'none';
+  }
   private hpFill: HTMLElement;
   private freqFill: HTMLElement;
   private killCount: HTMLElement;

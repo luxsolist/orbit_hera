@@ -17,6 +17,7 @@ export interface LensPoint {
 }
 
 export interface LensSource {
+  volume?:boolean; // Persistent rift: retain a subtle effect while the camera is inside.
   x: number; y: number; z: number; // 월드 좌표
   radiusWorld: number; // 개체 시각 반경(m) — 화면상 왜곡 반경 산출에 사용
   strength: number;
@@ -37,6 +38,9 @@ export function projectLensPoints(
   for (const s of sources) {
     if (out.length >= LENS_MAX_POINTS) break;
     worldPos.set(s.x, s.y, s.z);
+    if(s.volume&&camera.position.distanceToSquared(worldPos)<s.radiusWorld*s.radiusWorld){
+      out.push({x:.5,y:.5,radius:.4,strength:Math.min(.15,s.strength)});continue;
+    }
     proj.copy(worldPos).project(camera);
     if (proj.z < -1 || proj.z > 1) continue; // 카메라 뒤/원거리 클립 밖
     const u = (proj.x + 1) / 2;

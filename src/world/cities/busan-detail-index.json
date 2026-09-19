@@ -1,0 +1,582 @@
+{
+  "version": 1,
+  "cell": [
+    35,
+    129
+  ],
+  "chunks": [
+    "-3_103",
+    "-3_104",
+    "-3_105",
+    "-4_103",
+    "-4_104",
+    "-4_105",
+    "0_100",
+    "0_101",
+    "0_97",
+    "0_98",
+    "0_99",
+    "10_91",
+    "10_92",
+    "10_93",
+    "10_98",
+    "10_99",
+    "11_90",
+    "11_91",
+    "11_92",
+    "11_93",
+    "11_98",
+    "11_99",
+    "12_91",
+    "12_92",
+    "13_90",
+    "13_91",
+    "13_92",
+    "14_90",
+    "14_91",
+    "14_92",
+    "19_87",
+    "19_88",
+    "1_100",
+    "1_101",
+    "1_97",
+    "1_98",
+    "1_99",
+    "20_87",
+    "20_88",
+    "2_100",
+    "2_101",
+    "2_97",
+    "2_98",
+    "2_99",
+    "3_80",
+    "3_81",
+    "3_82",
+    "3_97",
+    "3_98",
+    "4_80",
+    "4_81",
+    "4_82",
+    "4_89",
+    "4_90",
+    "5_77",
+    "5_78",
+    "5_89",
+    "5_90",
+    "6_77",
+    "6_78",
+    "6_85",
+    "6_86",
+    "7_101",
+    "7_102",
+    "7_85",
+    "7_86",
+    "7_94",
+    "7_95",
+    "8_101",
+    "8_102",
+    "8_85",
+    "8_86",
+    "8_94",
+    "8_95",
+    "9_91",
+    "9_92",
+    "9_93"
+  ],
+  "targets": [
+    {
+      "name": "해운대해수욕장",
+      "nameEn": "Haeundae Beach",
+      "cls": "resonance",
+      "note": "대표 해수욕장",
+      "lat": 35.1577809,
+      "lon": 129.1581318,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 107531972,
+        "displayName": "해운대 해수욕장, 우1동, 해운대구, 부산광역시, 대한민국",
+        "importance": 0.3202715765630289
+      },
+      "id": "busan-0",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.1509899,35.1519419,129.1652737,35.1636199",
+      "file": "build/busan-reference/busan-0.osm",
+      "sha256": "244ee9fbf7f5dc9653c4cbe0eb7408667dd89c19e518e2abd4f0b7da25f7aed7",
+      "status": "cached",
+      "x": 14331.06432488838,
+      "z": 93755.83021200013
+    },
+    {
+      "name": "광안리해수욕장",
+      "nameEn": "Gwangalli Beach",
+      "cls": "resonance",
+      "note": "해변·야경 명소",
+      "lat": 35.1508879,
+      "lon": 129.1167806,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 107642460,
+        "displayName": "광안리해수욕장, 광안2동, 수영구, 부산광역시, 대한민국",
+        "importance": 0.30289193994832775
+      },
+      "id": "busan-1",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.1096393,35.1450489,129.1239219,35.1567269",
+      "file": "build/busan-reference/busan-1.osm",
+      "sha256": "f8921480d1c2aa2fff65610c43bb47595b6d525e08cafeff7ecdfec6694a869f",
+      "status": "cached",
+      "x": 10583.515083613587,
+      "z": 94523.15897199992
+    },
+    {
+      "name": "태종대",
+      "nameEn": "Taejongdae",
+      "cls": "deep-roots",
+      "note": "해안 절경 명소",
+      "lat": 35.05851,
+      "lon": 129.0876858,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 131451630,
+        "displayName": "태종대유원지, 24, 전망로, 동삼2동, 영도구, 부산광역시, 49127, 대한민국",
+        "importance": 0.3960456341796639
+      },
+      "id": "busan-2",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0805526,35.0526710,129.0948190,35.0643490",
+      "file": "build/busan-reference/busan-2.osm",
+      "sha256": "af4c875c4f18d9be624f46b87ebc155cce6ce78448e3a98e533ec2a78c7b188f",
+      "status": "cached",
+      "x": 7946.730766229708,
+      "z": 104806.6668000002
+    },
+    {
+      "name": "용두산공원",
+      "nameEn": "Yongdusan Park",
+      "cls": "relay",
+      "note": "부산타워 소재 공원",
+      "lat": 35.1004327,
+      "lon": 129.0326062,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 382696295,
+        "displayName": "용두산공원, 37-55, 광복동, 중구, 부산광역시, 대한민국",
+        "importance": 0.2885983973306146
+      },
+      "id": "busan-3",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0254693,35.0945937,129.0397431,35.1062717",
+      "file": "build/busan-reference/busan-3.osm",
+      "sha256": "9f73edea4f4bc09d678e9009a547e5c3f2d9003e775b785cb7e25192549fbce5",
+      "status": "cached",
+      "x": 2955.0131573169156,
+      "z": 100139.83183600011
+    },
+    {
+      "name": "부산타워",
+      "nameEn": "Busan Tower",
+      "cls": "relay",
+      "note": "전망 타워",
+      "lat": 35.1013015,
+      "lon": 129.0322296,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 480601129,
+        "displayName": "부산타워, 13, 대청로116번길, 대청동2가, 광복동, 중구, 부산광역시, 48948, 대한민국",
+        "importance": 7.220035095745812e-05
+      },
+      "id": "busan-4",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0250926,35.0954625,129.0393666,35.1071405",
+      "file": "build/busan-reference/busan-4.osm",
+      "sha256": "c2b02585013749f0c3be9f9281b739518f4877a0f0389a077176da6ef2b75712",
+      "status": "cached",
+      "x": 2920.8829012590345,
+      "z": 100043.11702000021
+    },
+    {
+      "name": "자갈치시장",
+      "nameEn": "Jagalchi Market",
+      "cls": "deep-roots",
+      "note": "대표 수산시장",
+      "lat": 35.0966276,
+      "lon": 129.0306885,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 382696296,
+        "displayName": "Jalgachi Market, 자갈치해안로, 남포동4가, 남포동, 중구, 부산광역시, 48982, 대한민국",
+        "importance": 7.220035095745812e-05
+      },
+      "id": "busan-5",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0235519,35.0907886,129.0378251,35.1024666",
+      "file": "build/busan-reference/busan-5.osm",
+      "sha256": "2422e059537581453442b1a3ee6caa7906b73a537e2a774af29d91af22220cc8",
+      "status": "cached",
+      "x": 2781.2171083505605,
+      "z": 100563.41556800023
+    },
+    {
+      "name": "국제시장",
+      "nameEn": "Gukje Market",
+      "cls": "deep-roots",
+      "note": "전통 재래시장",
+      "lat": 35.1011643,
+      "lon": 129.0281925,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 500548799,
+        "displayName": "국제시장, 신창동4가, 광복동, 중구, 부산광역시, 대한민국",
+        "importance": 0.08007220035095747
+      },
+      "id": "busan-6",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0210555,35.0953253,129.0353295,35.1070033",
+      "file": "build/busan-reference/busan-6.osm",
+      "sha256": "ba41ec8394a8d0f0f16fac9b5508aa077ae3ed11c495992ac73f4507cec2b204",
+      "status": "cached",
+      "x": 2555.0112689493017,
+      "z": 100058.39012399992
+    },
+    {
+      "name": "감천문화마을",
+      "nameEn": "Gamcheon Culture Village",
+      "cls": "deep-roots",
+      "note": "산비탈 색채마을",
+      "lat": 35.0963371,
+      "lon": 129.0087897,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 382693934,
+        "displayName": "감천문화마을, 옥천로75번길, 감천2동, 사하구, 부산광역시, 49365, 대한민국",
+        "importance": 0.2548773901198179
+      },
+      "id": "busan-7",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0016532,35.0904981,129.0159262,35.1021761",
+      "file": "build/busan-reference/busan-7.osm",
+      "sha256": "3d7d20ca61bd81c800f79a9d2d9f2df5cb9b2c4562e1307132f7e8fefd132f97",
+      "status": "cached",
+      "x": 796.5871260327265,
+      "z": 100595.75402800005
+    },
+    {
+      "name": "범어사",
+      "nameEn": "Beomeosa",
+      "cls": "ritual",
+      "note": "부산 대표 사찰",
+      "lat": 35.2840836,
+      "lon": 129.0686722,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 131922091,
+        "displayName": "범어사, 250, 범어사로, 청룡동, 청룡노포동, 금정구, 부산광역시, 46200, 대한민국",
+        "importance": 0.3735437609124175
+      },
+      "id": "busan-8",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0615191,35.2782446,129.0758253,35.2899226",
+      "file": "build/busan-reference/busan-8.osm",
+      "sha256": "80bbb0ca610d843c606ef78c83605a78151682f2cafc8436b4cc5aebe8f33a92",
+      "status": "cached",
+      "x": 6223.578783847935,
+      "z": 79695.81364799973
+    },
+    {
+      "name": "해동용궁사",
+      "nameEn": "Haedong Yonggungsa",
+      "cls": "ritual",
+      "note": "해안 사찰",
+      "lat": 35.1884335,
+      "lon": 129.2229764,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 382701819,
+        "displayName": "해동용궁사, 용궁길, 기장읍, 기장군, 부산광역시, 46084, 대한민국",
+        "importance": 0.24632300460320036
+      },
+      "id": "busan-9",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.2158318,35.1825945,129.2301210,35.1942725",
+      "file": "build/busan-reference/busan-9.osm",
+      "sha256": "0346d0d3e58efaccf0d9032d049f206f5b2adb9defa64c9ba0b6e5a2b22c4a0d",
+      "status": "cached",
+      "x": 20207.757904050977,
+      "z": 90343.58277999976
+    },
+    {
+      "name": "금정산성",
+      "nameEn": "Geumjeongsanseong",
+      "cls": "deep-roots",
+      "note": "산성 유적",
+      "lat": 35.2514859,
+      "lon": 129.0454231,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 1225560222,
+        "displayName": "금정산서문, 산성로, 금성동, 화명2동, 금정구, 부산광역시, 46237, 대한민국",
+        "importance": 7.220035095745812e-05
+      },
+      "id": "busan-10",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0382729,35.2456469,129.0525733,35.2573249",
+      "file": "build/busan-reference/busan-10.osm",
+      "sha256": "d4a98898577ff9ad5245e6e9aee5f2aaec2730b87cc293cbb9c6a73ebf61420f",
+      "status": "cached",
+      "x": 4116.574704997465,
+      "z": 83324.58961200014
+    },
+    {
+      "name": "부산박물관",
+      "nameEn": "Busan Museum",
+      "cls": "archive",
+      "note": "부산 역사박물관",
+      "lat": 35.1293619,
+      "lon": 129.0942026,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 477293035,
+        "displayName": "부산박물관, 63, 유엔평화로, 대연4동, 남구, 부산광역시, 48529, 대한민국",
+        "importance": 0.3656661556590361
+      },
+      "id": "busan-13",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0870632,35.1235229,129.1013420,35.1352009",
+      "file": "build/busan-reference/busan-13.osm",
+      "sha256": "faf2639ed7b9dec0f822738cc73510a473d61a76a65112b3eac8220f0bd643b6",
+      "status": "cached",
+      "x": 8537.331012304343,
+      "z": 96919.43329200009
+    },
+    {
+      "name": "오륙도",
+      "nameEn": "Oryukdo",
+      "cls": "deep-roots",
+      "note": "상징적 섬 명소",
+      "lat": 35.0920027,
+      "lon": 129.1269963,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "relation",
+        "osmId": 6995498,
+        "displayName": "오륙도, 남구, 부산광역시, 48595, 대한민국",
+        "importance": 0.3984771165675444
+      },
+      "id": "busan-14",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.1198601,35.0861637,129.1341325,35.0978417",
+      "file": "build/busan-reference/busan-14.osm",
+      "sha256": "c3dd2762665bf6ca3f50e581f5e75a69d5f39550c447901d8a88d6a5e5fbb4b7",
+      "status": "cached",
+      "x": 11509.336795779036,
+      "z": 101078.25943599979
+    },
+    {
+      "name": "송도해수욕장",
+      "nameEn": "Songdo Beach",
+      "cls": "resonance",
+      "note": "한국 최초 해수욕장",
+      "lat": 35.0755128,
+      "lon": 129.0173082,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 474957001,
+        "displayName": "송도해수욕장, 암남동, 서구, 부산광역시, 대한민국",
+        "importance": 0.23468656939839805
+      },
+      "id": "busan-15",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0101735,35.0696738,129.0244429,35.0813518",
+      "file": "build/busan-reference/busan-15.osm",
+      "sha256": "c8ad940b9c8c87954a3d5b207c3fb9fdd5889ff105cc125c6001ba5c86103feb",
+      "status": "cached",
+      "x": 1568.5961175933892,
+      "z": 102913.91510400017
+    },
+    {
+      "name": "영도대교",
+      "nameEn": "Yeongdo Bridge",
+      "cls": "relay",
+      "note": "도개교, 근대 상징",
+      "lat": 35.0955739,
+      "lon": 129.0364551,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 496277558,
+        "displayName": "영도대교, 태종로, 대교동1가, 남항동, 남포동, 중구, 부산광역시, 48954, 대한민국",
+        "importance": 0.3382445921771202
+      },
+      "id": "busan-16",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0293186,35.0897349,129.0435916,35.1014129",
+      "file": "build/busan-reference/busan-16.osm",
+      "sha256": "bbbc6965272ef958c8c5627f22930c6f3f615881b43a697a03ecb88fde79259f",
+      "status": "cached",
+      "x": 3303.8287243324085,
+      "z": 100680.71345200023
+    },
+    {
+      "name": "광안대교",
+      "nameEn": "Gwangan Bridge",
+      "cls": "relay",
+      "note": "해상 대교",
+      "lat": 35.1456901,
+      "lon": 129.1283872,
+      "geocodeStrategy": "bounded",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 382760140,
+        "displayName": "광안대교, 광안대로, 수영구, 부산광역시, 48280, 대한민국",
+        "importance": 0.4127618832342703
+      },
+      "id": "busan-17",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.1212463,35.1398511,129.1355281,35.1515291",
+      "file": "build/busan-reference/busan-17.osm",
+      "sha256": "4822b665f0d20b242cfe21d1d5fc57f8772fe8aebdca18079ffd0e909fca01b5",
+      "status": "cached",
+      "x": 11635.390362293432,
+      "z": 95101.77806799966
+    },
+    {
+      "name": "동래향교",
+      "nameEn": "Dongnae Hyanggyo",
+      "cls": "ritual",
+      "note": "유교 향교",
+      "lat": 35.2077564,
+      "lon": 129.084169,
+      "geocodeStrategy": "bounded-ko",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 785254420,
+        "displayName": "동래향교, 동래로, 명륜동, 복산동, 동래구, 부산광역시, 47735, 대한민국",
+        "importance": 0.359473463574925
+      },
+      "id": "busan-18",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0770227,35.2019174,129.0913153,35.2135954",
+      "file": "build/busan-reference/busan-18.osm",
+      "sha256": "1219ff168c4ef28400a0084e900570df617cf33d817d086b72264cbca1fceeea",
+      "status": "cached",
+      "x": 7628.012538664073,
+      "z": 88192.5575519999
+    },
+    {
+      "name": "부산시민공원",
+      "nameEn": "Busan Citizens Park",
+      "cls": "resonance",
+      "note": "시민 공원",
+      "lat": 35.1689195,
+      "lon": 129.057338,
+      "geocodeStrategy": "bounded-ko",
+      "geocodeSource": {
+        "osmType": "way",
+        "osmId": 399660588,
+        "displayName": "부산시민공원, 부전1동, 부산진구, 부산광역시, 대한민국",
+        "importance": 0.26001653813030656
+      },
+      "id": "busan-19",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.0501951,35.1630805,129.0644809,35.1747585",
+      "file": "build/busan-reference/busan-19.osm",
+      "sha256": "380b8d25242fab0aba3458d559f4011c9b8a07dc74cf6a1cda8350a9c7cd26a1",
+      "status": "cached",
+      "x": 5196.390392446251,
+      "z": 92515.88125999986
+    },
+    {
+      "name": "몰운대",
+      "nameEn": "Mollundae",
+      "cls": "deep-roots",
+      "note": "해안 절경지",
+      "lat": 35.038896,
+      "lon": 128.9689726,
+      "geocodeStrategy": "bounded-ko",
+      "geocodeSource": {
+        "osmType": "relation",
+        "osmId": 6994877,
+        "displayName": "몰운대, 다대1동, 사하구, 부산광역시, 대한민국",
+        "importance": 0.10673886701762414
+      },
+      "id": "busan-20",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=128.9618411,35.0330570,128.9761041,35.0447350",
+      "file": "build/busan-reference/busan-20.osm",
+      "sha256": "7963d881803cbe732d122b9031e718af6f63ee89f1570ea2ab3b27de75c7a70e",
+      "status": "cached",
+      "x": -2811.9307137085157,
+      "z": 106990.09727999987
+    }
+  ],
+  "unresolved": [
+    {
+      "name": "동래읍성지",
+      "nameEn": "Dongnae Eupseong",
+      "cls": "deep-roots",
+      "note": "조선 읍성 터",
+      "geocodeStatus": "unresolved",
+      "id": "busan-11",
+      "status": "unresolved-coordinate"
+    },
+    {
+      "name": "UN기념공원",
+      "nameEn": "UN Memorial Cemetery",
+      "cls": "memorial",
+      "note": "유엔군 묘지",
+      "geocodeStatus": "unresolved",
+      "id": "busan-12",
+      "status": "unresolved-coordinate"
+    }
+  ],
+  "summary": {
+    "patches": 72,
+    "buildings": 4005,
+    "models": 93,
+    "unmatched": [
+      {
+        "id": "way/1141928539",
+        "name": "감로약수",
+        "kind": "korean"
+      },
+      {
+        "id": "way/1226638214",
+        "name": "",
+        "kind": "korean"
+      },
+      {
+        "id": "way/1226638225",
+        "name": "",
+        "kind": "korean"
+      }
+    ]
+  },
+  "coast": {
+    "source": "OpenStreetMap natural=coastline; land-on-left",
+    "polygons": 46,
+    "loweredSeaGridPoints": 6841,
+    "seaLevel": 0,
+    "note": "Visual sea datum; not bathymetry or surveyed tidal elevation"
+  },
+  "bridgeApproaches": {
+    "routes": 6,
+    "segments": 654,
+    "source": "OSM connected road ways; DEM-fitted estimated vertical profile"
+  },
+  "bridgeCorridorSources": [
+    {
+      "file": "build/busan-reference/bridge-corridor-0.osm",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.1,35.127,129.152,35.139",
+      "sha256": "f71e51d58d1f36bac12413a69b60292e71c48938fe439104b8a7e604022407a3"
+    },
+    {
+      "file": "build/busan-reference/bridge-corridor-1.osm",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.1,35.139,129.152,35.151",
+      "sha256": "4bdecb3302a70696b73791e7a855d743d7b95ef4d71c8dd1f3036569807d348f"
+    },
+    {
+      "file": "build/busan-reference/bridge-corridor-2.osm",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.1,35.151,129.152,35.163000000000004",
+      "sha256": "ca1e76c4f3af6704510c26eacc6f616822c2d1c62d7c9d6bfa7fa3046095019d"
+    },
+    {
+      "file": "build/busan-reference/bridge-corridor-3.osm",
+      "url": "https://api.openstreetmap.org/api/0.6/map?bbox=129.1,35.163000000000004,129.152,35.175000000000004",
+      "sha256": "7d9515c82b7fbcaa7baf80f6df41987b2513c9512237eb0f0c6390d93ec9c10c"
+    }
+  ]
+}

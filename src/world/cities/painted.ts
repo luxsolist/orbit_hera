@@ -15,10 +15,4 @@ export const paintedSeoul:CityAppearance={
  environment:{clock:{latitude:37.5665,longitude:126.978,timeZone:'Asia/Seoul'},sky:0xb3cde2,fog:0xc8d2df,light:{hemiSky:0xbfcfdf,hemiGround:0xc9bda2,hemi:1.3,sunColor:0xfff0d7,sun:2.2,fillColor:0xadcbe8,fill:.35}}
 };
 
-export const paintedBusan:CityAppearance={
- ...paintedSeoul,id:'busan-painted',
- buildings:{...paintedSeoul.buildings,colors:[...paintedSeoul.buildings.colors],weights:[...paintedSeoul.buildings.weights],roofs:[...paintedSeoul.buildings.roofs]},
- ground:{...paintedSeoul.ground,areas:{...paintedSeoul.ground.areas}},
- street:{...paintedSeoul.street},props:{...paintedSeoul.props},
- environment:{...paintedSeoul.environment,clock:{latitude:35.1796,longitude:129.0756,timeZone:'Asia/Seoul'},light:{...paintedSeoul.environment.light}}
-};
+export {paintedBusan} from './busan';

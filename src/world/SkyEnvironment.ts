@@ -1,4 +1,4 @@
-import {solarState} from './CityTime';
+import {solarState,type CityClock} from './CityTime';
 import type {CityAppearance} from './cities/types';
 import * as THREE from "three";
 import type { SpawnPoint } from "./MapData";
@@ -15,7 +15,8 @@ export class SkyEnvironment {
   private lastTime=-Infinity;
   private solar?:ReturnType<typeof solarState>;
   private fixedDate?:Date;
-  setTime(date?:Date){this.fixedDate=date;this.lastTime=-Infinity;}
+  private clockOverride?:CityClock;
+  setTime(date?:Date,clock?:CityClock){this.fixedDate=date;this.clockOverride=clock;this.lastTime=-Infinity;}
 
 
   /** viewFar = 지오메트리가 존재하는 최대 거리(스트리밍 청크 로드 반경). 포그가 그 지점에서 끝난다. */
@@ -55,8 +56,8 @@ export class SkyEnvironment {
 
   /** 매 프레임 호출 — 태양(그림자 프러스텀)을 플레이어 위치로 평행이동(광원 방향은 유지). */
   update(px: number, pz: number) {
-    const clock=this.environment?.clock;
-    if(clock){
+    const clock=this.clockOverride??this.environment?.clock;
+    if(clock && this.environment){
       const date=this.fixedDate??new Date();
       if(Math.abs(date.getTime()-this.lastTime)>=1000){
         this.lastTime=date.getTime();this.solar=solarState(date,clock);

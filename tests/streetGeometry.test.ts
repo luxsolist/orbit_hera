@@ -61,3 +61,21 @@ it('reuses prepared buffers and restores nearby road details',()=>{
  updateStreetDetail(target,50,50);expect(target.getObjectByName('street_raised_curbs')!.visible).toBe(true);
  for(const group of [source,target])for(const child of group.children)(child as THREE.Mesh).geometry.dispose();
 });
+
+it('uses identical asphalt and marking materials and stripe pattern on elevated roads',()=>{
+ const t={size:2,step:100,cellX0:0,cellZ0:0,heights:new Float32Array(4)};
+ const colors={...seoulAppearance.street,curbHeight:0,junctionMarkings:false};
+ const ground=new THREE.Group(),bridge=new THREE.Group();
+ addStreetGeometry(ground,[{p:[10,50,54,50],w:24}],t,0,0,colors);
+ addStreetGeometry(bridge,[],t,0,0,colors,undefined,[{a:[10,20,62,10,20,38],b:[54,20,62,54,20,38]}]);
+ for(const name of ['street_asphalt','street_center_lines','street_lane_lines']){
+  const a=ground.getObjectByName(name) as THREE.Mesh,b=bridge.getObjectByName(name) as THREE.Mesh;
+  expect(b.material).toBe(a.material);expect(b.renderOrder).toBe(a.renderOrder);
+  const pos=b.geometry.getAttribute('position');for(let i=0;i<pos.count;i++)expect(pos.getY(i)).toBe(20);
+  if(name==='street_lane_lines'){
+   const area=(g:THREE.BufferGeometry)=>{const p=g.getAttribute('position');let total=0;for(let i=0;i<p.count;i+=3)total+=Math.abs((p.getX(i+1)-p.getX(i))*(p.getZ(i+2)-p.getZ(i))-(p.getZ(i+1)-p.getZ(i))*(p.getX(i+2)-p.getX(i)))/2;return total;};
+   expect(area(b.geometry)).toBeCloseTo(area(a.geometry),3);
+  }
+ }
+ for(const group of [ground,bridge])for(const child of group.children)(child as THREE.Mesh).geometry.dispose();
+});
