@@ -1,8 +1,9 @@
+import {fetchMapBundle,type BundlePayload} from './MapBundles';
 import {discardPreparedChunk,type PreparedChunk} from './PreparedChunk';
 import type {Cell} from './chunkManifest';
 import type {CityAppearance} from './cities';
-export interface ChunkPreparationJob {baseUrl?:string;cell:Cell;cx:number;cz:number;block:number;size:number;ox:number;oz:number;profile:CityAppearance;}
-type Job={id:number;key:string;job:ChunkPreparationJob;resolve:(p:PreparedChunk|null)=>void;reject:(e:Error)=>void;cleanup:()=>void};
+export interface ChunkPreparationJob {bundlePayload?:BundlePayload;baseUrl?:string;cell:Cell;cx:number;cz:number;block:number;size:number;ox:number;oz:number;profile:CityAppearance;}
+type Job={ready:boolean;id:number;key:string;job:ChunkPreparationJob;resolve:(p:PreparedChunk|null)=>void;reject:(e:Error)=>void;cleanup:()=>void};
 /** One bounded worker, with re-prioritizable queued jobs and cancellable in-flight work. */
 export class ChunkPreparation {
  private worker?:Worker;private active?:Job;private queue:Job[]=[];private next=0;private dead=false;private priorities=new Map<string,number>();
@@ -11,13 +12,16 @@ export class ChunkPreparation {
  prepare(key:string,job:ChunkPreparationJob,signal?:AbortSignal):Promise<PreparedChunk|null>{
   if(this.dead||signal?.aborted)return Promise.reject(new Error('Chunk preparation cancelled'));
   return new Promise((resolve,reject)=>{
-   const entry:Job={id:++this.next,key,job,resolve,reject,cleanup:()=>signal?.removeEventListener('abort',abort)};
+   const entry:Job={ready:true,id:++this.next,key,job,resolve,reject,cleanup:()=>signal?.removeEventListener('abort',abort)};
    const abort=()=>{entry.cleanup();this.queue=this.queue.filter(j=>j!==entry);if(this.active===entry){this.active=undefined;this.worker?.terminate();this.worker=undefined;}reject(new Error('Chunk preparation cancelled'));this.pump();};
-   signal?.addEventListener('abort',abort,{once:true});this.queue.push(entry);this.prioritize([...this.priorities.keys()]);this.pump();
+   signal?.addEventListener('abort',abort,{once:true});this.queue.push(entry);this.prioritize([...this.priorities.keys()]);
+   const download=fetchMapBundle(job.cell,job.cx,job.cz,job.baseUrl);
+   if(download){entry.ready=false;void download.then(payload=>{entry.job={...job,bundlePayload:payload};}).catch(()=>{}).finally(()=>{entry.ready=true;this.pump();});}
+   this.pump();
   });
  }
  private pump(){
-  if(this.dead||this.active||!this.queue.length)return;
+  if(this.dead||this.active||!this.queue.some(j=>j.ready))return;
   if(!this.worker){
    this.worker=new Worker(new URL('./chunk.worker.ts',import.meta.url),{type:'module'});
    this.worker.onmessage=(event:MessageEvent<{id:number;packet:PreparedChunk|null;error?:string}>)=>{
@@ -26,7 +30,7 @@ export class ChunkPreparation {
    };
    this.worker.onerror=()=>{const entry=this.active;this.active=undefined;this.worker?.terminate();this.worker=undefined;entry?.cleanup();entry?.reject(new Error('Chunk worker failed'));this.pump();};
   }
-  this.active=this.queue.shift()!;this.worker.postMessage({id:this.active.id,job:this.active.job});
+  this.active=this.queue.splice(this.queue.findIndex(j=>j.ready),1)[0];this.worker.postMessage({id:this.active.id,job:this.active.job});
  }
  dispose(){this.dead=true;this.worker?.terminate();this.worker=undefined;for(const j of [...this.queue,...(this.active?[this.active]:[])]){j.cleanup();j.reject(new Error('Chunk preparation disposed'));}this.queue=[];this.active=undefined;}
 }

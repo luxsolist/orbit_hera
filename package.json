@@ -16,7 +16,13 @@
     "audit:landmarks": "node scripts/audit-landmarks.mjs",
     "validate:world": "node scripts/validate-world.mjs",
     "test:fast": "vitest run --project fast",
-    "test:extended": "vitest run --project extended"
+    "test:extended": "vitest run --project extended",
+    "build:seoul-bundles": "node scripts/build-seoul-bundles.mjs",
+    "prebuild": "node scripts/verify-seoul-bundles.mjs",
+    "pretest": "python3 scripts/map-release.py ensure",
+    "maps:restore": "python3 scripts/map-release.py restore",
+    "maps:publish": "npm run build:seoul-bundles && python3 scripts/map-release.py publish",
+    "maps:verify": "node scripts/verify-seoul-bundles.mjs"
   },
   "dependencies": {
     "three": "^0.169.0"

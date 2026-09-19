@@ -1,3 +1,4 @@
+import {readMapBundle,bundleEntry,type BundlePayload} from './MapBundles';
 import busanIndex from './cities/busan-detail-index.json';
 import {applyBusanDetail} from './cities/BusanDetail';
 import {applySeoulLandmarkAppearance,type LandmarkAppearancePatch} from './cities/SeoulLandmarkAppearance';
@@ -86,9 +87,17 @@ async function fetchRoadGrade(cell:Cell,key:string,baseUrl?:string){
  const index=await roadGradeIndex,cellKey=cell.join('/');
  return index?.cells?.[cellKey]?.includes(key)?fetchJson<RoadGradePatch>(`maps/road-grade/${cellKey}/${key}.json`,baseUrl):null;
 }
-export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?: number, baseUrl?:string): Promise<WorldChunk | null> => {
+export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?: number, baseUrl?:string, bundlePayload?:BundlePayload): Promise<WorldChunk | null> => {
   const key=`${cx}_${cz}`;
-  const [raw,detail,roadGrade,appearance,busanDetail]=await Promise.all([
+  // Preserve exactly the existing correction order, regardless of transport format.
+  let packed;
+  if(bundleEntry(cell,cx,cz)&&typeof DecompressionStream!=='undefined'){
+    for(let attempt=0;attempt<2;attempt++){
+      try{packed=await readMapBundle(cell,cx,cz,baseUrl,attempt===0?bundlePayload:undefined);break;}
+      catch(error){if(attempt===1)throw new Error(`서울 지도 묶음 로드 실패 (${cx}, ${cz}): ${String(error)}`);}
+    }
+  }
+  const [raw,detail,roadGrade,appearance,busanDetail]=packed?[packed.raw,packed.detail,packed.roadGrade,packed.appearance,null]:await Promise.all([
     fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block),baseUrl),
     cell[0]===37&&cell[1]===126&&seoulChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/seoul/${key}.json`,baseUrl):Promise.resolve(null),
     fetchRoadGrade(cell,key,baseUrl),

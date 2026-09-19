@@ -17,7 +17,8 @@ it('uses catalog origin for latitude and negative longitude boundaries',async()=
  const m=manifest([40,-75]),fetch=vi.fn(async(_path:string)=>({ok:true,json:async()=>m}));vi.stubGlobal('fetch',fetch);
  await fetchCityTiles(41.01,-73.99,'boundary-stream');expect(fetch.mock.calls[0][0]).toBe('/maps/40/-75/tiles.json');
 });
-it('loads chunks using manifest block and grid, and rejects uncovered coordinates',async()=>{
+it('loads fallback chunks using manifest block and grid, and rejects uncovered coordinates',async()=>{
+ vi.stubGlobal('DecompressionStream',undefined);
  const m=manifest([37,126]),fetch=vi.fn(async(path:string)=>({ok:true,json:async()=>path.endsWith('tiles.json')?m:{cx:95,cz:52,terrain:{size:0,heights:[],seaLevel:0},objects:{buildings:[],roads:[],water:[]}}}));vi.stubGlobal('fetch',fetch);
  expect(await fetchWorldChunkAt(37.5125537,127.102679,1024,'seoul-stream')).toMatchObject({cx:95,cz:52});
  expect(fetch.mock.calls[1][0]).toBe('/maps/37/126/5_3/95_52.json');

@@ -5,3 +5,8 @@ dist/
 .vite/
 .claude/
 build/
+
+# Seoul editable source chunks: verified backups in GitHub Releases.
+/public/maps/37/126/*/*.json
+
+__pycache__/

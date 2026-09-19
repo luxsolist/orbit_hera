@@ -68,6 +68,7 @@
 ## 실행
 
 > **요구사항:** [Node.js](https://nodejs.org/) 18+
+> 지도 원본 복원·테스트에는 **Python 3.9+**(`python3` 명령), Releases 게시에는 **GitHub CLI**(`gh`) 로그인과 저장소 쓰기 권한이 필요합니다.
 
 ```bash
 npm install      # 의존성 설치
@@ -88,6 +89,32 @@ npm run gen:cities          # 도시 100선 config 생성
 npm run validate:world      # 산출 타일 불변식 전수 검사
 npm run audit:landmarks     # 랜드마크 큐레이션 감사
 ```
+
+## 지도 원본·압축 묶음·Releases 관리
+
+**서울부터 적용:** 일반 지도 청크 1,600개는 로컬에서 편집하고 GitHub Releases에 백업합니다.
+Git에는 게임용 **2×2 압축 묶음 400개**, 묶음 인덱스, 릴리스 포인터와 랜드마크/도로 보정 데이터를 보관합니다.
+게임·도시 뷰어는 같은 서버의 압축 묶음을 읽으며, 플레이 중 Releases에 직접 접속하지 않습니다.
+부산과 나머지 도시는 아직 기존 개별 파일 방식을 사용합니다.
+
+```bash
+npm run maps:restore         # 처음 받았거나 원본이 없을 때 복원; 기존 로컬 파일은 보존
+# 원본 지도 또는 랜드마크/도로 보정 데이터 수정
+npm run build:seoul-bundles  # 로컬 확인용 묶음 재생성; GitHub 업로드 없음
+npm test -- tests/mapBundles.test.ts tests/mapLocator.test.ts tests/chunkPreparation.test.ts tests/cityTileLookup.test.ts
+npm run maps:publish        # 확정한 지도: 재생성 → 원본 검증 → Releases 게시·재다운로드 검증
+npm run maps:verify         # 게임용 묶음과 게시한 원본 버전의 연결 확인
+npm run build              # 버전 검증 후 배포 빌드
+# 관련 코드·압축 묶음·인덱스·릴리스 포인터를 함께 커밋/푸시
+```
+
+`maps:publish`는 **실제로 GitHub에 릴리스를 게시**하지만 커밋·푸시·게임 배포는 하지 않습니다.
+`npm test`는 필요한 원본을 자동 복원합니다. `test:fast`, `test:extended`, 직접 Vitest 실행은 자동 복원하지 않으므로 먼저 `maps:restore`를 실행하세요.
+원본을 수정한 뒤 `npm run build`만 실행해도 묶음이 갱신되는 것은 아닙니다.
+
+- [운영 절차·복원·장애 대응·후속 작업](docs/map-releases.md)
+- [서울 압축 형식·캐시·스트리밍 구조](docs/seoul-map-bundles.md)
+- [현재 원본 백업 버전](config/map-releases/seoul.json) — 태그·다운로드 해시의 기준
 
 ## 기술 스택
 
