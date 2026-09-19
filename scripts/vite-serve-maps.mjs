@@ -55,7 +55,7 @@ export function mapsMiddleware({ root, prefix = "maps", base = "/" } = {}) {
 
     res.setHeader("Content-Type", MIME[extname(file)] ?? "application/octet-stream");
     res.setHeader("Content-Length", st.size);
-    res.setHeader("Cache-Control", /^bundles\/seoul\/[-\d_]+\.[a-f0-9]{16}\.bin$/.test(rel) ? "public, max-age=31536000, immutable" : "no-cache"); // 재빌드가 즉시 반영되도록
+    res.setHeader("Cache-Control", /^bundles\/(seoul|busan)\/[-\d_]+\.[a-f0-9]{16}\.bin$/.test(rel) ? "public, max-age=31536000, immutable" : "no-cache"); // 재빌드가 즉시 반영되도록
     createReadStream(file).pipe(res);
   };
 }

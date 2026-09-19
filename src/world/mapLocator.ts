@@ -94,10 +94,10 @@ export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?
   if(bundleEntry(cell,cx,cz)&&typeof DecompressionStream!=='undefined'){
     for(let attempt=0;attempt<2;attempt++){
       try{packed=await readMapBundle(cell,cx,cz,baseUrl,attempt===0?bundlePayload:undefined);break;}
-      catch(error){if(attempt===1)throw new Error(`서울 지도 묶음 로드 실패 (${cx}, ${cz}): ${String(error)}`);}
+      catch(error){if(attempt===1)throw new Error(`지도 묶음 로드 실패 (${cx}, ${cz}): ${String(error)}`);}
     }
   }
-  const [raw,detail,roadGrade,appearance,busanDetail]=packed?[packed.raw,packed.detail,packed.roadGrade,packed.appearance,null]:await Promise.all([
+  const [raw,detail,roadGrade,appearance,busanDetail]=packed?[packed.raw,cell[0]===35&&cell[1]===129?null:packed.detail,packed.roadGrade,packed.appearance,cell[0]===35&&cell[1]===129?packed.detail:null]:await Promise.all([
     fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block),baseUrl),
     cell[0]===37&&cell[1]===126&&seoulChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/seoul/${key}.json`,baseUrl):Promise.resolve(null),
     fetchRoadGrade(cell,key,baseUrl),

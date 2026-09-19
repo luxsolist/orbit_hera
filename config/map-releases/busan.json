@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "repository": "luxsolist/orbit_hera",
+  "tag": "maps-busan-9d5da5ae64ccb0de",
+  "asset": "busan-source.tar.gz",
+  "sha256": "c055c87142d2ac38cc60ab88f22a244c240786f5a43a1082933370b4a750f0d7",
+  "bundleIndexSha256": "89d2b4907a2bb67bf112fffe51c7c47c7edc5c76964324eb525b7fb377ad85e5",
+  "sourceFiles": 2396,
+  "bytes": 4745773
+}

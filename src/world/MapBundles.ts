@@ -1,4 +1,6 @@
-import index from './seoul-bundles.json';
+import seoul from './seoul-bundles.json';
+import busan from './busan-bundles.json';
+import cities from '../../config/map-cities.json';
 import type {Cell,WorldChunk} from './chunkManifest';
 import type {SeoulDetail} from './cities/SeoulDetail';
 import type {RoadGradePatch} from './RoadGradePatch';
@@ -7,17 +9,18 @@ export interface BundleChunk {raw:WorldChunk;detail:SeoulDetail|null;roadGrade:R
 interface Bundle {version:number;cell:number[];key:string;chunks:Record<string,BundleChunk>}
 interface Entry {file:string;bytes:number;rawBytes:number;sha256:string;chunks:string[]}
 export interface BundlePayload {url:string;data:ArrayBuffer}
-const entries:Record<string,Entry>=index.bundles;
+const indices:Record<string,{bundles:Record<string,Entry>}>= {seoul,busan};
+const cityOf=(cell:Cell)=>Object.keys(cities).find(city=>cities[city as keyof typeof cities].join('/')===cell.join('/'));
 const compressed=new Map<string,BundlePayload>(),decoded=new Map<string,{value:Bundle;size:number}>();
 const downloading=new Map<string,Promise<BundlePayload>>(),decoding=new Map<string,Promise<Bundle>>();
 const COMPRESSED_LIMIT=16*1024*1024,DECODED_LIMIT=32*1024*1024;
 function trim<T>(cache:Map<string,T>,size:(v:T)=>number,limit:number){let total=0;for(const v of cache.values())total+=size(v);while(total>limit&&cache.size){const key=cache.keys().next().value!;total-=size(cache.get(key)!);cache.delete(key);}}
 function touch<T>(cache:Map<string,T>,key:string){const v=cache.get(key);if(v){cache.delete(key);cache.set(key,v);}return v;}
-export function bundleEntry(cell:Cell,cx:number,cz:number){return cell[0]===37&&cell[1]===126?entries[`${Math.floor(cx/2)}_${Math.floor(cz/2)}`]:undefined;}
+export function bundleEntry(cell:Cell,cx:number,cz:number){const city=cityOf(cell);return city?indices[city]?.bundles[`${Math.floor(cx/2)}_${Math.floor(cz/2)}`]:undefined;}
 /** Requests are shared, not cancelled when just one of the four consumers leaves view. */
 export function fetchMapBundle(cell:Cell,cx:number,cz:number,baseUrl?:string):Promise<BundlePayload>|undefined {
  const entry=bundleEntry(cell,cx,cz);if(!entry||typeof DecompressionStream==='undefined')return;
- const path=`maps/bundles/seoul/${entry.file}`,url=baseUrl?new URL(path,baseUrl).href:`${import.meta.env.BASE_URL}${path}`;
+ const path=`maps/bundles/${cityOf(cell)}/${entry.file}`,url=baseUrl?new URL(path,baseUrl).href:`${import.meta.env.BASE_URL}${path}`;
  const cached=touch(compressed,url);if(cached)return Promise.resolve(cached);
  const active=downloading.get(url);if(active)return active;
  const request=(async()=>{const response=await fetch(url,{cache:'force-cache'});if(!response.ok)throw new Error(`Map bundle HTTP ${response.status}`);

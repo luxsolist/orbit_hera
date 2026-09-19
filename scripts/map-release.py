@@ -1,36 +1,42 @@
-"""Seoul source snapshots on GitHub Releases. Requires Python 3 and authenticated gh."""
+"""City source snapshots on GitHub Releases. Requires Python 3 and authenticated gh."""
 import argparse,hashlib,io,json,subprocess,tarfile,tempfile,urllib.request
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent.parent
+CITIES=json.loads((ROOT/'config/map-cities.json').read_text())
+CITY='seoul'
+GRID='37/126'
 CONFIG=ROOT/'config/map-releases/seoul.json'
+def configure(city):
+ global CITY,GRID,CONFIG
+ CITY=city;GRID='/'.join(map(str,CITIES[city]));CONFIG=ROOT/f'config/map-releases/{city}.json'
 def sha(b):return hashlib.sha256(b).hexdigest()
 def run(*args):return subprocess.check_output(args,cwd=ROOT,text=True).strip()
 def sources():
- m=json.loads((ROOT/'public/maps/37/126/tiles.json').read_text());paths={'public/maps/37/126/tiles.json'}
+ m=json.loads((ROOT/f'public/maps/{GRID}/tiles.json').read_text());paths={f'public/maps/{GRID}/tiles.json'}
  for c in m['chunks']:
-  x,z=c['cx'],c['cz'];k=f'{x}_{z}';base=f"public/maps/37/126/{x//m.get('block',16)}_{z//m.get('block',16)}/{k}.json"
+  x,z=c['cx'],c['cz'];k=f'{x}_{z}';base=f"public/maps/{GRID}/{x//m.get('block',16)}_{z//m.get('block',16)}/{k}.json"
   if not (ROOT/base).exists():raise RuntimeError('Restore sources first: '+base)
   paths.add(base)
-  for name in [f'public/maps/details/seoul/{k}.json',f'public/maps/road-grade/37/126/{k}.json',f'public/maps/landmark-appearance/seoul/{k}.json']:
+  for name in [f'public/maps/details/{CITY}/{k}.json',f'public/maps/road-grade/{GRID}/{k}.json',f'public/maps/landmark-appearance/{CITY}/{k}.json']:
    if (ROOT/name).exists():paths.add(name)
  return sorted(paths)
 def prepare():
- files={p:(ROOT/p).read_bytes() for p in sources()};index=(ROOT/'src/world/seoul-bundles.json').read_bytes()
+ files={p:(ROOT/p).read_bytes() for p in sources()};index=(ROOT/f'src/world/{CITY}-bundles.json').read_bytes()
  # Ensure the release snapshot is exactly the source represented by the playable bundles.
  bundle=json.loads(index)
  import gzip
  for entry in bundle['bundles'].values():
-  data=(ROOT/'public/maps/bundles/seoul'/entry['file']).read_bytes()
+  data=(ROOT/f'public/maps/bundles/{CITY}'/entry['file']).read_bytes()
   if sha(data)!=entry['sha256']:raise RuntimeError('Bundle hash mismatch')
   for key,c in json.loads(gzip.decompress(data))['chunks'].items():
-   x,z=map(int,key.split('_'));p=f'public/maps/37/126/{x//16}_{z//16}/{key}.json'
+   x,z=map(int,key.split('_'));p=f'public/maps/{GRID}/{x//16}_{z//16}/{key}.json'
    if c['raw']!=json.loads(files[p]):raise RuntimeError('Rebuild bundles: '+key)
-   for field,path in [('detail',f'public/maps/details/seoul/{key}.json'),('roadGrade',f'public/maps/road-grade/37/126/{key}.json'),('appearance',f'public/maps/landmark-appearance/seoul/{key}.json')]:
+   for field,path in [('detail',f'public/maps/details/{CITY}/{key}.json'),('roadGrade',f'public/maps/road-grade/{GRID}/{key}.json'),('appearance',f'public/maps/landmark-appearance/{CITY}/{key}.json')]:
     if c[field]!=(json.loads(files[path]) if path in files else None):raise RuntimeError('Rebuild bundles: '+path)
  manifest={'version':1,'files':{p:sha(b) for p,b in files.items()},'bundleIndexSha256':sha(index)}
  encoded=json.dumps(manifest,sort_keys=True,separators=(',',':')).encode();version=sha(encoded)[:16]
- tag='maps-seoul-'+version;out=ROOT/'build/map-releases'/tag;out.mkdir(parents=True,exist_ok=True)
- archive=out/'seoul-source.tar.gz'
+ tag=f'maps-{CITY}-'+version;out=ROOT/'build/map-releases'/tag;out.mkdir(parents=True,exist_ok=True)
+ archive=out/f'{CITY}-source.tar.gz'
  with tarfile.open(archive,'w:gz') as tar:
   for name,b in {**files,'MANIFEST.json':encoded,'bundle-index.json':index}.items():
    info=tarfile.TarInfo(name);info.size=len(b);info.mtime=0;info.mode=0o644;tar.addfile(info,io.BytesIO(b))
@@ -58,9 +64,9 @@ def download(meta,directory):
   run('gh','release','download',meta['tag'],'--repo',meta['repository'],'--pattern',meta['asset'],'--dir',str(directory),'--clobber')
  return directory/meta['asset']
 def publish():
- out,meta=prepare();notes=out/'notes.md';notes.write_text('Seoul map source snapshot. Includes terrain, landmark detail, appearance and road-grade overlays. Matched game bundle index SHA-256: '+meta['bundleIndexSha256']+'\n')
+ out,meta=prepare();notes=out/'notes.md';notes.write_text(f'{CITY} map source snapshot. Includes terrain, landmark detail, appearance and road-grade overlays. Matched game bundle index SHA-256: '+meta['bundleIndexSha256']+'\n')
  exists=subprocess.run(['gh','release','view',meta['tag'],'--repo',meta['repository']],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
- if not exists:run('gh','release','create',meta['tag'],str(out/meta['asset']),str(out/'release.json'),'--repo',meta['repository'],'--target',run('git','rev-parse','HEAD'),'--title','Seoul map source '+meta['tag'].removeprefix('maps-seoul-'),'--notes-file',str(notes),'--latest=false')
+ if not exists:run('gh','release','create',meta['tag'],str(out/meta['asset']),str(out/'release.json'),'--repo',meta['repository'],'--target',run('git','rev-parse','HEAD'),'--title',CITY+' map source '+meta['tag'].removeprefix(f'maps-{CITY}-'),'--notes-file',str(notes),'--latest=false')
  else:
   # Existing releases are immutable snapshots; accept only the already-published bytes.
   with tempfile.TemporaryDirectory() as temp:
@@ -82,8 +88,8 @@ def restore():
   p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b);written+=1
  print('Restored',written,'files; preserved',kept,'existing files')
 def ensure():
- m=json.loads((ROOT/'public/maps/37/126/tiles.json').read_text());block=m.get('block',16)
- if all((ROOT/f"public/maps/37/126/{c['cx']//block}_{c['cz']//block}/{c['cx']}_{c['cz']}.json").exists() for c in m['chunks']):return
+ m=json.loads((ROOT/f'public/maps/{GRID}/tiles.json').read_text());block=m.get('block',16)
+ if all((ROOT/f"public/maps/{GRID}/{c['cx']//block}_{c['cz']//block}/{c['cx']}_{c['cz']}.json").exists() for c in m['chunks']):return
  restore()
 if __name__=='__main__':
- parser=argparse.ArgumentParser();parser.add_argument('command',choices=['prepare','publish','restore','ensure']);args=parser.parse_args();{'prepare':prepare,'publish':publish,'restore':restore,'ensure':ensure}[args.command]()
+ parser=argparse.ArgumentParser();parser.add_argument('command',choices=['prepare','publish','restore','ensure']);parser.add_argument('--city',choices=list(CITIES),default='seoul');args=parser.parse_args();configure(args.city);{'prepare':prepare,'publish':publish,'restore':restore,'ensure':ensure}[args.command]()

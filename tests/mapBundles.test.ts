@@ -4,18 +4,21 @@ import {it,expect,vi,afterEach} from 'vitest';
 import {readFileSync,existsSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import index from '../src/world/seoul-bundles.json';
+import busan from '../src/world/busan-bundles.json';
+import {applyBusanDetail} from '../src/world/cities/BusanDetail';
+import {applyRoadGradePatch} from '../src/world/RoadGradePatch';
 import {fetchMapBundle,readMapBundle,bundleEntry} from '../src/world/MapBundles';
 import {fetchWorldChunk} from '../src/world/mapLocator';
 afterEach(()=>vi.unstubAllGlobals());
-it('packs all 1600 Seoul chunks and every runtime landmark/road overlay without changing data',()=>{
- const seen=new Set<string>();expect(Object.keys(index.bundles)).toHaveLength(400);
+it.each([{city:'seoul',grid:'37/126',index,count:400},{city:'busan',grid:'35/129',index:busan,count:420}])('packs all $city chunks and overlays without changing data',({city,grid,index,count})=>{
+ const seen=new Set<string>();expect(Object.keys(index.bundles)).toHaveLength(count);
  for(const [key,entry] of Object.entries(index.bundles)){
-  const bytes=readFileSync(`public/maps/bundles/seoul/${entry.file}`);expect(bytes.length).toBe(entry.bytes);
+  const bytes=readFileSync(`public/maps/bundles/${city}/${entry.file}`);expect(bytes.length).toBe(entry.bytes);
   const data=gunzipSync(bytes);expect(data.length).toBe(entry.rawBytes);const bundle=JSON.parse(data.toString());expect(bundle.key).toBe(key);
   for(const [k,value] of Object.entries(bundle.chunks) as [string,any][]){
    expect(seen.has(k)).toBe(false);seen.add(k);const [x,z]=k.split('_').map(Number);
-   const original=JSON.parse(readFileSync(`public/maps/37/126/${Math.floor(x/16)}_${Math.floor(z/16)}/${k}.json`,'utf8'));expect(value.raw).toEqual(original);
-   for(const [field,path] of [['detail',`details/seoul/${k}`],['roadGrade',`road-grade/37/126/${k}`],['appearance',`landmark-appearance/seoul/${k}`]]){
+   const original=JSON.parse(readFileSync(`public/maps/${grid}/${Math.floor(x/16)}_${Math.floor(z/16)}/${k}.json`,'utf8'));expect(value.raw).toEqual(original);
+   for(const [field,path] of [['detail',`details/${city}/${k}`],['roadGrade',`road-grade/${grid}/${k}`],['appearance',`landmark-appearance/${city}/${k}`]]){
     const p=`public/maps/${path}.json`;expect(value[field]).toEqual(existsSync(p)?JSON.parse(readFileSync(p,'utf8')):null);
    }
   }
@@ -47,3 +50,20 @@ it('downloads queued chunks together and preserves shared transfer when one cons
  await vi.waitFor(()=>expect(instances[0]?.messages.length).toBe(1));const message=instances[0].messages[0];expect(message.job.bundlePayload.data.byteLength).toBe(bytes.length);
  instances[0].onmessage({data:{id:message.id,packet:null}});expect(await b).toBeNull();expect(fetcher).toHaveBeenCalledTimes(1);prep.dispose();
 });
+
+it('loads Busan bridge/coast corrections from bundles in the original correction order',async()=>{
+ const fetcher=vi.fn(async(input:any)=>new Response(readFileSync('public/'+new URL(String(input)).pathname.slice(1))));vi.stubGlobal('fetch',fetcher);
+ let bridges=0,negative=0,partial=0;
+ for(const entry of Object.values(busan.bundles)){
+  const payload=JSON.parse(gunzipSync(readFileSync(`public/maps/bundles/busan/${entry.file}`)).toString());
+  if(entry.chunks.length<4)partial++;
+  for(const [key,value] of Object.entries(payload.chunks) as [string,any][]){
+   const [x,z]=key.split('_').map(Number);expect(bundleEntry([35,129],x,z)?.file).toBe(entry.file);if(x<0||z<0)negative++;
+   if(!value.detail)continue;
+   bridges+=(value.detail.bridges?.length??0);
+   const expected=applyRoadGradePatch(applyBusanDetail([35,129],value.raw,value.detail),value.roadGrade);
+   expect(await fetchWorldChunk([35,129],x,z,16,'http://busan.test/')).toEqual(expected);
+  }
+ }
+ expect(bridges).toBeGreaterThan(0);expect(negative).toBeGreaterThan(0);expect(partial).toBeGreaterThan(0);
+},30000);
