@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "repository": "luxsolist/orbit_hera",
+  "tag": "maps-rome-a3138178d3ea7268",
+  "asset": "rome-source.tar.gz",
+  "sha256": "7302cff54250626545779cb9407bd92e43b43b74aa0998d986d841e216b34b5a",
+  "bundleIndexSha256": "d19112b2e2f4b09e47e3181f0eb85bde4a5389b36a68f79266c5114f84d79fac",
+  "sourceFiles": 2828,
+  "bytes": 13785355
+}

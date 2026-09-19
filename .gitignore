@@ -13,3 +13,6 @@ __pycache__/
 
 # Busan editable sources are backed up in GitHub Releases.
 /public/maps/35/129/*/*.json
+
+# Rome sources are backed up in verified GitHub Releases.
+/public/maps/41/12/*/*.json

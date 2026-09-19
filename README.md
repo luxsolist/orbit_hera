@@ -101,12 +101,12 @@ npm run maps:publish:city -- busan   # 지정 도시 생성·검증·실제 게�
 npm run maps:verify -- all          # 등록된 모든 도시 검사
 ```
 
-`all`은 등록된 도시만 뜻하며 현재는 서울·부산입니다. 기존 도시별 명령도 호환됩니다.
+`all`은 등록된 도시만 뜻하며 현재는 서울·부산·로마입니다. 기존 도시별 명령도 호환됩니다.
 신규 도시는 [등록·전환 절차](docs/map-releases.md#신규-도시-등록과-공통-명령)를 따릅니다.
 
 
-**서울·부산 적용:** 도시별 일반 지도 청크 1,600개는 로컬에서 편집하고 GitHub Releases에 백업합니다.
-Git에는 게임용 **2×2 압축 묶음(서울 400개, 부산 420개)**, 묶음 인덱스, 릴리스 포인터와 랜드마크/도로 보정 데이터를 보관합니다.
+**서울·부산·로마 적용:** 일반 지도 청크는 로컬에서 편집하고 GitHub Releases에 백업합니다.
+Git에는 게임용 **2×2 압축 묶음(서울 400개, 부산 420개, 로마 441개)**, 묶음 인덱스, 릴리스 포인터와 랜드마크/도로 보정 데이터를 보관합니다.
 게임·도시 뷰어는 같은 서버의 압축 묶음을 읽으며, 플레이 중 Releases에 직접 접속하지 않습니다.
 그 외 도시는 기존 개별 파일 방식을 사용합니다. 부산은 격자 경계의 부분 묶음 때문에 420개입니다.
 
@@ -129,6 +129,7 @@ npm run build              # 버전 검증 후 배포 빌드
 
 - [운영 절차·복원·장애 대응·후속 작업](docs/map-releases.md)
 - [서울 압축 형식·캐시·스트리밍 구조](docs/seoul-map-bundles.md)
+- [로마 원본 백업 버전](config/map-releases/rome.json)
 - [부산 원본 백업 버전](config/map-releases/busan.json)
 - [서울 원본 백업 버전](config/map-releases/seoul.json) — 태그·다운로드 해시의 기준
 
@@ -169,3 +170,9 @@ docs/{spec,implements}/         명세 · 구현 문서(+ docs/private: 비공�
 보스) → 1막 클라이맥스 보스전·부유 요새 → Link Swap(전장 중 기체 전환)·드론 종류 확장 →
 전 세계 도시 확대(도시 100선 잔여 48개 · 얽힘 택소노미 기반 미션 자동 생성) → RTS 빌드업 → 온라인 협동.
 정본 순서는 [docs/spec/06-missions.md](docs/spec/06-missions.md) §5. 향후 Flutter WebView는 선택적 배포 채널로만.
+
+### 랜드마크 제작 기준
+
+- [도시 공통 제작·검증 절차](docs/landmark-rendering-workflow.md)
+- [로마 적용 범위·출처·정확도](docs/rome-landmark-details.md)
+- `npm run audit:landmark-details -- <도시>`: 원본 결합·높이·표면·지형 입력 검사

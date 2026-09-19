@@ -1,0 +1,142 @@
+[
+  {
+    "id": "node/497186177",
+    "name": "진실의 입",
+    "kind": "mask",
+    "height": 1.8,
+    "heightStatus": "published-diameter",
+    "chunk": "39_12",
+    "binding": "landscape",
+    "source": "https://www.openstreetmap.org/node/497186177"
+  },
+  {
+    "id": "way/8035487",
+    "name": "산탄젤로 성",
+    "kind": "castle",
+    "height": 48,
+    "heightStatus": "photo-estimate",
+    "chunk": "37_10",
+    "binding": "existing",
+    "source": "https://www.openstreetmap.org/way/8035487"
+  },
+  {
+    "id": "way/23590989",
+    "name": "콘스탄티누스 개선문",
+    "kind": "arch-three",
+    "height": 21,
+    "heightStatus": "osm-height",
+    "chunk": "39_11",
+    "binding": "existing",
+    "source": "https://www.openstreetmap.org/way/23590989"
+  },
+  {
+    "id": "way/23913953",
+    "name": "티투스 개선문",
+    "kind": "arch-one",
+    "height": 15.4,
+    "heightStatus": "osm-height",
+    "chunk": "39_11",
+    "binding": "existing",
+    "source": "https://www.openstreetmap.org/way/23913953"
+  },
+  {
+    "id": "way/24098531",
+    "name": "스페인 계단",
+    "kind": "steps",
+    "height": 24,
+    "heightStatus": "photo-estimate",
+    "chunk": "39_10",
+    "binding": "landscape",
+    "source": "https://www.openstreetmap.org/way/24098531"
+  },
+  {
+    "id": "way/131564482",
+    "name": "산타 마리아 마조레 대성당",
+    "kind": "basilica",
+    "height": 30,
+    "heightStatus": "photo-estimate",
+    "chunk": "40_11",
+    "binding": "existing",
+    "source": "https://www.openstreetmap.org/way/131564482"
+  },
+  {
+    "id": "way/134399943",
+    "name": "산탄젤로 다리",
+    "kind": "stone-bridge",
+    "height": 0,
+    "heightStatus": "terrain-endpoints",
+    "chunk": "37_10",
+    "binding": "landscape",
+    "source": "https://www.openstreetmap.org/way/134399943"
+  },
+  {
+    "id": "way/215289671",
+    "name": "시스티나 성당",
+    "kind": "chapel",
+    "height": 20.7,
+    "heightStatus": "photo-estimate",
+    "chunk": "36_10",
+    "binding": "existing",
+    "source": "https://www.openstreetmap.org/way/215289671"
+  },
+  {
+    "id": "way/244159210",
+    "name": "산 피에트로 대성당",
+    "kind": "st-peter",
+    "height": 136,
+    "heightStatus": "published",
+    "chunk": "36_10",
+    "binding": "existing",
+    "source": "https://www.openstreetmap.org/way/244159210"
+  },
+  {
+    "id": "way/255959482",
+    "name": "바티칸 박물관",
+    "kind": "courtyard",
+    "height": 22,
+    "heightStatus": "photo-estimate",
+    "chunk": "37_10",
+    "binding": "existing",
+    "source": "https://www.openstreetmap.org/way/255959482"
+  },
+  {
+    "id": "relation/36444",
+    "name": "산 조반니 인 라테라노 대성당",
+    "kind": "basilica",
+    "height": 35,
+    "heightStatus": "photo-estimate",
+    "chunk": "41_12",
+    "binding": "existing",
+    "source": "https://www.openstreetmap.org/relation/36444"
+  },
+  {
+    "id": "relation/1834818",
+    "name": "콜로세움",
+    "kind": "colosseum",
+    "height": 48.5,
+    "heightStatus": "published",
+    "chunk": "40_11",
+    "binding": "existing",
+    "source": "https://www.openstreetmap.org/relation/1834818"
+  },
+  {
+    "id": "relation/3374342",
+    "name": "판테온",
+    "kind": "pantheon",
+    "height": 43.3,
+    "heightStatus": "published",
+    "chunk": "38_11",
+    "binding": "existing",
+    "source": "https://www.openstreetmap.org/relation/3374342"
+  },
+  {
+    "id": "relation/13448560",
+    "name": "트레비 분수",
+    "kind": "trevi",
+    "height": 26,
+    "heightStatus": "photo-estimate",
+    "chunk": "39_10",
+    "binding": "new-source-footprint",
+    "source": "https://www.openstreetmap.org/relation/13448560"
+  }
+]

@@ -5,12 +5,15 @@ import {readFileSync,existsSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 import index from '../src/world/seoul-bundles.json';
 import busan from '../src/world/busan-bundles.json';
+import rome from '../src/world/rome-bundles.json';
+import romeDetails from '../src/world/cities/rome-detail-index.json';
+import {applyMapCorrections} from '../src/world/MapCorrections';
 import {applyBusanDetail} from '../src/world/cities/BusanDetail';
 import {applyRoadGradePatch} from '../src/world/RoadGradePatch';
 import {fetchMapBundle,readMapBundle,bundleEntry} from '../src/world/MapBundles';
 import {fetchWorldChunk} from '../src/world/mapLocator';
 afterEach(()=>vi.unstubAllGlobals());
-it.each([{city:'seoul',grid:'37/126',index,count:400},{city:'busan',grid:'35/129',index:busan,count:420}])('packs all $city chunks and overlays without changing data',({city,grid,index,count})=>{
+it.each([{city:'seoul',grid:'37/126',index,count:400,chunks:1600},{city:'busan',grid:'35/129',index:busan,count:420,chunks:1600},{city:'rome',grid:'41/12',index:rome,count:441,chunks:1640}])('packs all $city chunks and overlays without changing data',({city,grid,index,count,chunks})=>{
  const seen=new Set<string>();expect(Object.keys(index.bundles)).toHaveLength(count);
  for(const [key,entry] of Object.entries(index.bundles)){
   const bytes=readFileSync(`public/maps/bundles/${city}/${entry.file}`);expect(bytes.length).toBe(entry.bytes);
@@ -22,7 +25,7 @@ it.each([{city:'seoul',grid:'37/126',index,count:400},{city:'busan',grid:'35/129
     const p=`public/maps/${path}.json`;expect(value[field]).toEqual(existsSync(p)?JSON.parse(readFileSync(p,'utf8')):null);
    }
   }
- }expect(seen.size).toBe(1600);
+ }expect(seen.size).toBe(chunks);
 },30000);
 it('shares a compressed download across four requests, decodes it and retains the correction path',async()=>{
  const entry=bundleEntry([37,126],84,46)!;const bytes=readFileSync(`public/maps/bundles/seoul/${entry.file}`);
@@ -67,3 +70,14 @@ it('loads Busan bridge/coast corrections from bundles in the original correction
  }
  expect(bridges).toBeGreaterThan(0);expect(negative).toBeGreaterThan(0);expect(partial).toBeGreaterThan(0);
 },30000);
+
+it('loads all Rome landmark overlays and additions through the bundled correction path',async()=>{
+ const fetcher=vi.fn(async(input:any)=>{const path=new URL(String(input)).pathname;expect(path).toMatch(/^\/maps\/bundles\/rome\/.*\.bin$/);return new Response(readFileSync('public'+path));});vi.stubGlobal('fetch',fetcher);
+ let additions=0,sites=0;
+ for(const key of romeDetails.chunks){const [x,z]=key.split('_').map(Number),base='http://rome-packed.test/';const packed=(await readMapBundle([41,12],x,z,base))!;
+  const result=await fetchWorldChunk([41,12],x,z,16,base);
+  expect(result).toEqual(applyMapCorrections([41,12],packed.raw,packed));
+  additions+=(packed.detail as any)?.add?.length??0;sites+=packed.detail?.romeSites?.length??0;
+ }
+ expect(additions).toBeGreaterThan(0);expect(sites).toBe(3);expect(fetcher).toHaveBeenCalled();
+});

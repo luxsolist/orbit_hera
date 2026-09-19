@@ -29,7 +29,9 @@
     "build:map-bundles": "node scripts/build-map-bundles.mjs",
     "maps:publish:city": "node scripts/map-command.mjs publish",
     "maps:restore:city": "node scripts/map-command.mjs restore",
-    "maps:prepare:city": "node scripts/map-command.mjs prepare"
+    "maps:prepare:city": "node scripts/map-command.mjs prepare",
+    "build:rome-details": "python3 scripts/build-rome-details.py",
+    "audit:landmark-details": "node scripts/audit-landmark-details.mjs"
   },
   "dependencies": {
     "three": "^0.169.0"

@@ -1,3 +1,4 @@
+import romeIndex from './cities/rome-detail-index.json';
 import {applyMapCorrections} from './MapCorrections';
 import {readMapBundle,bundleEntry,type BundlePayload} from './MapBundles';
 import busanIndex from './cities/busan-detail-index.json';
@@ -75,6 +76,7 @@ export async function fetchWorldChunkAt(lat: number, lon: number, chunkSize = 10
 /** 청크 좌표로 직접 로드. block=매니페스트 블록 크기(경로 <bx>_<bz>/ 계산). */
 const seoulChunks=new Set(seoulIndex.chunks);
 const busanChunks=new Set(busanIndex.chunks);
+const romeChunks=new Set(romeIndex.chunks);
 const landmarkAppearanceChunks=new Set(landmarkAppearanceIndex.chunks);
 let roadGradeIndex:Promise<{cells:Record<string,string[]>}|null>|undefined;
 async function fetchRoadGrade(cell:Cell,key:string,baseUrl?:string){
@@ -93,15 +95,16 @@ export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?
     }
   }
   if(packed)return applyMapCorrections(cell,packed.raw,packed);
-  const [raw,detail,roadGrade,appearance,busanDetail]=await Promise.all([
+  const [raw,detail,roadGrade,appearance,busanDetail,romeDetail]=await Promise.all([
     fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block),baseUrl),
     cell[0]===37&&cell[1]===126&&seoulChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/seoul/${key}.json`,baseUrl):Promise.resolve(null),
     fetchRoadGrade(cell,key,baseUrl),
     cell[0]===37&&cell[1]===126&&landmarkAppearanceChunks.has(key)?fetchJson<LandmarkAppearancePatch>(`maps/landmark-appearance/seoul/${key}.json`,baseUrl):Promise.resolve(null),
     cell[0]===35&&cell[1]===129&&busanChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/busan/${key}.json`,baseUrl):Promise.resolve(null),
+    cell[0]===41&&cell[1]===12&&romeChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/rome/${key}.json`,baseUrl):Promise.resolve(null),
   ]);
   if(!raw)return null;
-  return applyMapCorrections(cell,raw,{detail:detail??busanDetail,roadGrade,appearance});
+  return applyMapCorrections(cell,raw,{detail:detail??busanDetail??romeDetail,roadGrade,appearance});
 };
 
 /** 랜드마크 이름 → 위치(위경도/셀/청크). */

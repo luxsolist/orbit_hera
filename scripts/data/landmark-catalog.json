@@ -109,14 +109,15 @@
     "nameEn": "St. Peter's Basilica",
     "cls": "ritual",
     "note": "가톨릭 총본산",
-    "lat": 41.893851,
-    "lon": 12.4931577,
-    "geocodeStrategy": "bounded",
+    "lat": 41.9022,
+    "lon": 12.45394,
+    "geocodeStrategy": "verified-osm-identity",
     "geocodeSource": {
      "osmType": "way",
-     "osmId": 201882369,
-     "displayName": "Basilica di San Pietro in Vincoli, 4/a, Piazza di San Pietro in Vincoli, Monti, Municipio Roma I, Roma, Roma Capitale, Lazio, 00184, Italia",
-     "importance": 0.5073376760078315
+     "osmId": 244159210,
+     "displayName": "Basilica di San Pietro, Vaticano",
+     "wikidata": "Q12512",
+     "reviewSource": "https://www.basilicasanpietro.va/it/help/la-basilica"
     }
    },
    {

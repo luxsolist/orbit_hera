@@ -1,3 +1,4 @@
+import {romeArchitectureGeometry,romeSiteGeometry} from './RomeArchitecture';
 import {busanBridgeGeometry,busanBridgeApproachGeometry,type BusanBridge,type BusanBridgeApproach} from './BusanBridges';
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -15,6 +16,7 @@ export interface DetailBuilding {
 interface Surface {id:string;p:number[];holes:number[][];kind:string;level?:number;levelSource?:string}
 interface Path {id:string;p:number[];width:number;bridge:boolean;tunnel:boolean;surface:string}
 export interface SeoulDetail {
+ romeSites?:DetailBuilding[];
  bridges?:BusanBridge[];
  bridgeApproaches?:BusanBridgeApproach[];
  roadReplacements?:{p:number[];pieces:number[][]}[];
@@ -70,6 +72,7 @@ function shape(p:number[],holes:number[][],ox:number,oz:number){
 /** Architectural silhouette, explicitly not a surveyed restoration. Horizontal alignment comes from the source footprint. */
 export function seoulArchitectureGeometry(b:Ring,ox:number,oz:number,base:number,groundBase=base):THREE.BufferGeometry|null {
  const d=b.seoulArchitecture;if(!d)return null;
+ if(d.kind.startsWith('rome-'))return romeArchitectureGeometry(b,ox,oz,base,groundBase);
  if(d.kind==='source-roof'||d.kind==='shrine'||(d.kind==='korean'&&(b.holes?.length||b.p.length>24)))return palaceSiteBuilding('seoul-source',ox,oz,base,{...b,h:d.h??b.h??6,n:d.kind==='source-roof'?undefined:b.n});
  let edge=0,angle=0;const p=d.modelFootprint??b.p;
  for(let i=0;i<p.length;i+=2){const j=(i+2)%p.length,dx=p[j]-p[i],dz=p[j+1]-p[i+1],len=Math.hypot(dx,dz);if(len>edge){edge=len;angle=Math.atan2(dz,dx);}}
@@ -183,6 +186,7 @@ export function paintSeoulDetail(ctx:CanvasRenderingContext2D,detail:SeoulDetail
 export function addSeoulLandscape(group:THREE.Group,chunk:WorldChunk,ox:number,oz:number,height:(x:number,z:number)=>number){
  const d=chunk.seoulDetail;if(!d)return;const geos:THREE.BufferGeometry[]=[];
  const add=(g:THREE.BufferGeometry,color:string)=>{const v=g.index?g.toNonIndexed():g;if(v!==g)g.dispose();v.deleteAttribute('uv');setUniformColor(v,new THREE.Color(color));geos.push(v);};
+ for(const site of d.romeSites??[]){const geo=romeSiteGeometry(site,ox,oz,height);if(geo)geos.push(geo);}
  for(const bridge of d.bridges??[])geos.push(busanBridgeGeometry(bridge,ox,oz));
  for(const approach of d.bridgeApproaches??[])geos.push(busanBridgeApproachGeometry(approach,ox,oz));
  const owned=(x:number,z:number)=>Math.floor(x/1024)===chunk.cx&&Math.floor(z/1024)===chunk.cz;
