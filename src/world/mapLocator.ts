@@ -1,16 +1,11 @@
+import {applyMapCorrections} from './MapCorrections';
 import {readMapBundle,bundleEntry,type BundlePayload} from './MapBundles';
 import busanIndex from './cities/busan-detail-index.json';
-import {applyBusanDetail} from './cities/BusanDetail';
-import {applySeoulLandmarkAppearance,type LandmarkAppearancePatch} from './cities/SeoulLandmarkAppearance';
+import {type LandmarkAppearancePatch} from './cities/SeoulLandmarkAppearance';
 import landmarkAppearanceIndex from './cities/seoul-landmark-appearance-index.json';
-import {applyRoadGradePatch,type RoadGradePatch} from './RoadGradePatch';
-import {correctGwanghwamunRoadGrade} from './cities/GwanghwamunRoadGrade';
-import {correctGwanghwamunStatues} from './cities/GwanghwamunStatues';
-import {applySeoulDetail,type SeoulDetail} from './cities/SeoulDetail';
+import {type RoadGradePatch} from './RoadGradePatch';
+import {type SeoulDetail} from './cities/SeoulDetail';
 import seoulIndex from './cities/seoul-detail-index.json';
-import {correctPalaceSite} from './cities/PalaceSite';
-import {correctGyeongbokgungChunk} from './cities/Gyeongbokgung';
-import {correctJamsilChunk} from './cities/jamsilCorrection';
 import {fetchCatalog} from './maps';
 // 위치(위도/경도) → 전지구 타일 월드 조회 — 위경도 셀 디렉터리를 타고 들어가 그 위치의 1024m 청크를 읽는다.
 // 전역 랜드마크 인덱스(maps/landmarks.json)로 랜드마크 이름 → 위치/소속 청크도 조회.
@@ -97,7 +92,8 @@ export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?
       catch(error){if(attempt===1)throw new Error(`지도 묶음 로드 실패 (${cx}, ${cz}): ${String(error)}`);}
     }
   }
-  const [raw,detail,roadGrade,appearance,busanDetail]=packed?[packed.raw,cell[0]===35&&cell[1]===129?null:packed.detail,packed.roadGrade,packed.appearance,cell[0]===35&&cell[1]===129?packed.detail:null]:await Promise.all([
+  if(packed)return applyMapCorrections(cell,packed.raw,packed);
+  const [raw,detail,roadGrade,appearance,busanDetail]=await Promise.all([
     fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block),baseUrl),
     cell[0]===37&&cell[1]===126&&seoulChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/seoul/${key}.json`,baseUrl):Promise.resolve(null),
     fetchRoadGrade(cell,key,baseUrl),
@@ -105,9 +101,7 @@ export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?
     cell[0]===35&&cell[1]===129&&busanChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/busan/${key}.json`,baseUrl):Promise.resolve(null),
   ]);
   if(!raw)return null;
-  const source=busanDetail?applyBusanDetail(cell,raw,busanDetail):raw;
-  const chunk=correctPalaceSite(cell,correctGyeongbokgungChunk(cell,correctJamsilChunk(cell,applyRoadGradePatch(source,roadGrade))));
-  return applySeoulLandmarkAppearance(cell,correctGwanghwamunRoadGrade(cell,correctGwanghwamunStatues(cell,detail?applySeoulDetail(cell,chunk,detail):chunk)),appearance);
+  return applyMapCorrections(cell,raw,{detail:detail??busanDetail,roadGrade,appearance});
 };
 
 /** 랜드마크 이름 → 위치(위경도/셀/청크). */

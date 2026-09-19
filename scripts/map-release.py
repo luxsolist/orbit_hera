@@ -1,8 +1,12 @@
 """City source snapshots on GitHub Releases. Requires Python 3 and authenticated gh."""
-import argparse,hashlib,io,json,subprocess,tarfile,tempfile,urllib.request
+import argparse,hashlib,io,json,re,subprocess,tarfile,tempfile,urllib.request
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent.parent
 CITIES=json.loads((ROOT/'config/map-cities.json').read_text())
+seen=set()
+for city,cell in CITIES.items():
+ if not re.fullmatch(r'[a-z][a-z0-9-]*',city) or not isinstance(cell,list) or len(cell)!=2 or any(type(n) is not int for n in cell) or not -90<=cell[0]<90 or not -180<=cell[1]<180 or tuple(cell) in seen:raise RuntimeError('Invalid or duplicate map cell: '+city)
+ seen.add(tuple(cell))
 CITY='seoul'
 GRID='37/126'
 CONFIG=ROOT/'config/map-releases/seoul.json'
@@ -24,15 +28,21 @@ def prepare():
  files={p:(ROOT/p).read_bytes() for p in sources()};index=(ROOT/f'src/world/{CITY}-bundles.json').read_bytes()
  # Ensure the release snapshot is exactly the source represented by the playable bundles.
  bundle=json.loads(index)
+ manifest_source=json.loads(files[f'public/maps/{GRID}/tiles.json']);block=manifest_source.get('block',16)
+ expected={f"{c['cx']}_{c['cz']}" for c in manifest_source['chunks']};seen=set()
+ if bundle['cell']!=CITIES[CITY] or bundle['size']!=2:raise RuntimeError('Invalid bundle index')
  import gzip
  for entry in bundle['bundles'].values():
   data=(ROOT/f'public/maps/bundles/{CITY}'/entry['file']).read_bytes()
   if sha(data)!=entry['sha256']:raise RuntimeError('Bundle hash mismatch')
   for key,c in json.loads(gzip.decompress(data))['chunks'].items():
-   x,z=map(int,key.split('_'));p=f'public/maps/{GRID}/{x//16}_{z//16}/{key}.json'
+   if key in seen or key not in expected:raise RuntimeError('Invalid bundle coverage: '+key)
+   seen.add(key)
+   x,z=map(int,key.split('_'));p=f'public/maps/{GRID}/{x//block}_{z//block}/{key}.json'
    if c['raw']!=json.loads(files[p]):raise RuntimeError('Rebuild bundles: '+key)
    for field,path in [('detail',f'public/maps/details/{CITY}/{key}.json'),('roadGrade',f'public/maps/road-grade/{GRID}/{key}.json'),('appearance',f'public/maps/landmark-appearance/{CITY}/{key}.json')]:
     if c[field]!=(json.loads(files[path]) if path in files else None):raise RuntimeError('Rebuild bundles: '+path)
+ if seen!=expected:raise RuntimeError('Missing bundled source chunks')
  manifest={'version':1,'files':{p:sha(b) for p,b in files.items()},'bundleIndexSha256':sha(index)}
  encoded=json.dumps(manifest,sort_keys=True,separators=(',',':')).encode();version=sha(encoded)[:16]
  tag=f'maps-{CITY}-'+version;out=ROOT/'build/map-releases'/tag;out.mkdir(parents=True,exist_ok=True)
@@ -92,4 +102,6 @@ def ensure():
  if all((ROOT/f"public/maps/{GRID}/{c['cx']//block}_{c['cz']//block}/{c['cx']}_{c['cz']}.json").exists() for c in m['chunks']):return
  restore()
 if __name__=='__main__':
- parser=argparse.ArgumentParser();parser.add_argument('command',choices=['prepare','publish','restore','ensure']);parser.add_argument('--city',choices=list(CITIES),default='seoul');args=parser.parse_args();configure(args.city);{'prepare':prepare,'publish':publish,'restore':restore,'ensure':ensure}[args.command]()
+ parser=argparse.ArgumentParser();parser.add_argument('command',choices=['prepare','publish','restore','ensure']);parser.add_argument('--city',choices=[*CITIES,'all'],default='seoul');args=parser.parse_args()
+ for city in (CITIES if args.city=='all' else [args.city]):
+  configure(city);{'prepare':prepare,'publish':publish,'restore':restore,'ensure':ensure}[args.command]()

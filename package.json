@@ -19,13 +19,17 @@
     "test:extended": "vitest run --project extended",
     "build:seoul-bundles": "node scripts/build-seoul-bundles.mjs",
     "prebuild": "node scripts/verify-map-bundles.mjs",
-    "pretest": "python3 scripts/map-release.py ensure && python3 scripts/map-release.py ensure --city busan",
-    "maps:restore": "python3 scripts/map-release.py restore",
-    "maps:publish": "npm run build:seoul-bundles && python3 scripts/map-release.py publish",
+    "pretest": "node scripts/map-command.mjs ensure all",
+    "maps:restore": "node scripts/map-command.mjs restore seoul",
+    "maps:publish": "node scripts/map-command.mjs publish seoul",
     "maps:verify": "node scripts/verify-map-bundles.mjs",
     "build:busan-bundles": "node scripts/build-map-bundles.mjs busan",
-    "maps:restore:busan": "python3 scripts/map-release.py restore --city busan",
-    "maps:publish:busan": "npm run build:busan-bundles && python3 scripts/map-release.py publish --city busan"
+    "maps:restore:busan": "node scripts/map-command.mjs restore busan",
+    "maps:publish:busan": "node scripts/map-command.mjs publish busan",
+    "build:map-bundles": "node scripts/build-map-bundles.mjs",
+    "maps:publish:city": "node scripts/map-command.mjs publish",
+    "maps:restore:city": "node scripts/map-command.mjs restore",
+    "maps:prepare:city": "node scripts/map-command.mjs prepare"
   },
   "dependencies": {
     "three": "^0.169.0"

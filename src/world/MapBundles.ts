@@ -1,5 +1,3 @@
-import seoul from './seoul-bundles.json';
-import busan from './busan-bundles.json';
 import cities from '../../config/map-cities.json';
 import type {Cell,WorldChunk} from './chunkManifest';
 import type {SeoulDetail} from './cities/SeoulDetail';
@@ -9,14 +7,21 @@ export interface BundleChunk {raw:WorldChunk;detail:SeoulDetail|null;roadGrade:R
 interface Bundle {version:number;cell:number[];key:string;chunks:Record<string,BundleChunk>}
 interface Entry {file:string;bytes:number;rawBytes:number;sha256:string;chunks:string[]}
 export interface BundlePayload {url:string;data:ArrayBuffer}
-const indices:Record<string,{bundles:Record<string,Entry>}>= {seoul,busan};
-const cityOf=(cell:Cell)=>Object.keys(cities).find(city=>cities[city as keyof typeof cities].join('/')===cell.join('/'));
+// Vite discovers registered city indices without adding a source import per city.
+const modules=import.meta.glob<{default:{cell:number[];size:number;bundles:Record<string,Entry>}}>('./*-bundles.json',{eager:true});
+const byCell=new Map<string,{city:string;size:number;bundles:Record<string,Entry>}>();
+for(const [city,cell] of Object.entries(cities)){
+ const index=modules[`./${city}-bundles.json`]?.default;
+ if(!index||index.cell.join('/')!==cell.join('/')||index.size!==2||byCell.has(cell.join('/')))throw new Error(`Invalid map registration: ${city}`);
+ byCell.set(cell.join('/'),{city,...index});
+}
+const cityOf=(cell:Cell)=>byCell.get(cell.join('/'))?.city;
 const compressed=new Map<string,BundlePayload>(),decoded=new Map<string,{value:Bundle;size:number}>();
 const downloading=new Map<string,Promise<BundlePayload>>(),decoding=new Map<string,Promise<Bundle>>();
 const COMPRESSED_LIMIT=16*1024*1024,DECODED_LIMIT=32*1024*1024;
 function trim<T>(cache:Map<string,T>,size:(v:T)=>number,limit:number){let total=0;for(const v of cache.values())total+=size(v);while(total>limit&&cache.size){const key=cache.keys().next().value!;total-=size(cache.get(key)!);cache.delete(key);}}
 function touch<T>(cache:Map<string,T>,key:string){const v=cache.get(key);if(v){cache.delete(key);cache.set(key,v);}return v;}
-export function bundleEntry(cell:Cell,cx:number,cz:number){const city=cityOf(cell);return city?indices[city]?.bundles[`${Math.floor(cx/2)}_${Math.floor(cz/2)}`]:undefined;}
+export function bundleEntry(cell:Cell,cx:number,cz:number){const index=byCell.get(cell.join('/'));const entry=index?.bundles[`${Math.floor(cx/2)}_${Math.floor(cz/2)}`];return entry?.chunks.includes(`${cx}_${cz}`)?entry:undefined;}
 /** Requests are shared, not cancelled when just one of the four consumers leaves view. */
 export function fetchMapBundle(cell:Cell,cx:number,cz:number,baseUrl?:string):Promise<BundlePayload>|undefined {
  const entry=bundleEntry(cell,cx,cz);if(!entry||typeof DecompressionStream==='undefined')return;

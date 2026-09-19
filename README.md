@@ -92,6 +92,19 @@ npm run audit:landmarks     # 랜드마크 큐레이션 감사
 
 ## 지도 원본·압축 묶음·Releases 관리
 
+도시 등록 기준은 `config/map-cities.json`입니다. 도시별 코드 복사 없이 공통 명령으로 처리합니다.
+
+```bash
+npm run build:map-bundles -- busan   # 지정 도시 묶음 생성
+npm run maps:restore:city -- all     # 등록된 모든 도시의 누락 원본 복원
+npm run maps:publish:city -- busan   # 지정 도시 생성·검증·실제 게시
+npm run maps:verify -- all          # 등록된 모든 도시 검사
+```
+
+`all`은 등록된 도시만 뜻하며 현재는 서울·부산입니다. 기존 도시별 명령도 호환됩니다.
+신규 도시는 [등록·전환 절차](docs/map-releases.md#신규-도시-등록과-공통-명령)를 따릅니다.
+
+
 **서울·부산 적용:** 도시별 일반 지도 청크 1,600개는 로컬에서 편집하고 GitHub Releases에 백업합니다.
 Git에는 게임용 **2×2 압축 묶음(서울 400개, 부산 420개)**, 묶음 인덱스, 릴리스 포인터와 랜드마크/도로 보정 데이터를 보관합니다.
 게임·도시 뷰어는 같은 서버의 압축 묶음을 읽으며, 플레이 중 Releases에 직접 접속하지 않습니다.

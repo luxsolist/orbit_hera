@@ -1,8 +1,9 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {gzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
-const cities=JSON.parse(await readFile('config/map-cities.json','utf8')),city=process.argv[2]??'seoul';
-if(!cities[city])throw new Error('Unknown map city: '+city);
+import {loadMapCities,selectMapCities} from './map-city-config.mjs';
+const cities=await loadMapCities(),selected=selectMapCities(cities,process.argv[2]);
+for(const city of selected){
 const cell=cities[city],grid=cell.join('/');
 const root='public/maps',out=`${root}/bundles/${city}`;await mkdir(out,{recursive:true});
 const read=async p=>JSON.parse(await readFile(p,'utf8'));
@@ -20,4 +21,6 @@ for(const [key,coords] of groups){
  await writeFile(`${out}/${file}`,compressed);index.bundles[key]={file,bytes:compressed.length,rawBytes:raw.length,sha256:hash,chunks:Object.keys(chunks)};bytes+=compressed.length;rawBytes+=raw.length;
 }
 await writeFile(`src/world/${city}-bundles.json`,JSON.stringify(index,null,2)+'\n');
-console.log(JSON.stringify({chunks:manifest.chunks.length,bundles:groups.size,rawBytes,gzipBytes:bytes}));
+console.log(JSON.stringify({city,chunks:manifest.chunks.length,bundles:groups.size,rawBytes,gzipBytes:bytes}));
+
+}
