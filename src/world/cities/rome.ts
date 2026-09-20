@@ -1,3 +1,4 @@
+import {romeNight} from './night';
 import {seoulAppearance} from './seoul';
 import type {CityAppearance} from './types';
 /** Rome photo direction: docs/rome-art-direction.md. Shared renderer, independent palette. */
@@ -13,7 +14,7 @@ export const paintedRome:CityAppearance={
   areas:{...seoulAppearance.ground.areas,pavement:'#cfc4af',sand:'#e4d4b3',rock:'#b6ad99',park:'#849467',garden:'#9cac79',grass:'#99a777',wood:'#5b7454',scrub:'#7e8e61',pitch:'#8e9f73'}},
  street:{...seoulAppearance.street,asphalt:'#737879',pavement:'#cfc4b0',curb:'#b5b4a7',marking:'#f0eadb',center:'#ece4d2',wearStrength:.03},
  props:{...seoulAppearance.props,metal:0x616b64,bark:0x796650,leaves:0x57724e},
- environment:{clock:{latitude:41.9028,longitude:12.4964,timeZone:'Europe/Rome'},
+ environment:{night:romeNight,clock:{latitude:41.9028,longitude:12.4964,timeZone:'Europe/Rome'},
   sky:0xb7d4e9,fog:0xd4dbdf,
   paintedSky:{horizon:[.70,.83,.94],zenith:[.23,.49,.81]},
   light:{hemiSky:0xc4d8e8,hemiGround:0xd8c7ab,hemi:1.3,sunColor:0xffefd8,sun:2.2,fillColor:0xb9d2eb,fill:.36}}

@@ -1,0 +1,142 @@
+[
+  {
+    "id": "way/10973697",
+    "name": "디오니소스 극장",
+    "kind": "dionysus",
+    "height": 12,
+    "heightStatus": "photo-estimate",
+    "binding": "landscape",
+    "chunk": "62_3",
+    "source": "https://www.openstreetmap.org/way/10973697"
+  },
+  {
+    "id": "way/63765671",
+    "name": "제우스 신전",
+    "kind": "zeus",
+    "height": 17,
+    "heightStatus": "photo-estimate",
+    "binding": "landscape",
+    "chunk": "63_3",
+    "source": "https://www.openstreetmap.org/way/63765671"
+  },
+  {
+    "id": "way/175107932",
+    "name": "하드리아누스 문",
+    "kind": "hadrian",
+    "height": 18,
+    "heightStatus": "published",
+    "binding": "landscape",
+    "chunk": "63_3",
+    "source": "https://www.openstreetmap.org/way/175107932"
+  },
+  {
+    "id": "way/910010334",
+    "name": "에레크테이온",
+    "kind": "erechtheion",
+    "height": 10,
+    "heightStatus": "photo-estimate",
+    "binding": "existing",
+    "chunk": "62_3",
+    "source": "https://www.openstreetmap.org/way/910010334"
+  },
+  {
+    "id": "way/910010406",
+    "name": "파르테논 신전",
+    "kind": "parthenon",
+    "height": 17,
+    "heightStatus": "published-plan/photo-height",
+    "binding": "existing",
+    "chunk": "62_3",
+    "source": "https://www.openstreetmap.org/way/910010406"
+  },
+  {
+    "id": "way/975219800",
+    "name": "아탈로스의 스토아",
+    "kind": "stoa",
+    "height": 12.5,
+    "heightStatus": "osm-height",
+    "binding": "existing",
+    "chunk": "62_2",
+    "source": "https://www.openstreetmap.org/way/975219800"
+  },
+  {
+    "id": "way/983921252",
+    "name": "아크로폴리스 박물관",
+    "kind": "acropolis-museum",
+    "height": 23,
+    "heightStatus": "photo-estimate",
+    "binding": "existing",
+    "chunk": "62_3",
+    "source": "https://www.openstreetmap.org/way/983921252"
+  },
+  {
+    "id": "relation/2828",
+    "name": "국립고고학박물관",
+    "kind": "national-museum",
+    "height": 18,
+    "heightStatus": "photo-estimate",
+    "binding": "existing",
+    "chunk": "63_1",
+    "source": "https://www.openstreetmap.org/relation/2828"
+  },
+  {
+    "id": "relation/2903266",
+    "name": "케라메이코스",
+    "kind": "surface",
+    "binding": "source-ground",
+    "chunk": "61_2",
+    "source": "https://www.openstreetmap.org/relation/2903266"
+  },
+  {
+    "id": "relation/4423249",
+    "name": "아크로폴리스",
+    "kind": "surface",
+    "binding": "source-ground",
+    "chunk": "62_3",
+    "source": "https://www.openstreetmap.org/relation/4423249"
+  },
+  {
+    "id": "relation/6354054",
+    "name": "모나스티라키 광장",
+    "kind": "surface",
+    "binding": "source-ground",
+    "chunk": "62_2",
+    "source": "https://www.openstreetmap.org/relation/6354054"
+  },
+  {
+    "id": "relation/13139942",
+    "name": "고대 아고라",
+    "kind": "surface",
+    "binding": "source-ground",
+    "chunk": "62_2",
+    "source": "https://www.openstreetmap.org/relation/13139942"
+  },
+  {
+    "id": "relation/13249184",
+    "name": "헤로데스 아티쿠스 음악당",
+    "kind": "odeon",
+    "height": 28,
+    "heightStatus": "photo-estimate",
+    "binding": "landscape",
+    "chunk": "62_3",
+    "source": "https://www.openstreetmap.org/relation/13249184"
+  },
+  {
+    "id": "relation/16363966",
+    "name": "신타그마 광장",
+    "kind": "surface",
+    "binding": "source-ground",
+    "chunk": "63_2",
+    "source": "https://www.openstreetmap.org/relation/16363966"
+  },
+  {
+    "id": "relation/19023846",
+    "name": "판아테나이코 경기장",
+    "kind": "stadium",
+    "height": 22,
+    "heightStatus": "photo-estimate",
+    "binding": "landscape",
+    "chunk": "63_3",
+    "source": "https://www.openstreetmap.org/relation/19023846"
+  }
+]

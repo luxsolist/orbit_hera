@@ -1,3 +1,4 @@
+import {bindStreetLampNight} from './StreetProps';
 import {busanBridgeStreets} from './cities/BusanBridges';
 import * as THREE from 'three';
 import {buildChunkMesh,facadeMaterial,type ChunkBuild} from './chunkMesh';
@@ -66,7 +67,7 @@ export function* assembleChunk(packet:PreparedChunk,ox:number,oz:number,profile:
   else if(m.texture){const tex=new THREE.Texture(m.texture);tex.colorSpace=THREE.SRGBColorSpace;tex.flipY=false;tex.anisotropy=4;tex.needsUpdate=true;material=streetMaterial(tex,ox,oz,profile.street);}
   else {material=new THREE.MaterialLoader().parse(m.material);material.userData.paintedOwned=true;}
   const mesh=new THREE.Mesh(geometry,material);mesh.name=m.name;mesh.castShadow=m.cast;mesh.receiveShadow=m.receive;mesh.renderOrder=m.order;mesh.userData=m.userData;
-  if(mesh.name==='street_lamp_lenses')mesh.onBeforeRender=(_r,scene)=>{(material as THREE.MeshBasicMaterial).color.set(0xffd69a).multiplyScalar(.08+2.5*(scene.userData.cityNight??0));};
+  if(mesh.name==='street_lamp_lenses')bindStreetLampNight(mesh,profile.environment.night);
   // Compute culling bounds before activation, rather than on its first rendered frame.
   setBounds(geometry,m.bounds);group.add(mesh);
   if(m.ranges?.length){
@@ -77,7 +78,7 @@ export function* assembleChunk(packet:PreparedChunk,ox:number,oz:number,profile:
   yield;
  }
  if(packet.data.terrain)for(const street of packet.streets){addStreetGeometry(group,[],packet.data.terrain,ox,oz,profile.street,[street]);yield;}
- if(profile.renderStyle==='painted')applyPaintedMaterials(group);
+ if(profile.renderStyle==='painted')applyPaintedMaterials(group,profile.environment.night);
  finished=true;return {...packet.data,group,buildingMesh};
  } finally {
   if(!finished){group.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();const m=o.material as THREE.MeshStandardMaterial;if(m.map){m.map.dispose();m.dispose();}else if(m.userData.paintedOwned)m.dispose();}});discardPreparedChunk(packet);}

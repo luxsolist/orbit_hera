@@ -6,6 +6,8 @@ import {gunzipSync} from 'node:zlib';
 import index from '../src/world/seoul-bundles.json';
 import busan from '../src/world/busan-bundles.json';
 import rome from '../src/world/rome-bundles.json';
+import athens from '../src/world/athens-bundles.json';
+import athensDetails from '../src/world/cities/athens-detail-index.json';
 import romeDetails from '../src/world/cities/rome-detail-index.json';
 import {applyMapCorrections} from '../src/world/MapCorrections';
 import {applyBusanDetail} from '../src/world/cities/BusanDetail';
@@ -13,7 +15,7 @@ import {applyRoadGradePatch} from '../src/world/RoadGradePatch';
 import {fetchMapBundle,readMapBundle,bundleEntry} from '../src/world/MapBundles';
 import {fetchWorldChunk} from '../src/world/mapLocator';
 afterEach(()=>vi.unstubAllGlobals());
-it.each([{city:'seoul',grid:'37/126',index,count:400,chunks:1600},{city:'busan',grid:'35/129',index:busan,count:420,chunks:1600},{city:'rome',grid:'41/12',index:rome,count:441,chunks:1640}])('packs all $city chunks and overlays without changing data',({city,grid,index,count,chunks})=>{
+it.each([{city:'seoul',grid:'37/126',index,count:400,chunks:1600},{city:'busan',grid:'35/129',index:busan,count:420,chunks:1600},{city:'rome',grid:'41/12',index:rome,count:441,chunks:1640},{city:'athens',grid:'37/23',index:athens,count:441,chunks:1640}])('packs all $city chunks and overlays without changing data',({city,grid,index,count,chunks})=>{
  const seen=new Set<string>();expect(Object.keys(index.bundles)).toHaveLength(count);
  for(const [key,entry] of Object.entries(index.bundles)){
   const bytes=readFileSync(`public/maps/bundles/${city}/${entry.file}`);expect(bytes.length).toBe(entry.bytes);
@@ -80,4 +82,14 @@ it('loads all Rome landmark overlays and additions through the bundled correctio
   additions+=(packed.detail as any)?.add?.length??0;sites+=packed.detail?.romeSites?.length??0;
  }
  expect(additions).toBeGreaterThan(0);expect(sites).toBe(3);expect(fetcher).toHaveBeenCalled();
+});
+
+it('loads Athens landmarks through bundles without separate detail requests',async()=>{
+ const fetcher=vi.fn(async(input:any)=>{const path=new URL(String(input)).pathname;expect(path).toMatch(/^\/maps\/bundles\/athens\/.*\.bin$/);return new Response(readFileSync('public'+path));});vi.stubGlobal('fetch',fetcher);
+ let sites=0;
+ for(const key of athensDetails.chunks){const [x,z]=key.split('_').map(Number),base='http://athens-packed.test/';const packed=(await readMapBundle([37,23],x,z,base))!;
+  expect(await fetchWorldChunk([37,23],x,z,16,base)).toEqual(applyMapCorrections([37,23],packed.raw,packed));
+  sites+=packed.detail?.athensSites?.length??0;
+ }
+ expect(sites).toBeGreaterThan(0);
 });

@@ -536,11 +536,11 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
 
   if(!preparing && profile.street.geometry && terrain)addStreetGeometry(group,chunk.objects?.roads??[],terrain,originX,originZ,profile.street,streets,busanBridgeStreets(chunk.seoulDetail));
 
-  if(profile.props.enabled && terrain)addStreetProps(group,chunk,chunkSize,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.props);
+  if(profile.props.enabled && terrain)addStreetProps(group,chunk,chunkSize,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.props,profile.environment.night);
 
   if(chunk.seoulDetail&&terrain)addSeoulLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
   if(chunk.palaceSite&&terrain)addPalaceLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
-  if(!preparing && profile.renderStyle==='painted')applyPaintedMaterials(group);
+  if(!preparing && profile.renderStyle==='painted')applyPaintedMaterials(group,profile.environment.night);
   return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, walls, roads, water, sites };
 }
 

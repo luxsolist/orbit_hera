@@ -124,7 +124,7 @@ export class StreamingWorld implements GameWorld {
     this.streamer = new ChunkStreamer(this.makeIO(), streamConfig);
     // 추가 선로딩 영역은 기존 가시거리 바깥에 유지한다.
     this.sky = new SkyEnvironment(scene, this.spawn, viewFar,this.appearance.environment);
-    if(this.appearance.renderStyle==='painted')this.paintedSky=addPaintedSky(scene,this.appearance.environment.paintedSky);
+    if(this.appearance.renderStyle==='painted')this.paintedSky=addPaintedSky(scene,this.appearance.environment.paintedSky,this.appearance.environment.night);
     scene.userData.paintedCity=this.appearance.renderStyle==='painted';
     scene.add(this.group);
   }

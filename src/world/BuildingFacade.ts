@@ -70,6 +70,9 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
     float glazing=0.0;
     float nightGlazing=0.0;
+    vec2 nightCell=vec2(0.0);
+    float nightUnresolved=0.0;
+    float nightShop=0.0;
     vec2 surfaceUv=(fFace>1.5?fPosition.xz:vec2(fFace<.5?fPosition.z:fPosition.x,fPosition.y))/4.0;
     if(fFace<1.5 && fKind<.5)surfaceUv=vec2(fFace<.5?fPosition.z:fPosition.x,fPosition.y)/vec2(1.92,1.76);
     vec3 surfaceColor=vec3(1.0),surfaceNormal=vec3(0.0,0.0,1.0);
@@ -95,6 +98,7 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
         pitch*=mix(.88,1.18,fVariant)*cityDetail.y;
         vec2 grid=vec2(fFace<.5?fPosition.z:fPosition.x,fPosition.y)/vec2(pitch,mix(3.2,4.2,industrial)*mix(.94,1.08,fract(fVariant*7.0)));
         grid.x+=fVariant;
+        nightCell=floor(grid);
         vec2 cell=abs(fract(grid)-.5),aa=max(fwidth(grid),vec2(.002));
         vec2 limit=mix(vec2(.30,.31),vec2(.43,.42),office);limit=mix(limit,vec2(.35,.16),industrial);
         limit*=vec2(mix(.8,1.0,fract(fVariant*11.0)),mix(.82,1.0,fract(fVariant*17.0)));
@@ -107,6 +111,7 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
         float nightDetail=1.0-smoothstep(.25,.65,max(fwidth(nightReference.x),fwidth(nightReference.y)));
         // Preserve average luminous coverage when individual panes become subpixel.
         float unresolved=smoothstep(.25,.65,max(aa.x,aa.y));
+        nightUnresolved=unresolved;
         float nightCoverage=mix(windowMask.x*windowMask.y,4.0*limit.x*limit.y,unresolved);
         nightGlazing=nightCoverage*nightDetail*step(1.4,fPosition.y);
         float variation=fract(sin(dot(floor(grid),vec2(12.9898,78.233)))*43758.5453);
@@ -155,6 +160,7 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
         diffuseColor.rgb*=1.0-loadingDoor*.14;
         glazing=max(glazing,shopMask);
         nightGlazing=max(nightGlazing,shopMask);
+        nightShop=shopMask;
 
       }
     }

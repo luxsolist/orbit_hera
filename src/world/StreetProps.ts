@@ -1,3 +1,5 @@
+import {defaultCityNight} from './cities/night';
+import type {CityNightSettings} from './cities/types';
 import {seoulAppearance,type CityAppearance} from './cities';
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -44,7 +46,7 @@ export function streetPropSites(chunk:WorldChunk,size:number,config:CityAppearan
  for(const p of candidates){if(sites.every(q=>Math.hypot(p.x-q.x,p.z-q.z)>config.minSpacing))sites.push(p);if(sites.length>=config.maxPerChunk)break;}
  return sites;
 }
-export function addStreetProps(group:THREE.Group,chunk:WorldChunk,size:number,originX:number,originZ:number,heightAt:(x:number,z:number)=>number,config:CityAppearance['props']=seoulAppearance.props):void {
+export function addStreetProps(group:THREE.Group,chunk:WorldChunk,size:number,originX:number,originZ:number,heightAt:(x:number,z:number)=>number,config:CityAppearance['props']=seoulAppearance.props,night:CityNightSettings=defaultCityNight):void {
  const geometry:THREE.BufferGeometry[][]=[[],[],[]];
  const lenses:THREE.BufferGeometry[]=[];
  for(const p of streetPropSites(chunk,size,config)){
@@ -71,9 +73,15 @@ export function addStreetProps(group:THREE.Group,chunk:WorldChunk,size:number,or
   const geo=mergeGeometries(lenses,false);lenses.forEach(g=>g.dispose());
   if(geo){const mat=new THREE.MeshBasicMaterial({color:0xffd69a});mat.userData.paintedOwned=true;
    const mesh=new THREE.Mesh(geo,mat);mesh.name='street_lamp_lenses';
-   mesh.onBeforeRender=(_renderer,scene)=>{mat.color.set(0xffd69a).multiplyScalar(.08+2.5*(scene.userData.cityNight??0));};
+   bindStreetLampNight(mesh,night);
    group.add(mesh);
   }
  }
 
+}
+
+/** Shared by direct builds and worker-assembled chunks. No per-lamp dynamic lights. */
+export function bindStreetLampNight(mesh:THREE.Mesh,settings:CityNightSettings=defaultCityNight):void {
+ const material=mesh.material as THREE.MeshBasicMaterial;
+ mesh.onBeforeRender=(_r,scene)=>{material.color.set(settings.lampColor).multiplyScalar(.08+settings.lampIntensity*(scene.userData.cityNight??0));};
 }

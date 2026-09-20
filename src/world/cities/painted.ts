@@ -1,3 +1,4 @@
+import {seoulNight} from './night';
 import {seoulAppearance} from './seoul';
 import type {CityAppearance} from './types';
 /** Shared clear animation palette; cities retain independent profiles. */
@@ -12,7 +13,7 @@ export const paintedSeoul:CityAppearance={
  ground:{...seoulAppearance.ground,apronColor:'#aaa99d',areas:{...seoulAppearance.ground.areas,park:'#7e905f',garden:'#98a56b',grass:'#8f9f6c',wood:'#4e6c58',scrub:'#71815a',pitch:'#8c9a66'}},
  street:{...seoulAppearance.street,asphalt:'#667981',pavement:'#d2cbb9',curb:'#a6aaa2',marking:'#f4e8cd',center:'#e4c47c',wearStrength:.025},
  props:{...seoulAppearance.props,metal:0x687c80,bark:0x756148,leaves:0x667f49},
- environment:{clock:{latitude:37.5665,longitude:126.978,timeZone:'Asia/Seoul'},sky:0xb3cde2,fog:0xc8d2df,light:{hemiSky:0xbfcfdf,hemiGround:0xc9bda2,hemi:1.3,sunColor:0xfff0d7,sun:2.2,fillColor:0xadcbe8,fill:.35}}
+ environment:{night:seoulNight,clock:{latitude:37.5665,longitude:126.978,timeZone:'Asia/Seoul'},sky:0xb3cde2,fog:0xc8d2df,light:{hemiSky:0xbfcfdf,hemiGround:0xc9bda2,hemi:1.3,sunColor:0xfff0d7,sun:2.2,fillColor:0xadcbe8,fill:.35}}
 };
 
 export {paintedBusan} from './busan';

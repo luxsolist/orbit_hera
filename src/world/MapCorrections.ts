@@ -1,3 +1,4 @@
+import {applyAthensDetail} from './cities/AthensDetail';
 import {applyRomeDetail} from './cities/RomeDetail';
 import type {Cell,WorldChunk} from './chunkManifest';
 import type {BundleChunk} from './MapBundles';
@@ -14,6 +15,7 @@ type Overlays=Pick<BundleChunk,'detail'|'roadGrade'|'appearance'>;
 type Correction=(cell:Cell,chunk:WorldChunk,overlays:Overlays)=>WorldChunk;
 // Only city-specific geometry belongs here; transport and cache never select correction order.
 const beforeRoad:Record<string,Correction>={
+ '37/23':(cell,chunk,{detail})=>detail?applyAthensDetail(cell,chunk,detail):chunk,
  '41/12':(cell,chunk,{detail})=>detail?applyRomeDetail(cell,chunk,detail):chunk,
  '35/129':(cell,chunk,{detail})=>detail?applyBusanDetail(cell,chunk,detail):chunk,
 };

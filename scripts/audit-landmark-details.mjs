@@ -15,7 +15,7 @@ for(const key of index.chunks){
  for(const b of d.buildings){polygon(b.p,b.id);for(const p of b.holes??[])polygon(p,b.id);if(!available.has(JSON.stringify(b.p)))errors.push(`Unbound building ${key}/${b.id}`);if(ids.has(b.id))errors.push(`Duplicate building ${key}/${b.id}`);ids.add(b.id);if(b.h!=null&&(!Number.isFinite(b.h)||b.h<=0||b.h>1000))errors.push(`Invalid height ${b.id}`);buildings++;}
  for(const a of [...d.areas,...d.water]){polygon(a.p,a.id);surfaces++;}
  for(const [i,y] of d.terrain)if(!Number.isInteger(i)||i<0||i>=raw.terrain.heights.length||!Number.isFinite(y))errors.push(`Invalid terrain ${key}`);
- for(const site of d.romeSites??[])if(site.p.length<(site.kind==='rome-mask'?2:4)||!site.p.every(Number.isFinite))errors.push(`Invalid site ${site.id}`);
+ for(const site of [...(d.romeSites??[]),...(d.athensSites??[])])if(site.p.length<(site.kind==='rome-mask'?2:4)||!site.p.every(Number.isFinite))errors.push(`Invalid site ${site.id}`);
 }
 if(errors.length)throw new Error(errors.join('\n'));
 console.log(JSON.stringify({city,chunks:index.chunks.length,buildings,surfaces,status:'passed'}));

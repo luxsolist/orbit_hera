@@ -16,3 +16,6 @@ __pycache__/
 
 # Rome sources are backed up in verified GitHub Releases.
 /public/maps/41/12/*/*.json
+
+# Athens sources are backed up in verified GitHub Releases.
+/public/maps/37/23/*/*.json

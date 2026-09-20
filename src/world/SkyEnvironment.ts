@@ -1,3 +1,4 @@
+import {cityNightSky,defaultCityNight} from './cities/night';
 import {solarState,type CityClock} from './CityTime';
 import type {CityAppearance} from './cities/types';
 import * as THREE from "three";
@@ -61,16 +62,17 @@ export class SkyEnvironment {
       const date=this.fixedDate??new Date();
       if(Math.abs(date.getTime()-this.lastTime)>=1000){
         this.lastTime=date.getTime();this.solar=solarState(date,clock);
-        const s=this.solar,light=this.environment!.light;
-        this.hemi.intensity=.32+(light.hemi-.32)*s.dayLight;
+        const s=this.solar,light=this.environment!.light,night=this.environment!.night??defaultCityNight;
+        this.hemi.intensity=night.ambient+(light.hemi-night.ambient)*s.dayLight;
         this.hemi.color.set(0x667ea9).lerp(new THREE.Color(light.hemiSky),s.dayLight);
         this.hemi.groundColor.set(0x414f69).lerp(new THREE.Color(light.hemiGround),s.dayLight);
         this.sun.intensity=light.sun*s.dayLight;this.sun.color.set(light.sunColor).lerp(new THREE.Color(0xffa766),s.twilight);
-        this.fill.intensity=.18+(light.fill-.18)*s.dayLight;
+        this.fill.intensity=night.fill+(light.fill-night.fill)*s.dayLight;
         this.fill.color.set(0x88a9dc).lerp(new THREE.Color(light.fillColor),s.dayLight);
-        const fog=new THREE.Color(0x1e2e4b).lerp(new THREE.Color(this.environment!.fog),s.dayLight).lerp(new THREE.Color(0xc49c91),s.twilight*.45);
+        const fog=new THREE.Color(night.fog).lerp(new THREE.Color(this.environment!.fog),s.dayLight).lerp(new THREE.Color(0xc49c91),s.twilight*.45);
         (this.scene.fog as THREE.Fog).color.copy(fog);
-        (this.scene.background as THREE.Color).set(0x101c36).lerp(new THREE.Color(this.environment!.sky),s.dayLight);
+        const nightSky=cityNightSky(night).horizon;
+        (this.scene.background as THREE.Color).setRGB(nightSky.x,nightSky.y,nightSky.z).lerp(new THREE.Color(this.environment!.sky),s.dayLight);
         this.scene.userData.cityNight=s.night;this.scene.userData.cityDaylight=s.dayLight;this.scene.userData.cityTwilight=s.twilight;
       }
     }

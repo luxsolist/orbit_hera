@@ -1,3 +1,4 @@
+import {paintedAthens} from '../src/world/cities/athens';
 import {paintedRome} from '../src/world/cities/rome';
 import {paintedSeoul,paintedBusan} from '../src/world/cities/painted';
 import {it,expect,vi} from 'vitest';
@@ -5,7 +6,7 @@ import * as THREE from 'three';
 import {cityAppearance,seoulAppearance,defaultAppearance,type CityAppearance} from '../src/world/cities';
 import {facadeStyle,createFacadeMaterial,landmarkHighlightEnabled} from '../src/world/BuildingFacade';
 import {buildChunkMesh,disposeChunkGroup} from '../src/world/chunkMesh';
-import {addStreetProps,streetPropSites} from '../src/world/StreetProps';
+import {bindStreetLampNight,addStreetProps,streetPropSites} from '../src/world/StreetProps';
 import type {WorldChunk} from '../src/world/chunkManifest';
 const chunk:WorldChunk={cx:0,cz:0,terrain:null,underground:null,objects:{buildings:[{p:[10,10,30,10,30,30,10,30],h:25}],roads:[{p:[5,100,195,100],w:10}],water:[]}};
 const other:CityAppearance={...seoulAppearance,id:'test-city',buildings:{...seoulAppearance.buildings,colors:[0xff0000],weights:[7],roofs:[0x00ff00],apartmentHeight:40,windowContrast:.25},props:{...seoulAppearance.props,maxPerChunk:2,lampHeight:9,metal:0xff0000}};
@@ -13,6 +14,7 @@ it('resolves city IDs and leaves unconfigured cities on legacy appearance',()=>{
  expect(cityAppearance('seoul-stream')).toBe(paintedSeoul);
  expect(cityAppearance('busan-stream')).toBe(paintedBusan);
  expect(cityAppearance('rome-stream')).toBe(paintedRome);
+ expect(cityAppearance('athens-stream')).toBe(paintedAthens);
  expect(landmarkHighlightEnabled(paintedRome)).toBe(false);
  expect(landmarkHighlightEnabled(defaultAppearance)).toBe(true);
  expect(cityAppearance()).toBe(defaultAppearance);
@@ -44,7 +46,7 @@ it('binds facade detail settings separately per material',()=>{
 
 it('paints configured cities without changing collision geometry or shared legacy materials',()=>{
  const legacy=buildChunkMesh(chunk,200,0,0,seoulAppearance);
- for(const profile of [paintedSeoul,paintedBusan,paintedRome]){
+ for(const profile of [paintedSeoul,paintedBusan,paintedRome,paintedAthens]){
   const painted=buildChunkMesh(chunk,200,0,0,profile);
   expect(painted.buildings).toEqual(legacy.buildings);
   const mat=painted.buildingMesh!.material as THREE.Material;
@@ -52,6 +54,9 @@ it('paints configured cities without changing collision geometry or shared legac
   // Exercise the shader hook and day/night binding, independent of cache version labels.
   const shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader} as any;
   mat.onBeforeCompile(shader,{} as any);
+  expect(shader.uniforms.nightOccupancy.value.toArray()).toEqual(profile.environment.night!.occupancy);
+  expect(shader.uniforms.nightWarm.value.getHex()).toBe(profile.environment.night!.windowColors[0]);
+  expect(shader.uniforms.nightWindow.value.y).toBe(profile.environment.night!.windowIntensity);
   expect(shader.uniforms.cityDetail).toBeDefined(); // Original facade hook survives cloning.
   expect(shader.fragmentShader).toContain('nightGlazing');
   expect(shader.fragmentShader).toContain('clearPaint');
@@ -68,4 +73,18 @@ it('paints configured cities without changing collision geometry or shared legac
  expect(paintedBusan.buildings).not.toBe(paintedSeoul.buildings);
  expect(paintedBusan.props).not.toBe(paintedSeoul.props);
  disposeChunkGroup(legacy.group);
+});
+
+it('restores city lamp colors after night/day switches without accumulating brightness',()=>{
+ const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera();
+ for(const profile of [paintedRome,paintedAthens]){
+  const lamp=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial());
+  bindStreetLampNight(lamp,profile.environment.night);
+  for(const night of [0,1,0,1]){
+   scene.userData.cityNight=night;lamp.onBeforeRender({} as any,scene,camera,lamp.geometry,lamp.material,null as any);
+   const settings=profile.environment.night!;
+   expect(lamp.material.color.toArray()).toEqual(new THREE.Color(settings.lampColor).multiplyScalar(.08+settings.lampIntensity*night).toArray());
+  }
+  lamp.geometry.dispose();lamp.material.dispose();
+ }
 });

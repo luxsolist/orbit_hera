@@ -30,6 +30,7 @@
     "maps:publish:city": "node scripts/map-command.mjs publish",
     "maps:restore:city": "node scripts/map-command.mjs restore",
     "maps:prepare:city": "node scripts/map-command.mjs prepare",
+    "build:athens-details": "python3 scripts/build-athens-details.py",
     "build:rome-details": "python3 scripts/build-rome-details.py",
     "audit:landmark-details": "node scripts/audit-landmark-details.mjs"
   },
