@@ -1,5 +1,5 @@
 import {it,expect} from 'vitest';
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync,existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
@@ -11,20 +11,35 @@ it('builds and verifies a newly registered city with negative coordinates and no
  const run=(script:string,...args:string[])=>spawnSync(process.execPath,[resolve('scripts',script),...args],{cwd:root,encoding:'utf8'});
  try{
   put('config/map-cities.json',{'test-city':[12,34]});
+  put('config/street-regions.json',{'test-city':{}});put('config/street-profiles.json',{});
   put('public/maps/12/34/tiles.json',{cell:[12,34],block:8,chunks:[{cx:-9,cz:1},{cx:-10,cz:1}]});
-  for(const cx of [-9,-10])put(`public/maps/12/34/-2_0/${cx}_1.json`,{cx,cz:1});
+  for(const cx of [-9,-10])put(`public/maps/12/34/-2_0/${cx}_1.json`,{cx,cz:1,terrain:{size:2,seaLevel:0,heights:[0,0,0,0]},objects:{buildings:[],roads:[],water:[]},underground:null});
   put('public/maps/details/test-city/-9_1.json',{custom:'preserved'});
   mkdirSync(join(root,'src/world'),{recursive:true});
-  expect(run('build-map-bundles.mjs','all').status).toBe(0);
+  const built=run('build-map-bundles.mjs','all');expect(built.status,built.stderr+'\n'+built.stdout).toBe(0);
   const bytes=readFileSync(join(root,'src/world/test-city-bundles.json')),index=JSON.parse(bytes.toString());
   expect(Object.keys(index.bundles)).toEqual(['-5_0']);
   const entry=index.bundles['-5_0'],bundle=JSON.parse(gunzipSync(readFileSync(join(root,'public/maps/bundles/test-city',entry.file))).toString());
-  expect(bundle.chunks['-9_1'].detail).toEqual({custom:'preserved'});
+  expect(bundle.chunks['-9_1'].detail).toBeNull();
+  expect(bundle.chunks['-9_1'].raw.mapBuild.input.detail).toEqual({custom:'preserved'});
+  const finalPath=join(root,'public/maps/12/34/-2_0/-9_1.json'),completed=JSON.parse(readFileSync(finalPath,'utf8'));
+  expect(run('complete-map-chunks.mjs','test-city','--inputs').status).toBe(0);
+  expect(JSON.parse(readFileSync(finalPath,'utf8'))).toEqual(completed.mapBuild.input.raw);
+  expect(run('complete-map-chunks.mjs','test-city').status).toBe(0);
+  expect(JSON.parse(readFileSync(finalPath,'utf8'))).toEqual(completed);
   put('config/map-releases/test-city.json',{tag:'test',bundleIndexSha256:createHash('sha256').update(bytes).digest('hex')});
   expect(run('verify-map-bundles.mjs','all').status).toBe(0);
+  const obsolete='public/maps/bundles/test-city/-6_0.0000000000000000.bin';put(obsolete,{old:'preserved'});
+  const pointer=JSON.parse(readFileSync(join(root,'config/map-releases/test-city.json'),'utf8'));
+  put('config/map-releases/test-city.json',{...pointer,bundleIndexSha256:'unpublished'});
+  expect(run('prune-map-bundles.mjs','test-city').status).not.toBe(0);expect(existsSync(join(root,obsolete))).toBe(true);
+  put('config/map-releases/test-city.json',pointer);const cleanup=run('prune-map-bundles.mjs','test-city');expect(cleanup.status).toBe(0);
+  const report=JSON.parse(cleanup.stdout.trim());expect(report.cached).toBe(1);expect(existsSync(join(root,obsolete))).toBe(false);
+  expect(JSON.parse(readFileSync(join(report.cache,'-6_0.0000000000000000.bin'),'utf8'))).toEqual({old:'preserved'});
+  expect(existsSync(join(root,'public/maps/bundles/test-city',entry.file))).toBe(true);
   put('public/maps/12/34/tiles.json',{cell:[12,34],chunks:[{cx:-9,cz:1},{cx:-10,cz:1},{cx:0,cz:0}]});
   expect(run('verify-map-bundles.mjs','all').stderr).toContain('Missing chunks');
   put('config/map-cities.json',{'test-city':[12,34],duplicate:[12,34]});
   expect(run('build-map-bundles.mjs','all').stderr).toContain('duplicate map cell');
  }finally{rmSync(root,{recursive:true,force:true});}
-});
+},60000);

@@ -1,7 +1,7 @@
-import {readFileSync,writeFileSync,mkdirSync,existsSync,readdirSync,renameSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync,existsSync,readdirSync,renameSync,rmSync} from 'node:fs';
 import {resolve,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {repairUrbanSpikes,repairLattice,ROAD_GRADE_VERSION,waterContains,auditRoadLattice} from './road-grade.mjs';
+import {repairUrbanSpikes,repairLattice,ROAD_GRADE_VERSION,waterContains,auditRoadLattice,designUrbanRoadSurface,ROAD_SURFACE_SETTINGS,fairUrbanRoadSurface,ROAD_FAIRING_SETTINGS} from './road-grade.mjs';
 const read=p=>JSON.parse(readFileSync(p,'utf8'));
 const atomic=(p,data)=>{mkdirSync(resolve(p,'..'),{recursive:true});writeFileSync(p+'.tmp',JSON.stringify(data));renameSync(p+'.tmp',p);};
 export function repairRoadGrades({root='public/maps',cellFilter=null,write=true}={}){
@@ -10,6 +10,7 @@ export function repairRoadGrades({root='public/maps',cellFilter=null,write=true}
  const manifests=[];for(const lat of readdirSync(base,{withFileTypes:true}))if(lat.isDirectory()&&/^-?\d+$/.test(lat.name))for(const lon of readdirSync(join(base,lat.name),{withFileTypes:true}))if(lon.isDirectory()&&/^-?\d+$/.test(lon.name)){
   const key=lat.name+'/'+lon.name,p=join(base,key,'tiles.json');if(existsSync(p)&&(!cellFilter||cellFilter===key))manifests.push([key,p]);
  }
+ if(write&&manifests.some(([,file])=>read(file).completedChunkVersion===1))throw new Error('Completed map input: restore clean inputs through build:city-surfaces before running legacy grade stages');
  const index=cellFilter&&existsSync(join(out,'index.json'))?read(join(out,'index.json')):{version:ROAD_GRADE_VERSION,cells:{}};
  const report={version:ROAD_GRADE_VERSION,generatedAt:new Date().toISOString(),cities:catalog.map(c=>({id:c.id,name:c.name,cell:Math.floor(c.lat)+'/'+Math.floor(c.lon)})),cells:[],totals:{chunks:0,roads:0,changedChunks:0,changedSamples:0,protectedRoads:0,unclassifiedRoads:0}};
  for(const [cellKey,file] of manifests){
@@ -35,11 +36,13 @@ export function repairRoadGrades({root='public/maps',cellFilter=null,write=true}
    for(const r of raw.objects.roads??[]){
     stats.roads++;const tagged=r.bridge||r.tunnel||(Number(r.layer)||0)!==0;
     if(tagged)stats.protectedRoads++;if(r.bridge==null&&r.tunnel==null&&r.layer==null)stats.unclassifiedRoads++;
+    // Underground geometry has no authority over the surface terrain.
+    if(r.tunnel||(Number(r.layer)||0)<0)continue;
     const radius=(r.w??6)/2+step*1.5;
     for(let q=2;q<r.p.length;q+=2){const ax=r.p[q-2],az=r.p[q-1],bx=r.p[q],bz=r.p[q+1],dx=bx-ax,dz=bz-az,len2=dx*dx+dz*dz;if(!len2)continue;
      rect(Math.min(ax,bx)-radius,Math.min(az,bz)-radius,Math.max(ax,bx)+radius,Math.max(az,bz)+radius,(k,x,z)=>{
       const u=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/len2)),d=Math.hypot(x-ax-u*dx,z-az-u*dz);
-      if(d>radius)return;if(tagged){protect[k]=1;return;}
+      if(d>radius)return;
       const w=Math.round(255*Math.max(0,Math.min(1,(radius-d)/step)));mask[k]=Math.max(mask[k],w);
      });
     }
@@ -60,15 +63,26 @@ export function repairRoadGrades({root='public/maps',cellFilter=null,write=true}
   const repaired=repairLattice(first.grid,mask,protect,width,height);
   repaired.maxDelta=0;
   for(let k=0;k<grid.length;k++)if(Number.isFinite(grid[k])){const limit=spikes.evidence.has(k)?80:30;repaired.grid[k]=Math.max(grid[k]-limit,Math.min(grid[k]+30,repaired.grid[k]));repaired.maxDelta=Math.max(repaired.maxDelta,Math.abs(repaired.grid[k]-grid[k]));}
+  const designed=designUrbanRoadSurface(repaired.grid,mask,protect,urban,width,height,step);
+  const faired=fairUrbanRoadSurface(designed.surface,designed.land,grid,mask,protect,urban,width,height);
+  const surface=faired.surface;
+  for(let k=0;k<grid.length;k++)if(Number.isFinite(grid[k])){
+   const low=grid[k]-(spikes.evidence.has(k)?80:30),high=grid[k]+30;
+   repaired.grid[k]=Math.max(low,Math.min(high,faired.land[k]));
+   surface[k]=Math.max(low,Math.min(high,surface[k]));
+   repaired.maxDelta=Math.max(repaired.maxDelta,Math.abs(repaired.grid[k]-grid[k]));
+  }
+  stats.surfaceDesign={revision:2,fairingSettings:ROAD_FAIRING_SETTINGS,fairingChangedSamples:faired.changed,settings:ROAD_SURFACE_SETTINGS,changedSamples:designed.changed,reviewSamples:designed.skipped};
+  stats.surfaceAfter=auditRoadLattice(surface,mask,new Uint8Array(grid.length),width,height,step);
   stats.algorithmRevision=3;stats.urbanPeaks=spikes.evidence.size;stats.urbanExclusions=spikes.reasons;stats.after=auditRoadLattice(repaired.grid,mask,protect,width,height,step,{originX:xmin*C,originZ:zmin*C,locations:true,exclusions:spikes.exclusions});
   if(write)atomic(join(out,'issues-'+cellKey.replace('/','-')+'.json'),{cell:cellKey,generatedAt:report.generatedAt,algorithmRevision:3,step,coordinateSystem:'cell-local metres; x east from floor(lon), z south from floor(lat)+1',edges:stats.after.locations});
   delete stats.after.locations;
   stats.qualityPassed=stats.after.steepEdges===0;stats.maxDelta=Math.round(repaired.maxDelta*100)/100;
   const keys=[];
-  for(const c of chunks){const raw=read(path(c)),t=raw.terrain;if(t.size!==n||t.heights.length!==n*n)continue;const points=[],urbanEvidence=[];
-   for(let j=0;j<n;j++)for(let i=0;i<n;i++){const k=((c.cz-zmin)*stride+j)*width+(c.cx-xmin)*stride+i,v=repaired.grid[k],old=t.heights[j*n+i];if(Math.abs(v-old)>=.05){points.push([j*n+i,old,Math.round(v*100)/100]);if(spikes.evidence.has(k))urbanEvidence.push({index:j*n+i,...spikes.evidence.get(k)});}}
-   if(!points.length)continue;const key=c.cx+'_'+c.cz;keys.push(key);stats.changedChunks++;stats.changedSamples+=points.length;
-   if(write)atomic(join(out,cellKey,key+'.json'),{version:ROAD_GRADE_VERSION,size:n,points,...(urbanEvidence.length?{algorithmRevision:3,urbanEvidence}:{})});
+  for(const c of chunks){const raw=read(path(c)),t=raw.terrain;if(t.size!==n||t.heights.length!==n*n)continue;const points=[],surfacePoints=[],urbanEvidence=[];
+   for(let j=0;j<n;j++)for(let i=0;i<n;i++){const k=((c.cz-zmin)*stride+j)*width+(c.cx-xmin)*stride+i,v=repaired.grid[k],old=t.heights[j*n+i];if(Math.abs(surface[k]-v)>=.01)surfacePoints.push([j*n+i,old,Math.round(surface[k]*100)/100]);if(Math.abs(v-old)>=.05){points.push([j*n+i,old,Math.round(v*100)/100]);if(spikes.evidence.has(k))urbanEvidence.push({index:j*n+i,...spikes.evidence.get(k)});}}
+   if(!points.length&&!surfacePoints.length){if(write)rmSync(join(out,cellKey,c.cx+'_'+c.cz+'.json'),{force:true});continue;}const key=c.cx+'_'+c.cz;keys.push(key);stats.changedChunks++;stats.changedSamples+=points.length;
+   if(write)atomic(join(out,cellKey,key+'.json'),{version:ROAD_GRADE_VERSION,size:n,points,surfaceRevision:1,surfacePoints,...(urbanEvidence.length?{algorithmRevision:3,urbanEvidence}:{})});
   }
   index.cells[cellKey]=keys;report.cells.push(stats);for(const k of Object.keys(report.totals))report.totals[k]+=stats[k];
   console.log(JSON.stringify(stats));

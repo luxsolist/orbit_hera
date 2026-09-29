@@ -97,8 +97,10 @@ export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?
     }
   }
   if(packed)return applyMapCorrections(cell,packed.raw,packed);
-  const [raw,detail,roadGrade,appearance,busanDetail,romeDetail,athensDetail]=await Promise.all([
-    fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block),baseUrl),
+  const raw=await fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block),baseUrl);
+  if(!raw)return null;
+  if(raw.mapBuild?.version===1)return raw;
+  const [detail,roadGrade,appearance,busanDetail,romeDetail,athensDetail]=await Promise.all([
     cell[0]===37&&cell[1]===126&&seoulChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/seoul/${key}.json`,baseUrl):Promise.resolve(null),
     fetchRoadGrade(cell,key,baseUrl),
     cell[0]===37&&cell[1]===126&&landmarkAppearanceChunks.has(key)?fetchJson<LandmarkAppearancePatch>(`maps/landmark-appearance/seoul/${key}.json`,baseUrl):Promise.resolve(null),

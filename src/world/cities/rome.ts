@@ -12,7 +12,7 @@ export const paintedRome:CityAppearance={
   windowContrast:.9,windowSpacing:1.12,architectureStrength:1.05},
  ground:{...seoulAppearance.ground,waterColor:'#718f83',apronColor:'#b5ad9e',
   areas:{...seoulAppearance.ground.areas,pavement:'#cfc4af',sand:'#e4d4b3',rock:'#b6ad99',park:'#849467',garden:'#9cac79',grass:'#99a777',wood:'#5b7454',scrub:'#7e8e61',pitch:'#8e9f73'}},
- street:{...seoulAppearance.street,asphalt:'#737879',pavement:'#cfc4b0',curb:'#b5b4a7',marking:'#f0eadb',center:'#ece4d2',wearStrength:.03},
+ street:{...seoulAppearance.street,asphalt:'#737879',pavement:'#cfc4b0',curb:'#b5b4a7',marking:'#f0eadb',center:'#e4c47c',wearStrength:.03},
  props:{...seoulAppearance.props,metal:0x616b64,bark:0x796650,leaves:0x57724e},
  environment:{night:romeNight,clock:{latitude:41.9028,longitude:12.4964,timeZone:'Europe/Rome'},
   sky:0xb7d4e9,fog:0xd4dbdf,

@@ -109,7 +109,7 @@ export function createOsmParser(onElement) {
     }
     const geo = j === g.length ? g : g.subarray(0, j);
     wayGeom.set(w.id, geo);
-    if (w.tagged) emit({ type: "way", id: w.id, tags: w.tags, geometry: toGeom(geo) });
+    if (w.tagged) emit({ type: "way", id: w.id, tags: w.tags, nodes: w.nds.slice(), geometry: toGeom(geo) });
   };
   const finishRel = (r) => {
     if (!r.tagged) return;

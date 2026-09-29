@@ -500,14 +500,14 @@ export class PlayerController {
     }
 
     const previousGrounded=this.grounded;
-    const previousTerrain=this.world.heightAt(this.position.x,this.position.z);
+    const previousTerrain=this.world.heightAt(this.position.x,this.position.z,this.position.y-this.eye);
     const previousFeet=this.position.y-this.eye;
     this.moveHorizontal(dt); // 서브스테핑 충돌 해소(고속 터널링 방지)
 
     // --- 수직(이동 형태별) ---
     if (move.mode === "walk") {
       // Follow continuous terrain down slopes without repeated fall/landing transitions.
-      const terrain=this.world.heightAt(this.position.x,this.position.z);
+      const terrain=this.world.heightAt(this.position.x,this.position.z,this.position.y-this.eye);
       const travel=Math.hypot(this.hVel.x,this.hVel.z)*dt;
       const terrainDrop=previousTerrain-terrain;
       if(previousGrounded && this.velocityY<=0 && Math.abs(previousFeet-previousTerrain)<.06
@@ -691,7 +691,7 @@ export class PlayerController {
    * 바위/건물 옥상(topAt). 점프 상한·착지·비행 바닥 기준에 공통 사용(일관성 보장).
    */
   private standSurfaceY(x: number, z: number, feetY: number): number {
-    const terrain = this.world.heightAt(x, z);
+    const terrain = this.world.heightAt(x, z, feetY);
     const top = this.world.topAt(x, z);
     return top > terrain && feetY >= top - 0.05 ? top : terrain;
   }

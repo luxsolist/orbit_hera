@@ -1,3 +1,4 @@
+import {waterMetadata, auditWaterFeatures} from './water-build.mjs';
 // 수역만 재추출해 build/<id>.json 의 terrain.water 를 **멀티폴리곤 구멍(holes) 보존판**으로 교체.
 // 전체 OSM 재페치(40km 맵 = 수천 타일) 없이 수역(희소)만 카테고리별 단일 쿼리로 받아,
 // 한강 등 relation natural=water 의 inner ring(섬·제방=육지)을 복원한다 → 도심 침수 제거.
@@ -78,7 +79,7 @@ for (const el of els) {
       const hs = [];
       for (const h of poly.holes) { const hc = sanitizeRing(h, false); if (hc && ringArea(hc) >= 4) hs.push(hc); }
       holesTotal += hs.length; relPolys++;
-      water.push(hs.length ? { p: cp, holes: hs } : { p: cp });
+      water.push({p: cp, ...waterMetadata(t, `${el.type}/${el.id}`), ...(hs.length ? {holes: hs} : {})});
     }
     continue;
   }
@@ -87,13 +88,15 @@ for (const el of els) {
   for (const g of el.geometry) { const [x, z] = proj(g.lat, g.lon); flat.push(x, z); }
   if (t.natural === "water" || t.water || t.waterway === "riverbank") {
     const cp = sanitizeRing(flat, false);
-    if (cp) water.push({ p: cp });
+    if (cp) water.push({ p: cp, ...waterMetadata(t, `${el.type}/${el.id}`) });
   } else if (t.waterway === "river" || t.waterway === "stream" || t.waterway === "canal") {
     const wl = sanitizePolyline(flat);
-    if (wl && wl.length >= 4) waterways.push({ p: wl, culverted: isUndergroundWaterway(t), stream: t.waterway === "stream", w: t.waterway === "river" ? 24 : 6 });
+    if (wl && wl.length >= 4) waterways.push({ p: wl, culverted: isUndergroundWaterway(t), stream: t.waterway === "stream", ...waterMetadata(t, `${el.type}/${el.id}`, true) });
   }
 }
-for (const sfc of surfaceWaterways(waterways)) water.push({ p: sfc.p, w: sfc.w });
+for (const {culverted, stream, ...sfc} of surfaceWaterways(waterways)) water.push(sfc);
+const waterAudit = auditWaterFeatures(water);
+if (waterAudit.errors.length) throw new Error(waterAudit.errors.join("\n"));
 
 const path = `build/${id}.json`;
 if (!existsSync(path)) { console.error(`${path} 없음 — build-maps 먼저 실행`); process.exit(1); }

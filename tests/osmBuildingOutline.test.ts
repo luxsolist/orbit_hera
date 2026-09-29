@@ -7,12 +7,12 @@ it('building relations do not extrude each part to total building height',()=>{
 });
 
 it('supertall reference copies cannot assign tower heights to unknown buildings',()=>{
- const box=(x:number)=>[x,0,x+2,0,x+2,2,x,2];
+ const box=(x:number)=>[x,0,x+12,0,x+12,12,x,12];
  const buildings=[...Array.from({length:20},(_,i)=>({p:box(i),h:555})),{p:box(50),h:6},{p:box(70),h:9},{p:box(90),h:12},{p:box(100),h:9}];
  interpolateBuildingHeights(buildings,buildings.map((_,i)=>i===23));expect(buildings[23].h).toBe(9);expect(buildings[0].h).toBe(555);
 });
 it('duplicate nearby references do not override independent neighbors',()=>{
- const box=(x:number)=>[x,0,x+2,0,x+2,2,x,2];
+ const box=(x:number)=>[x,0,x+12,0,x+12,12,x,12];
  const buildings=[...Array.from({length:10},()=>({p:box(0),h:120})),{p:box(50),h:6},{p:box(70),h:12},{p:box(90),h:9}];
  interpolateBuildingHeights(buildings,buildings.map((_,i)=>i===12));expect(buildings[12].h).toBe(12);
 });

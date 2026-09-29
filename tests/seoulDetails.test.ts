@@ -1,3 +1,4 @@
+import {readMapFixture} from './mapFixture';
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {applySeoulDetail,seoulArchitectureGeometry,type SeoulDetail} from '../src/world/cities/SeoulDetail';
@@ -6,7 +7,7 @@ import {correctJamsilChunk} from '../src/world/cities/jamsilCorrection';
 import {correctGyeongbokgungChunk} from '../src/world/cities/Gyeongbokgung';
 import {correctPalaceSite} from '../src/world/cities/PalaceSite';
 import type {WorldChunk} from '../src/world/chunkManifest';
-const read=(p:string)=>JSON.parse(readFileSync(p,'utf8'));
+const read=(p:string)=>readMapFixture(p);
 const load=(key:string)=>{const [x,z]=key.split('_').map(Number);return read(`public/maps/37/126/${Math.floor(x/16)}_${Math.floor(z/16)}/${key}.json`) as WorldChunk;};
 const detail=(key:string)=>read(`public/maps/details/seoul/${key}.json`) as SeoulDetail;
 const corrected=(key:string)=>{const raw=load(key);return applySeoulDetail([37,126],correctPalaceSite([37,126],correctGyeongbokgungChunk([37,126],correctJamsilChunk([37,126],raw))),detail(key));};

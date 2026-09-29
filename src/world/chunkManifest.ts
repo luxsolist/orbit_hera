@@ -112,12 +112,20 @@ export function pickSpawnChunk(chunks: ChunkEntry[], rand: () => number, R = 2, 
 
 /** 1024m 월드 청크 — 지형(DEM)+오브젝트(OSM)+지하. 좌표는 셀-로컬 m(원점=셀 NW). */
 export interface WorldChunk {
+  /** Self-contained output; inputs are preserved for a clean offline rebuild only. */
+  mapBuild?: {version:1; buildVersion?:string; input: {raw:WorldChunk; detail:import("./cities/SeoulDetail").SeoulDetail|null; roadGrade:import("./RoadGradePatch").RoadGradePatch|null; appearance:import("./cities/SeoulLandmarkAppearance").LandmarkAppearancePatch|null}};
+  compiledStreet?: import("./CompiledStreet").CompiledStreetPlan;
+  /** Baked street surface, independent of riverbed height; same lattice as terrain. */
+  roadHeights?: number[];
+  streetPilot?: boolean;
+  surfaceReconciled?: boolean;
+  roadRefinementSource?: string;
   palaceSite?: boolean;
   seoulDetail?: import("./cities/SeoulDetail").SeoulDetail;
   cx: number;
   cz: number;
   terrain: { size: number; seaLevel: number; heights: number[] }; // size×size row-major(평지=size 0)
-  objects: { buildings: Ring[]; roads: Ring[]; water: Ring[]; walls?: Ring[]; areas?: AreaRing[]; sites?: SiteLandmark[] };
+  objects: { structures?: Ring[]; buildings: Ring[]; roads: Ring[]; water: Ring[]; walls?: Ring[]; areas?: AreaRing[]; sites?: SiteLandmark[] };
   underground: unknown | null; // 추후 별도 생성해 병합
 }
 

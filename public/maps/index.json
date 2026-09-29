@@ -3,13 +3,13 @@
   "id": "seoul-stream",
   "name": "서울 도심 · Seoul",
   "subtitle": "37/126 경복궁 일대 — 청크 스트리밍 타일 월드",
-  "buildings": 273972,
+  "buildings": 280930,
   "lat": 37.578,
   "lon": 126.977,
   "stream": true,
   "spawnYaw": 0,
-  "landmarks": 870,
-  "sites": 8
+  "landmarks": 872,
+  "sites": 7
  },
  {
   "id": "everest-stream",

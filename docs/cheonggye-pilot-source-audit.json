@@ -1,0 +1,145 @@
+{
+  "designVersion": "cheonggye-1km-v3",
+  "design": {
+    "landGrade": [
+      -0.002,
+      0.001
+    ],
+    "waterDrop": 4.5,
+    "waterGrade": -0.0015,
+    "section": {
+      "water": 4,
+      "path": 8.5,
+      "wall": 9,
+      "bank": 12.4,
+      "waterDepth": 0.65,
+      "pathRise": 0.5
+    },
+    "rampOffsets": [
+      -310,
+      155
+    ],
+    "roads": {
+      "bankClearance": 2.6,
+      "minimumWidth": 4,
+      "sampleSpacing": 4,
+      "riverRoadWidth": 8,
+      "layoutStep": 8,
+      "maxRoadShift": 12
+    },
+    "markings": {
+      "lineWidth": 0.24,
+      "minimumRun": 6,
+      "junctionMargin": 7,
+      "mergeGap": 6
+    },
+    "terrainTransition": {
+      "innerMargin": 32,
+      "minimumWidth": 128,
+      "maximumWidth": 512,
+      "targetGrade": 0.05
+    }
+  },
+  "centerGeo": [
+    37.568149,
+    126.987684
+  ],
+  "coreMeters": [
+    1000,
+    1000
+  ],
+  "transitionMeters": 160,
+  "sourceHashes": {
+    "scripts/build-cheonggye-pilot.py": "14d163dd522921f7f853a89bb3f1760c4911af811a6b3e530af2b68ad893d4fe",
+    "scripts/cheonggye_layout.py": "1a780be4ed8a6807fae37178c629e90b4ec97ef586a3951999f0449065bc2167",
+    "scripts/resolved-street-layout.mjs": "dd67d6e3a7a713dda8c860eb46eb3d55def065e52ac7505d4cbc2e7287295d58",
+    "src/world/streetSpace.mjs": "6f1b7e258162644a30d399b0509d81cd0b4337030f1f6a3ed29fa45175242f30",
+    "src/world/streetSection.mjs": "fd19c3c93423e1c9057b798f60aaa2c6996ee1bcc8666399b65a27ed329d6723",
+    "src/world/MapCorrections.ts": "945222893c8f80f5890d8be24376e9eab75aba9039d1cb3291804bb949e1e0f1",
+    "scripts/data/cheonggye-design.json": "f42e21ef0ee28f6512252d53fcb6e42a5e1b99da4a7e2a64a7076437244febe2",
+    "public/maps/37/126/5_2/84_46.json": "46d3770db008edcb8bbba5bd0b951aa26d1f3665e530982aa9a7359dfabb83e2",
+    "public/maps/road-grade/37/126/84_46.json#base": "532d8ac51b32ee10132488fe9f3908e016896cfe69d84a246ff136ed79e70dde",
+    "public/maps/37/126/5_2/84_47.json": "27df709ae94622ff28923ce328d89c2caeb9c643a553b0dce91a76225d15e181",
+    "public/maps/road-grade/37/126/84_47.json#base": "70309aa6fac6cb628dc92bc05b73ab199b70346df93d1e98f0304b5f6865204d",
+    "public/maps/37/126/5_2/85_46.json": "fa4372161947285a4e2dc637a8ea4d8bd41539bd92d9e4773ade3a4922f67478",
+    "public/maps/road-grade/37/126/85_46.json#base": "8f4d0928f5a795ad4f8886e4891c511dff5b99e4cab22bef1443838abdb82111",
+    "public/maps/37/126/5_2/85_47.json": "17dc408f548ea0590c65938e63d9a602d7410d67c0fb8466e9dca3cee38bb5a9",
+    "public/maps/road-grade/37/126/85_47.json#base": "b8dd92d722b45c4a67f0265a9dc1978b334cfb919d5db1beceb3ed46ae228206",
+    "resolved-street-layout": "3e2432a7a6c0a191817b388fbd5f534aaeee36179a8e9b22292446eee5665b2b"
+  },
+  "roadGradeOverlays": {
+    "84_46": "applied",
+    "84_47": "applied",
+    "85_46": "applied",
+    "85_47": "applied"
+  },
+  "roadSource": {
+    "layout": "OSM-derived tile centerlines",
+    "width": "designed continuous 8m river roads; ordinary roads use final shared semantic/clearance widths; designed river corridors retain authored cross sections",
+    "markings": "procedural layout, not surveyed lane paint"
+  },
+  "roadSegments": 5718,
+  "layoutSummary": {
+    "maxRoadDisplacement": 5.6535195699107135,
+    "riverRoadWidth": 8
+  },
+  "anchors": [
+    [
+      -400,
+      -400,
+      38.05
+    ],
+    [
+      0,
+      -400,
+      34.31
+    ],
+    [
+      400,
+      -400,
+      31
+    ],
+    [
+      -400,
+      0,
+      44.3
+    ],
+    [
+      0,
+      0,
+      35.9
+    ],
+    [
+      400,
+      0,
+      30.76
+    ],
+    [
+      -400,
+      400,
+      47.44
+    ],
+    [
+      0,
+      400,
+      43.58
+    ],
+    [
+      400,
+      400,
+      34.71
+    ]
+  ],
+  "plane": [
+    37.78333333333333,
+    -0.01388333333333333,
+    0.009320833333333335
+  ],
+  "crossings": 7,
+  "reference": "https://data.si.re.kr/photo/03X00164Bb7000",
+  "limitations": [
+    "2005 reference photograph is morphology reference, not current survey",
+    "Road elevation and 5m channel depth are estimates",
+    "V3 jointly solves river and road layout; DEM plane only supplies the baseline height"
+  ]
+}

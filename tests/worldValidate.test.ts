@@ -384,3 +384,12 @@ describe("validateManifest — 청크 중복(셀 공유 병합)", () => {
     expect(issues.some((i: { code: string }) => i.code === "chunk-dup")).toBe(true);
   });
 });
+
+
+it('accepts intentional centimetre water geometry but warns about excess precision, including island holes',()=>{
+ const water={p:[1100.15,2100.07,1120.5,2100.07,1120.5,2120.2,1100.15,2120.2],holes:[[1105.25,2105.25,1110.25,2105.25,1110.25,2110.25]]};
+ expect(codes(validateChunk(goodChunk({water:[water]}),C),'warn')).not.toContain('coord-precision');
+ expect(codes(validateChunk(goodChunk({water:[water]}),C),'warn')).not.toContain('water-coord-precision');
+ water.holes[0][0]=1105.251;
+ expect(codes(validateChunk(goodChunk({water:[water]}),C),'warn')).toContain('water-coord-precision');
+});

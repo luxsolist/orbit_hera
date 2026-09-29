@@ -32,7 +32,7 @@ export interface GameWorld {
   readonly buildings: BuildingCombat | null;
 
   /** 지형 높이(m). */
-  heightAt(x: number, z: number): number;
+  heightAt(x: number, z: number, feetY?:number): number;
   /** (x,z) 에서 디딜 수 있는 가장 높은 윗면(없으면 -Infinity). */
   topAt(x: number, z: number): number;
   /** 원(반경 radius, 발높이 feetY)을 장애물 밖으로 밀어낸 위치. */

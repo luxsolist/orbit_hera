@@ -1,0 +1,36 @@
+{
+  "default": {
+    "sidewalk": 2.3,
+    "buildingClearance": 0.8,
+    "medianJoin": 5,
+    "propSpacing": 19,
+    "centerlineMinWidth": 6,
+    "centerlineHighways": [
+      "primary",
+      "secondary",
+      "tertiary",
+      "trunk",
+      "residential",
+      "unclassified",
+      "road"
+    ],
+    "pedestrianWidth": 2.5,
+    "pedestrianMaxShift": 6,
+    "pedestrianFallbackShift": 16,
+    "estimatedRiverWidth": 12,
+    "estimatedStreamWidth": 4
+  },
+  "historic": {
+    "sidewalk": 1.5,
+    "buildingClearance": 0.35,
+    "medianJoin": 2,
+    "propSpacing": 24,
+    "centerlineMinWidth": 7,
+    "centerlineHighways": [
+      "primary",
+      "secondary",
+      "trunk"
+    ],
+    "pedestrianWidth": 2.5
+  }
+}

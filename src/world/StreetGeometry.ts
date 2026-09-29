@@ -1,18 +1,37 @@
+import {streetFreeFootprints} from './StreetEnvelope';
+import {streetSidewalk} from './streetSection.mjs';
+import type {Ring} from './MapData';
+import {streetContext,streetCorridor} from './StreetLayout';
+import {roadPaintCorners,planRoadMarkings,centerLineOffsets,DEFAULT_MARKINGS} from './RoadMarkings';
+import {STREET_MATERIAL_DETAIL_GLSL} from './StreetMaterialDetail';
+import bakedMarkings from './cities/cheonggye-markings.json';
+import {solveRoadNetwork,roadJunctionCandidate,roadSegmentKey,corridorOffsetPoint,corridorOutline,insideRoadOutline,type RoadCorridor} from './RoadNetwork';
+import {surfaceTriangles,subtractSurface} from './SurfacePartition';
+import {inPilot,pilotStreetHeight,cutPilotRiver,pilotBridgeRoad,pilotRoadNetwork,pilotInRiver} from './cities/CheonggyePilot';
 import * as THREE from 'three';
 import type {ChunkTerrain} from './chunkMesh';
 import type {CityAppearance} from './cities';
+const pilotMarkings=new Map(bakedMarkings.segments as [string,number[][]][]);
 type Point=[number,number];
-type Road={p:number[];w?:number};
+type Road=Pick<Ring,"p"|"w"|"streetSection"|"bridge"|"layer">;
 /** Two left/right world-space road cross sections; elevated roads share ground street layers. */
 export interface ElevatedStreet {a:number[];b:number[];distance?:number}
-function roadStripes(w:number,len:number,phase:number,stripe:(offset:number,start:number,end:number,layer:number)=>void){
- if(w>=16){stripe(-.22,0,len,4);stripe(.22,0,len,4);}
- if(w>=22)for(let d=-((phase%11+11)%11);d<len;d+=11){const a=Math.max(0,d),b=Math.min(d+4,len);if(b>a){stripe(-3.5,a,b,5);stripe(3.5,a,b,5);}}
-}
 
 /** Clip a convex footprint against each actual terrain triangle, avoiding bilinear height drift. */
-export function terrainFootprint(poly:Point[],t:ChunkTerrain,ox:number,oz:number):number[]{
- const output:number[]=[],n=t.size,step=t.step;
+export function terrainFootprint(poly:Point[],t:ChunkTerrain,ox:number,oz:number,bridge=false,street=true,clipObstacles=true):number[]{
+ if(t.compiledStreet&&street){const [x0,z0,x1,z1]=t.compiledStreet.bounds;return subtractSurface(poly.map(p=>[p[0],0,p[1]]),[[x0,z0],[x1,z0],[x1,z1],[x0,z1]]).flatMap(p=>terrainFootprint(p.map(v=>[v[0],v[2]]),{...t,compiledStreet:undefined},ox,oz,bridge,street,clipObstacles));}
+ if(!bridge&&street&&clipObstacles){const parts=streetFreeFootprints(poly,t.streetObstacles);return parts.flatMap(p=>terrainFootprintRaw(p,t,ox,oz,bridge,street));}
+ return terrainFootprintRaw(poly,t,ox,oz,bridge,street);
+}
+function terrainFootprintRaw(poly:Point[],t:ChunkTerrain,ox:number,oz:number,bridge=false,street=true):number[]{
+ const output:number[]=[],n=t.size,step=t.step,hGrid=street?(t.roadHeights??t.heights):t.heights;
+ // All of this convex road polygon lies on the pilot's exact planar land surface.
+ // Keep dense clipping only at the river, chunk boundaries and the transition belt.
+ const endX=t.cellX0+(n-1)*step,endZ=t.cellZ0+(n-1)*step;
+ if(t.streetPilot&&poly.length>=3&&poly.every(([x,z])=>inPilot(x,z)&&x>=t.cellX0&&x<=endX&&z>=t.cellZ0&&z<=endZ)){
+  for(let i=1;i<poly.length-1;i++)for(const [x,z] of [poly[0],poly[i+1],poly[i]])output.push(x-ox,pilotStreetHeight(x,z),z-oz);
+  return partitionRoad(output,t,ox,oz,bridge);
+ }
  const minX=Math.max(0,Math.floor((Math.min(...poly.map(p=>p[0]))-t.cellX0)/step));
  const maxX=Math.min(n-2,Math.floor((Math.max(...poly.map(p=>p[0]))-t.cellX0)/step));
  const minZ=Math.max(0,Math.floor((Math.min(...poly.map(p=>p[1]))-t.cellZ0)/step));
@@ -35,7 +54,7 @@ export function terrainFootprint(poly:Point[],t:ChunkTerrain,ox:number,oz:number
    }
    const h=(p:Point)=>{
     const fx=(p[0]-x)/step,fz=(p[1]-z)/step;
-    const ha=t.heights[j*n+i],hb=t.heights[j*n+i+1],hc=t.heights[(j+1)*n+i],hd=t.heights[(j+1)*n+i+1];
+    const ha=hGrid[j*n+i],hb=hGrid[j*n+i+1],hc=hGrid[(j+1)*n+i],hd=hGrid[(j+1)*n+i+1];
     return tri[0]===a?ha+(hb-ha)*fx+(hc-ha)*fz:hd+(hc-hd)*(1-fx)+(hb-hd)*(1-fz);
    };
    for(let k=1;k<clipped.length-1;k++){
@@ -46,7 +65,13 @@ export function terrainFootprint(poly:Point[],t:ChunkTerrain,ox:number,oz:number
    }
   }
  }
- return output;
+ return partitionRoad(output,t,ox,oz,bridge);
+}
+function partitionRoad(data:number[],t:ChunkTerrain,ox:number,oz:number,bridge:boolean):number[]{
+ if(!t.streetPilot||bridge)return data;
+ const out:number[]=[];
+ for(let i=0;i<data.length;i+=9){const poly=[0,3,6].map(k=>[data[i+k]+ox,data[i+k+1],data[i+k+2]+oz]);for(const p of cutPilotRiver(poly))for(const v of surfaceTriangles(p))out.push(v[0]-ox,v[1],v[2]-oz);}
+ return out;
 }
 function capsule(ax:number,az:number,bx:number,bz:number,r:number):Point[]{
  const angle=Math.atan2(bz-az,bx-ax),points:Point[]=[];
@@ -54,20 +79,34 @@ function capsule(ax:number,az:number,bx:number,bz:number,r:number):Point[]{
  for(let i=0;i<=8;i++){const a=angle+Math.PI/2+i*Math.PI/8;points.push([ax+Math.cos(a)*r,az+Math.sin(a)*r]);}
  return points;
 }
-type Segment={ax:number;az:number;bx:number;bz:number;w:number;len:number};
+type Segment={ax:number;az:number;bx:number;bz:number;w:number;sidewalk?:number;clipObstacles?:boolean;bridge?:boolean;len:number;key?:string;corridor?:RoadCorridor};
 function segmentDistance(x:number,z:number,s:Segment):number {
  const u=Math.max(0,Math.min(1,((x-s.ax)*(s.bx-s.ax)+(z-s.az)*(s.bz-s.az))/(s.len*s.len)));
  return Math.hypot(x-s.ax-u*(s.bx-s.ax),z-s.az-u*(s.bz-s.az));
 }
 /** Spatial index shared by junction detection and exposed curb selection. */
-function streetSegments(roads:Road[]){
- const segments:Segment[]=[],grid=new Map<string,Segment[]>();
+function streetSegments(roads:Road[],network?:Map<string,RoadCorridor>){
+ const segments:Segment[]=[],grid=new Map<string,Segment[]>(),seen=new Set<string>();
+ const make=(p:number[],w:number):Segment=>{
+  const key=roadSegmentKey(p),c=streetCorridor(network,p);
+  return c?{ax:c.a[0],az:c.a[1],bx:c.b[0],bz:c.b[1],w:c.w,len:c.length,key,corridor:c}:
+   {ax:p[0],az:p[1],bx:p[2],bz:p[3],w,len:Math.hypot(p[2]-p[0],p[3]-p[1]),key};
+ };
  for(const r of roads)for(let k=2;k<r.p.length;k+=2){
-  const [ax,az,bx,bz]=r.p.slice(k-2,k+2),len=Math.hypot(bx-ax,bz-az),w=r.w??6;
-  if(!Number.isFinite(len)||len<.01||!Number.isFinite(w)||w<=0)continue;
-  const seg={ax,az,bx,bz,w,len};segments.push(seg);
-  for(let x=Math.floor((Math.min(ax,bx)-w/2-3)/32);x<=Math.floor((Math.max(ax,bx)+w/2+3)/32);x++)for(let z=Math.floor((Math.min(az,bz)-w/2-3)/32);z<=Math.floor((Math.max(az,bz)+w/2+3)/32);z++){
-   const key=x+':'+z;let list=grid.get(key);if(!list){list=[];grid.set(key,list);}list.push(seg);
+  const s=make(r.p.slice(k-2,k+2),r.w??6);s.sidewalk=streetSidewalk(r);s.clipObstacles=!r.streetSection||r.streetSection.mode==='conflict';s.bridge=!!r.bridge||(r.layer??0)>0;
+  if(!Number.isFinite(s.len)||s.len<.01||!Number.isFinite(s.w)||s.w<=0||seen.has(s.key!))continue;
+  seen.add(s.key!);segments.push(s);
+ }
+ // Authored neighbours supplement the actual rendered roads; they must never
+ // replace them. Mixed tiles otherwise leave ordinary endcap curbs inside roads.
+ // Local geometry takes precedence when a source segment is present in both.
+ const indexed=new Map<string,Segment>();
+ if(network)for(const c of network.values()){const s=make([...c.a,...c.b],c.w);indexed.set(s.key!,s);}
+ for(const s of segments)indexed.set(s.key!,s);
+ for(const s of indexed.values()){const {ax,az,bx,bz,w}=s;
+  const pad=w*.8+3;
+  for(let x=Math.floor((Math.min(ax,bx)-pad)/32);x<=Math.floor((Math.max(ax,bx)+pad)/32);x++)for(let z=Math.floor((Math.min(az,bz)-pad)/32);z<=Math.floor((Math.max(az,bz)+pad)/32);z++){
+   const key=x+':'+z;let list=grid.get(key);if(!list){list=[];grid.set(key,list);}list.push(s);
   }
  }
  const nearby=(x:number,z:number)=>grid.get(Math.floor(x/32)+':'+Math.floor(z/32))??[];
@@ -78,19 +117,22 @@ export function junctions(s:Segment,others:Segment[]):{distance:number;clearance
  const result:{distance:number;clearance:number}[]=[];
  const dx=s.bx-s.ax,dz=s.bz-s.az;
  for(const q of others){
-  if(q===s)continue;
+  if(q===s||(s.key&&q.key===s.key))continue;
+  if(!roadJunctionCandidate([s.ax,s.az],[s.bx,s.bz],[q.ax,q.az],[q.bx,q.bz]))continue;
   const ex=q.bx-q.ax,ez=q.bz-q.az,det=dx*ez-dz*ex,sine=Math.abs(det)/(s.len*q.len);
   if(sine<.35)continue;
   const rx=q.ax-s.ax,rz=q.az-s.az,u=(rx*ez-rz*ex)/det,v=(rx*dz-rz*dx)/det;
   if(u<-.001||u>1.001||v<-.001||v>1.001)continue;
-  const distance=Math.max(0,Math.min(s.len,u*s.len)),clearance=(q.w/2+1)/sine;
+  const distance=Math.max(0,Math.min(s.len,u*s.len));
+  if((distance<.01&&s.corridor?.startJoined)||(distance>s.len-.01&&s.corridor?.endJoined))continue;
+  const clearance=(q.w/2+1)/sine;
   const old=result.find(p=>Math.abs(p.distance-distance)<1);
   if(old)old.clearance=Math.max(old.clearance,clearance);else result.push({distance,clearance});
  }
  return result.sort((a,b)=>a.distance-b.distance);
 }
-function raisedFootprint(poly:Point[],t:ChunkTerrain,ox:number,oz:number,height:number):number[]{
- const top=terrainFootprint(poly,t,ox,oz),out:number[]=[];
+function raisedFootprint(poly:Point[],t:ChunkTerrain,ox:number,oz:number,height:number,bridge=false,clipObstacles=true):number[]{
+ const top=terrainFootprint(poly,t,ox,oz,bridge,true,clipObstacles),out:number[]=[];
  const edges=new Map<string,{a:number[];b:number[];count:number}>();
  const key=(p:number[])=>p.map(v=>v.toFixed(5)).join(',');
  for(let i=0;i<top.length;i+=9){
@@ -111,29 +153,12 @@ function surfaceMaterial(color:string,layer:number,wear=0):THREE.MeshStandardMat
    shader.uniforms.roadWear={value:wear};
    shader.vertexShader='attribute vec2 streetCoord; varying vec2 streetUV;\n'+shader.vertexShader;
    shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nstreetUV=streetCoord;');
-   shader.fragmentShader='uniform float roadWear; varying vec2 streetUV;\n'+shader.fragmentShader;
+   shader.fragmentShader='uniform float roadWear; varying vec2 streetUV;\n'+STREET_MATERIAL_DETAIL_GLSL+shader.fragmentShader;
    shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
-    ${layer===1?`
-    vec2 tile=streetUV/vec2(.6,.4),edge=abs(fract(tile)-.5),aa=max(fwidth(tile),vec2(.002));
-    float fade=1.0-smoothstep(.3,.8,max(aa.x,aa.y));
-    float joint=max(smoothstep(.475-aa.x,.475+aa.x,edge.x),smoothstep(.46-aa.y,.46+aa.y,edge.y));
-    diffuseColor.rgb*=1.0-joint*.18*fade;
-    `:`
-    vec2 grainCoord=streetUV*12.0;
-    float fade=1.0-smoothstep(.3,1.0,max(fwidth(grainCoord.x),fwidth(grainCoord.y)));
-    float grain=fract(sin(dot(floor(grainCoord),vec2(127.1,311.7)))*43758.5453)-.5;
-    diffuseColor.rgb*=1.0+grain*.16*fade;
-    vec2 patchCell=streetUV/vec2(7.0,4.0),patchEdge=abs(fract(patchCell)-.5);
-    float seed=fract(sin(dot(floor(patchCell),vec2(12.9898,78.233)))*43758.5453);
-    vec2 patchAA=max(fwidth(patchCell),vec2(.015));
-    vec2 repairMask=1.0-smoothstep(vec2(.35)-patchAA,vec2(.35)+patchAA,patchEdge);
-    float wearFade=1.0-smoothstep(.2,.6,max(patchAA.x,patchAA.y));
-    diffuseColor.rgb*=1.0-roadWear*step(.9,seed)*repairMask.x*repairMask.y*wearFade;
-
-    `}
+    diffuseColor.rgb=streetMaterialDetail(diffuseColor.rgb,streetUV,${layer===3?'1.0,0.0':'0.0,1.0'},roadWear);
    `);
   };
-  material.customProgramCacheKey=()=> 'street-geometry-'+layer;
+  material.customProgramCacheKey=()=> 'street-geometry-common-v2-'+layer;
  }
  return material;
 }
@@ -155,37 +180,36 @@ export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,
  };
  if(prepared){for(const data of prepared)attach(data);return;}
  const buffers:number[][]=Array.from({length:7},()=>[]);
- const add=(layer:number,poly:Point[])=>{const data=terrainFootprint(poly,t,ox,oz);for(const value of data)buffers[layer].push(value);};
- const {segments,nearby}=streetSegments(roads);
+ if(t.compiledStreet){const plan=t.compiledStreet;for(const m of plan.meshes){const pos=buffers[m.layer];for(let i=0;i<(m.index?.length??m.position.length/3);i++){const k=(m.index?.[i]??i)*3;pos.push(m.position[k]+plan.origin[0]-ox,m.position[k+1],m.position[k+2]+plan.origin[1]-oz);}}}
+ let bridge=false,clipObstacles=true;
+ const add=(layer:number,poly:Point[])=>{const data=terrainFootprint(poly,t,ox,oz,bridge,true,clipObstacles);for(const value of data)buffers[layer].push(value);};
+ const bounds=t.compiledStreet?.bounds,endX=t.cellX0+(t.size-1)*t.step,endZ=t.cellZ0+(t.size-1)*t.step;
+ // A fully compiled tile already owns every street surface. Avoid rebuilding
+ // thousands of legacy pieces merely to subtract them again.
+ const fullyCompiled=!!bounds&&bounds[0]<=t.cellX0&&bounds[1]<=t.cellZ0&&bounds[2]>=endX&&bounds[3]>=endZ;
+ const legacyRoads=fullyCompiled?[]:roads;
+ const context=legacyRoads.length?streetContext(legacyRoads,!!t.streetPilot):undefined;
+ const {segments,nearby}=streetSegments(legacyRoads,context);
+ // Baked paint is usable only while its exact source widths remain authoritative.
+ const resolvedPaint=context&&context!==pilotRoadNetwork?planRoadMarkings(context,bakedMarkings.settings,(c,p)=>!t.streetPilot||pilotBridgeRoad([...c.a,...c.b])||!pilotInRiver(...p)):undefined;
+ const ordinaryNetwork=solveRoadNetwork(segments.filter(s=>!s.corridor).map(s=>({p:[s.ax,s.az,s.bx,s.bz],w:s.w})));
+ const ordinaryPaint=planRoadMarkings(ordinaryNetwork);
  for(const segment of segments){
-   const {ax,az,bx,bz,len,w}=segment;
-   const shape=(width:number)=>capsule(ax,az,bx,bz,width/2);
-   if(w>=6&&w<=24){add(0,shape(w+5.2));add(1,shape(w+4.6));}
+   const {ax,az,bx,bz,len,w}=segment;const sidewalk=segment.sidewalk??0;clipObstacles=segment.clipObstacles??true;bridge=!!segment.bridge||!!t.streetPilot&&pilotBridgeRoad([ax,az,bx,bz]);
+   const shape=(width:number)=>segment.corridor?corridorOutline(segment.corridor,width-w):capsule(ax,az,bx,bz,width/2);
+   if(sidewalk){add(0,shape(w+sidewalk*2));add(1,shape(w+sidewalk*2));}
    add(2,shape(w+.45));add(3,shape(w));
-   const candidates=new Set<Segment>();
-   for(let d=0;d<=len+16;d+=16){const u=Math.min(d,len)/len;for(const q of nearby(ax+(bx-ax)*u,az+(bz-az)*u))candidates.add(q);}
-   const joins=colors.junctionMarkings?junctions(segment,[...candidates]):[];
    const ux=(bx-ax)/len,uz=(bz-az)/len;
-   const point=(distance:number,side:number):Point=>[ax+ux*distance-uz*side,az+uz*distance+ux*side];
-   const rectangle=(start:number,end:number,left:number,right:number,layer:number)=>add(layer,[point(start,left),point(end,left),point(end,right),point(start,right)]);
-   const stripe=(offset:number,start:number,end:number,layer:number)=>{
-    let pieces=[[start,end]];
-    for(const j of joins){const lo=j.distance-j.clearance-7,hi=j.distance+j.clearance+7;pieces=pieces.flatMap(([a,b])=>b<=lo||a>=hi?[[a,b]]:[[a,Math.min(b,lo)],[Math.max(a,hi),b]].filter(([a,b])=>b>a));}
-    for(const [a,b] of pieces)rectangle(a,b,offset-.09,offset+.09,layer);
-   };
-   roadStripes(w,len,0,stripe);
-   // Zebra and stop lines on sufficiently long approaches. Placement is inferred, not surveyed.
-   if(w>=6&&w<=24)for(const j of joins)for(const sign of [-1,1]){
-    const center=j.distance+sign*(j.clearance+3),start=center-1.5,end=center+1.5;
-    const stop=center+sign*3;
-    if(start<1||end>len-1||stop<1||stop>len-1)continue;
-    if(joins.some(q=>q!==j&&Math.abs(q.distance-center)<q.clearance+7))continue;
-    for(let lateral=-w/2+.7;lateral+.5<w/2-.5;lateral+=1)rectangle(start,end,lateral,lateral+.5,5);
-    // Right-hand traffic: only the incoming half of the road receives a stop line.
-    rectangle(stop-.15,stop+.15,sign<0?.2:-w/2+.4,sign<0?w/2-.4:-.2,5);
+   const point=(distance:number,side:number):Point=>segment.corridor?corridorOffsetPoint(segment.corridor,distance,side):[ax+ux*distance-uz*side,az+uz*distance+ux*side];
+   if(segment.corridor){
+    if(resolvedPaint){for(const m of resolvedPaint.get(segment.key!)??[])add(4,roadPaintCorners(segment.corridor,m));}
+    else for(const [start,end,left,right,layer,,endLeft,endRight] of pilotMarkings.get(segment.key!)??[])if(layer===4)add(4,[point(start,left),point(end,endLeft??left),point(end,endRight??right),point(start,right)]);
+   }else{
+    const c=ordinaryNetwork.get(segment.key!)!;
+    for(const m of ordinaryPaint.get(segment.key!)??[])add(4,roadPaintCorners(c,m));
    }
    const height=colors.curbHeight??0;
-   if(height>0&&w>=6&&w<=24){
+   if(height>0&&sidewalk){
     const outline=shape(w+.24);
     for(let e=0;e<outline.length;e++){
      const a=outline[e],b=outline[(e+1)%outline.length],length=Math.hypot(b[0]-a[0],b[1]-a[1]);
@@ -194,8 +218,8 @@ export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,
       const p:Point=[a[0]+(b[0]-a[0])*k/steps,a[1]+(b[1]-a[1])*k/steps],q:Point=[a[0]+(b[0]-a[0])*(k+1)/steps,a[1]+(b[1]-a[1])*(k+1)/steps];
       const mx=(p[0]+q[0])/2,mz=(p[1]+q[1])/2;
       // Keep the full short section clear of every neighbouring carriageway.
-      if(nearby(mx,mz).some(other=>other!==segment&&[p,q,[mx,mz]].some(v=>segmentDistance(v[0],v[1],other)<other.w/2+.25)))continue;
-      const data=raisedFootprint([[p[0]-nx,p[1]-nz],[q[0]-nx,q[1]-nz],[q[0]+nx,q[1]+nz],[p[0]+nx,p[1]+nz]],t,ox,oz,height);
+      if(nearby(mx,mz).some(other=>other.key!==segment.key&&[p,q,[mx,mz]].some(v=>other.corridor?insideRoadOutline([v[0],v[1]],corridorOutline(other.corridor,.5)):segmentDistance(v[0],v[1],other)<other.w/2+.25)))continue;
+      const data=raisedFootprint([[p[0]-nx,p[1]-nz],[q[0]-nx,q[1]-nz],[q[0]+nx,q[1]+nz],[p[0]+nx,p[1]+nz]],t,ox,oz,height,bridge,clipObstacles);
       for(const value of data)buffers[6].push(value);
      }
     }
@@ -213,9 +237,8 @@ export function addStreetGeometry(group:THREE.Group,roads:Road[],t:ChunkTerrain,
   };
   const quad=(layer:number,a:number[],b:number[],c:number[],d:number[])=>{for(const p of [a,b,c,a,c,d])buffers[layer].push(...p);};
   quad(3,point(0,0,true),point(1,0,true),point(1,1,true),point(0,1,true));
-  roadStripes(Math.min(wa,wb),len,s.distance??0,(offset,start,end,layer)=>{
-   quad(layer,point(start/len,offset+.09),point(end/len,offset+.09),point(end/len,offset-.09),point(start/len,offset-.09));
-  });
+  const half=DEFAULT_MARKINGS.lineWidth/2;
+  for(const offset of centerLineOffsets(Math.min(wa,wb)))quad(4,point(0,offset+half),point(1,offset+half),point(1,offset-half),point(0,offset-half));
  }
  buffers.forEach((positions,i)=>{
   if(!positions.length)return;
@@ -234,11 +257,12 @@ export function updateStreetDetail(group:THREE.Group,x:number,z:number):void {
  for(const child of group.children){
   const mesh=child as THREE.Mesh,layer=mesh.userData.streetLayer;
   const smallProp=['street_lights','street_tree_trunks'].includes(mesh.name);
-  if(!smallProp&&(layer===undefined||layer<4))continue;
+  const pilotLimit=mesh.userData.detailDistance as number|undefined;
+  if(!pilotLimit&&!smallProp&&(layer===undefined||layer<4))continue;
   if(!mesh.geometry.boundingBox)mesh.geometry.computeBoundingBox();
   const box=mesh.geometry.boundingBox!;
   const distance=Math.hypot(Math.max(box.min.x-x,0,x-box.max.x),Math.max(box.min.z-z,0,z-box.max.z));
-  const limit=smallProp?(mesh.visible?1200:1050):(mesh.visible?850:700);
+  const limit=pilotLimit??(smallProp?(mesh.visible?1200:1050):(mesh.visible?850:700));
   mesh.visible=distance<limit;
  }
 }

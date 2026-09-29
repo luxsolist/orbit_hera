@@ -14,7 +14,7 @@ export const paintedAthens:CityAppearance={
   windowContrast:.92,windowSpacing:1.08,architectureStrength:1.05},
  ground:{...seoulAppearance.ground,waterColor:'#548f9f',apronColor:'#bbb9aa',
   areas:{...seoulAppearance.ground.areas,pavement:'#d9d1be',sand:'#e1d3ad',rock:'#c7bba0',park:'#899366',garden:'#9faa79',grass:'#b1b181',wood:'#586f4e',scrub:'#95996b',pitch:'#91a276'}},
- street:{...seoulAppearance.street,asphalt:'#717b80',pavement:'#d9d2c0',curb:'#b9bdb4',marking:'#f0eddd',center:'#e8dfbf',wearStrength:.025},
+ street:{...seoulAppearance.street,asphalt:'#717b80',pavement:'#d9d2c0',curb:'#b9bdb4',marking:'#f0eddd',center:'#e4c47c',wearStrength:.025},
  props:{...seoulAppearance.props,metal:0x687477,bark:0x7b6c54,leaves:0x60774b},
  environment:{night:athensNight,clock:{latitude:37.9838,longitude:23.7275,timeZone:'Europe/Athens'},
   sky:0xa9cfe9,fog:0xcbdce5,

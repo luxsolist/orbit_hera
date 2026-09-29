@@ -6,16 +6,30 @@ dist/
 .claude/
 build/
 
-# Seoul editable source chunks: verified backups in GitHub Releases.
-/public/maps/37/126/*/*.json
-
 __pycache__/
 
-# Busan editable sources are backed up in GitHub Releases.
-/public/maps/35/129/*/*.json
+# Bundled cities: retain compressed .bin files and manifests/indexes in Git.
+# Raw chunks, temporary output and correction sidecars remain local.
+# Keep other cities tracked until they have verified compressed replacements.
+/public/maps/37/126/*/
+/public/maps/35/129/*/
+/public/maps/41/12/*/
+/public/maps/37/23/*/
 
-# Rome sources are backed up in verified GitHub Releases.
-/public/maps/41/12/*/*.json
+/public/maps/road-grade/37/126/
+/public/maps/road-grade/35/129/
+/public/maps/road-grade/41/12/
+/public/maps/road-grade/37/23/
+/public/maps/details/seoul/
+/public/maps/details/busan/
+/public/maps/details/rome/
+/public/maps/details/athens/
+/public/maps/landmark-appearance/seoul/
+/public/maps/landmark-appearance/busan/
+/public/maps/landmark-appearance/rome/
+/public/maps/landmark-appearance/athens/
 
-# Athens sources are backed up in verified GitHub Releases.
-/public/maps/37/23/*/*.json
+# Generated diagnostics; road-grade/index.json remains tracked for legacy cities.
+/public/maps/road-grade/report*.json
+/public/maps/road-grade/issues*.json
+/public/maps/road-grade/validation*.json

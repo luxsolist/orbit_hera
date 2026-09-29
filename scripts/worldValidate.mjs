@@ -182,7 +182,7 @@ export function validateChunk(chunk, chunkSize, opts = {}) {
     }
   }
   for (const r of o.roads ?? []) { checkSeg(r, "road", true); if (!finite(r.w) || r.w <= 0) W("road-w", `도로 폭 ${r.w}`); } // 도로=청크 클립 → 경계 강제
-  for (const w of o.water ?? []) { if (w.w != null) checkSeg(w, "water-line", false); else checkFill(w, "water"); } // 하천선은 centroid 배치(비강제)
+  for (const w of o.water ?? []) { if (w.w != null) checkSeg(w, "water-line", false); else checkFill(w, "water"); } // 하천선은 반폭 halo까지 보존하여 인접 청크 물가 연결(중심선 경계 비강제)
   for (const a of o.areas ?? []) { checkFill(a, "area"); if (!KNOWN_AREA.has(a.k)) W("area-kind", `미지정 면 종류 '${a.k}'`); }
   for (const w of o.walls ?? []) { checkSeg(w, "wall", true); if (!finite(w.h) || w.h <= 0) W("wall-h", `담장 높이 ${w.h}`); } // 담장=청크 클립 → 경계 강제
   // 비건물 랜드마크(site) — 점+반경이라 **중심이 자기 청크 안**에 있어야 한다(면처럼 클립되지 않으므로
@@ -199,8 +199,12 @@ export function validateChunk(chunk, chunkSize, opts = {}) {
   // 정수 정밀도 가드 — 좌표·표고는 1m 정수로 굽는 용량 최적화. 비정수면 회귀(cm 부동소수 → 용량 폭증). 샘플 검사(전역 회귀는 즉시 검출).
   const nonInt = (v) => Number.isFinite(v) && Math.abs(v - Math.round(v)) > 1e-6;
   const sample = [];
-  for (const k of ["buildings", "roads", "water", "areas", "walls"]) { const p = o[k]?.[0]?.p; if (p) sample.push(p[0], p[1]); }
+  for (const k of ["buildings", "roads", "areas", "walls"]) { const p = o[k]?.[0]?.p; if (p) sample.push(p[0], p[1]); }
   if (Array.isArray(t.heights) && t.heights.length) sample.push(t.heights[0], t.heights[t.heights.length >> 1]);
+  // Water intentionally keeps cm precision to retain thin banks/islands; still reject
+  // accidental excess precision rather than exempting its coordinates from validation.
+  const waterSample = (o.water ?? []).flatMap(w => [w.p?.[0], w.p?.[1], ...(w.holes ?? []).flatMap(h => h.slice(0, 2))]);
+  if (waterSample.some(v => nonInt(v * 100))) W("water-coord-precision", "수역 좌표가 cm 정밀도를 벗어남");
   if (sample.some(nonInt)) W("coord-precision", "좌표/표고가 정수(1m)가 아님 — 용량 최적화 회귀 의심");
   return issues;
 }

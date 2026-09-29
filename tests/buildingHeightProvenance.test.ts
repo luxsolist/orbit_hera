@@ -9,7 +9,7 @@ it('distinguishes tagged heights, level estimates, type defaults and unknowns',(
  expect(buildingHeightProvenance({building:'yes'}).heightSource).toBe('default-estimate');
 });
 it('records neighbor estimation only when enough references exist',()=>{
- const b=(x:number,h:number,source:string)=>({p:[x,0,x+4,0,x+4,4,x,4],h,heightSource:source});
+ const b=(x:number,h:number,source:string)=>({p:[x,0,x+12,0,x+12,12,x,12],h,heightSource:source});
  const buildings=[b(0,9,'default-estimate'),b(20,30,'osm-height'),b(40,40,'levels-estimate'),b(60,50,'osm-height'),b(1000,9,'default-estimate')];
  interpolateBuildingHeights(buildings,[true,false,false,false,true]);
  expect(buildings[0]).toMatchObject({h:40,heightSource:'neighbor-estimate'});

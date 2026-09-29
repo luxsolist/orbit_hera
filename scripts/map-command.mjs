@@ -7,4 +7,5 @@ function run(executable,args){const result=spawnSync(executable,args,{stdio:'inh
 for(const city of selected){
  if(command==='publish')run(process.execPath,['scripts/build-map-bundles.mjs',city]);
  run('python3',['scripts/map-release.py',command,'--city',city]);
+ if(command==='publish')run(process.execPath,['scripts/prune-map-bundles.mjs',city]);
 }

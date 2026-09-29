@@ -278,17 +278,18 @@ describe("osm.isUndergroundWaterway — 복개/지하 하천 판별(수집 제�
   it("지표 하천은 false", () => {
     expect(isUndergroundWaterway({ waterway: "stream" })).toBe(false);
     expect(isUndergroundWaterway({ layer: "0" })).toBe(false);
+    expect(isUndergroundWaterway({ tunnel: "no" })).toBe(false);
   });
 });
 
-describe("osm.surfaceWaterways — 지표 노출 하천만(복개 수계 태그누락 보정)", () => {
-  it("하천계에 복개 구간이 있으면 전체 제외(태그 누락 지표 구간 포함)", () => {
+describe("osm.surfaceWaterways — 지표 노출 하천만(복개 구간만 제외)", () => {
+  it("복개 구간과 연결된 지표 하천은 보존", () => {
     const segs = [
-      { p: [0, 0, 10, 0], culverted: false, stream: true },  // 지표(태그 누락)
+      { p: [0, 0, 10, 0], culverted: false, stream: true },  // 지표
       { p: [10, 0, 20, 0], culverted: true, stream: true },  // 복개
-      { p: [20, 0, 30, 0], culverted: false, stream: true },  // 지표(태그 누락)
+      { p: [20, 0, 30, 0], culverted: false, stream: true },  // 지표
     ];
-    expect(surfaceWaterways(segs)).toHaveLength(0);
+    expect(surfaceWaterways(segs)).toEqual(segs.filter(s => !s.culverted));
   });
   it("복개 없는 순수 지표 하천은 유지", () => {
     const surf = [{ p: [0, 0, 10, 0], culverted: false, stream: true }, { p: [10, 0, 20, 0], culverted: false, stream: true }];

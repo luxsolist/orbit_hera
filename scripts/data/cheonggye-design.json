@@ -1,0 +1,40 @@
+{
+  "landGrade": [
+    -0.002,
+    0.001
+  ],
+  "waterDrop": 4.5,
+  "waterGrade": -0.0015,
+  "section": {
+    "water": 4,
+    "path": 8.5,
+    "wall": 9,
+    "bank": 12.4,
+    "waterDepth": 0.65,
+    "pathRise": 0.5
+  },
+  "rampOffsets": [
+    -310,
+    155
+  ],
+  "roads": {
+    "bankClearance": 2.6,
+    "minimumWidth": 4,
+    "sampleSpacing": 4,
+    "riverRoadWidth": 8,
+    "layoutStep": 8,
+    "maxRoadShift": 12
+  },
+  "markings": {
+    "lineWidth": 0.24,
+    "minimumRun": 6,
+    "junctionMargin": 7,
+    "mergeGap": 6
+  },
+  "terrainTransition": {
+    "innerMargin": 32,
+    "minimumWidth": 128,
+    "maximumWidth": 512,
+    "targetGrade": 0.05
+  }
+}

@@ -1,16 +1,21 @@
-import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {completeCityChunks} from './complete-map-chunks.mjs';
+import {validateCitySurfaces} from './validate-city-surfaces.mjs';
+import {readFile,writeFile,mkdir,rename} from 'node:fs/promises';
 import {gzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
 import {loadMapCities,selectMapCities} from './map-city-config.mjs';
 const cities=await loadMapCities(),selected=selectMapCities(cities,process.argv[2]);
 for(const city of selected){
+// Validate before writing any bundle or replacing the index. publish uses this same path.
+validateCitySurfaces(city);
+await completeCityChunks(city);
 const cell=cities[city],grid=cell.join('/');
 const root='public/maps',out=`${root}/bundles/${city}`;await mkdir(out,{recursive:true});
 const read=async p=>JSON.parse(await readFile(p,'utf8'));
 const optional=async p=>{try{return await read(p);}catch(e){if(e.code==='ENOENT')return null;throw e;}};
 const manifest=await read(`${root}/${grid}/tiles.json`),groups=new Map();
 for(const {cx,cz} of manifest.chunks){const key=`${Math.floor(cx/2)}_${Math.floor(cz/2)}`;if(!groups.has(key))groups.set(key,[]);groups.get(key).push({cx,cz});}
-const index={version:1,cell,size:2,bundles:{}};let bytes=0,rawBytes=0;
+const index={version:1,completedChunkVersion:1,cell,size:2,bundles:{}};let bytes=0,rawBytes=0;
 for(const [key,coords] of groups){
  const chunks={};
  for(const {cx,cz} of coords){const k=`${cx}_${cz}`,block=manifest.block??16;
@@ -20,7 +25,7 @@ for(const [key,coords] of groups){
  const hash=createHash('sha256').update(compressed).digest('hex'),file=`${key}.${hash.slice(0,16)}.bin`;
  await writeFile(`${out}/${file}`,compressed);index.bundles[key]={file,bytes:compressed.length,rawBytes:raw.length,sha256:hash,chunks:Object.keys(chunks)};bytes+=compressed.length;rawBytes+=raw.length;
 }
-await writeFile(`src/world/${city}-bundles.json`,JSON.stringify(index,null,2)+'\n');
+await writeFile(`src/world/${city}-bundles.json.next`,JSON.stringify(index,null,2)+'\n');await rename(`src/world/${city}-bundles.json.next`,`src/world/${city}-bundles.json`);
 console.log(JSON.stringify({city,chunks:manifest.chunks.length,bundles:groups.size,rawBytes,gzipBytes:bytes}));
 
 }

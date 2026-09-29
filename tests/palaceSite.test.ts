@@ -1,9 +1,10 @@
+import {readMapFixture} from './mapFixture';
 import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {correctPalaceSite,palaceSiteBuilding,inPalace} from '../src/world/cities/PalaceSite';
 import site from '../src/world/cities/gyeongbokgung-site.json';
 import type {WorldChunk} from '../src/world/chunkManifest';
-const chunk=(cx:number,cz:number)=>JSON.parse(readFileSync(`public/maps/37/126/${Math.floor(cx/16)}_${Math.floor(cz/16)}/${cx}_${cz}.json`,'utf8')) as WorldChunk;
+const chunk=(cx:number,cz:number)=>readMapFixture(`public/maps/37/126/${Math.floor(cx/16)}_${Math.floor(cz/16)}/${cx}_${cz}.json`) as WorldChunk;
 it('preserves other cities and source inputs while converting matched palace buildings',()=>{
  const raw=chunk(84,45),before=JSON.stringify(raw);expect(correctPalaceSite([35,129],raw)).toBe(raw);
  const out=correctPalaceSite([37,126],raw);expect(correctPalaceSite([37,126],out)).toBe(out);expect(JSON.stringify(raw)).toBe(before);expect(out.objects.buildings.some(b=>b.palaceBuildingId)).toBe(true);

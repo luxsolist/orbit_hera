@@ -41,12 +41,18 @@ def prepare():
    x,z=map(int,key.split('_'));p=f'public/maps/{GRID}/{x//block}_{z//block}/{key}.json'
    if c['raw']!=json.loads(files[p]):raise RuntimeError('Rebuild bundles: '+key)
    for field,path in [('detail',f'public/maps/details/{CITY}/{key}.json'),('roadGrade',f'public/maps/road-grade/{GRID}/{key}.json'),('appearance',f'public/maps/landmark-appearance/{CITY}/{key}.json')]:
-    if c[field]!=(json.loads(files[path]) if path in files else None):raise RuntimeError('Rebuild bundles: '+path)
+    if c.get(field)!=(json.loads(files[path]) if path in files else None):raise RuntimeError('Rebuild bundles: '+path)
  if seen!=expected:raise RuntimeError('Missing bundled source chunks')
  manifest={'version':1,'files':{p:sha(b) for p,b in files.items()},'bundleIndexSha256':sha(index)}
  encoded=json.dumps(manifest,sort_keys=True,separators=(',',':')).encode();version=sha(encoded)[:16]
  tag=f'maps-{CITY}-'+version;out=ROOT/'build/map-releases'/tag;out.mkdir(parents=True,exist_ok=True)
  archive=out/f'{CITY}-source.tar.gz'
+ cached=out/'release.json'
+ if archive.exists() and cached.exists():
+  meta=json.loads(cached.read_text())
+  if meta.get('tag')==tag and meta.get('asset')==archive.name and meta.get('bundleIndexSha256')==sha(index) and meta.get('sha256')==sha(archive.read_bytes()) and meta.get('repository')==run('gh','repo','view','--json','nameWithOwner','--jq','.nameWithOwner'):
+   print('Verified prepared snapshot:',out,flush=True);return out,meta
+ print('Preparing archive:',tag,'files:',len(files),flush=True)
  with tarfile.open(archive,'w:gz') as tar:
   for name,b in {**files,'MANIFEST.json':encoded,'bundle-index.json':index}.items():
    info=tarfile.TarInfo(name);info.size=len(b);info.mtime=0;info.mode=0o644;tar.addfile(info,io.BytesIO(b))
@@ -74,7 +80,7 @@ def download(meta,directory):
   run('gh','release','download',meta['tag'],'--repo',meta['repository'],'--pattern',meta['asset'],'--dir',str(directory),'--clobber')
  return directory/meta['asset']
 def publish():
- out,meta=prepare();notes=out/'notes.md';notes.write_text(f'{CITY} map source snapshot. Includes terrain, landmark detail, appearance and road-grade overlays. Matched game bundle index SHA-256: '+meta['bundleIndexSha256']+'\n')
+ out,meta=prepare();notes=out/'notes.md';notes.write_text(f'{CITY} map source snapshot. Includes self-contained completed chunks and their embedded clean rebuild inputs (legacy cities may include overlays). Matched game bundle index SHA-256: '+meta['bundleIndexSha256']+'\n')
  exists=subprocess.run(['gh','release','view',meta['tag'],'--repo',meta['repository']],cwd=ROOT,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
  if not exists:run('gh','release','create',meta['tag'],str(out/meta['asset']),str(out/'release.json'),'--repo',meta['repository'],'--target',run('git','rev-parse','HEAD'),'--title',CITY+' map source '+meta['tag'].removeprefix(f'maps-{CITY}-'),'--notes-file',str(notes),'--latest=false')
  else:

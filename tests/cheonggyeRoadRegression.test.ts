@@ -1,9 +1,10 @@
+import {readMapFixture} from './mapFixture';
 import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {applyRoadGradePatch} from '../src/world/RoadGradePatch';
 import {chunkTerrainEntry,sampleChunkHeight} from '../src/world/chunkMesh';
 import {applySeoulDetail} from '../src/world/cities/SeoulDetail';
-const read=(p:string)=>JSON.parse(readFileSync(p,'utf8'));
+const read=(p:string)=>readMapFixture(p);
 it('repairs the reported 37.568149,126.987684 road after runtime Seoul overrides',()=>{
  const raw=read('public/maps/37/126/5_2/85_46.json'),patch=read('public/maps/road-grade/37/126/85_46.json');
  const corrected=applySeoulDetail([37,126],applyRoadGradePatch(raw,patch),read('public/maps/details/seoul/85_46.json'));

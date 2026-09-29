@@ -1,9 +1,14 @@
+import {readMapFixture} from './mapFixture';
 import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {STATUES,correctGwanghwamunStatues,statueGeometry} from '../src/world/cities/GwanghwamunStatues';
 import type {WorldChunk} from '../src/world/chunkManifest';
 it('replaces the false building and inserts both statues exactly once without changing neighbors',()=>{
- const raw=JSON.parse(readFileSync('public/maps/37/126/5_2/84_46.json','utf8')) as WorldChunk;
+ const raw=readMapFixture('public/maps/37/126/5_2/84_46.json') as WorldChunk;
+ // Keep the historical misclassified outline in the fixture even after source maps improve.
+ const old=[86268,47545,86268,47557,86280,47557,86280,47545,86277,47545,86277,47546,86277,47547,86274,47547,86271,47547,86271,47546,86271,47545];
+ raw.objects.buildings=raw.objects.buildings.filter(b=>!b.statueModel&&JSON.stringify(b.p)!==JSON.stringify(old));
+ raw.objects.buildings.push({p:old,h:10,n:'Gwanghwamun Square'});
  const out=correctGwanghwamunStatues([37,126],raw),twice=correctGwanghwamunStatues([37,126],out);
  expect(out.objects.buildings.filter(b=>b.statueModel)).toHaveLength(2);expect(twice).toEqual(out);
  expect(out.objects.buildings.length).toBe(raw.objects.buildings.length+1);

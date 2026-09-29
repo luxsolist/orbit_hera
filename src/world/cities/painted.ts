@@ -11,7 +11,8 @@ export const paintedSeoul:CityAppearance={
  weights:[18,10,16,5,5,3,3,10,5,3,3,3,10,2,2,2],
  roofs:[0x8d9897,0x9da5a3,0xa39381,0x829591,0xb4b3a8],windowContrast:1.05,windowSpacing:1.06,architectureStrength:1.05},
  ground:{...seoulAppearance.ground,apronColor:'#aaa99d',areas:{...seoulAppearance.ground.areas,park:'#7e905f',garden:'#98a56b',grass:'#8f9f6c',wood:'#4e6c58',scrub:'#71815a',pitch:'#8c9a66'}},
- street:{...seoulAppearance.street,asphalt:'#667981',pavement:'#d2cbb9',curb:'#a6aaa2',marking:'#f4e8cd',center:'#e4c47c',wearStrength:.025},
+ // Former pilot interior colours, converted from linear shader mixing to sRGB. City-wide palette.
+ street:{...seoulAppearance.street,asphalt:'#535c60',pavement:'#c2bdb0',curb:'#a6aaa2',marking:'#f4e8cd',center:'#e4c47c',wearStrength:.025},
  props:{...seoulAppearance.props,metal:0x687c80,bark:0x756148,leaves:0x667f49},
  environment:{night:seoulNight,clock:{latitude:37.5665,longitude:126.978,timeZone:'Asia/Seoul'},sky:0xb3cde2,fog:0xc8d2df,light:{hemiSky:0xbfcfdf,hemiGround:0xc9bda2,hemi:1.3,sunColor:0xfff0d7,sun:2.2,fillColor:0xadcbe8,fill:.35}}
 };

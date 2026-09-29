@@ -19,7 +19,7 @@ it('clips road surfaces exactly to both terrain triangles, including nonplanar s
 it('draws intersections above all sidewalk layers with bounded draw calls',()=>{
  const group=new THREE.Group();const t={...terrain,size:2,step:100,heights:new Float32Array(4)};
  addStreetGeometry(group,[{p:[0,50,100,50],w:8},{p:[50,0,50,100],w:8}],t,0,0,{...seoulAppearance.street,curbHeight:0,junctionMarkings:false});
- expect(group.children.length).toBe(4);
+ expect(group.children.length).toBe(5);
  const asphalt=group.getObjectByName('street_asphalt') as THREE.Mesh;
  const pavement=group.getObjectByName('street_pavement') as THREE.Mesh;
  expect(asphalt.renderOrder).toBeGreaterThan(pavement.renderOrder);
@@ -36,12 +36,13 @@ it('finds perpendicular and oblique junctions but ignores straight continuation'
  expect(junctions(s,[{ax:100,az:50,bx:200,bz:50,len:100,w:10}])).toEqual([]);
  expect(junctions(s,[{ax:0,az:0,bx:100,bz:100,len:Math.sqrt(20000),w:10}])[0].clearance).toBeCloseTo(6*Math.sqrt(2));
 });
-it('clears intersection paint, adds approach crossings and keeps raised curbs out of the junction',()=>{
+it('clears intersection centre lines, omits white paint and keeps raised curbs out of the junction',()=>{
  const group=new THREE.Group(),t={...terrain,step:100,heights:new Float32Array(4)};
  addStreetGeometry(group,[{p:[0,50,100,50],w:16},{p:[50,0,50,100],w:16}],t,0,0,seoulAppearance.street);
  const curbs=group.getObjectByName('street_raised_curbs') as THREE.Mesh;
  curbs.geometry.computeBoundingBox();expect(curbs.geometry.boundingBox!.max.y).toBeCloseTo(.12);
- for(const name of ['street_center_lines','street_lane_lines','street_raised_curbs']){
+ expect(group.getObjectByName('street_lane_lines')).toBeUndefined();
+ for(const name of ['street_center_lines','street_raised_curbs']){
   const mesh=group.getObjectByName(name) as THREE.Mesh;expect(mesh).toBeDefined();
   const pos=mesh.geometry.getAttribute('position');
   for(let i=0;i<pos.count;i++)expect(Math.abs(pos.getX(i)-50)<8&&Math.abs(pos.getZ(i)-50)<8).toBe(false);
@@ -68,14 +69,34 @@ it('uses identical asphalt and marking materials and stripe pattern on elevated 
  const ground=new THREE.Group(),bridge=new THREE.Group();
  addStreetGeometry(ground,[{p:[10,50,54,50],w:24}],t,0,0,colors);
  addStreetGeometry(bridge,[],t,0,0,colors,undefined,[{a:[10,20,62,10,20,38],b:[54,20,62,54,20,38]}]);
- for(const name of ['street_asphalt','street_center_lines','street_lane_lines']){
+ expect(ground.getObjectByName('street_lane_lines')).toBeUndefined();expect(bridge.getObjectByName('street_lane_lines')).toBeUndefined();
+ for(const name of ['street_asphalt','street_center_lines']){
   const a=ground.getObjectByName(name) as THREE.Mesh,b=bridge.getObjectByName(name) as THREE.Mesh;
   expect(b.material).toBe(a.material);expect(b.renderOrder).toBe(a.renderOrder);
   const pos=b.geometry.getAttribute('position');for(let i=0;i<pos.count;i++)expect(pos.getY(i)).toBe(20);
-  if(name==='street_lane_lines'){
+  if(name==='street_center_lines'){
    const area=(g:THREE.BufferGeometry)=>{const p=g.getAttribute('position');let total=0;for(let i=0;i<p.count;i+=3)total+=Math.abs((p.getX(i+1)-p.getX(i))*(p.getZ(i+2)-p.getZ(i))-(p.getZ(i+1)-p.getZ(i))*(p.getX(i+2)-p.getX(i)))/2;return total;};
    expect(area(b.geometry)).toBeCloseTo(area(a.geometry),3);
   }
  }
  for(const group of [ground,bridge])for(const child of group.children)(child as THREE.Mesh).geometry.dispose();
+});
+
+it('removes internal curb rings and branch edges even when an authored road halo is present',()=>{
+ const roads=[{p:[0,50,100,50],w:28},{p:[35,10,35,50],w:8},{p:[35,50,45,50,70,50],w:8}];
+ for(const streetPilot of [false,true]){
+  const group=new THREE.Group();
+  addStreetGeometry(group,roads,{...terrain,step:100,heights:new Float32Array(4),streetPilot},0,0,seoulAppearance.street);
+  const curbs=group.getObjectByName('street_raised_curbs') as THREE.Mesh;
+  expect(curbs).toBeDefined();const p=curbs.geometry.getAttribute('position');
+  for(let i=0;i<p.count;i++)expect(p.getZ(i)<36||p.getZ(i)>64,`curb inside main road at ${p.getX(i)},${p.getZ(i)} (halo=${streetPilot})`).toBe(true);
+  for(const child of group.children)(child as THREE.Mesh).geometry.dispose();
+ }
+});
+
+it('renders only the baked surface when it owns the complete tile',()=>{
+ const group=new THREE.Group(),t:ChunkTerrain={...terrain,compiledStreet:{version:1,region:'city-wide',compilerVersion:'test',sourceHash:'test',bounds:[0,0,10,10],origin:[0,0],props:[],meshes:[{layer:3,position:[1,0,1,1,0,3,3,0,1],index:[0,1,2]}]}};
+ addStreetGeometry(group,[{p:[0,5,10,5],w:20}],t,0,0,seoulAppearance.street);
+ expect(group.children).toHaveLength(1);const mesh=group.getObjectByName('street_asphalt') as THREE.Mesh;
+ expect(mesh.geometry.getAttribute('position').count).toBe(3);mesh.geometry.dispose();
 });

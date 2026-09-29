@@ -1,3 +1,7 @@
+import {planStreetSections} from '../src/world/streetSection.mjs';
+import {auditStructureRecords,constrainEstimatedBuildingHeight,auditEstimatedBuildingHeights} from './osm.mjs';
+import {fitStreetWidths} from '../src/world/streetSpace.mjs';
+import {normalizeWaterFeature, auditWaterFeatures, auditWaterRoadCrossings, waterChunkPieces} from './water-build.mjs';
 import {execFileSync} from 'node:child_process';
 import {repairRoadGrades} from './repair-road-grades.mjs';
 // 전지구 타일 월드 빌드 — 섹션형 맵(OSM 오브젝트) + 하이트맵(.bin, DEM 지형)을 합쳐
@@ -28,7 +32,18 @@ const MAPS = "public/maps";  // 런타임 셀 청크 출력
 const BUILD_DIR = "build";   // 빌드 중간물 입력(가공 OSM + DEM .bin) — 런타임 비사용
 const raw = JSON.parse(readFileSync(`${BUILD_DIR}/${id}.json`, "utf8"));
 const objects = raw.objects ?? { buildings: raw.buildings ?? [], roads: raw.roads ?? [], walls: raw.walls, areas: raw.areas, landmarks: raw.landmarks, water: undefined };
+for(const b of objects.buildings??[])constrainEstimatedBuildingHeight(b);
+const heightErrors=auditEstimatedBuildingHeights(objects.buildings??[]);if(heightErrors.length)throw new Error(heightErrors.join("\n"));
+const facilityAudit=auditStructureRecords(objects.buildings??[]);if(facilityAudit.errors.length)throw new Error(facilityAudit.errors.join('\n'));
+objects.roads=planStreetSections(fitStreetWidths(objects)).roads;
 const terrain = raw.terrain ?? { seaLevel: 0, water: raw.water ?? [], heightmap: undefined };
+// Validate before removing old tiles; old caches retain explicit legacy provenance.
+terrain.water = (terrain.water ?? []).map(normalizeWaterFeature);
+const waterAudit = auditWaterFeatures(terrain.water);
+if (!waterAudit.errors.length) waterAudit.crossings = auditWaterRoadCrossings(terrain.water, objects.roads ?? []);
+writeFileSync(`${BUILD_DIR}/${id}.water-audit.json`, JSON.stringify(waterAudit, null, 2));
+if (waterAudit.errors.length) throw new Error(waterAudit.errors.join("\n"));
+console.error(`Water: ${waterAudit.count}, legacy tags: ${waterAudit.legacy}, estimated widths: ${waterAudit.estimatedWidths}`);
 const lat0 = raw.meta.lat0, lon0 = raw.meta.lon0;
 
 const M_LAT = 111320;
@@ -150,27 +165,24 @@ for (const b of objects.buildings ?? []) {
   if (!inExt(cx, cz)) continue; // 청크로는 커버리지 안만 기록
   // lm(얽힘 택소노미)·n(표시명)은 랜드마크로 승격된 건물만 보유 — 런타임 StreamingWorld 가
   // 이 필드를 보고 registerBuilding 대신 랜드마크로 등록한다(일반 건물엔 없어서 용량 영향 없음).
-  chunk(cx, cz).buildings.push({ p: rp, ...Object.fromEntries(["osmId", "heightSource", "heightTag", "levelsTag"].filter(k => b[k] != null).map(k => [k, b[k]])), ...(b.h != null ? { h: b.h } : {}), ...(b.lm ? { lm: b.lm } : {}), ...(b.lm && b.n ? { n: b.n } : {}) });
+  chunk(cx, cz).buildings.push({ p: rp, ...(b.holes?.length?{holes:b.holes.map(reproj).filter(p=>p.length>=6)}:{}), ...Object.fromEntries(["osmId", "heightSource", "heightTag", "levelsTag", "structureKind", "roofed", "facilityKind", "groundClearance", "clearanceSource", "buildingPart", "layer", "bridge", "covered"].filter(k => b[k] != null).map(k => [k, b[k]])), ...(b.h != null ? { h: b.h } : {}), ...(b.lm ? { lm: b.lm } : {}), ...(b.lm && b.n ? { n: b.n } : {}) });
 }
 // 도로: 폴리라인을 청크 경계로 클립해 **연속 조각**으로 저장(2점 분할 폐기) → 연속 리본·중앙선, 끊김 방지.
-for (const r of objects.roads ?? []) binPolyline(reproj(r.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).roads.push({ p: piece, ...Object.fromEntries(['bridge','tunnel','layer'].filter(k=>r[k]!=null).map(k=>[k,r[k]])), ...(r.w != null ? { w: r.w } : {}) }); });
+for (const r of objects.roads ?? []) binPolyline(reproj(r.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).roads.push({ p: piece, ...Object.fromEntries(['bridge','tunnel','layer','widthSource','streetSection','osmId','highway','roadName','oneway','lanes','sourceNodes','service','access'].filter(k=>r[k]!=null).map(k=>[k,r[k]])), ...(r.w != null ? { w: r.w } : {}) }); });
 // 담장/울타리: 동일하게 폴리라인 클립으로 연속 조각 저장.
 for (const wl of objects.walls ?? []) binPolyline(reproj(wl.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).walls.push({ p: piece, ...(wl.h != null ? { h: wl.h } : {}), ...(wl.w != null ? { w: wl.w } : {}) }); });
 // 수역: 면(polygon)은 청크별 클립(드레이프 정확) + 멀티폴리곤 구멍(holes)도 같은 청크 rect 로 클립해 보존(섬·제방 도려냄),
-// 선형 하천(w 보유)은 도로처럼 폴리라인 클립(맵 밖·거대 relation 좌표 방지).
-for (const w of terrain.water ?? []) {
-  if (w.w != null) { binPolyline(reproj(w.p), (cx, cz, piece) => { if (inExt(cx, cz)) chunk(cx, cz).water.push({ p: piece, w: w.w }); }); continue; }
-  const outer = reproj(w.p);
-  const holes = (w.holes ?? []).map(reproj).filter((h) => h.length >= 6);
-  const [x0, z0, x1, z1] = bbox(outer);
-  for (let cz = ci(z0); cz <= ci(z1); cz++) for (let cx = ci(x0); cx <= ci(x1); cx++) {
-    if (!inExt(cx, cz)) continue;
-    const oc = clipRect(outer, cx * C, cz * C, (cx + 1) * C, (cz + 1) * C);
-    if (oc.length < 6 || polyArea(oc) < 1) continue;
-    const hc = [];
-    for (const h of holes) { const c = clipRect(h, cx * C, cz * C, (cx + 1) * C, (cz + 1) * C); if (c.length >= 6 && polyArea(c) >= 1) hc.push(c); }
-    chunk(cx, cz).water.push(hc.length ? { p: oc, holes: hc } : { p: oc });
+// 선형 하천은 반폭 halo로 클립하여 중심선이 없는 이웃 청크에도 물가를 보존한다.
+const reprojectWater = p => {
+  const out = [];
+  for (let i = 0; i < p.length; i += 2) {
+    const [x, z] = mapToCell(p[i], p[i + 1]);
+    out.push(Math.round(x * 100) / 100, Math.round(z * 100) / 100);
   }
+  return dedupeFlat(out);
+};
+for (const w of terrain.water) {
+  for (const piece of waterChunkPieces(w, reprojectWater, C, inExt)) chunk(piece.cx, piece.cz).water.push(piece.water);
 }
 // 지표 면(공원/잔디/숲 등): 청크별로 클립해 분배 — 각 조각이 자기 청크 격자 안에서 지형에 드레이프.
 for (const a of objects.areas ?? []) binClipped(reproj(a.p), (cx, cz, c) => { if (inExt(cx, cz)) chunk(cx, cz).areas.push({ p: c, k: a.k }); });

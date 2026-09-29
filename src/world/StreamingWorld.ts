@@ -1,3 +1,4 @@
+import {resolvePilotBank} from './cities/CheonggyePilot';
 import type {CityClock} from './CityTime';
 import {ChunkPreparation} from './ChunkPreparation';
 import {assembleChunk,discardPreparedChunk,type PreparedChunk} from './PreparedChunk';
@@ -21,7 +22,7 @@ import { SkyEnvironment } from "./SkyEnvironment";
 import { cellLocalOf, pickSpawnChunk, chunksOwnedBy, CHUNK_BLOCK, type Cell, type TilesManifest, type WorldChunk } from "./chunkManifest";
 import { fetchCityTiles, manifestChunkAt, fetchWorldChunk } from "./mapLocator";
 import { ChunkStreamer, chunkIndex, type ChunkIO, type ChunkReq, type ChunkConfig } from "./chunkStream";
-import { buildChunkMesh, disposeChunkGroup, sampleChunkHeight, chunkTerrainEntry, forEachLandmarkNear, type ChunkTerrain, type ChunkBuild } from "./chunkMesh";
+import { buildChunkMesh, disposeChunkGroup, sampleChunkSupportHeight, chunkTerrainEntry, forEachLandmarkNear, type ChunkTerrain, type ChunkBuild } from "./chunkMesh";
 
 const chunkKey = (cx: number, cz: number): string => `${cx}_${cz}`;
 
@@ -204,7 +205,7 @@ export class StreamingWorld implements GameWorld {
     const key=chunkKey(cb.cx,cb.cz);
     const start=performance.now();
     const collision=packet?CollisionWorld.fromSnapshot(packet.collision):new CollisionWorld();
-    if(!packet){for(const b of cb.buildings)collision.addFootprintBox(b.poly,.3,b.top);for(const w of cb.walls)collision.addWallBox(w.x0,w.x1,w.z0,w.z1,w.top);collision.finalize();}
+    if(!packet){for(const b of cb.overhead??[])collision.addFootprintBox(b.poly,0,b.top,true,b.holes,b.bottom);for(const b of cb.buildings)collision.addFootprintBox(b.poly,.3,b.top,!!cb.terrain?.compiledStreet,b.holes??[],b.clearanceBottom??-Infinity,b.topPlane);for(const w of cb.walls)collision.addWallBox(w.x0,w.x1,w.z0,w.z1,w.top);collision.finalize();}
     this.collisionMs+=performance.now()-start;this.maxCollisionMs=Math.max(this.maxCollisionMs,this.collisionMs);
     let finished=false;
     try {
@@ -242,11 +243,11 @@ export class StreamingWorld implements GameWorld {
 
   // ─────────────────────────── GameWorld 표면 ───────────────────────────
 
-  heightAt(x: number, z: number): number {
+  heightAt(x: number, z: number, feetY=Infinity): number {
     const cellX = x + this.originX, cellZ = z + this.originZ;
     const cx = chunkIndex(cellX, this.chunkSize), cz = chunkIndex(cellZ, this.chunkSize);
     const t = this.terrainReg.get(chunkKey(cx, cz));
-    return t ? sampleChunkHeight(t, cellX, cellZ) : 0;
+    return sampleChunkSupportHeight(t??null,cellX,cellZ,feetY);
   }
 
   topAt(x: number, z: number): number {
@@ -254,7 +255,10 @@ export class StreamingWorld implements GameWorld {
   }
 
   resolveCollision(x: number, z: number, radius: number, feetY: number): { x: number; z: number } {
-    return this.collision.resolveCollision(x, z, radius, feetY);
+    const hit=this.collision.resolveCollision(x,z,radius,feetY),cellX=hit.x+this.originX,cellZ=hit.z+this.originZ;
+    const t=this.terrainReg.get(chunkKey(chunkIndex(cellX,this.chunkSize),chunkIndex(cellZ,this.chunkSize)));
+    if(!t?.streetPilot)return hit;
+    const resolved=resolvePilotBank(cellX,cellZ,radius,feetY);return {x:resolved.x-this.originX,z:resolved.z-this.originZ};
   }
 
   segmentHitsBuilding(sx: number, sy: number, sz: number, ex: number, ey: number, ez: number): number {

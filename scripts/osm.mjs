@@ -33,11 +33,69 @@ export function buildingHeightInfo(t = {}) {
   if (hv > 0 && hv <= BUILDING_H_MAX) return { h: Math.round(hv * 10) / 10, estimated: false };
   const lv = firstNum(t["building:levels"]);
   if (lv > 0 && lv <= BUILDING_LVL_MAX) return { h: Math.round(Math.max(3, lv * 3.3) * 10) / 10, estimated: false };
+  const facility=surfaceBuildingKind(t);
+  if(Object.hasOwn(FACILITY_HEIGHTS,facility))return {h:FACILITY_HEIGHTS[facility],estimated:false};
   const b = t.building;
   if (b === "hut" || b === "shed" || b === "roof") return { h: 3, estimated: false };
   if (b === "temple" || b === "shrine" || b === "palace" || b === "pavilion") return { h: 7, estimated: false };
   if (b === "house" || b === "detached" || b === "hanok") return { h: 6, estimated: false };
   return { h: 9, estimated: true }; // 일반/미지정 → 주변 보간 대상
+}
+
+/** Tag-driven roles, never inferred from footprint size or a nearby POI node. */
+export const FACILITY_HEIGHTS=Object.freeze({platform:3,shelter:3,canopy:3,tollgate:7,toilets:3.2,kiosk:3,garage:3,shed:3,utility:3.5});
+export function surfaceBuildingKind(t={}) {
+  const levels=String(t.level??'').split(';').map(Number);
+  if(t.building==='no'||t.location==='underground'||(t.level!=null&&levels.every(v=>Number.isFinite(v)&&v<0))||(Number(t.layer)<0&&(t.tunnel==='yes'||t.building||t['building:part'])))return 'underground';
+  if(t.public_transport==='platform'||t.highway==='platform'||t.railway==='platform')return 'platform';
+  if(t.barrier==='toll_booth')return 'tollgate';
+  if(t['building:part']==='roof')return 'canopy';
+  const explicit={toilets:'toilets',kiosk:'kiosk',garage:'garage',garages:'garage',shed:'shed',hut:'shed',cabin:'shed',service:'utility',transformer_tower:'utility',shelter:'shelter',roof:'canopy'}[t.building];
+  if(typeof explicit==='string')return explicit;
+  // An amenity on an explicitly typed office/apartment/hotel does not replace that whole building.
+  if(!t.building||['yes','public'].includes(t.building)){
+    if(t.amenity==='toilets')return 'toilets';
+    if(t.amenity==='shelter')return 'shelter';
+    if(t.shop==='kiosk')return 'kiosk';
+  }
+  return 'building';
+}
+/** Vertical occupancy is retained from source tags, never from nearby landmarks. */
+export function buildingVerticalFields(t={}) {
+ const levels=String(t.level??'').split(';').map(Number),explicitFloor=t.level!=null&&levels.length&&levels.every(v=>Number.isFinite(v)&&v>0)?Math.min(...levels)*3.3:0;
+ const layer=Number(t.layer)||0,minHeight=parseFloat(t.min_height??t['building:min_height']??''),bridge=String(t.building??'').split(';').includes('bridge');
+ const clearance=Number.isFinite(minHeight)&&minHeight>0?minHeight:explicitFloor>0?explicitFloor:layer>0?Math.max(5,layer*4):bridge?5:0;
+ return {layer,...(t['building:part']&&t['building:part']!=='no'?{buildingPart:true}:{}),...(clearance?{groundClearance:clearance,clearanceSource:Number.isFinite(minHeight)&&minHeight>0?'min-height':explicitFloor>0?'level':'layer-estimate'}:{})};
+}
+export function structureFields(t={}) {
+ const kind=surfaceBuildingKind(t);if(!Object.hasOwn(FACILITY_HEIGHTS,kind))return {};
+ const open=['platform','shelter','canopy','tollgate'].includes(kind);
+ return {facilityKind:kind,...(open?{structureKind:kind==='tollgate'?'canopy':kind,roofed:kind!=='platform'||t.building==='yes'||t.building==='roof'||t.covered==='yes'}:{})};
+}
+/** Audit baked records before world generation/packing. Missing legacy metadata is reported separately. */
+export function auditStructureRecords(records) {
+ const errors=[],review=[];const counts={};
+ for(const b of records){const kind=b.facilityKind??b.structureKind;if(!kind)continue;
+  counts[kind]=(counts[kind]??0)+1;const id=b.osmId??'unknown';
+  if(!Object.hasOwn(FACILITY_HEIGHTS,kind)){errors.push(`${id}: unknown facility kind ${kind}`);continue;}
+  if(!['osm-height','levels-estimate','type-estimate','neighbor-estimate','default-estimate'].includes(b.heightSource))errors.push(`${id}: missing facility height provenance`);
+  if(b.structureKind&&!['platform','shelter','canopy','tollgate'].includes(kind))errors.push(`${id}: enclosed facility assigned open geometry`);
+  if(!Number.isFinite(b.h)||b.h<=0)errors.push(`${id}: invalid facility height`);
+  if(['neighbor-estimate','default-estimate'].includes(b.heightSource))errors.push(`${id}: facility received ordinary-building height estimation`);
+  if(b.heightSource==='type-estimate'&&Math.abs(b.h-FACILITY_HEIGHTS[kind])>.01)errors.push(`${id}: invalid ${kind} fallback height`);
+  if(b.h>Math.max(8,FACILITY_HEIGHTS[kind]*2))review.push(`${id}: ${kind} explicit height ${b.h}m needs review (preserved)`);
+ }
+ return {counts,errors,review};
+}
+
+/** Width belongs to one OSM carriageway, not the combined road in both directions. */
+export function roadWidthInfo(t={}) {
+  const width=Number(t.width);
+  if(width>=2&&width<=80)return {w:width,widthSource:'tag'};
+  const lanes=Number(t.lanes);
+  if(Number.isInteger(lanes)&&lanes>=1&&lanes<=12)return {w:Math.round((lanes*3.2+1)*10)/10,widthSource:'lanes'};
+  const base=roadWidth(t.highway);
+  return {w:(t.oneway==='yes'||t.oneway==='-1')&&base>=16?base/2:base,widthSource:'class'};
 }
 
 /** OSM building 태그 → 높이(m)만. (buildingHeightInfo 의 h) */
@@ -52,6 +110,29 @@ export function buildingHeightProvenance(t = {}, osmId) {
   return { ...(osmId ? { osmId } : {}), heightSource: source,
     ...(source === 'osm-height' ? { heightTag: String(t.height) } : {}),
     ...(source === 'levels-estimate' ? { levelsTag: String(t['building:levels']) } : {}) };
+}
+
+/** Small anonymous footprints must not inherit office-scale neighborhood heights.
+ * Design estimates only: do not infer a facility type or replace tagged/curated heights.
+ * Buildings are stored whole in their centroid chunk, never clipped into small slivers.
+ */
+export function estimatedFootprintHeightLimit(b, estimated = false) {
+  if (b.facilityKind || b.structureKind || b.lm || b.n || b.landmarkModel || b.statueModel || b.palaceBuildingId || b.seoulArchitecture || b.heightTag || b.levelsTag) return Infinity;
+  if (!['default-estimate','neighbor-estimate','footprint-estimate'].includes(b.heightSource) && !(estimated && !b.heightSource)) return Infinity;
+  const p=b.p;
+  if (!Array.isArray(p) || p.length<6 || p.length%2 || !p.every(Number.isFinite)) return Infinity;
+  const area=ringArea(p);
+  if (!(area>0) || area>50) return Infinity;
+  // One storey up to 25 m², smoothly allowing two storeys at 50 m².
+  return Math.round((3.5 + Math.max(0,area-25)*3/25)*10)/10;
+}
+export function constrainEstimatedBuildingHeight(b, estimated = false) {
+  const limit=estimatedFootprintHeightLimit(b,estimated);
+  if (b.h>limit) { b.h=limit; b.heightSource='footprint-estimate'; return true; }
+  return false;
+}
+export function auditEstimatedBuildingHeights(buildings) {
+  return buildings.filter(b=>b.h>estimatedFootprintHeightLimit(b)).map(b=>`${b.osmId??'unknown'}: tiny footprint inherited ${b.h}m estimated height`);
 }
 
 /**
@@ -72,7 +153,7 @@ export function interpolateBuildingHeights(buildings, estimated, { radius = 220,
   const cell = radius, grid = new Map(), key = (gx, gz) => `${gx}_${gz}`;
   const seedKeys = new Set();
   for (let i = 0; i < n; i++) { // only independent, ordinary-height reference buildings
-    if (estimated[i] || !Number.isFinite(buildings[i].h) || buildings[i].h <= 0 || buildings[i].h > maxSeedHeight) continue;
+    if (buildings[i].facilityKind || buildings[i].structureKind || estimated[i] || !Number.isFinite(buildings[i].h) || buildings[i].h <= 0 || buildings[i].h > maxSeedHeight) continue;
     // Duplicate/overlapping references must not gain extra votes in the median.
     const seedKey = `${Math.round(cx[i]/10)}:${Math.round(cz[i]/10)}:${Math.round(buildings[i].h)}`;
     if(seedKeys.has(seedKey)) continue;
@@ -82,7 +163,7 @@ export function interpolateBuildingHeights(buildings, estimated, { radius = 220,
   }
   const r2 = radius * radius, out = new Float64Array(n);
   for (let i = 0; i < n; i++) {
-    if (!estimated[i]) continue;
+    if (!estimated[i] || buildings[i].facilityKind || buildings[i].structureKind) continue;
     const gx = Math.floor(cx[i] / cell), gz = Math.floor(cz[i] / cell), hs = [];
     for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
       const arr = grid.get(key(gx + dx, gz + dz)); if (!arr) continue;
@@ -93,10 +174,11 @@ export function interpolateBuildingHeights(buildings, estimated, { radius = 220,
       out[i] = hs.length % 2 ? hs[mid] : (hs[mid - 1] + hs[mid]) / 2;
     } else out[i] = NaN; // 주변 seed 부족 → 기본값 유지
   }
-  for (let i = 0; i < n; i++) if (estimated[i] && Number.isFinite(out[i])) {
+  for (let i = 0; i < n; i++) if (estimated[i] && !buildings[i].facilityKind && !buildings[i].structureKind && Number.isFinite(out[i])) {
     buildings[i].h = Math.round(out[i] * 10) / 10;
     if (buildings[i].heightSource) buildings[i].heightSource = 'neighbor-estimate';
   }
+  for (let i=0;i<n;i++) if (estimated[i]) constrainEstimatedBuildingHeight(buildings[i],true);
   return buildings;
 }
 
@@ -109,33 +191,13 @@ const VEHICULAR = new Set([
 export const isVehicularHighway = (hw) => VEHICULAR.has(hw);
 
 /** 지하/복개 waterway 인지 — 복개천(tunnel)·층<0·covered 는 지표수 아님(수집 제외). */
-export const isUndergroundWaterway = (t = {}) => !!t.tunnel || (t.layer != null && Number(t.layer) < 0) || t.covered === "yes";
+export const isUndergroundWaterway = (t = {}) => (!!t.tunnel && t.tunnel !== "no") || (t.layer != null && Number(t.layer) < 0) || t.covered === "yes";
 
-/**
- * 지표 노출 하천만 추림 — segments: [{p, culverted, stream}]. 연결성(끝점 공유)으로 수계를 묶어:
- *  - 명시 복개 구간(culverted) 제외.
- *  - **하천(stream)** 은 수계에 복개가 하나라도 있으면 전체 제외(중학천 등 복개천의 태그 누락 지표 구간까지 숨김).
- *  - 강/운하는 복개 구간만 제외, 지표부 유지. 복개 없는 순수 지표 하천(산 계곡)은 노출. 순수.
+/** Only explicitly covered segments are hidden. A culvert does not hide its upstream/downstream river.
+ * Missing tags need source correction; connectivity alone cannot prove a buried stream.
  */
 export function surfaceWaterways(segments) {
-  const K = (x, z) => Math.round(x) + "," + Math.round(z);
-  const parent = segments.map((_, i) => i);
-  const find = (i) => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
-  const endMap = new Map();
-  segments.forEach((s, i) => {
-    const p = s.p;
-    for (const k of [K(p[0], p[1]), K(p[p.length - 2], p[p.length - 1])]) {
-      const j = endMap.get(k);
-      if (j != null) parent[find(i)] = find(j); else endMap.set(k, i);
-    }
-  });
-  const compCulvert = new Set();
-  segments.forEach((s, i) => { if (s.culverted) compCulvert.add(find(i)); });
-  return segments.filter((s, i) => {
-    if (s.culverted) return false;                          // 명시 복개 구간
-    if (s.stream && compCulvert.has(find(i))) return false; // 복개 포함 하천계 전체(태그 누락 보정)
-    return true;
-  });
+  return segments.filter(s => !s.culverted);
 }
 
 /** highway 종류 → 도로 폭(m). 보도/계단/서비스 등 보행로까지 포함(전체 highway 수집). 미지정 6. */
@@ -383,14 +445,15 @@ export function mergeStrokes(roads, angleTolDeg = 50) {
   const used = new Array(roads.length).fill(false);
   const cosTol = Math.cos((angleTolDeg * Math.PI) / 180);
   const reverseFlat = (p) => { const o = []; for (let i = p.length - 2; i >= 0; i -= 2) o.push(p[i], p[i + 1]); return o; };
-  const extendTail = (pts, w) => {
+  const structure = r => `${!!r.bridge}:${!!r.tunnel}:${Number(r.layer) || 0}`;
+  const extendTail = (pts, w, topology) => {
     for (;;) {
       const n = pts.length / 2, tx = pts[(n - 1) * 2], tz = pts[(n - 1) * 2 + 1];
       let tdx = tx - pts[(n - 2) * 2], tdz = tz - pts[(n - 2) * 2 + 1];
       const tl = Math.hypot(tdx, tdz) || 1; tdx /= tl; tdz /= tl;
       let best = -1, bestDot = cosTol, bestSeq = null;
       for (const ri of ends.get(K(tx, tz)) || []) {
-        if (used[ri] || Math.abs(roads[ri].w - w) > 0.1) continue;
+        if (used[ri] || Math.abs(roads[ri].w - w) > 0.1 || structure(roads[ri]) !== topology) continue;
         const p = roads[ri].p;
         const seq = K(p[0], p[1]) === K(tx, tz) ? p : reverseFlat(p); // tail 에서 시작하도록 정렬
         let dx = seq[2] - seq[0], dz = seq[3] - seq[1]; const l = Math.hypot(dx, dz) || 1;
@@ -407,10 +470,10 @@ export function mergeStrokes(roads, angleTolDeg = 50) {
     if (used[ri]) continue;
     used[ri] = true;
     let pts = [...roads[ri].p];
-    extendTail(pts, roads[ri].w);          // 꼬리 방향 확장
+    extendTail(pts, roads[ri].w, structure(roads[ri]));          // 꼬리 방향 확장
     pts = reverseFlat(pts);
-    extendTail(pts, roads[ri].w);          // 반대(머리) 방향 확장
-    out.push({ p: pts, w: roads[ri].w });
+    extendTail(pts, roads[ri].w, structure(roads[ri]));          // 반대(머리) 방향 확장
+    out.push({ ...roads[ri], p: pts });
   }
   return out;
 }

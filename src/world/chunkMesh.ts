@@ -1,3 +1,14 @@
+import {compiledStreetHeight,inCompiledStreet} from "./CompiledStreet";
+import {streetObstacleRings,streetFreeFootprints} from './StreetEnvelope';
+import {streetContext} from './StreetLayout';
+import {roadSegmentKey,corridorOutline,insideRoadOutline} from './RoadNetwork';
+import {streetSidewalk} from './streetSection.mjs';
+import {streetPlatform} from './StreetPlatform';
+import {groundedWall} from './GroundedBarrier';
+import {inPilot,cutPilotRiver,pilotInRiver,pilotGroundHeight,pilotBridgeAt} from './cities/CheonggyePilot';
+import {surfaceTriangles} from './SurfacePartition';
+import {addPilotRiver,addPilotBridgeStructures} from './cities/CheonggyeRiver';
+import {addPilotStreetDetails} from './cities/CheonggyeStreetDetails';
 import {busanBridgeStreets} from './cities/BusanBridges';
 import {landmarkRoof} from './cities/SeoulLandmarkAppearance';
 import {statueGeometry} from './cities/GwanghwamunStatues';
@@ -27,6 +38,11 @@ import type { SiteLandmark } from "./MapData";
 
 /** 청크 지형 격자(heightAt 바이리니어용) — 좌표·높이는 셀-로컬(샘플 시 origin 보정). */
 export interface ChunkTerrain {
+  compiledStreet?: import("./CompiledStreet").CompiledStreetPlan;
+  streetObstacles?: import("./MapData").Ring[];
+  roadHeights?: Float32Array;
+  surfaceRoads?: import("./MapData").Ring[];
+  streetPilot?: boolean;
   size: number;
   step: number;
   cellX0: number;
@@ -45,7 +61,8 @@ export interface ChunkBuild {
    * 건물 footprint(로컬 폴리 [x0,z0,...]) + 옥상 높이(top) — CollisionWorld 재구축용.
    * + 병합 메시 내 정점 범위(vStart/vCount) + base(바닥 y) — BuildingCombat 개별 갱신 바인딩.
    */
-  buildings: { poly: number[]; top: number; vStart: number; vCount: number; baseY: number; lm?: EntanglementClass; n?: string }[];
+  overhead?:{poly:number[];holes:number[][];bottom:number;top:number}[];
+  buildings: { poly: number[]; top: number; vStart: number; vCount: number; baseY: number; clearanceBottom?:number; topPlane?:[number,number,number]; holes?:number[][]; lm?: EntanglementClass; n?: string }[];
   /** 건물 병합 메시(정점 색·위치 부분 갱신 대상) — 건물 없으면 null. */
   buildingMesh: THREE.Mesh | null;
   /**
@@ -198,7 +215,12 @@ export function chunkTerrainEntry(chunk: WorldChunk, chunkSize: number): ChunkTe
   const tn = chunk.terrain?.size ?? 0;
   if (tn < 2 || chunk.terrain.heights.length < tn * tn) return null;
   return {
+    ...(chunk.streetPilot?{streetPilot:true}:{}),
+    compiledStreet:chunk.compiledStreet,
     size: tn,
+    ...(chunk.roadHeights?{roadHeights:new Float32Array(chunk.roadHeights)}:{}),
+    streetObstacles:streetObstacleRings(chunk.objects),
+    surfaceRoads:chunk.roadHeights?chunk.objects.roads.filter(r=>!r.tunnel&&(r.layer??0)>=0):[],
     step: chunkSize / (tn - 1),
     cellX0: chunk.cx * chunkSize,
     cellZ0: chunk.cz * chunkSize,
@@ -211,9 +233,9 @@ export function chunkTerrainEntry(chunk: WorldChunk, chunkSize: number): ChunkTe
  * **지형 메시 삼각분할(a,c,b)+(b,c,d)과 동일하게 보간** — bilinear 가 아니라 렌더되는 삼각형 평면값을
  * 반환해, 이 높이로 드레이프한 도로/면이 지형 메시 위로 정확히 떠 지형(초록)이 솟지 않게 한다.
  */
-export function sampleChunkHeight(t: ChunkTerrain | null, cellX: number, cellZ: number): number {
+export function sampleChunkLandHeight(t: ChunkTerrain | null, cellX: number, cellZ: number, street=false): number {
   if (!t) return 0;
-  const s = t.size, h = t.heights;
+  const s = t.size, h = street?(t.roadHeights??t.heights):t.heights;
   const gx = Math.min(s - 1, Math.max(0, (cellX - t.cellX0) / t.step));
   const gz = Math.min(s - 1, Math.max(0, (cellZ - t.cellZ0) / t.step));
   const i = Math.min(Math.floor(gx), s - 2), j = Math.min(Math.floor(gz), s - 2);
@@ -221,6 +243,32 @@ export function sampleChunkHeight(t: ChunkTerrain | null, cellX: number, cellZ: 
   const ha = h[j * s + i], hb = h[j * s + i + 1], hc = h[(j + 1) * s + i], hd = h[(j + 1) * s + i + 1];
   // 셀을 b-c 대각(fx+fz=1)으로 분할: (a,b,c) 하측 / (b,c,d) 상측
   return fx + fz <= 1 ? ha + (hb - ha) * fx + (hc - ha) * fz : hd + (hb - hd) * (1 - fz) + (hc - hd) * (1 - fx);
+}
+
+/** Semantic river support is independent of the coarse land grid used by streets. */
+export function sampleChunkHeight(t:ChunkTerrain|null,x:number,z:number):number {
+ if(t?.streetPilot&&pilotInRiver(x,z))return pilotGroundHeight(x,z,(a,b)=>sampleChunkLandHeight(t,a,b));
+ return sampleChunkLandHeight(t,x,z);
+}
+
+/** Shared support for viewer/game movement; being below a deck keeps the river floor. */
+export function sampleStreetHeight(t:ChunkTerrain|null,x:number,z:number):number{return sampleChunkLandHeight(t,x,z,true);}
+const streetSupportCache=new WeakMap<ChunkTerrain,{p:[number,number][];minX:number;maxX:number;minZ:number;maxZ:number}[]>();
+export function sampleChunkSupportHeight(t:ChunkTerrain|null,x:number,z:number,feetY=Infinity):number {
+ const baked=compiledStreetHeight(t?.compiledStreet,x,z,feetY);if(baked!==undefined)return baked;
+ const ground=sampleChunkHeight(t,x,z),deck=sampleStreetHeight(t,x,z);
+ if(inCompiledStreet(t?.compiledStreet,x,z))return ground;
+ if(t?.streetPilot&&pilotInRiver(x,z))return pilotBridgeAt(x,z)&&feetY>=deck-.35?deck:ground;
+ if(feetY<deck-.35||Math.abs(deck-ground)<.001)return ground;
+ if(t?.surfaceRoads){
+  let shapes=streetSupportCache.get(t);
+  if(!shapes){const network=streetContext(t.surfaceRoads,!!t.streetPilot)!;shapes=[];
+   for(const r of t.surfaceRoads)for(let i=2;i<r.p.length;i+=2){const c=network.get(roadSegmentKey(r.p.slice(i-2,i+2)));if(!c)continue;for(const p of streetFreeFootprints(corridorOutline(c,streetSidewalk(r)*2),r.bridge||r.streetSection&&r.streetSection.mode!=="conflict"?undefined:t.streetObstacles))shapes.push({p,minX:Math.min(...p.map(v=>v[0])),maxX:Math.max(...p.map(v=>v[0])),minZ:Math.min(...p.map(v=>v[1])),maxZ:Math.max(...p.map(v=>v[1]))});}
+   streetSupportCache.set(t,shapes);
+  }
+  if(shapes.some(s=>x>=s.minX&&x<=s.maxX&&z>=s.minZ&&z<=s.maxZ&&insideRoadOutline([x,z],s.p)))return deck;
+ }
+ return ground;
 }
 
 /** Exact boundary extrema on the piecewise-linear terrain, plus interior grid peaks.
@@ -341,7 +389,16 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
     geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
     geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-    geo.setIndex(idx);
+    if(chunk.streetPilot){
+      const cutPositions:number[]=[],cutUV:number[]=[],cutColors:number[]=[];
+      for(let k=0;k<idx.length;k+=3){
+        const poly=idx.slice(k,k+3).map(i=>[positions[i*3]+originX,positions[i*3+1],positions[i*3+2]+originZ,uvs[i*2],uvs[i*2+1]]);
+        for(const piece of cutPilotRiver(poly))for(const v of surfaceTriangles(piece)){
+          cutPositions.push(v[0]-originX,v[1],v[2]-originZ);cutUV.push(v[3],v[4]);elevationColor(v[1],col);cutColors.push(col.r,col.g,col.b);
+        }
+      }
+      geo.setAttribute('position',new THREE.Float32BufferAttribute(cutPositions,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(cutUV,2));geo.setAttribute('color',new THREE.Float32BufferAttribute(cutColors,3));
+    }else geo.setIndex(idx);
     geo.computeVertexNormals();
     const tex = bakeSurfaceTexture(chunk, terrain, profile);
     // 텍스처 성공 → 청크 전용 머티리얼(언로드 시 dispose). 실패 → 공유 폴백(고도 vertexColors).
@@ -361,6 +418,8 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
   const blockKey=(b:typeof sourceBuildings[number])=>{const xs=b.p.filter((_,i)=>i%2===0),zs=b.p.filter((_,i)=>i%2===1);return `${Math.floor(((Math.min(...xs)+Math.max(...xs))/2-originX)/256)}:${Math.floor(((Math.min(...zs)+Math.max(...zs))/2-originZ)/256)}`;};
   const orderedBuildings=preparing?[...sourceBuildings].sort((a,b)=>blockKey(a).localeCompare(blockKey(b))):sourceBuildings;
   for (const b of orderedBuildings) {
+    // Offline terrace triangles provide both rendering and support.
+    if(b.walkableProfile&&terrain?.compiledStreet)continue;
     const p = b.p;
     const n = p.length / 2;
     if (n < 3) continue;
@@ -371,10 +430,13 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     // Sample every terrain triangle crossed by the boundary, not only corners.
     const groundY = sampleChunkHeight(terrain, cxs / n, czs / n);
     const contact = buildingGroundRange(terrain, p);
-    const baseY = Math.min(groundY, contact.min) - 0.6;
+    const pilotBuilding=!!chunk.streetPilot&&inPilot(cxs/n,czs/n);
+    const floorY=pilotBuilding?contact.max:groundY;
+    const baseY = b.groundClearance?contact.max+b.groundClearance:Math.min(groundY, contact.min) - 0.6;
     // Keep the existing roof except when terrain would penetrate it.
-    const top = Math.max(groundY + h, contact.max + Math.min(h, 2.8));
+    const top = Math.max(floorY + h, contact.max + Math.min(h, 2.8),baseY + (b.groundClearance||b.ruin ? 0.4 : 2.8));
     const depth = top - baseY;
+    const withPassages=(record:ChunkBuild['buildings'][number]):ChunkBuild['buildings']=>b.passageGroundParts?[{...record,clearanceBottom:contact.max+(b.passageClearance??3)},...b.passageGroundParts.map(part=>({...record,poly:localize(part.p,originX,originZ),holes:(part.holes??[]).map(p=>localize(p,originX,originZ)),top:contact.max+(b.passageClearance??3)}))]:[record];
 
     if(b.statueModel){
       const statue=statueGeometry(b.statueModel,originX,originZ,contact.max);
@@ -390,7 +452,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
         if(detailedBuildings)dressBuilding(palace,local,contact.max,-1);
         palace.computeBoundingBox();const roof=palace.boundingBox!.max.y;
         const vCount=palace.getAttribute('position').count;
-        bGeos.push(palace);buildings.push({poly:local,top:roof,baseY:contact.min-.6,vStart:bVtx,vCount,lm:b.lm,n:b.n});bVtx+=vCount;
+        bGeos.push(palace);buildings.push(...withPassages({poly:local,top:roof,baseY:contact.min-.6,vStart:bVtx,vCount,lm:b.lm,n:b.n}));bVtx+=vCount;
         continue;
       }
     }
@@ -400,7 +462,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
       if(asset){
         if(detailedBuildings)dressBuilding(asset,local,contact.max,-1);
         asset.computeBoundingBox();const vCount=asset.getAttribute('position').count;
-        bGeos.push(asset);buildings.push({poly:local,top:asset.boundingBox!.max.y,baseY:contact.min-.6,vStart:bVtx,vCount,lm:b.lm,n:b.n});bVtx+=vCount;
+        bGeos.push(asset);buildings.push(...withPassages({poly:local,top:asset.boundingBox!.max.y,baseY:contact.min-.6,vStart:bVtx,vCount,lm:b.lm,n:b.n}));bVtx+=vCount;
         continue;
       }
     }
@@ -443,14 +505,14 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     }
     if(detailedBuildings){
       let area=0;for(let i=0,j=n-1;i<n;j=i++)area+=local[j*2]*local[i*2+1]-local[i*2]*local[j*2+1];
-      let style=highlight?-1:facadeStyle(h,Math.abs(area)*.5,profile);
-      if(!highlight&&b.landmarkAppearance?.wallMaterial==='glass')style=2;
-      if(!highlight&&b.landmarkAppearance?.wallMaterial==='brick')style=0;
+      let style=highlight||b.facilityKind?-1:facadeStyle(h,Math.abs(area)*.5,profile);
+      if(!highlight&&!b.facilityKind&&b.landmarkAppearance?.wallMaterial==='glass')style=2;
+      if(!highlight&&!b.facilityKind&&b.landmarkAppearance?.wallMaterial==='brick')style=0;
       if(style>=0){
         bcol.setHex(facadeColor(cxs/n,czs/n,profile));
       }
       if(b.landmarkAppearance?.wallColor)bcol.set(b.landmarkAppearance.wallColor);
-      geo=dressBuilding(geo,local,baseY,style,facadeVariant(cxs/n,czs/n));
+      geo=dressBuilding(geo,local,pilotBuilding?floorY:baseY,style,facadeVariant(cxs/n,czs/n)+(pilotBuilding?1:0));
       if(roof){const faces=geo.getAttribute('facadeFace');for(let i=bodyVertices;i<faces.count;i++)faces.setX(i,2);}
     }
     setUniformColor(geo, bcol);
@@ -461,11 +523,12 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     const vCount = geo.getAttribute("position").count;
     bGeos.push(geo);
     // lm/n = 랜드마크 승격 표식(빌드가 부착) — 등록 시 일반 건물과 갈라지는 유일한 신호. 렌더는 동일(병합 메시).
-    buildings.push({ poly: local, top, vStart: bVtx, vCount, baseY, ...(b.lm ? { lm: b.lm, ...(b.n ? { n: b.n } : {}) } : {}) });
+    buildings.push({ poly: local, top, vStart: bVtx, vCount, baseY, ...(b.groundClearance?{clearanceBottom:baseY}:{}), ...(b.holes?.length?{holes:b.holes.map(p=>localize(p,originX,originZ))}:{}), ...(b.lm ? { lm: b.lm, ...(b.n ? { n: b.n } : {}) } : {}) });
     bVtx += vCount;
   }
   const buildingMesh = addMerged(group, bGeos, detailedBuildings ? facadeMaterial(profile) : cityMat, true);
   if(buildingMesh)buildingMesh.name="chunk_buildings";
+  for(const volume of terrain?.compiledStreet?.supportVolumes??[])buildings.push({poly:localize(volume.p,originX,originZ),holes:(volume.holes??[]).map(p=>localize(p,originX,originZ)),baseY:volume.base,clearanceBottom:volume.base,top:volume.top,topPlane:volume.topPlane?[volume.topPlane[0],volume.topPlane[1],volume.topPlane[2]+volume.topPlane[0]*originX+volume.topPlane[1]*originZ]:undefined,vStart:bVtx,vCount:0});
 
   // ── 도로 — 지형 표면 텍스처에 베이크됨(bakeSurfaceTexture). 여기선 미니맵용 폴리라인만 수집. ──
   const roads: ChunkBuild["roads"] = [];
@@ -477,12 +540,31 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
   // ── 담장/울타리 — 건물처럼 바닥까지 채우고(아래로 스커트) 윗면은 지형+높이로 스무딩한 연속 수직 리본. ──
   const walls: ChunkBuild["walls"] = [];
   const wallVerts: number[] = [];
+  const overhead:NonNullable<ChunkBuild["overhead"]>=[];
+  const platformGeos:THREE.BufferGeometry[]=[];
+  for(const platform of [...(chunk.objects.structures??[]),...chunk.objects.buildings.filter(b=>b.groundClearance&&!b.landmarkModel&&!b.statueModel&&!b.palaceBuildingId&&!b.seoulArchitecture).map(b=>({...b,structureKind:"canopy" as const,roofed:false,h:b.groundClearance}))]){
+    const asset=streetPlatform(platform,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
+    platformGeos.push(asset.geometry);walls.push(...asset.walls);
+    if(platform.structureKind==='platform'?!!platform.roofed:platform.roofed!==false){
+      const p=platform.p,base=Math.max(...p.filter((_,i)=>i%2===0).map((_,i)=>sampleChunkHeight(terrain,p[i*2],p[i*2+1]))),top=base+Math.max(platform.h??3,platform.groundClearance??0);
+      overhead.push({poly:localize(p,originX,originZ),holes:(platform.holes??[]).map(p=>localize(p,originX,originZ)),bottom:top-(platform.structureKind==='platform'?.09:0),top:top+(platform.structureKind==='platform'?.09:.18)});
+    }
+  }
+  const platformMesh=addMerged(group,platformGeos,cityMat,true);
+  if(platformMesh)platformMesh.name='chunk_transport_platforms';
+
   for (const wl of chunk.objects?.walls ?? []) {
     const p = wl.p;
     const n = p.length / 2;
     if (n < 2) continue;
     const wh = wl.h ?? 2.5;
     const half = (wl.w ?? 0.4) / 2;
+    if(chunk.streetPilot&&terrain){
+      const barrier=groundedWall(p,wh,half*2,terrain,originX,originZ);
+      for(const v of barrier.positions)wallVerts.push(v);
+      walls.push(...barrier.walls);
+      continue;
+    }
     // 폴리라인 ≤12m 리샘플 + 정점별 지형 드레이프(윗면 부드럽게). baseY = 구간 최저 지표 − 스커트(바닥 채움).
     const lx: number[] = [], lz: number[] = [], topY: number[] = [];
     let minG = Infinity;
@@ -498,13 +580,15 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
       wallVerts.push(lx[i], baseY, lz[i], lx[i + 1], baseY, lz[i + 1], lx[i], topY[i], lz[i]);
       wallVerts.push(lx[i], topY[i], lz[i], lx[i + 1], baseY, lz[i + 1], lx[i + 1], topY[i + 1], lz[i + 1]);
     }
-    // 충돌 AABB(원본 세그먼트별), 윗면 = 양 끝 지표 최대 + 높이(넘기 판정)
-    for (let i = 0; i < n - 1; i++) {
-      const ax = p[i * 2] - originX, az = p[i * 2 + 1] - originZ, bx = p[(i + 1) * 2] - originX, bz = p[(i + 1) * 2 + 1] - originZ;
+    // In the pilot, short wall bounds follow the visible wall instead of blocking
+    // a large diagonal rectangle across the open promenade.
+    const cp=chunk.streetPilot?lx.flatMap((x,i)=>[x+originX,lz[i]+originZ]):p;
+    for (let i = 0; i < cp.length/2 - 1; i++) {
+      const ax = cp[i * 2] - originX, az = cp[i * 2 + 1] - originZ, bx = cp[(i + 1) * 2] - originX, bz = cp[(i + 1) * 2 + 1] - originZ;
       const len = Math.hypot(bx - ax, bz - az);
       if (len < 0.1) continue;
       const ux = (bx - ax) / len, uz = (bz - az) / len, px = -uz * half, pz = ux * half;
-      const top = Math.max(sampleChunkHeight(terrain, p[i * 2], p[i * 2 + 1]), sampleChunkHeight(terrain, p[(i + 1) * 2], p[(i + 1) * 2 + 1])) + wh;
+      const top = Math.max(sampleChunkHeight(terrain, cp[i * 2], cp[i * 2 + 1]), sampleChunkHeight(terrain, cp[(i + 1) * 2], cp[(i + 1) * 2 + 1])) + wh;
       walls.push({
         x0: Math.min(ax + px, ax - px, bx + px, bx - px), x1: Math.max(ax + px, ax - px, bx + px, bx - px),
         z0: Math.min(az + pz, az - pz, bz + pz, bz - pz), z1: Math.max(az + pz, az - pz, bz + pz, bz - pz),
@@ -517,7 +601,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     g.setAttribute("position", new THREE.Float32BufferAttribute(wallVerts, 3));
     g.computeVertexNormals();
     const mesh = new THREE.Mesh(g, wallMat);
-    mesh.castShadow = true; mesh.receiveShadow = true;
+    mesh.name="chunk_walls";mesh.castShadow = true; mesh.receiveShadow = true;
     group.add(mesh);
   }
 
@@ -538,10 +622,11 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
 
   if(profile.props.enabled && terrain)addStreetProps(group,chunk,chunkSize,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.props,profile.environment.night);
 
+  if(chunk.streetPilot&&terrain){addPilotStreetDetails(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.environment.night);addPilotRiver(group,chunk.cx,chunk.cz,chunkSize,originX,originZ,(x,z)=>sampleChunkLandHeight(terrain,x,z));addPilotBridgeStructures(group,chunk.objects.roads,chunk.cx,chunk.cz,chunkSize,originX,originZ,(x,z)=>sampleStreetHeight(terrain,x,z));}
   if(chunk.seoulDetail&&terrain)addSeoulLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
   if(chunk.palaceSite&&terrain)addPalaceLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
   if(!preparing && profile.renderStyle==='painted')applyPaintedMaterials(group,profile.environment.night);
-  return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, walls, roads, water, sites };
+  return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, overhead, walls, roads, water, sites };
 }
 
 /**

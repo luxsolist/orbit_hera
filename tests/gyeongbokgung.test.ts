@@ -1,10 +1,11 @@
+import {readMapFixture} from './mapFixture';
 import {expect,it} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {correctGyeongbokgungChunk,palaceGeometry} from '../src/world/cities/Gyeongbokgung';
 import placements from '../src/world/cities/gyeongbokgung-placement.json';
 import type {WorldChunk} from '../src/world/chunkManifest';
 for(const entry of placements)it(entry.name+' replaces exactly one mapped building and produces finite colored geometry',()=>{
- const raw=JSON.parse(readFileSync(`public/maps/37/126/${Math.floor(entry.cx/16)}_${Math.floor(entry.cz/16)}/${entry.cx}_${entry.cz}.json`,'utf8')) as WorldChunk;
+ const raw=readMapFixture(`public/maps/37/126/${Math.floor(entry.cx/16)}_${Math.floor(entry.cz/16)}/${entry.cx}_${entry.cz}.json`) as WorldChunk;
  const before=JSON.stringify(raw);const result=correctGyeongbokgungChunk([37,126],raw);
  expect(result.objects.buildings.filter(b=>b.landmarkModel===entry.id)).toHaveLength(1);
  expect(result.objects.buildings.length).toBe(raw.objects.buildings.length);

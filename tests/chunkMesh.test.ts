@@ -334,3 +334,29 @@ describe("linearToSrgbByte — 베이스/덧칠 경로 색 일치", () => {
     expect(linearToSrgbByte(2)).toBe(255);
   });
 });
+
+it('exports a canopy roof as an overhead collider while leaving an uncovered platform open',()=>{
+ const p=[1100,2100,1120,2100,1120,2120,1100,2120];
+ const c=makeChunk({objects:{buildings:[],roads:[],water:[],structures:[{p,structureKind:'canopy',h:7,supportPoints:[1100,2100,1120,2100]}]}});
+ const roof=buildChunkMesh(c,CHUNK,CHUNK,2*CHUNK);
+ expect(roof.overhead).toHaveLength(1);expect(roof.overhead![0].top-roof.overhead![0].bottom).toBeCloseTo(.18);disposeChunkGroup(roof.group);
+ c.objects.structures=[{p,structureKind:'platform',roofed:false}];
+ const uncovered=buildChunkMesh(c,CHUNK,CHUNK,2*CHUNK);expect(uncovered.overhead).toHaveLength(0);disposeChunkGroup(uncovered.group);
+});
+
+it('keeps a low covered passage roof thin instead of adding an artificial storey',()=>{
+ const p=[1100,2100,1120,2100,1120,2120,1100,2120];
+ const c=makeChunk({objects:{buildings:[{p,h:3.5,groundClearance:3}],roads:[],water:[]},terrain:{size:2,seaLevel:0,heights:[0,0,0,0]}});
+ const mesh=buildChunkMesh(c,CHUNK,CHUNK,2*CHUNK);
+ expect(mesh.buildings[0].top-mesh.buildings[0].baseY).toBeCloseTo(.5);
+ disposeChunkGroup(mesh.group);
+});
+
+it('leaves a courtyard open in the rendered building roof as well as its collider',()=>{
+ const p=[1100,2100,1120,2100,1120,2120,1100,2120],hole=[1105,2105,1115,2105,1115,2115,1105,2115];
+ const c=makeChunk({objects:{buildings:[{p,holes:[hole],h:12}],roads:[],water:[]},terrain:{size:2,seaLevel:0,heights:[0,0,0,0]}});
+ const mesh=buildChunkMesh(c,CHUNK,CHUNK,2*CHUNK);mesh.group.updateMatrixWorld(true);
+ const hits=(x:number,z:number)=>new THREE.Raycaster(new THREE.Vector3(x-CHUNK,50,z-2*CHUNK),new THREE.Vector3(0,-1,0)).intersectObject(mesh.buildingMesh!);
+ expect(hits(1110,2110)).toHaveLength(0);expect(hits(1102,2110).length).toBeGreaterThan(0);
+ expect(mesh.buildings[0].holes).toHaveLength(1);disposeChunkGroup(mesh.group);
+});

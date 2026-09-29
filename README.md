@@ -85,10 +85,22 @@ npm run test:e2e # 빌드 + Playwright 스모크(카탈로그 전 맵)
 
 ```bash
 npm run build:map -- <id>   # DEM → OSM 가공 → 청크 → 검증 게이트
+node scripts/repair-road-grades.mjs --cell 37/126 # 공통 도로 높이·진입로 보정 재생성
+npm run build:city-surfaces -- seoul # 공통 높이/시설 보정 + 등록 가로 구역 빌드 + 검증
+npm run build:street-regions -- seoul city-wide # 서울 전체 공통 가로·구조물·층위 빌드 및 검증
+node scripts/pack-street-region.mjs seoul city-wide # 전체 검증을 통과한 서울 압축 묶음 활성화
+npm run audit:water -- gyeongbokgung busan # 캐시 수역 분류/섬/도로 겹침 후보 검사
+npm run audit:city-surfaces -- seoul # 원본 일치 여부 + 형상 + 도시 전체 도로 단면 검사 (압축 전 자동 실행)
+npm run audit:roads -- seoul # 전체 도로 중심/양측 경사·반복 굴곡과 후보 위경도 보고
+npm run audit:roads -- seoul --strict # 잔여 품질 후보도 실패 처리
 npm run gen:cities          # 도시 100선 config 생성
 npm run validate:world      # 산출 타일 불변식 전수 검사
 npm run audit:landmarks     # 랜드마크 큐레이션 감사
 ```
+
+도로 보정의 공통 순서, 잔여 경고 분류, 국소 세분화와 검증 기준은 [도로 연결망 높이 빌드](docs/road-network-height-build.md)에 정리되어 있습니다. 새 보정도 이 빌드 경로와 공통 런타임 적용 단계에 추가합니다. 건물·담장·수면 경계 안에서 인도를 먼저 예약하고 차도·식재 공간을 배분하는 공통 단면 설계와 검증은 [공통 가로공간 계약](docs/street-layout-contract.md)을 참고합니다.
+
+서울 전체에는 원본 의미 → 가로 묶음 → 차도/보도 공동 배분 → 최종 메시/시설 → 검사 순서의 [공통 가로 구역 빌더](docs/street-region-builder.md)를 적용했습니다. Python/Shapely 설치와 시범구역 검증 사항은 해당 문서를 참고합니다. 서울 전체 1,600청크·400개 압축 묶음 적용 결과와 재빌드 경로는 [도시 전체 가로 빌드](docs/city-street-build.md), 구조물 분류와 추정 층위 정책은 [구조물·층위](docs/street-structure-layers.md)에 정리했습니다. 빌드 설정 추가와 실제 지도 활성화는 구분하며, 최종 감사 통과 전에는 기존 지도를 유지합니다.
 
 ## 지도 원본·압축 묶음·Releases 관리
 
@@ -106,7 +118,7 @@ npm run maps:verify -- all          # 등록된 모든 도시 검사
 
 
 **서울·부산·로마·아테네 적용:** 일반 지도 청크는 로컬에서 편집하고 GitHub Releases에 백업합니다.
-Git에는 게임용 **2×2 압축 묶음(서울 400개, 부산 420개, 로마 441개, 아테네 441개)**, 묶음 인덱스, 릴리스 포인터와 랜드마크/도로 보정 데이터를 보관합니다.
+Git에는 게임용 **2×2 압축 묶음(서울 400개, 부산 420개, 로마 441개, 아테네 441개)**, 묶음 인덱스, 릴리스 포인터와 아직 통합하지 않은 도시의 랜드마크/도로 보정 데이터를 보관합니다. 서울 보정 결과는 완성 청크와 그 압축 묶음에 포함됩니다.
 게임·도시 뷰어는 같은 서버의 압축 묶음을 읽으며, 플레이 중 Releases에 직접 접속하지 않습니다.
 그 외 도시는 기존 개별 파일 방식을 사용합니다. 부산은 격자 경계의 부분 묶음 때문에 420개입니다.
 
@@ -177,3 +189,7 @@ docs/{spec,implements}/         명세 · 구현 문서(+ docs/private: 비공�
 - [도시 공통 제작·검증 절차](docs/landmark-rendering-workflow.md)
 - [로마 적용 범위·출처·정확도](docs/rome-landmark-details.md)
 - `npm run audit:landmark-details -- <도시>`: 원본 결합·높이·표면·지형 입력 검사
+
+하천은 도시 전체에 동일 단면을 적용하지 않고 원본 형상을 보존합니다. [하천 맵 빌드 규칙](docs/river-map-build.md)에 분류·청크 이음·검증과 기존 데이터 재생성 절차를 정리했습니다.
+
+완성 청크 형식과 재빌드/복원 절차는 [완성 지도 청크](docs/completed-map-chunks.md)를 참고하세요. 서울은 청크별 지형·도로·랜드마크 보정 결과를 청크에 통합하고 별도 보정 파일을 제거하는 형식으로 전환했습니다.

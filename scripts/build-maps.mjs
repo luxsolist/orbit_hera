@@ -1,3 +1,4 @@
+import {waterMetadata, auditWaterFeatures} from './water-build.mjs';
 // 전지구 명소 전장 데이터 빌드: OSM(Overpass) 실측 수집 → 로컬 미터 투영 → public/maps/<id>.json
 // + 카탈로그 public/maps/index.json. 일부 환경에서 Node fetch 가 IPv6 로만 시도해 막히므로
 // 수집은 curl(IPv4)을 자식 프로세스로 호출한다.
@@ -10,7 +11,7 @@ import { createReadStream } from "node:fs";
 import { createInterface } from "node:readline";
 import { MAPS } from "./maps.config.mjs";
 import { RECIPES } from "./landmarks.mjs";
-import { projFns, buildingHeightInfo, buildingHeightProvenance, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius, buildNameIndex, matchCuratedByName, applyBlocklist, BLOCK_MATCH_M } from "./osm.mjs";
+import { projFns, surfaceBuildingKind, structureFields, buildingVerticalFields, auditStructureRecords, roadWidthInfo, buildingHeightInfo, buildingHeightProvenance, interpolateBuildingHeights, roadWidth, ringArea, wallSpec, areaKind, relationPolys, sanitizeRing, sanitizePolyline, smoothPolyline, isVehicularHighway, mergeStrokes, isUndergroundWaterway, surfaceWaterways, landmarkFrom, matchCuratedBuilding, CURATED_SNAP_M, siteRadius, buildNameIndex, matchCuratedByName, applyBlocklist, BLOCK_MATCH_M } from "./osm.mjs";
 
 // 레시피가 있는 랜드마크는 부품 목록(structure)으로 베이킹, 나머지는 그대로(타입별 빌더).
 function bakeLandmarks(landmarks) {
@@ -112,9 +113,10 @@ function processOSM(osm, proj) {
   };
   // 건물 footprint: 정리(연속중복 제거 + 자기교차는 볼록껍질 복구) + 면적 필터 + 동일 footprint 중복 제거(z-fighting 방지).
   const seenB = new Set();
-  const addBuilding = (t, flat, osmId) => {
+  const addBuilding = (t, flat, osmId, holes=[]) => {
+    const kind=surfaceBuildingKind(t);if(kind==='underground')return;
     const cp = sanitizeRing(flat, true);
-    if (!cp || ringArea(cp) < 12) return;
+    if (!cp || ringArea(cp) < (kind==='building'?12:2)) return;
     const n = cp.length / 2; let cx = 0, cz = 0;
     for (let i = 0; i < n; i++) { cx += cp[i * 2]; cz += cp[i * 2 + 1]; }
     const sig = `${Math.round(cx / n * 10)}_${Math.round(cz / n * 10)}_${Math.round(ringArea(cp))}_${n}`;
@@ -122,20 +124,20 @@ function processOSM(osm, proj) {
     seenB.add(sig);
     const { h, estimated } = buildingHeightInfo(t);
     // 얽힘 택소노미 승격 — 분류·이름·면적 3조건 통과 건물만 랜드마크(osm.landmarkFrom). 나머지는 일반 건물.
-    const lm = landmarkFrom(t, ringArea(cp));
-    buildings.push({ p: cp, h, ...buildingHeightProvenance(t, osmId), ...(lm ? { lm: lm.cls, n: lm.n } : {}) });
+    const lm = kind==='building'?landmarkFrom(t, ringArea(cp)):null;
+    buildings.push({ p: cp, h, ...buildingHeightProvenance(t, osmId), ...structureFields(t), ...buildingVerticalFields(t), ...(holes.length?{holes}:{}), ...(lm ? { lm: lm.cls, n: lm.n } : {}) });
     bEst.push(estimated);
   };
   // 면(폴리곤) 분류 — 수역/녹지·자연 면. 닫힌 면만(선형 제외). 자기교차면 드롭(복구 안 함 — 큰 concave 왜곡 방지).
   // holes=멀티폴리곤 구멍(수역에만 적용 — 섬·제방·육지가 물에 잠기지 않도록 even-odd 도려냄).
-  const classifyArea = (t, flat, holes = []) => {
+  const classifyArea = (t, flat, holes = [], osmId) => {
     if (flat.length < 6) return;
     const cp = sanitizeRing(flat, false);
     if (!cp) return;
     if (t.natural === "water" || t.water || t.waterway === "riverbank") {
       const hs = [];
       for (const h of holes) { const hc = sanitizeRing(h, false); if (hc && ringArea(hc) >= 4) hs.push(hc); }
-      water.push(hs.length ? { p: cp, holes: hs } : { p: cp });
+      water.push({p: cp, ...waterMetadata(t, osmId), ...(hs.length ? {holes: hs} : {})});
       return;
     }
     const k = areaKind(t);
@@ -146,17 +148,17 @@ function processOSM(osm, proj) {
     const t = el.tags || {};
     if (el.type === "relation") {
       // 멀티폴리곤 outer 들을 개별 면으로(건물 관계 = 건물).
-      const isBld = !!t.building;
+      const isBld = !!t.building || !!t['building:part'] || !['building','underground'].includes(surfaceBuildingKind(t));
       for (const poly of relationPolys(el, proj)) {
-        if (isBld) addBuilding(t, poly.outer, `${el.type}/${el.id}`); // 건물은 압출이라 구멍 무시(outer 만)
-        else classifyArea(t, poly.outer, poly.holes); // 수역 구멍 보존
+        if (isBld) addBuilding(t, poly.outer, `${el.type}/${el.id}`,poly.holes); // Courtyards remain open in mesh and collision.
+        else classifyArea(t, poly.outer, poly.holes, `${el.type}/${el.id}`); // 수역 구멍 보존
       }
       continue;
     }
     if (el.type !== "way" || !el.geometry) continue;
     const flat = wayFlat(el);
     if (flat.length < 4) continue;
-    if (t.building) {
+    if (t.building || t['building:part'] || (!['building','underground'].includes(surfaceBuildingKind(t))&&el.geometry.length>=4&&el.geometry[0].lat===el.geometry.at(-1).lat&&el.geometry[0].lon===el.geometry.at(-1).lon)) {
       addBuilding(t, flat, `${el.type}/${el.id}`);
     } else if (t.barrier) {
       const w = wallSpec(t);
@@ -166,19 +168,23 @@ function processOSM(osm, proj) {
       // 차도만 수집(보도/오솔길/계단 등 보행로 제외). 스무딩은 stroke 병합 후 일괄(연속 곡선).
       if (!isVehicularHighway(t.highway)) continue;
       const rp = sanitizePolyline(flat);
-      if (rp) roads.push({ p: rp, w: roadWidth(t.highway), bridge: !!t.bridge && t.bridge !== 'no', tunnel: !!t.tunnel && t.tunnel !== 'no', layer: Number(t.layer) || 0 });
+      if (rp) roads.push({ p: rp, osmId: el.type+'/'+el.id, highway:t.highway, roadName:t.name??t.ref??'', oneway:t.oneway??'no', lanes:t.lanes, sourceNodes:el.nodes, service:t.service, access:t.access, ...roadWidthInfo(t), bridge: !!t.bridge && t.bridge !== 'no', tunnel: !!t.tunnel && t.tunnel !== 'no', layer: Number(t.layer) || 0 });
     } else if (t.waterway === "river" || t.waterway === "stream" || t.waterway === "canal") {
       // 강/하천 중심선(선형) — 지표 노출 판정(수계 연결성)은 수집 후 surfaceWaterways 로 일괄.
       const wl = sanitizePolyline(flat);
-      if (wl && wl.length >= 4) waterways.push({ p: wl, culverted: isUndergroundWaterway(t), stream: t.waterway === "stream", w: t.waterway === "river" ? 24 : 6 });
+      if (wl && wl.length >= 4) waterways.push({ p: wl, culverted: isUndergroundWaterway(t), stream: t.waterway === "stream", ...waterMetadata(t, `${el.type}/${el.id}`, true) });
     } else {
-      classifyArea(t, flat);
+      classifyArea(t, flat, [], `${el.type}/${el.id}`);
     }
   }
+  const facilities=auditStructureRecords(buildings);if(facilities.errors.length)throw new Error(facilities.errors.join('\n'));
   // 연결된 같은-폭 도로를 stroke 로 병합(교차로 관통 연속화) 후 곡선 스무딩 → 중앙선·표면 끊김 최소화.
-  const mergedRoads = mergeStrokes(roads).map((s) => ({ p: smoothPolyline(s.p, 2), w: s.w }));
-  // 지표 노출 하천만 water 로(복개 수계의 태그 누락 지표 구간까지 숨김).
-  for (const s of surfaceWaterways(waterways)) water.push({ p: s.p, w: s.w });
+  // Preserve logical source ways and junction nodes. Street compilation owns grouping/smoothing.
+  const mergedRoads = roads;
+  // 지표 노출 하천만 water 로(명시 복개 구간만 제외; 연결된 지표 하천은 보존).
+  for (const {culverted, stream, ...s} of surfaceWaterways(waterways)) water.push(s);
+  const waterAudit = auditWaterFeatures(water);
+  if (waterAudit.errors.length) throw new Error(waterAudit.errors.join("\n"));
   // 높이 미상 건물(일반 9m 폴백)을 주변 실측 건물 높이로 보간 — 도심 고층/주거 저층 자연스럽게.
   const nEst = bEst.filter(Boolean).length;
   interpolateBuildingHeights(buildings, bEst);

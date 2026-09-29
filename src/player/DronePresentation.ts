@@ -119,7 +119,7 @@ export class DronePresentation {
       for(const [index,side] of ['left','right'].entries()){
         const key=side as 'left'|'right',leg=this.model.legs[key];
         const foot=leg.ankle.getWorldPosition(new THREE.Vector3());
-        const ground=p.gameWorld.heightAt(foot.x,foot.z),roof=p.gameWorld.topAt(foot.x,foot.z);
+        const ground=p.gameWorld.heightAt(foot.x,foot.z,foot.y),roof=p.gameWorld.topAt(foot.x,foot.z);
         const surface=roof>ground&&roof<=this.model.position.y+.4?roof:ground;
         const desired=state.grounded?THREE.MathUtils.clamp(surface-this.model.position.y,-.55,.55):0;
         this.footOffsets[key]+=(desired-this.footOffsets[key])*(reset?1:1-Math.exp(-dt*20));

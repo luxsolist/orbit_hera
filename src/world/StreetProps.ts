@@ -1,3 +1,8 @@
+import {inCompiledStreet,compiledStreetHeight} from './CompiledStreet';
+import {streetSidewalk,STREET_SECTION} from './streetSection.mjs';
+import {streetContext,streetCorridor} from './StreetLayout';
+import {corridorPoint,corridorOutline,insideRoadOutline,type RoadCorridor} from './RoadNetwork';
+import {inPilot,pilotInRiver} from './cities/CheonggyePilot';
 import {defaultCityNight} from './cities/night';
 import type {CityNightSettings} from './cities/types';
 import {seoulAppearance,type CityAppearance} from './cities';
@@ -22,18 +27,27 @@ export function streetPropSites(chunk:WorldChunk,size:number,config:CityAppearan
  if(!config.enabled||config.maxPerChunk<=0)return [];
  const objects=chunk.objects;if(!objects)return [];
  const buildings=objects.buildings.map(b=>({p:b.p,x0:Math.min(...b.p.filter((_,i)=>i%2===0))-2,x1:Math.max(...b.p.filter((_,i)=>i%2===0))+2,z0:Math.min(...b.p.filter((_,i)=>i%2===1))-2,z1:Math.max(...b.p.filter((_,i)=>i%2===1))+2}));
- const segments:{ax:number;az:number;bx:number;bz:number;w:number}[]=[];
- for(const road of objects.roads)for(let i=2;i<road.p.length;i+=2)segments.push({ax:road.p[i-2],az:road.p[i-1],bx:road.p[i],bz:road.p[i+1],w:road.w??6});
+ const context=streetContext(objects.roads,!!chunk.streetPilot);
+ const segments:{ax:number;az:number;bx:number;bz:number;w:number;sidewalk:number;furniture:boolean;corridor?:RoadCorridor;outline?:[number,number][]}[]=[];
+ for(const road of objects.roads)for(let i=2;i<road.p.length;i+=2){const c=streetCorridor(context,road.p.slice(i-2,i+2));
+  segments.push(c?{ax:c.a[0],az:c.a[1],bx:c.b[0],bz:c.b[1],w:c.w,sidewalk:streetSidewalk(road),furniture:road.streetSection?.furniture??true,corridor:c,outline:corridorOutline(c)}:{ax:road.p[i-2],az:road.p[i-1],bx:road.p[i],bz:road.p[i+1],w:road.w??6,sidewalk:streetSidewalk(road),furniture:road.streetSection?.furniture??true});
+ }
  const candidates:Point[]=[];
  for(const r of segments){
-  if(r.w<6||r.w>24)continue;
+  if(!r.furniture||r.sidewalk<STREET_SECTION.furnitureInset+STREET_SECTION.furnitureRadius||r.w<=0)continue;
   const length=Math.hypot(r.bx-r.ax,r.bz-r.az);if(length<24)continue;
+  const offset=STREET_SECTION.furnitureInset;
   for(let d=18;d<length-6;d+=Math.max(1,config.spacing))for(const side of [-1,1]){
-   const x=r.ax+(r.bx-r.ax)*d/length-(r.bz-r.az)/length*(r.w/2+config.offset)*side;
-   const z=r.az+(r.bz-r.az)*d/length+(r.bx-r.ax)/length*(r.w/2+config.offset)*side;
+   let x=r.ax+(r.bx-r.ax)*d/length-(r.bz-r.az)/length*(r.w/2+offset)*side;
+   let z=r.az+(r.bz-r.az)*d/length+(r.bx-r.ax)/length*(r.w/2+offset)*side;
+   if(r.corridor)[x,z]=corridorPoint(r.corridor,d,side*r.w/2,offset*2);
+   // A legacy planter centred just outside the region must not straddle its
+   // independently designed surface. Baked sites reserve the same border margin.
+   const bounds=chunk.compiledStreet?.bounds;
+   if(bounds&&x+.9>=bounds[0]&&x-.9<=bounds[2]&&z+.9>=bounds[1]&&z-.9<=bounds[3])continue;
    if(x<chunk.cx*size+2||x>(chunk.cx+1)*size-2||z<chunk.cz*size+2||z>(chunk.cz+1)*size-2)continue;
    if(buildings.some(b=>x>=b.x0&&x<=b.x1&&z>=b.z0&&z<=b.z1))continue;
-   if(segments.some(s=>distance(x,z,s.ax,s.az,s.bx,s.bz)<s.w/2+.7))continue;
+   if(segments.some(s=>s.outline?[-.9,0,.9].some(dx=>[-.9,0,.9].some(dz=>insideRoadOutline([x+dx,z+dz],s.outline!))):distance(x,z,s.ax,s.az,s.bx,s.bz)<s.w/2+.9))continue;
    if(objects.water.some(w=>w.w!=null?w.p.some((_,i)=>i%2===0&&i>=2&&distance(x,z,w.p[i-2],w.p[i-1],w.p[i],w.p[i+1])<w.w!/2+2):inside(x,z,w.p)&&!(w.holes??[]).some(h=>inside(x,z,h))))continue;
    const tree=(objects.areas??[]).some(a=>['park','wood','garden','grass'].includes(a.k)&&inside(x,z,a.p));
    if(tree?!config.trees:!config.lamps)continue;
@@ -44,13 +58,14 @@ export function streetPropSites(chunk:WorldChunk,size:number,config:CityAppearan
  const key=(p:Point)=>((Math.imul(Math.round(p.x),73856093)^Math.imul(Math.round(p.z),19349663))>>>0);
  candidates.sort((a,b)=>key(a)-key(b));const sites:Point[]=[];
  for(const p of candidates){if(sites.every(q=>Math.hypot(p.x-q.x,p.z-q.z)>config.minSpacing))sites.push(p);if(sites.length>=config.maxPerChunk)break;}
- return sites;
+ return [...sites,...(chunk.compiledStreet?.props??[]).filter(p=>p.tree?config.trees:config.lamps)];
 }
 export function addStreetProps(group:THREE.Group,chunk:WorldChunk,size:number,originX:number,originZ:number,heightAt:(x:number,z:number)=>number,config:CityAppearance['props']=seoulAppearance.props,night:CityNightSettings=defaultCityNight):void {
  const geometry:THREE.BufferGeometry[][]=[[],[],[]];
  const lenses:THREE.BufferGeometry[]=[];
  for(const p of streetPropSites(chunk,size,config)){
-  const y=heightAt(p.x,p.z),x=p.x-originX,z=p.z-originZ;
+  if(chunk.streetPilot&&!inCompiledStreet(chunk.compiledStreet,p.x,p.z)&&(inPilot(p.x,p.z)||pilotInRiver(p.x,p.z)))continue;
+  const y=compiledStreetHeight(chunk.compiledStreet,p.x,p.z)??heightAt(p.x,p.z),x=p.x-originX,z=p.z-originZ;
   if(!Number.isFinite(y))continue;
   const first=geometry.map(g=>g.length);
   if(p.tree){

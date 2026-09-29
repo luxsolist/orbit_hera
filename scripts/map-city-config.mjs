@@ -12,3 +12,9 @@ export function selectMapCities(cities,selection){
  if(!selection||!Object.hasOwn(cities,selection))throw new Error('Specify a registered city or all');
  return [selection];
 }
+
+/** Build operations never modify unowned legacy chunks in a shared, stamped cell. */
+export function ownedCityChunks(manifest,city){
+ const stamped=manifest.chunks.some(c=>c.m),owned=manifest.chunks.filter(c=>!stamped||c.m===city+'-stream');
+ if(!owned.length)throw new Error('No owned chunks for '+city);return owned;
+}

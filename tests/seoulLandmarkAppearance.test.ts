@@ -1,3 +1,4 @@
+import {readMapFixture} from './mapFixture';
 import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {applySeoulLandmarkAppearance,landmarkRoof,type LandmarkAppearance} from '../src/world/cities/SeoulLandmarkAppearance';
@@ -31,7 +32,7 @@ it('renders landmark shells with facade attributes while keeping combat vertex r
  const c=geometry.getAttribute('color'),faces=geometry.getAttribute('facadeFace');const wall=Array.from({length:faces.count},(_,i)=>i).find(i=>faces.getX(i)<1.5)!;expect(c.getX(wall)).toBeGreaterThan(c.getY(wall));disposeChunkGroup(built.group);
 });
 it('covers every baked landmark in the Seoul cell with an exact footprint entry',()=>{
- const read=(p:string)=>JSON.parse(readFileSync(p,'utf8'));let count=0;
+ const read=(p:string)=>readMapFixture(p);let count=0;
  for(const t of read('public/maps/37/126/tiles.json').chunks){const key=`${t.cx}_${t.cz}`,raw=read(`public/maps/37/126/${Math.floor(t.cx/16)}_${Math.floor(t.cz/16)}/${key}.json`);
   const landmarks=raw.objects.buildings.filter((b:Ring)=>b.lm);if(!landmarks.length)continue;
   expect(index.chunks).toContain(key);const entries=read(`public/maps/landmark-appearance/seoul/${key}.json`).buildings;

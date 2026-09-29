@@ -6,7 +6,7 @@ import { SpatialGrid } from "./SpatialGrid";
 type Circle = { x: number; z: number; radius: number; top: number; savedTop?: number };
 /** 방향성 바운딩 박스(OBB): center + 단위 u축 + 반폭(hu:u, hv:⊥) + br(외접반경) + top(옥상=디딤면, 그 위면 통과). */
 type OBB = { cx: number; cz: number; ux: number; uz: number; hu: number; hv: number; br: number; top: number; savedTop?: number };
-type Tri = { ax: number; az: number; bx: number; bz: number; cx: number; cz: number; mx: number; mz: number; br: number; top: number; savedTop?: number };
+type Tri = { ax: number; az: number; bx: number; bz: number; cx: number; cz: number; mx: number; mz: number; br: number; top: number; bottom?:number; topPlane?:[number,number,number]; savedTop?: number };
 type Wall = { x0: number; x1: number; z0: number; z1: number; top: number };
 
 /**
@@ -53,8 +53,11 @@ export class CollisionWorld {
    * OBB 커버리지가 부족한 오목(ㄱ/ㄷ자) 건물은 삼각분할 콜라이더로 정확히 막는다.
    * inset 만큼 안으로 줄여 인접 건물 사이 통로 확보. top=옥상 높이(그 위면 통과 → 올라서기).
    */
-  addFootprintBox(p: number[], inset: number, top: number): void {
+  addFootprintBox(p: number[], inset: number, top: number, exact=false, holes:number[][]=[], bottom=-Infinity,topPlane?:[number,number,number]): void {
+    if(exact||holes.length||Number.isFinite(bottom)||topPlane){this.addTriColliders(p,top,holes,bottom,topPlane);return;}
     const n = p.length / 2;
+    // A concave frontage must not regain its cut-away street space through a bounding box.
+    let turn=0;for(let i=0;i<n;i++){const j=(i+1)%n,k=(i+2)%n,cross=(p[j*2]-p[i*2])*(p[k*2+1]-p[j*2+1])-(p[j*2+1]-p[i*2+1])*(p[k*2]-p[j*2]);if(Math.abs(cross)<1e-5)continue;const sign=Math.sign(cross);if(turn&&turn!==sign){this.addTriColliders(p,top);return;}turn=sign;}
     let polyA = 0;
     for (let i = 0, j = n - 1; i < n; j = i++)
       polyA += p[j * 2] * p[i * 2 + 1] - p[i * 2] * p[j * 2 + 1];
@@ -108,7 +111,7 @@ export class CollisionWorld {
   }
 
   /** 오목 footprint 를 삼각분할(ear-clipping)해 삼각형 콜라이더로 등록. top=옥상 높이. */
-  private addTriColliders(p: number[], top: number): void {
+  private addTriColliders(p: number[], top: number, holes:number[][]=[],bottom=-Infinity,topPlane?:[number,number,number]): void {
     let n = p.length / 2;
     if (n >= 2 && p[0] === p[(n - 1) * 2] && p[1] === p[(n - 1) * 2 + 1]) n -= 1;
     if (n < 3) return;
@@ -116,12 +119,19 @@ export class CollisionWorld {
     for (let i = 0; i < n; i++) contour.push(new THREE.Vector2(p[i * 2], p[i * 2 + 1]));
     let tris: number[][];
     try {
-      tris = THREE.ShapeUtils.triangulateShape(contour, []);
+      const hs=holes.map(p=>{const a:THREE.Vector2[]=[];for(let i=0;i<p.length;i+=2)a.push(new THREE.Vector2(p[i],p[i+1]));return a;});
+      tris = THREE.ShapeUtils.triangulateShape(contour, hs);
+      contour.push(...hs.flat());
     } catch {
       return;
     }
     for (const t of tris) {
       const a = contour[t[0]], b = contour[t[1]], c = contour[t[2]];
+      const area2=Math.abs((b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x));
+      const edge2=Math.max(a.distanceToSquared(b),b.distanceToSquared(c),c.distanceToSquared(a));
+      // A collinear ear is not a solid. Its half planes can otherwise block
+      // an unrelated road far outside the building after world-coordinate rounding.
+      if(area2<=edge2*1e-10)continue;
       const mx = (a.x + b.x + c.x) / 3,
         mz = (a.y + b.y + c.y) / 3;
       const br = Math.max(
@@ -129,7 +139,7 @@ export class CollisionWorld {
         Math.hypot(b.x - mx, b.y - mz),
         Math.hypot(c.x - mx, c.y - mz)
       );
-      this.tris.push({ ax: a.x, az: a.y, bx: b.x, bz: b.y, cx: c.x, cz: c.y, mx, mz, br, top });
+      this.tris.push({ ax: a.x, az: a.y, bx: b.x, bz: b.y, cx: c.x, cz: c.y, mx, mz, br, top, bottom, topPlane });
     }
   }
 
@@ -194,7 +204,7 @@ export class CollisionWorld {
     });
     // 오목 건물 삼각형(원-삼각형): 격자 브로드페이즈. 발이 옥상 이상이면 통과.
     this.triGrid.query(x - pad, z - pad, x + pad, z + pad, (t) => {
-      if (feetY >= t.top - 0.05) return;
+      if (feetY >= (t.top===-Infinity?-Infinity:t.topPlane?t.topPlane[0]*x+t.topPlane[1]*z+t.topPlane[2]:t.top) - 0.05 || feetY+Math.max(2,radius*2)<=(t.bottom??-Infinity)) return;
       const dmx = x - t.mx, dmz = z - t.mz;
       if (dmx * dmx + dmz * dmz > (t.br + radius) * (t.br + radius)) return;
       const ex = [t.ax, t.bx, t.cx], ez = [t.az, t.bz, t.cz];
@@ -288,7 +298,7 @@ export class CollisionWorld {
       const s1 = (x - t.bx) * (t.az - t.bz) - (t.ax - t.bx) * (z - t.bz);
       const s2 = (x - t.cx) * (t.bz - t.cz) - (t.bx - t.cx) * (z - t.cz);
       const s3 = (x - t.ax) * (t.cz - t.az) - (t.cx - t.ax) * (z - t.az);
-      if (!((s1 < 0 || s2 < 0 || s3 < 0) && (s1 > 0 || s2 > 0 || s3 > 0))) best = t.top;
+      if (!((s1 < 0 || s2 < 0 || s3 < 0) && (s1 > 0 || s2 > 0 || s3 > 0))) best = Math.max(best,t.topPlane?t.topPlane[0]*x+t.topPlane[1]*z+t.topPlane[2]:t.top);
     });
     return best;
   }
@@ -302,16 +312,24 @@ export class CollisionWorld {
     const dx = ex - sx, dy = ey - sy, dz = ez - sz;
     let best = Infinity;
     // XZ 구간 [t0,t1](선분 내부 = footprint 내부)에서 y(t)<top 이 되는 첫 t 를 best 로 갱신.
-    const consider = (t0: number, t1: number, top: number): void => {
+    const consider = (t0: number, t1: number, top: number,bottom=-Infinity,topPlane?:[number,number,number]): void => {
       if (t0 < 0) t0 = 0;
       if (t1 > 1) t1 = 1;
       if (t1 < t0) return;
+      if(top===-Infinity)return;
+      if(Number.isFinite(bottom)){
+       if(Math.abs(dy)<1e-12){if(sy<bottom)return;}
+       else {const crossing=(bottom-sy)/dy;if(dy>0)t0=Math.max(t0,crossing);else t1=Math.min(t1,crossing);if(t1<t0)return;}
+      }
+      const slope=topPlane?topPlane[0]*dx+topPlane[1]*dz:0;
+      const ceiling=topPlane?topPlane[0]*sx+topPlane[1]*sz+topPlane[2]+slope*t0:top;
+      const relativeDy=dy-slope;
       const y0 = sy + dy * t0;
       let tHit: number;
-      if (y0 < top) tHit = t0;             // 진입 시점에 이미 옥상 아래 → 즉시 차폐
-      else if (dy >= 0) return;            // 상승 중 + 이미 옥상 위 → 계속 위 → 통과
+      if (y0 < ceiling) tHit = t0;             // 진입 시점에 이미 옥상 아래 → 즉시 차폐
+      else if (relativeDy >= 0) return;            // 상승 중 + 이미 옥상 위 → 계속 위 → 통과
       else {                               // 하강 중 → 옥상 아래로 내려가는 시점
-        tHit = t0 + (top - y0) / dy;
+        tHit = t0 + (ceiling - y0) / relativeDy;
         if (tHit > t1) return;
       }
       if (tHit < best) best = tHit;
@@ -341,7 +359,7 @@ export class CollisionWorld {
         else { const tc = -c / s; if (s > 0) t0 = Math.max(t0, tc); else t1 = Math.min(t1, tc); }
         if (t0 > t1) break;
       }
-      if (t0 <= t1) consider(t0, t1, t.top);
+      if (t0 <= t1) consider(t0, t1, t.top,t.bottom,t.topPlane);
     });
     // 담장 박스(선분-AABB 슬랩) — 개수 적음
     for (const w of this.walls) {

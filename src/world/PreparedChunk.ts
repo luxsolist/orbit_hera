@@ -1,3 +1,4 @@
+import {bindPilotRiverMaterial} from './cities/CheonggyeRiver';
 import {bindStreetLampNight} from './StreetProps';
 import {busanBridgeStreets} from './cities/BusanBridges';
 import * as THREE from 'three';
@@ -25,7 +26,8 @@ export function prepareChunk(chunk:WorldChunk,size:number,ox:number,oz:number,pr
  const geometry=performance.now()-start,roadStart=performance.now();
  const streets=profile.street.geometry&&cb.terrain?prepareStreetMeshes(chunk.objects?.roads??[],cb.terrain,ox,oz,profile.street,busanBridgeStreets(chunk.seoulDetail)):[];
  const streetMs=performance.now()-roadStart,collisionStart=performance.now(),collision=new CollisionWorld();
- for(const b of cb.buildings)collision.addFootprintBox(b.poly,.3,b.top);
+ for(const b of cb.overhead??[])collision.addFootprintBox(b.poly,0,b.top,true,b.holes,b.bottom);
+ for(const b of cb.buildings)collision.addFootprintBox(b.poly,.3,b.top,!!cb.terrain?.compiledStreet,b.holes??[],b.clearanceBottom??-Infinity,b.topPlane);
  for(const w of cb.walls)collision.addWallBox(w.x0,w.x1,w.z0,w.z1,w.top);
  const collisionMs=performance.now()-collisionStart,meshes:MeshPacket[]=[];
  const attribute=(a:THREE.BufferAttribute):Attribute=>({array:a.array,itemSize:a.itemSize,normalized:a.normalized});
@@ -50,6 +52,7 @@ export function chunkTransfers(packet:PreparedChunk):Transferable[]{
  const result=new Set<Transferable>();
  for(const m of packet.meshes){for(const a of Object.values(m.attributes))result.add(a.array.buffer as ArrayBuffer);if(m.index)result.add(m.index.array.buffer as ArrayBuffer);if(m.texture)result.add(m.texture);}
  if(packet.data.terrain)result.add(packet.data.terrain.heights.buffer as ArrayBuffer);
+ if(packet.data.terrain?.roadHeights)result.add(packet.data.terrain.roadHeights.buffer as ArrayBuffer);
  for(const s of packet.streets){for(const v of Object.values(s))if(ArrayBuffer.isView(v))result.add(v.buffer as ArrayBuffer);}
  return [...result];
 }
@@ -67,6 +70,7 @@ export function* assembleChunk(packet:PreparedChunk,ox:number,oz:number,profile:
   else if(m.texture){const tex=new THREE.Texture(m.texture);tex.colorSpace=THREE.SRGBColorSpace;tex.flipY=false;tex.anisotropy=4;tex.needsUpdate=true;material=streetMaterial(tex,ox,oz,profile.street);}
   else {material=new THREE.MaterialLoader().parse(m.material);material.userData.paintedOwned=true;}
   const mesh=new THREE.Mesh(geometry,material);mesh.name=m.name;mesh.castShadow=m.cast;mesh.receiveShadow=m.receive;mesh.renderOrder=m.order;mesh.userData=m.userData;
+  if(mesh.name.startsWith('pilot_river_'))bindPilotRiverMaterial(mesh,ox,oz);
   if(mesh.name==='street_lamp_lenses')bindStreetLampNight(mesh,profile.environment.night);
   // Compute culling bounds before activation, rather than on its first rendered frame.
   setBounds(geometry,m.bounds);group.add(mesh);

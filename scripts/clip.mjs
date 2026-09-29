@@ -26,8 +26,8 @@ export function polyArea(p) {
   return Math.abs(a) / 2;
 }
 
-/** Sutherland-Hodgman — 폴리곤 p([x,z,...])를 축정렬 사각형으로 클립. 결과 평면 좌표(빈 배열 가능, cm 반올림). */
-export function clipRect(p, minX, minZ, maxX, maxZ) {
+/** Sutherland-Hodgman — 폴리곤 p([x,z,...])를 축정렬 사각형으로 클립. 결과 평면 좌표(빈 배열 가능, 기본 1m, 수역 0.01m). */
+export function clipRect(p, minX, minZ, maxX, maxZ, precision = 1) {
   let poly = []; for (let i = 0; i < p.length; i += 2) poly.push([p[i], p[i + 1]]);
   const edge = (pts, inside, ix) => {
     const out = []; const m = pts.length;
@@ -38,7 +38,7 @@ export function clipRect(p, minX, minZ, maxX, maxZ) {
   poly = edge(poly, (P) => P[0] <= maxX, (A, B) => { const t = (maxX - A[0]) / (B[0] - A[0]); return [maxX, A[1] + (B[1] - A[1]) * t]; });
   poly = edge(poly, (P) => P[1] >= minZ, (A, B) => { const t = (minZ - A[1]) / (B[1] - A[1]); return [A[0] + (B[0] - A[0]) * t, minZ]; });
   poly = edge(poly, (P) => P[1] <= maxZ, (A, B) => { const t = (maxZ - A[1]) / (B[1] - A[1]); return [A[0] + (B[0] - A[0]) * t, maxZ]; });
-  const out = []; for (const pt of poly) out.push(Math.round(pt[0]), Math.round(pt[1])); // 1m 정수(용량↓, 게임 규모엔 충분)
+  const out = []; for (const pt of poly) out.push(Math.round(pt[0] * (1 / precision)) / (1 / precision), Math.round(pt[1] * (1 / precision)) / (1 / precision)); // Water uses cm precision to retain narrow banks/islands.
   return dedupeFlat(out);
 }
 
@@ -56,9 +56,9 @@ export function clipSeg(ax, az, bx, bz, xmin, zmin, xmax, zmax) {
 
 /**
  * 폴리라인(도로/담장, [x,z,...])을 사각형으로 클립 → 연속 조각 폴리라인 배열(밖 구간에서 끊김).
- * 2점 세그먼트 분할 대신 폴리라인을 유지해 청크 안에서 연속 리본·중앙선이 그려지도록 한다. cm 반올림 + 2점 이상만.
+ * 2점 세그먼트 분할 대신 폴리라인을 유지해 청크 안에서 연속 리본·중앙선이 그려지도록 한다. 지정 정밀도 반올림(기본 1m) + 2점 이상만.
  */
-export function clipPolylineToRect(p, xmin, zmin, xmax, zmax) {
+export function clipPolylineToRect(p, xmin, zmin, xmax, zmax, precision = 1) {
   const pieces = []; let cur = null; const eps = 1e-6;
   for (let i = 0; i + 3 < p.length; i += 2) {
     const r = clipSeg(p[i], p[i + 1], p[i + 2], p[i + 3], xmin, zmin, xmax, zmax);
@@ -69,5 +69,5 @@ export function clipPolylineToRect(p, xmin, zmin, xmax, zmax) {
     cur.push(r.D[0], r.D[1]);
     if (!r.dToEnd) cur = null; // 사각형을 벗어남 → 조각 종료
   }
-  return pieces.map((pc) => dedupeFlat(pc.map((v) => Math.round(v)))).filter((pc) => pc.length >= 4); // 1m 정수 + 연속중복 제거
+  return pieces.map((pc) => dedupeFlat(pc.map((v) => Math.round(v * (1 / precision)) / (1 / precision)))).filter((pc) => pc.length >= 4); // 지정 정밀도 + 연속중복 제거
 }

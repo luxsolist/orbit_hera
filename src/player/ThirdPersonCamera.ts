@@ -25,7 +25,7 @@ export function cameraBoomFraction(world: GameWorld, origin: THREE.Vector3, end:
       const t=i/steps;
       if(t>fraction)break;
       sample.copy(a).lerp(b,t);
-      if(sample.y<world.heightAt(sample.x,sample.z)+.1){fraction=Math.min(fraction,Math.max(0,t-.2/length));break;}
+      if(sample.y<world.heightAt(sample.x,sample.z,sample.y)+.1){fraction=Math.min(fraction,Math.max(0,t-.2/length));break;}
     }
   }
   return fraction;

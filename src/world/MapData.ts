@@ -1,7 +1,36 @@
 // 런타임에 서버에서 내려받는 전장(맵) 데이터 스키마.
 // 모든 좌표는 로컬 미터(1 unit = 1m, 북 = -Z, 원점 = meta.lat0/lon0).
 
+export interface WaterInfo {
+  version: 1;
+  kind: 'river' | 'stream' | 'canal' | 'lake' | 'pond' | 'reservoir' | 'unknown';
+  style: 'natural' | 'engineered' | 'canal';
+  styleSource: 'tag' | 'default' | 'legacy';
+  widthSource: 'outline' | 'tag' | 'estimate' | 'legacy';
+  sourceEstimate?:number;
+  designWidth?:number;
+  name?: string;
+}
+
 export interface Ring {
+  highway?:string;roadName?:string;oneway?:string;lanes?:string;sourceNodes?:number[];service?:string;access?:string;
+  streetSection?: {version:1;sourceWidth:number;carriageway:number;sidewalk:number;furniture:boolean;clearance:number;mode:"street"|"shared"|"conflict";explicitWidthAdjusted:boolean};
+  structureKind?: 'platform' | 'shelter' | 'canopy';
+  facilityKind?: 'platform' | 'shelter' | 'canopy' | 'toilets' | 'kiosk' | 'garage' | 'shed' | 'utility' | 'tollgate';
+  roofed?: boolean;
+  groundClearance?:number;
+  clearanceSource?:string;
+  supportPoints?:number[];
+  ruin?:boolean;
+  passageGroundParts?:{p:number[];holes?:number[][]}[];
+  passageClearance?:number;
+  walkableProfile?:{a:number[];b:number[];height:number;step:number};
+  widthSource?: 'tag' | 'lanes' | 'class' | 'clearance';
+  bridge?: boolean;
+  tunnel?: boolean;
+  layer?: number;
+  /** Source-preserving water policy; no implicit city-wide engineered river section. */
+  waterInfo?: WaterInfo;
   /** Reviewed replacement asset; attached only by the matching city patch. */
   landmarkModel?: string;
   statueModel?: string;
@@ -10,7 +39,7 @@ export interface Ring {
   seoulArchitecture?: import("./cities/SeoulDetail").DetailBuilding;
   /** Optional audit provenance; absent in older baked tiles. */
   osmId?: string;
-  heightSource?: 'osm-height' | 'levels-estimate' | 'type-estimate' | 'default-estimate' | 'neighbor-estimate';
+  heightSource?: 'osm-height' | 'levels-estimate' | 'type-estimate' | 'default-estimate' | 'neighbor-estimate' | 'footprint-estimate';
   heightTag?: string;
   levelsTag?: string;
   p: number[]; // [x0,z0,x1,z1,...]

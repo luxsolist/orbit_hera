@@ -1,3 +1,7 @@
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,existsSync,rmSync} from 'node:fs';
+import {join} from 'node:path';
+import {tmpdir} from 'node:os';
+import {repairRoadGrades} from '../scripts/repair-road-grades.mjs';
 import {it,expect} from 'vitest';
 import {repairUrbanSpikes,correctedRoadSample,repairLattice,waterContains,auditRoadLattice} from '../scripts/road-grade.mjs';
 import {applyRoadGradePatch} from '../src/world/RoadGradePatch';
@@ -51,4 +55,21 @@ it('preserves broad hills, protected anchors and anomalies beyond the urban limi
  const audit=auditRoadLattice(g,mask,protect,n,n,32,{originX:1024,originZ:2048,locations:true,exclusions:new Map([[k,'exceeds-urban-limit']])});
  expect(audit.reasons['exceeds-urban-limit']).toBeGreaterThan(0);
  expect(audit.locations.some((p:{x:number;z:number})=>p.x===1280&&p.z===2304)).toBe(true);
+});
+
+it('removes an obsolete generated patch on rebuild while read-only audits preserve it',()=>{
+ const root=mkdtempSync(join(tmpdir(),'road-grade-rebuild-'));
+ const write=(p:string,v:unknown)=>{const file=join(root,p);mkdirSync(join(file,'..'),{recursive:true});writeFileSync(file,JSON.stringify(v));};
+ try{
+  write('index.json',[]);
+  write('37/126/tiles.json',{chunks:[{cx:0,cz:0}],chunkSize:1024,terrainSize:3,block:16});
+  write('37/126/0_0/0_0.json',{cx:0,cz:0,terrain:{size:3,heights:Array(9).fill(20)},objects:{roads:[],buildings:[],water:[]}});
+  write('road-grade/index.json',{version:1,cells:{'37/126':['0_0']}});
+  const old={version:1,size:3,points:[[4,20,10]]};write('road-grade/37/126/0_0.json',old);
+  repairRoadGrades({root,cellFilter:'37/126',write:false});
+  expect(JSON.parse(readFileSync(join(root,'road-grade/37/126/0_0.json'),'utf8'))).toEqual(old);
+  repairRoadGrades({root,cellFilter:'37/126'});
+  expect(existsSync(join(root,'road-grade/37/126/0_0.json'))).toBe(false);
+  expect(JSON.parse(readFileSync(join(root,'road-grade/index.json'),'utf8')).cells['37/126']).toEqual([]);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

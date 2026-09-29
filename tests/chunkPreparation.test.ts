@@ -12,17 +12,19 @@ const profile={...paintedSeoul,props:{...paintedSeoul.props,enabled:false},groun
 const raw={cx:0,cz:0,terrain:{size:2,heights:[0,0,0,0]},objects:{buildings:[{p:[10,10,30,10,30,22,10,22],h:20},{p:[510,10,530,10,530,22,510,22],h:40}],roads:[],walls:[],water:[]}} as WorldChunk;
 afterEach(()=>vi.unstubAllGlobals());
 it('transfers geometry without losing facades, building ranges or shared destruction attributes',()=>{
- const packet=prepareChunk(raw,1024,0,0,profile),transfer=chunkTransfers(packet);
+ const packet=prepareChunk({...raw,roadHeights:[4,4,4,4]},1024,0,0,profile),transfer=chunkTransfers(packet);
  expect(new Set(transfer).size).toBe(transfer.length);
  const clone=structuredClone(packet,{transfer:transfer as ArrayBuffer[]});
  expect(packet.meshes[0].attributes.position.array.byteLength).toBe(0);
+ expect(packet.data.terrain!.roadHeights!.byteLength).toBe(0);
+ expect(Array.from(clone.data.terrain!.roadHeights!)).toEqual([4,4,4,4]);
  const it=assembleChunk(clone,0,0,profile);let r=it.next();while(!r.done)r=it.next();const built=r.value;
  const original=buildChunkMesh(raw,1024,0,0,profile);
  expect(built.buildings).toEqual(original.buildings);
  expect(Array.from(built.buildingMesh!.geometry.getAttribute('position').array)).toEqual(Array.from(original.buildingMesh!.geometry.getAttribute('position').array));
  const sections=built.group.children.filter(o=>o.name==='chunk_building_section') as THREE.Mesh[];
  expect(sections.length).toBe(1);expect(sections[0].geometry.getAttribute('position')).toBe(built.buildingMesh!.geometry.getAttribute('position'));
- expect((built.buildingMesh!.material as THREE.Material).customProgramCacheKey()).toContain('painted-reference');
+ expect((built.buildingMesh!.material as THREE.Material).customProgramCacheKey()).toBe((original.buildingMesh!.material as THREE.Material).customProgramCacheKey());
  expect(built.buildingMesh!.geometry.getAttribute('facadeKind')).toBeTruthy();
  disposeChunkGroup(original.group);disposeChunkGroup(built.group);
 });

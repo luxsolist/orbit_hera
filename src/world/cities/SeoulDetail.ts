@@ -1,3 +1,5 @@
+import {reconciledWaterLevel} from '../SurfaceCoherence';
+import {pilotInRiver} from './CheonggyePilot';
 import {athensArchitectureGeometry,athensSiteGeometry} from './AthensArchitecture';
 import {romeArchitectureGeometry,romeSiteGeometry} from './RomeArchitecture';
 import {busanBridgeGeometry,busanBridgeApproachGeometry,type BusanBridge,type BusanBridgeApproach} from './BusanBridges';
@@ -194,8 +196,9 @@ export function addSeoulLandscape(group:THREE.Group,chunk:WorldChunk,ox:number,o
  for(const bridge of d.bridges??[])geos.push(busanBridgeGeometry(bridge,ox,oz));
  for(const approach of d.bridgeApproaches??[])geos.push(busanBridgeApproachGeometry(approach,ox,oz));
  const owned=(x:number,z:number)=>Math.floor(x/1024)===chunk.cx&&Math.floor(z/1024)===chunk.cz;
- for(const a of d.water){if(a.level==null)continue;const xs=a.p.filter((_,i)=>i%2===0),zs=a.p.filter((_,i)=>i%2===1),x=xs.reduce((a,v)=>a+v,0)/xs.length,z=zs.reduce((a,v)=>a+v,0)/zs.length;if(!owned(x,z))continue;const g=new THREE.ShapeGeometry(shape(a.p,a.holes,ox,oz));g.rotateX(-Math.PI/2);g.translate(0,a.level+.03,0);add(g,'#7faaa6');}
- for(const [x,z] of d.trees){const y=height(x,z),h=9+Math.abs(Math.sin(x+z))*5;const crown=new THREE.IcosahedronGeometry(h*.58,1);crown.translate(x-ox,y+h*.75,z-oz);add(crown,'#648159');const trunk=new THREE.CylinderGeometry(.16,.25,h*.6,5);trunk.translate(x-ox,y+h*.3,z-oz);add(trunk,'#796954');}
- for(const wall of d.walls)for(let i=2;i<wall.p.length;i+=2){const ax=wall.p[i-2],az=wall.p[i-1],bx=wall.p[i],bz=wall.p[i+1],x=(ax+bx)/2,z=(az+bz)/2;if(!owned(x,z))continue;const len=Math.hypot(bx-ax,bz-az);if(len<.1)continue;const g=new THREE.BoxGeometry(len,.25,.8);g.rotateY(-Math.atan2(bz-az,bx-ax));g.translate(x-ox,Math.max(height(ax,az),height(bx,bz))+wall.h,z-oz);add(g,'#687171');}
+ for(const a of d.water){const level=reconciledWaterLevel(a,height);if(level==null)continue;const xs=a.p.filter((_,i)=>i%2===0),zs=a.p.filter((_,i)=>i%2===1),x=xs.reduce((a,v)=>a+v,0)/xs.length,z=zs.reduce((a,v)=>a+v,0)/zs.length;if(!owned(x,z)||(chunk.streetPilot&&pilotInRiver(x,z)))continue;const g=new THREE.ShapeGeometry(shape(a.p,a.holes,ox,oz));g.rotateX(-Math.PI/2);g.translate(0,level+.03,0);add(g,'#7faaa6');}
+ for(const [x,z] of d.trees){if(chunk.streetPilot&&pilotInRiver(x,z))continue;const y=height(x,z),h=9+Math.abs(Math.sin(x+z))*5;const crown=new THREE.IcosahedronGeometry(h*.58,1);crown.translate(x-ox,y+h*.75,z-oz);add(crown,'#648159');const trunk=new THREE.CylinderGeometry(.16,.25,h*.6,5);trunk.translate(x-ox,y+h*.3,z-oz);add(trunk,'#796954');}
+ // Pilot walls include their own terrain-following cap in the common wall mesh.
+ for(const wall of chunk.streetPilot?[]:d.walls)for(let i=2;i<wall.p.length;i+=2){const ax=wall.p[i-2],az=wall.p[i-1],bx=wall.p[i],bz=wall.p[i+1],x=(ax+bx)/2,z=(az+bz)/2;if(!owned(x,z)||(chunk.streetPilot&&pilotInRiver(x,z)))continue;const len=Math.hypot(bx-ax,bz-az);if(len<.1)continue;const g=new THREE.BoxGeometry(len,.25,.8);g.rotateY(-Math.atan2(bz-az,bx-ax));g.translate(x-ox,Math.max(height(ax,az),height(bx,bz))+wall.h,z-oz);add(g,'#687171');}
  if(geos.length){const g=mergeGeometries(geos,false);geos.forEach(v=>v.dispose());const m=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9});m.userData.paintedOwned=true;const mesh=new THREE.Mesh(g,m);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);}
 }

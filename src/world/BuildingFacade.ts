@@ -64,9 +64,9 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
   shader.uniforms.cityDetail={value:new THREE.Vector3(profile.buildings.windowContrast,profile.buildings.windowSpacing,profile.buildings.architectureStrength)};
   const maps=citySurfaceMaps(profile.buildings.texturePath);
   for(const [name,texture] of Object.entries(maps))shader.uniforms[name]={value:texture};
-  shader.vertexShader='attribute vec3 facadePosition; attribute float facadeKind; attribute float facadeFace; attribute float facadeVariant; varying float fVariant; varying vec3 fPosition; varying float fKind; varying float fFace;\n'+shader.vertexShader;
-  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nfPosition=facadePosition; fKind=facadeKind; fFace=facadeFace; fVariant=facadeVariant;');
-  shader.fragmentShader=Object.keys(maps).map(name=>`uniform sampler2D ${name};`).join('\n')+'\n'+'uniform vec3 cityDetail; varying float fVariant; varying vec3 fPosition; varying float fKind; varying float fFace;\n'+shader.fragmentShader;
+  shader.vertexShader='attribute vec3 facadePosition; attribute float facadeKind; attribute float facadeFace; attribute float facadeVariant; varying float fRealism; varying float fVariant; varying vec3 fPosition; varying float fKind; varying float fFace;\n'+shader.vertexShader;
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nfPosition=facadePosition; fKind=facadeKind; fFace=facadeFace; fVariant=fract(facadeVariant); fRealism=step(1.0,facadeVariant);');
+  shader.fragmentShader=Object.keys(maps).map(name=>`uniform sampler2D ${name};`).join('\n')+'\n'+'uniform vec3 cityDetail; varying float fRealism; varying float fVariant; varying vec3 fPosition; varying float fKind; varying float fFace;\n'+shader.fragmentShader;
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
     float glazing=0.0;
     float nightGlazing=0.0;
@@ -125,6 +125,16 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
         tintedGlass=mix(painted,tintedGlass,mix(.60,.85,fVariant));
         float distanceSoftening=1.0-smoothstep(.03,.22,max(aa.x,aa.y));
         diffuseColor.rgb=mix(painted,tintedGlass,clamp(glazing*mix(.3,1.0,distanceSoftening)*cityDetail.x,0.0,1.0));
+        // Pilot-only close-range reveal/frame, richer glass and a defined street-level plinth.
+        float nearDetail=fRealism*distanceSoftening*detail;
+        vec2 revealMask=1.0-smoothstep(limit+vec2(.025)-aa,limit+vec2(.025)+aa,cell);
+        float reveal=max(0.0,revealMask.x*revealMask.y-windowMask.x*windowMask.y)*step(1.4,fPosition.y);
+        vec3 clearGlass=mix(vec3(.12,.19,.23),vec3(.35,.46,.53),smoothstep(0.0,1.0,fract(grid.y)));
+        diffuseColor.rgb=mix(diffuseColor.rgb,clearGlass,glazing*nearDetail*.65);
+        diffuseColor.rgb*=1.0-reveal*nearDetail*.35;
+        float sill=(1.0-smoothstep(.015,.05,abs(fract(grid.y)-(.5-limit.y))))*windowMask.x;
+        diffuseColor.rgb+=vec3(.10,.09,.07)*sill*nearDetail;
+        diffuseColor.rgb*=1.0-fRealism*.18*(1.0-smoothstep(.25,.65,fPosition.y));
         float floorBand=smoothstep(.46-aa.y,.46+aa.y,cell.y)*detail;
         diffuseColor.rgb*=1.0-floorBand*.035;
         float baseShade=mix(.9,1.0,smoothstep(0.0,2.5,fPosition.y));

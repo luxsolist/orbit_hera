@@ -202,3 +202,37 @@ describe("CollisionWorld — segmentBlocked (빔/드레인 건물 시야 차폐)
     expect(c.segmentBlocked(-10, 2, 0, 10, 2, 0)).toBe(Infinity);
   });
 });
+
+// A small frontage cut used to be filled back in by the >70% OBB shortcut.
+it("keeps a narrow street frontage notch traversable",()=>{const c=new CollisionWorld();c.addFootprintBox([0,0,20,0,20,20,12,20,12,16,8,16,8,20,0,20],0,30);c.finalize();const p=c.resolveCollision(10,18,0.5,0);expect(p.x).toBeCloseTo(10);expect(p.z).toBeCloseTo(18);expect(c.topAt(10,18)).toBe(-Infinity);expect(c.topAt(4,4)).toBe(30);});
+
+describe("structural layers",()=>{
+ it("allows ground travel and beams below a raised building but blocks its volume",()=>{
+  const c=new CollisionWorld();c.addFootprintBox([-10,-10,10,-10,10,10,-10,10],0,20,true,[],6);c.finalize();
+  expect(c.resolveCollision(0,0,.5,0)).toEqual({x:0,z:0});
+  expect(c.segmentBlocked(-20,2,0,20,2,0)).toBe(Infinity);
+  expect(c.segmentBlocked(-20,10,0,20,10,0)).toBeLessThan(1);
+  expect(c.segmentBlocked(0,0,0,0,30,0)).toBeCloseTo(.2);
+ });
+ it("keeps courtyard interiors empty while retaining the enclosing walls",()=>{
+  const c=new CollisionWorld();c.addFootprintBox([-10,-10,10,-10,10,10,-10,10],0,20,true,[[-5,-5,-5,5,5,5,5,-5]]);c.finalize();
+  expect(c.resolveCollision(0,0,.5,0)).toEqual({x:0,z:0});
+  expect(c.segmentBlocked(-2,2,0,2,2,0)).toBe(Infinity);
+  expect(c.segmentBlocked(0,2,0,15,2,0)).toBeLessThan(1);
+ });
+});
+
+it('does not turn a near-collinear footprint ear into an unbounded blocker',()=>{
+ const w=new CollisionWorld();w.addFootprintBox([96073.0111742171,45704.28504399965,96094.22469995717,45700.08827999965,96092.24641945584,45690.13627199962,96091.03648896926,45690.37004399998,96090.54191884425,45687.87647600011,96090.04734871922,45685.38290800023,96091.16013150083,45685.160268,96089.57044181193,45677.18975600019,96068.46289538447,45681.375388000066,96073.0111742171,45704.28504399965],0,100,true);w.finalize();
+ expect(w.segmentBlocked(96101.63442023106,1,45709.50595199975,96101.63452023106,1,45709.50595199975)).toBeGreaterThan(1);
+ expect(w.segmentBlocked(96081,1,45691,96081.0001,1,45691)).toBeLessThanOrEqual(1);
+});
+
+it('uses sloping support ceilings for movement, roof queries and rays',()=>{
+ const w=new CollisionWorld();w.addFootprintBox([0,0,10,0,10,10,0,10],0,20,true,[],0,[1,0,10]);w.finalize();
+ expect(w.topAt(2,2)).toBeCloseTo(12);
+ expect(w.segmentBlocked(2,12.15,2,2.001,12.15,2)).toBe(Infinity);
+ expect(w.segmentBlocked(2,11,2,2.001,11,2)).toBe(0);
+ expect(w.segmentBlocked(0,15,2,10,15,2)).toBeCloseTo(.5);
+ expect(w.segmentBlocked(2,-2,2,2,-1,2)).toBe(Infinity);
+});

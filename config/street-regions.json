@@ -1,0 +1,71 @@
+{
+  "seoul": {
+    "jongno-cheonggye": {
+      "bounds": [
+        86580,
+        47740,
+        88050,
+        48390
+      ],
+      "halo": 160,
+      "source": "build/seoul-reference/south-korea-260912.osm.pbf",
+      "sidewalk": 2.3,
+      "minCarriageway": 3,
+      "enabled": false
+    },
+    "city-wide": {
+      "coverage": "manifest",
+      "halo": 160,
+      "source": "build/seoul-reference/south-korea-260912.osm.pbf",
+      "sidewalk": 2.3,
+      "minCarriageway": 3,
+      "enabled": true
+    }
+  },
+  "rome": {
+    "historic-pilot": {
+      "bounds": [
+        37888,
+        9216,
+        39936,
+        11264
+      ],
+      "halo": 200,
+      "source": "build/map-sources/centro-latest.osm.pbf",
+      "profile": "historic",
+      "refreshObjects": true,
+      "enabled": false
+    },
+    "city-wide": {
+      "coverage": "manifest",
+      "halo": 200,
+      "source": "build/map-sources/centro-latest.osm.pbf",
+      "profile": "historic",
+      "refreshObjects": true,
+      "enabled": true
+    }
+  },
+  "athens": {
+    "historic-pilot": {
+      "bounds": [
+        62464,
+        1024,
+        64512,
+        3072
+      ],
+      "halo": 200,
+      "source": "build/map-sources/greece-latest.osm.pbf",
+      "profile": "historic",
+      "refreshObjects": true,
+      "enabled": false
+    },
+    "city-wide": {
+      "coverage": "manifest",
+      "halo": 200,
+      "source": "build/map-sources/greece-latest.osm.pbf",
+      "profile": "historic",
+      "refreshObjects": true,
+      "enabled": true
+    }
+  }
+}

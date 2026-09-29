@@ -32,7 +32,12 @@
     "maps:prepare:city": "node scripts/map-command.mjs prepare",
     "build:athens-details": "python3 scripts/build-athens-details.py",
     "build:rome-details": "python3 scripts/build-rome-details.py",
-    "audit:landmark-details": "node scripts/audit-landmark-details.mjs"
+    "audit:landmark-details": "node scripts/audit-landmark-details.mjs",
+    "build:city-surfaces": "node scripts/build-city-surfaces.mjs",
+    "audit:city-surfaces": "node scripts/validate-city-surfaces.mjs",
+    "audit:water": "node scripts/audit-water.mjs",
+    "audit:roads": "node scripts/audit-city-roads.mjs",
+    "build:street-regions": "node scripts/build-street-regions.mjs"
   },
   "dependencies": {
     "three": "^0.169.0"

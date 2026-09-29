@@ -1,9 +1,10 @@
+import {readMapFixture} from './mapFixture';
 import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {correctGwanghwamunRoadGrade,gwanghwamunRoadGrade} from '../src/world/cities/GwanghwamunRoadGrade';
 import {chunkTerrainEntry,sampleChunkHeight} from '../src/world/chunkMesh';
 import type {WorldChunk} from '../src/world/chunkManifest';
-const load=(cx:number,cz:number)=>JSON.parse(readFileSync(`public/maps/37/126/5_2/${cx}_${cz}.json`,'utf8')) as WorldChunk;
+const load=(cx:number,cz:number)=>readMapFixture(`public/maps/37/126/5_2/${cx}_${cz}.json`) as WorldChunk;
 it('removes alternating road humps through the intersection and preserves original data',()=>{
  const raw=load(84,46),before=JSON.stringify(raw),out=correctGwanghwamunRoadGrade([37,126],raw),t=chunkTerrainEntry(out,1024)!;
  for(let z=47700;z<=48000;z+=8)expect(sampleChunkHeight(t,86300,z)).toBeCloseTo(gwanghwamunRoadGrade(86300,z),4);

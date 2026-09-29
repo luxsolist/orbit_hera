@@ -32,6 +32,10 @@
 //     --force-terrain : stream 맵이라도 1단계(도시별 .bin)를 강제로 굽는다(디버깅용 — 평소엔 불필요)
 //     --zoom=N        : terrarium 줌(기본 13)
 import { execFileSync } from "node:child_process";
+import {streetRegions} from './street-config.mjs';
+import {restoreMapBuildInputs} from './complete-map-chunks.mjs';
+import {readFileSync} from 'node:fs';
+import {buildCitySurfaces} from './build-city-surfaces.mjs';
 import { MAPS } from "./maps.config.mjs";
 
 const args = process.argv.slice(2);
@@ -59,6 +63,11 @@ const run = (label, file, a) => {
 
 console.error(`=== 맵데이터 파이프라인: ${id} ===`);
 
+const registeredCities=JSON.parse(readFileSync('config/map-cities.json','utf8'));
+const targetCity=Object.entries(registeredCities).find(([name,cell])=>name===(m.stream?.id?.replace(/-stream$/, '')??m.id)||cell[0]===Math.floor(m.lat0)&&cell[1]===Math.floor(m.lon0))?.[0];
+streetRegions(targetCity??m.stream?.id?.replace(/-stream$/, '')??m.id,undefined,{requireSource:true,requireCityCoverage:true});
+if(targetCity)restoreMapBuildInputs(targetCity);
+
 // 1) 지형 DEM(실측) — stream 맵은 build-world 가 geodem 으로 직접 뽑으므로 원칙적으로 불필요.
 //    heightmap 스펙이 있고, stream 이 아니거나(미래의 monolithic 맵) --force-terrain 일 때만 굽는다.
 if (m.heightmap && (forceTerrain || !m.stream)) {
@@ -79,4 +88,6 @@ run("3/4 타일 청크", "scripts/build-world.mjs", [id]);
 // 4) 검증 게이트 — error 있으면 비0 → 여기서 파이프라인 실패
 run("4/4 검증", "scripts/validate-world.mjs", [id]);
 
-console.error(`\n✅ ${id} 파이프라인 완료 (DEM → OSM → 청크 → 검증 통과)`);
+buildCitySurfaces(targetCity??m.stream?.id?.replace(/-stream$/, '')??m.id);
+
+console.error(`\n✅ ${id} 파이프라인 완료 (DEM → OSM → 청크 → 필수 검증 통과; 도로 전수 품질은 build/<city>-road-profile.json 참조)`);

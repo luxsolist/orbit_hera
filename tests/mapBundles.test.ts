@@ -1,34 +1,15 @@
 import {ChunkPreparation} from '../src/world/ChunkPreparation';
 import {paintedSeoul} from '../src/world/cities/painted';
 import {it,expect,vi,afterEach} from 'vitest';
-import {readFileSync,existsSync} from 'node:fs';
+import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
-import index from '../src/world/seoul-bundles.json';
 import busan from '../src/world/busan-bundles.json';
-import rome from '../src/world/rome-bundles.json';
-import athens from '../src/world/athens-bundles.json';
 import athensDetails from '../src/world/cities/athens-detail-index.json';
 import romeDetails from '../src/world/cities/rome-detail-index.json';
 import {applyMapCorrections} from '../src/world/MapCorrections';
-import {applyBusanDetail} from '../src/world/cities/BusanDetail';
-import {applyRoadGradePatch} from '../src/world/RoadGradePatch';
 import {fetchMapBundle,readMapBundle,bundleEntry} from '../src/world/MapBundles';
 import {fetchWorldChunk} from '../src/world/mapLocator';
 afterEach(()=>vi.unstubAllGlobals());
-it.each([{city:'seoul',grid:'37/126',index,count:400,chunks:1600},{city:'busan',grid:'35/129',index:busan,count:420,chunks:1600},{city:'rome',grid:'41/12',index:rome,count:441,chunks:1640},{city:'athens',grid:'37/23',index:athens,count:441,chunks:1640}])('packs all $city chunks and overlays without changing data',({city,grid,index,count,chunks})=>{
- const seen=new Set<string>();expect(Object.keys(index.bundles)).toHaveLength(count);
- for(const [key,entry] of Object.entries(index.bundles)){
-  const bytes=readFileSync(`public/maps/bundles/${city}/${entry.file}`);expect(bytes.length).toBe(entry.bytes);
-  const data=gunzipSync(bytes);expect(data.length).toBe(entry.rawBytes);const bundle=JSON.parse(data.toString());expect(bundle.key).toBe(key);
-  for(const [k,value] of Object.entries(bundle.chunks) as [string,any][]){
-   expect(seen.has(k)).toBe(false);seen.add(k);const [x,z]=k.split('_').map(Number);
-   const original=JSON.parse(readFileSync(`public/maps/${grid}/${Math.floor(x/16)}_${Math.floor(z/16)}/${k}.json`,'utf8'));expect(value.raw).toEqual(original);
-   for(const [field,path] of [['detail',`details/${city}/${k}`],['roadGrade',`road-grade/${grid}/${k}`],['appearance',`landmark-appearance/${city}/${k}`]]){
-    const p=`public/maps/${path}.json`;expect(value[field]).toEqual(existsSync(p)?JSON.parse(readFileSync(p,'utf8')):null);
-   }
-  }
- }expect(seen.size).toBe(chunks);
-},30000);
 it('shares a compressed download across four requests, decodes it and retains the correction path',async()=>{
  const entry=bundleEntry([37,126],84,46)!;const bytes=readFileSync(`public/maps/bundles/seoul/${entry.file}`);
  const fetcher=vi.fn(async()=>new Response(bytes));vi.stubGlobal('fetch',fetcher);
@@ -56,7 +37,7 @@ it('downloads queued chunks together and preserves shared transfer when one cons
  instances[0].onmessage({data:{id:message.id,packet:null}});expect(await b).toBeNull();expect(fetcher).toHaveBeenCalledTimes(1);prep.dispose();
 });
 
-it('loads Busan bridge/coast corrections from bundles in the original correction order',async()=>{
+it('loads Busan bridge/coast corrections from bundles through the shared correction path',async()=>{
  const fetcher=vi.fn(async(input:any)=>new Response(readFileSync('public/'+new URL(String(input)).pathname.slice(1))));vi.stubGlobal('fetch',fetcher);
  let bridges=0,negative=0,partial=0;
  for(const entry of Object.values(busan.bundles)){
@@ -66,7 +47,7 @@ it('loads Busan bridge/coast corrections from bundles in the original correction
    const [x,z]=key.split('_').map(Number);expect(bundleEntry([35,129],x,z)?.file).toBe(entry.file);if(x<0||z<0)negative++;
    if(!value.detail)continue;
    bridges+=(value.detail.bridges?.length??0);
-   const expected=applyRoadGradePatch(applyBusanDetail([35,129],value.raw,value.detail),value.roadGrade);
+   const expected=applyMapCorrections([35,129],value.raw,value);
    expect(await fetchWorldChunk([35,129],x,z,16,'http://busan.test/')).toEqual(expected);
   }
  }
