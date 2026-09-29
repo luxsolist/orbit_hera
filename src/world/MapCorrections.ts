@@ -9,7 +9,7 @@ import type {Cell,WorldChunk} from './chunkManifest';
 import type {BundleChunk} from './MapBundles';
 import {applyRoadGradePatch,applyRoadNetworkPatch} from './RoadGradePatch';
 import {applyBusanDetail} from './cities/BusanDetail';
-import {applySeoulDetail} from './cities/SeoulDetail';
+import {applySeoulDetail,restoreRegionalArchitecture} from './cities/SeoulDetail';
 import {applySeoulLandmarkAppearance} from './cities/SeoulLandmarkAppearance';
 import {correctGwanghwamunRoadGrade} from './cities/GwanghwamunRoadGrade';
 import {correctGwanghwamunStatues} from './cities/GwanghwamunStatues';
@@ -31,7 +31,7 @@ const afterRoad:Record<string,Correction>={
  },
 };
 export function applyMapCorrections(cell:Cell,chunk:WorldChunk,overlays:Overlays,options:{streetSections?:boolean;streetPilot?:boolean;surfaceCoherence?:boolean;roadNetwork?:boolean;localRefinement?:boolean}={}):WorldChunk{
- if(chunk.mapBuild?.version===1)return chunk;
+ if(chunk.mapBuild?.version===1)return restoreRegionalArchitecture(chunk);
  const key=cell.join('/');
  chunk=beforeRoad[key]?.(cell,chunk,overlays)??chunk;
  chunk=applyRoadGradePatch(chunk,overlays.roadGrade);

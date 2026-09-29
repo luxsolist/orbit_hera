@@ -33,7 +33,7 @@ describe('Seoul source-bound landmark detail',()=>{
  });
  it('preserves existing three palace assets and the palace terrain patch',()=>{
   for(const key of ['84_45','84_46']){const raw=correctPalaceSite([37,126],correctGyeongbokgungChunk([37,126],load(key))),out=applySeoulDetail([37,126],raw,detail(key));
-   for(const b of raw.objects.buildings.filter(b=>b.landmarkModel||b.palaceBuildingId))expect(out.objects.buildings).toContain(b);
+   for(const b of raw.objects.buildings.filter(b=>b.landmarkModel||b.palaceBuildingId))expect(out.objects.buildings).toContainEqual(b.structureKind?Object.fromEntries(Object.entries(b).filter(([key])=>key!=='structureKind')):b);
   }
  });
  it('every architectural replacement produces finite bounded geometry',()=>{

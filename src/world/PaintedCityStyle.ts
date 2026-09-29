@@ -41,17 +41,21 @@ export function applyPaintedMaterials(group:THREE.Group,settings:CityNightSettin
     const isFacade=shader.fragmentShader.includes('float glazing=0.0;');
     if(isFacade)shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
       float seed=fVariant*113.0+fFace*19.0;
-      float room=fract(sin(dot(nightCell,vec2(12.9898,78.233))+seed)*43758.5453);
+      for(int paneLayer=0;paneLayer<3;paneLayer++){
+      vec2 paneCell=paneLayer==0?nightCell:paneLayer==1?nightFarCell:nightCoarseCell;
+      float paneMask=paneLayer==0?nightGlazing:paneLayer==1?nightFarGlazing:nightCoarseGlazing;
+      float room=fract(sin(dot(paneCell,vec2(12.9898,78.233))+seed)*43758.5453);
       float building=fract(sin(fVariant*719.0)*43758.5453);
       float occupied=fKind<.5?nightOccupancy.x:fKind<1.5?nightOccupancy.y:fKind<2.5?nightOccupancy.z:nightOccupancy.w;
       occupied=clamp(occupied*mix(.55,1.45,building),0.0,1.0);
       occupied=mix(occupied,nightShopOccupancy,step(.01,nightShop));
-      float lit=mix(step(1.0-occupied,room),occupied,nightUnresolved);
-      float tintPick=fract(sin(dot(nightCell,vec2(39.346,11.135))+seed)*27183.17);
-      vec3 lamp=mix(nightWarm,nightCool,mix(step(1.0-nightWindow.x,tintPick),nightWindow.x,nightUnresolved));
-      float strength=fract(sin(dot(nightCell,vec2(73.156,52.235))+seed)*19341.7);
-      strength=mix(nightWindow.z,nightWindow.w,mix(strength*strength,1.0/3.0,nightUnresolved));
-      totalEmissiveRadiance+=lamp*nightGlazing*lit*cityNight*nightWindow.y*strength;
+      float lit=step(1.0-occupied,room);
+      float tintPick=fract(sin(dot(paneCell,vec2(39.346,11.135))+seed)*27183.17);
+      vec3 lamp=mix(nightWarm,nightCool,step(1.0-nightWindow.x,tintPick));
+      float strength=fract(sin(dot(paneCell,vec2(73.156,52.235))+seed)*19341.7);
+      strength=mix(nightWindow.z,nightWindow.w,strength*strength);
+      totalEmissiveRadiance+=lamp*paneMask*lit*cityNight*nightWindow.y*strength;
+      }
 
     `);
     shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`
@@ -66,11 +70,11 @@ export function applyPaintedMaterials(group:THREE.Group,settings:CityNightSettin
      float clearValue=dot(clearPaint,vec3(.2126,.7152,.0722));
      clearPaint=max(vec3(0.0),mix(vec3(clearValue),clearPaint,1.14));
      outgoingLight=mix(outgoingLight,clearPaint,.90)*(1.0+wash*.012);
-     outgoingLight=mix(outgoingLight,outgoingLight*nightTint+totalEmissiveRadiance*.9,cityNight);
+     outgoingLight=mix(outgoingLight,outgoingLight*nightTint*${isFacade?'0.45':'1.0'}+totalEmissiveRadiance*.9,cityNight);
      #include <opaque_fragment>
     `);
    };
-   material.customProgramCacheKey=()=>key+'-painted-city-night-v6';
+   material.customProgramCacheKey=()=>key+'-painted-city-night-v8';
    return material;
   };
   const previous=object.onBeforeRender;

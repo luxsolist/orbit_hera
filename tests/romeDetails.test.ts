@@ -1,10 +1,11 @@
+import {readMapFixture} from './mapFixture';
 import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {applyRomeDetail} from '../src/world/cities/RomeDetail';
 import {romeArchitectureGeometry,romeSiteGeometry} from '../src/world/cities/RomeArchitecture';
 import index from '../src/world/cities/rome-detail-index.json';
 import catalog from '../scripts/data/landmark-catalog.json';
-const read=(p:string)=>JSON.parse(readFileSync(p,'utf8'));
+const read=(p:string)=>readMapFixture(p);
 it('preserves original terrain and binds Rome models once without leaking to other cities',()=>{
  let models=0,sites=0;
  for(const key of index.chunks){const [x,z]=key.split('_').map(Number),raw=read(`public/maps/41/12/${Math.floor(x/16)}_${Math.floor(z/16)}/${key}.json`),d=read(`public/maps/details/rome/${key}.json`),snapshot=JSON.stringify(raw);

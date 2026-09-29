@@ -60,7 +60,7 @@ it('loads all Rome landmark overlays and additions through the bundled correctio
  for(const key of romeDetails.chunks){const [x,z]=key.split('_').map(Number),base='http://rome-packed.test/';const packed=(await readMapBundle([41,12],x,z,base))!;
   const result=await fetchWorldChunk([41,12],x,z,16,base);
   expect(result).toEqual(applyMapCorrections([41,12],packed.raw,packed));
-  additions+=(packed.detail as any)?.add?.length??0;sites+=packed.detail?.romeSites?.length??0;
+  additions+=((packed.detail??packed.raw.mapBuild?.input.detail) as any)?.add?.length??0;sites+=(packed.detail??packed.raw.mapBuild?.input.detail)?.romeSites?.length??0;
  }
  expect(additions).toBeGreaterThan(0);expect(sites).toBe(3);expect(fetcher).toHaveBeenCalled();
 });
@@ -70,7 +70,7 @@ it('loads Athens landmarks through bundles without separate detail requests',asy
  let sites=0;
  for(const key of athensDetails.chunks){const [x,z]=key.split('_').map(Number),base='http://athens-packed.test/';const packed=(await readMapBundle([37,23],x,z,base))!;
   expect(await fetchWorldChunk([37,23],x,z,16,base)).toEqual(applyMapCorrections([37,23],packed.raw,packed));
-  sites+=packed.detail?.athensSites?.length??0;
+  sites+=(packed.detail??packed.raw.mapBuild?.input.detail)?.athensSites?.length??0;
  }
  expect(sites).toBeGreaterThan(0);
 });

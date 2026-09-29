@@ -27,20 +27,55 @@ export interface SeoulDetail {
  buildings:DetailBuilding[];remove?:number[][];areas:Surface[];water:Surface[];paths:Path[];
  walls:{id:string;p:number[];h:number}[];trees:number[][];terrain:number[][];
 }
-/** Immutable, exact baked-footprint binding. Unknown heights stay unknown; no neighbor-height propagation. */
+/** Source identity survives rounding, ring rotation and new boundary vertices. */
+export function regionalDetailMatcher(details:DetailBuilding[]){
+ const identity=(id:string|undefined)=>id?.replace(/^(way|relation)\/(\d+)\/\d+$/, '$1/$2');
+ const byShape=new Map(details.map(d=>[JSON.stringify(d.p),d]));
+ const byId=new Map<string,DetailBuilding[]>();
+ for(const d of details){const id=identity(d.id);if(id)byId.set(id,[...(byId.get(id)??[]),d]);}
+ const bounds=(p:number[])=>[Math.min(...p.filter((_,i)=>i%2===0)),Math.min(...p.filter((_,i)=>i%2===1)),Math.max(...p.filter((_,i)=>i%2===0)),Math.max(...p.filter((_,i)=>i%2===1))];
+ return (b:Ring)=>{
+  const exact=byShape.get(JSON.stringify(b.p));if(exact)return exact;
+  const matches=byId.get(identity(b.osmId)??'')??[];if(!matches.length)return undefined;const a=bounds(b.p);
+  const scored=matches.map(d=>{const q=bounds(d.p),overlap=Math.max(0,Math.min(a[2],q[2])-Math.max(a[0],q[0]))*Math.max(0,Math.min(a[3],q[3])-Math.max(a[1],q[1]));return {d,score:overlap/Math.max(.001,Math.min((a[2]-a[0])*(a[3]-a[1]),(q[2]-q[0])*(q[3]-q[1])))};}).sort((a,b)=>b.score-a.score);
+  // A multipart relation cannot assign a remote or ambiguous part to this shell.
+  return scored[0]?.score>=.5&&(!scored[1]||scored[0].score-scored[1].score>.05)?scored[0].d:undefined;
+ };
+}
+const authored=(b:Ring)=>!!(b.seoulArchitecture||b.landmarkModel||b.palaceBuildingId||b.statueModel);
+const restoreCache=new WeakMap<WorldChunk,WorldChunk>();
+/** Bind retained authored metadata on older completed chunks; never rerun terrain/roads.
+ * New builds use the same rule before street classification and mesh generation.
+ */
+export function restoreRegionalArchitecture(raw:WorldChunk):WorldChunk{
+ const cached=restoreCache.get(raw);if(cached)return cached;
+ const detail=raw.seoulDetail??raw.mapBuild?.input.detail;
+ const match=regionalDetailMatcher(detail?.buildings??[]);let changed=false;
+ const repair=(b:Ring)=>{
+  let out=b;
+  if(!authored(b)){const d=match(b);if(d?.kind)out={...b,seoulArchitecture:d,...(d.h!=null?{h:d.h}:{}),...(d.name?{n:d.name}:{}),...(d.heightSource?{heightSource:d.heightSource}:{})};}
+  if(authored(out)&&out.structureKind){out={...out};delete out.structureKind;}
+  if(out!==b)changed=true;return out;
+ };
+ const buildings=raw.objects.buildings.map(repair),structures:Ring[]=[];
+ for(const b of raw.objects.structures??[]){const out=repair(b);if(authored(out)){buildings.push(out);changed=true;}else structures.push(out);}
+ const result=changed?{...raw,objects:{...raw.objects,buildings,structures}}:raw;
+ restoreCache.set(raw,result);restoreCache.set(result,result);return result;
+}
+/** Immutable source-identity and footprint binding. Unknown heights stay unknown; no neighbor-height propagation. */
 export function applySeoulDetail(cell:Cell,raw:WorldChunk,detail:SeoulDetail):WorldChunk {
  if(cell[0]!==37||cell[1]!==126)return raw;
  return applyRegionalDetail(raw,detail,true);
 }
 /** Shared immutable detail binding used by Seoul and Busan. Legacy field names preserve worker compatibility. */
 export function applyRegionalDetail(raw:WorldChunk,detail:SeoulDetail,protectPalace=false):WorldChunk {
- if(raw.seoulDetail)return raw;
+ if(raw.seoulDetail)return restoreRegionalArchitecture(raw);
  if(!['buildings','areas','paths','walls','water','trees','terrain'].every(k=>Array.isArray(detail[k as keyof SeoulDetail])))return raw;
- const byShape=new Map(detail.buildings.map(b=>[JSON.stringify(b.p),b]));
+ const matchDetail=regionalDetailMatcher(detail.buildings);
  const removed=new Set((detail.remove??[]).map(p=>JSON.stringify(p)));
  const buildings=raw.objects.buildings.filter(b=>!removed.has(JSON.stringify(b.p))).map(b=>{
   if(b.landmarkModel||b.palaceBuildingId)return b;
-  const d=byShape.get(JSON.stringify(b.p));if(!d)return b;
+  const d=matchDetail(b);if(!d)return b;
   return {...b,...(d.h!=null?{h:d.h}:{}),osmId:d.id,...(d.heightSource?{heightSource:d.heightSource}:{}),
    ...(d.heightTag?{heightTag:d.heightTag}:{}),...(d.levelsTag?{levelsTag:d.levelsTag}:{}),
    ...(d.wallColor?{landmarkAppearance:{p:b.p,source:'https://www.openstreetmap.org/'+d.id,height:null,levels:null,roofShape:'flat',roofHeight:null,wallColor:d.wallColor,roofColor:null,wallMaterial:null,buildingType:null,status:'photo-palette-estimate'}}:{}),
@@ -66,7 +101,7 @@ export function applyRegionalDetail(raw:WorldChunk,detail:SeoulDetail,protectPal
  }
  const roadReplacements=new Map((detail.roadReplacements??[]).map(r=>[JSON.stringify(r.p),r.pieces]));
  const roads=raw.objects.roads.flatMap(r=>{const pieces=roadReplacements.get(JSON.stringify(r.p));return pieces?pieces.map(p=>({...r,p})):[r];});
- return {...raw,seoulDetail:detail,terrain:{...raw.terrain,heights},objects:{...raw.objects,buildings,walls,roads}};
+ return restoreRegionalArchitecture({...raw,seoulDetail:detail,terrain:{...raw.terrain,heights},objects:{...raw.objects,buildings,walls,roads}});
 }
 const builder=new StructureBuilder();
 function shape(p:number[],holes:number[][],ox:number,oz:number){

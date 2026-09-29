@@ -71,7 +71,10 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
     float glazing=0.0;
     float nightGlazing=0.0;
     vec2 nightCell=vec2(0.0);
-    float nightUnresolved=0.0;
+    float nightFarGlazing=0.0;
+    vec2 nightFarCell=vec2(0.0);
+    float nightCoarseGlazing=0.0;
+    vec2 nightCoarseCell=vec2(0.0);
     float nightShop=0.0;
     vec2 surfaceUv=(fFace>1.5?fPosition.xz:vec2(fFace<.5?fPosition.z:fPosition.x,fPosition.y))/4.0;
     if(fFace<1.5 && fKind<.5)surfaceUv=vec2(fFace<.5?fPosition.z:fPosition.x,fPosition.y)/vec2(1.92,1.76);
@@ -105,15 +108,32 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
         vec2 windowMask=1.0-smoothstep(limit-aa,limit+aa,cell);
         float detail=1.0-smoothstep(.25,.65,max(aa.x,aa.y));
         glazing=windowMask.x*windowMask.y*detail*step(1.4,fPosition.y);
-        // Night visibility uses one low-rise world-space pitch for every archetype.
-        // Dense office windows must not extinguish sooner than masonry windows.
+
+        // Keep discrete panes at distance: never replace them with area-average emission.
+        // A common sparse grid keeps dense office windows visible as long as low-rise windows.
         vec2 nightReference=vec2(fFace<.5?fPosition.z:fPosition.x,fPosition.y)/vec2(3.1*cityDetail.y,3.2);
-        float nightDetail=1.0-smoothstep(.25,.65,max(fwidth(nightReference.x),fwidth(nightReference.y)));
-        // Preserve average luminous coverage when individual panes become subpixel.
-        float unresolved=smoothstep(.25,.65,max(aa.x,aa.y));
-        nightUnresolved=unresolved;
-        float nightCoverage=mix(windowMask.x*windowMask.y,4.0*limit.x*limit.y,unresolved);
-        nightGlazing=nightCoverage*nightDetail*step(1.4,fPosition.y);
+        nightReference.x+=fVariant;
+
+        vec2 referenceAA=max(fwidth(nightReference),vec2(.002));
+        // Screen-space footprint selects stable, world-anchored window groups.
+        // Blend adjacent powers of two instead of stretching a pattern with camera motion.
+        float nightLod=clamp(log2(max(max(referenceAA.x,referenceAA.y)/.12,1.0)),0.0,4.0);
+        float groupScale=exp2(floor(nightLod));
+        float groupBlend=fract(nightLod);
+        vec2 groupGrid=nightReference/groupScale;
+        vec2 coarseGrid=groupGrid*.5;
+        vec2 nightAA=referenceAA/groupScale,coarseAA=nightAA*.5;
+        float nightDetail=1.0-smoothstep(.25,.50,max(nightAA.x,nightAA.y));
+        float nightBlend=smoothstep(.10,.25,max(aa.x,aa.y));
+        vec2 farCell=abs(fract(groupGrid)-.5),coarseCell=abs(fract(coarseGrid)-.5);
+        vec2 farAA=min(nightAA,vec2(.08)),coarseEdge=min(coarseAA,vec2(.08));
+        vec2 farMask=1.0-smoothstep(vec2(.27,.28)-farAA,vec2(.27,.28)+farAA,farCell);
+        vec2 coarseMask=1.0-smoothstep(vec2(.27,.28)-coarseEdge,vec2(.27,.28)+coarseEdge,coarseCell);
+        nightFarCell=floor(groupGrid);
+        nightCoarseCell=floor(coarseGrid);
+        nightGlazing=windowMask.x*windowMask.y*(1.0-nightBlend)*step(1.4,fPosition.y);
+        nightFarGlazing=farMask.x*farMask.y*nightBlend*(1.0-groupBlend)*nightDetail*step(1.4,fPosition.y);
+        nightCoarseGlazing=coarseMask.x*coarseMask.y*nightBlend*groupBlend*nightDetail*step(1.4,fPosition.y);
         float variation=fract(sin(dot(floor(grid),vec2(12.9898,78.233)))*43758.5453);
         vec3 glass=mix(vec3(.23,.32,.38),vec3(.42,.51,.56),variation*.5);
         // Preserve sampled paint hue: texture supplies relative luminance, not a second paint color.
@@ -189,6 +209,6 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
     }
   `);
  };
- material.customProgramCacheKey=()=> 'city-facades-architectural-v7';
+ material.customProgramCacheKey=()=> 'city-facades-architectural-v9';
  return material;
 }

@@ -1,9 +1,10 @@
+import {readMapFixture} from './mapFixture';
 import {it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {applyAthensDetail} from '../src/world/cities/AthensDetail';
 import {athensArchitectureGeometry,athensSiteGeometry} from '../src/world/cities/AthensArchitecture';
 import index from '../src/world/cities/athens-detail-index.json';
-const read=(p:string)=>JSON.parse(readFileSync(p,'utf8'));
+const read=(p:string)=>readMapFixture(p);
 it('binds Athens source footprints once, keeps terrain/roads intact and leaves other cities untouched',()=>{
  let buildings=0,sites=0;
  for(const key of index.chunks){const [x,z]=key.split('_').map(Number),raw=read(`public/maps/37/23/${Math.floor(x/16)}_${Math.floor(z/16)}/${key}.json`),d=read(`public/maps/details/athens/${key}.json`),before=JSON.stringify(raw);
