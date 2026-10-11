@@ -107,15 +107,15 @@ describe("city-catalog.json — 생성 결과", () => {
 });
 
 describe("maps.config — 손 맵 + 생성 맵 병합", () => {
-  it("100개(손 4 + 생성 96) — 기등록 도시와 빌드 제외 도시는 생성에서 빠진다", () => {
-    // 97 → 96: 예루살렘이 buildExcluded(큐레이션 정책 판단, 2026-08-27). 카탈로그 100선에는
-    // 남아 있고 MAPS 에서만 빠진다 — 이 차이가 곧 "빌드하지 않는다"의 실체다.
-    expect(MAPS).toHaveLength(100);
+  it("도시 전역 가로 구역이 등록된 도시만 맵이 된다(손 2 + 생성 1)", () => {
+    // 100선 카탈로그는 장 배속·큐레이션 정본으로 남고, 최신 빌드가 가능한 도시만 MAPS 에 오른다.
+    expect((MAPS as { id: string }[]).map((m) => m.id).sort()).toEqual(["athens", "gyeongbokgung", "rome"]);
     const gen = MAPS.filter((m: { chapter?: number }) => m.chapter !== undefined);
-    expect(gen).toHaveLength(96);
-    // 서울/부산/로마는 손 맵이 담당 → 생성 목록에 없어야(도시가 두 벌 생기지 않게)
-    for (const id of ["seoul", "busan", "rome"]) {
-      expect(gen.find((m: { id: string }) => m.id === id), id).toBeUndefined();
+    expect(gen.map((m: { id: string }) => m.id)).toEqual(["athens"]);
+    const regions = JSON.parse(readFileSync("config/street-regions.json", "utf8"));
+    for (const m of MAPS as { id: string; stream: { id: string } }[]) {
+      const city = m.stream.id.replace(/-stream$/, "");
+      expect(Object.values(regions[city] ?? {}).some((r) => (r as { enabled?: boolean }).enabled), city).toBe(true);
     }
   });
 
@@ -143,11 +143,11 @@ describe("maps.config — 손 맵 + 생성 맵 병합", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("기존 스트리밍 3맵의 카탈로그 id 가 보존된다(저장 슬롯·자매쌍이 이 id 로 묶여 있음)", () => {
+  it("스트리밍 맵의 카탈로그 id 가 보존된다(저장 슬롯이 이 id 로 묶여 있음)", () => {
     const byId = new Map((MAPS as { id: string; stream: { id: string } }[]).map((m) => [m.id, m.stream.id]));
     expect(byId.get("gyeongbokgung")).toBe("seoul-stream");
-    expect(byId.get("busan")).toBe("busan-stream");
-    expect(byId.get("everest")).toBe("everest-stream");
+    expect(byId.get("rome")).toBe("rome-stream");
+    expect(byId.get("athens")).toBe("athens-stream");
   });
 
   it("cityMapDef — 반경 20km DEM 과 맵 범위가 같은 규격", () => {

@@ -856,7 +856,7 @@ def encode_region(data,result,output_dir=None):
         if len(output)%100==0:print('street compiler: encoded',len(output),flush=True)
     return dict(format='chunk-files',chunks=output) if output_dir else output
 def main():
-    city=sys.argv[1] if len(sys.argv)>1 else 'seoul';region=sys.argv[2] if len(sys.argv)>2 else 'jongno-cheonggye'
+    city=sys.argv[1] if len(sys.argv)>1 else 'seoul';region=sys.argv[2] if len(sys.argv)>2 else 'city-wide'
     path=ROOT/f'build/streets/{city}-{region}-input.json';raw=path.read_bytes();data=json.loads(raw)
     data['_sourceHash']=hashlib.sha256(raw).hexdigest()
     del raw

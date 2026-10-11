@@ -8,16 +8,15 @@ import {groundedWall} from './GroundedBarrier';
 import {inPilot,cutPilotRiver,pilotInRiver,pilotGroundHeight,pilotBridgeAt} from './cities/CheonggyePilot';
 import {surfaceTriangles} from './SurfacePartition';
 import {addPilotRiver,addPilotBridgeStructures} from './cities/CheonggyeRiver';
-import {addPilotStreetDetails} from './cities/CheonggyeStreetDetails';
-import {busanBridgeStreets} from './cities/BusanBridges';
+import {addPilotStreetDetails,pilotTreeSites} from './cities/CheonggyeStreetDetails';
 import {landmarkRoof} from './cities/SeoulLandmarkAppearance';
 import {statueGeometry} from './cities/GwanghwamunStatues';
-import {seoulArchitectureGeometry,paintSeoulDetail,addSeoulLandscape} from './cities/SeoulDetail';
-import {palaceSiteBuilding,paintPalaceGround,addPalaceLandscape,inPalace} from './cities/PalaceSite';
+import {seoulArchitectureGeometry,paintSeoulDetail,addSeoulLandscape,seoulDetailTrees} from './cities/SeoulDetail';
+import {palaceSiteBuilding,paintPalaceGround,addPalaceLandscape,inPalace,palaceTrees} from './cities/PalaceSite';
 import {palaceGeometry} from './cities/Gyeongbokgung';
 import {applyPaintedMaterials} from './PaintedCityStyle';
 import {addStreetGeometry,type StreetMeshData} from './StreetGeometry';
-import {defaultAppearance,seoulAppearance,type CityAppearance} from './cities';
+import {defaultAppearance,type CityAppearance} from './cities';
 // 타일 월드 청크(WorldChunk, 셀-로컬 m) → THREE 메시 + 충돌/높이 등록 데이터.
 // StreamingWorld 의 ChunkIO.build 가 호출하는 동기 메시화 단계(시간예산 빌드 큐 안에서 실행).
 //
@@ -25,8 +24,11 @@ import {defaultAppearance,seoulAppearance,type CityAppearance} from './cities';
 // 플레이어를 원점 근처에 두고 Float32 정밀도를 확보한다(부동 원점 단순화판).
 import * as THREE from "three";
 import {addStreetProps} from "./StreetProps";
+import {vegetationSites,localVegetation,addVegetation,paintCanopyShade,type AuthoredTree} from "./Vegetation";
+import {addParkFurniture} from "./ParkFurniture";
 import {paintUrbanGround} from "./UrbanGround";
-import {paintStreets, streetMaterial, STREET} from "./StreetSurface";
+import {paintStreets, streetMaterial, waterSurface, STREET} from "./StreetSurface";
+import {facadeGrammar,grammarFacadeKind,grammarPaint,grammarOrnaments,signDensity,GRAMMAR,type GrammarKind} from "./FacadeGrammar";
 import { landmarkHighlightEnabled, facadeStyle, facadeColor, facadeVariant, applyRoofColor, dressBuilding, createFacadeMaterial } from "./BuildingFacade";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { setUniformColor, elevationColor, GROUND_GREEN, SAND_TAN } from "./geo";
@@ -77,6 +79,8 @@ export interface ChunkBuild {
   roads: { p: number[]; w: number }[];
   /** 수역 폴리(로컬) — 미니맵용. */
   water: number[][];
+  /** Detail-tier tree instances (Vegetation.VEGETATION_STRIDE, local frame); rendered on the main thread. */
+  vegetation?: Float32Array;
 }
 
 // 지형은 청크 전용 베이크 텍스처(map)를 쓴다(아래 bakeSurfaceTexture). terrainMat 은 텍스처 실패 시 폴백(고도 vertexColors).
@@ -113,6 +117,11 @@ const MAX_TEX = 1024;         // 청크 텍스처 한 변 최대 px(메모리 �
  * 면(비초록)·수역·도로·중앙선을 평면 페인트. 셀-로컬 [x,z,...] → 캔버스 px(원점=셀 NW, +X=동/+Z=남).
  * 반환 텍스처는 청크 전용(언로드 시 dispose). document 없거나 ctx 실패면 null(폴백 vertexColors).
  */
+/** The flat water paint the terrain shader recognises (one colour for rivers, lakes and sea). */
+export function waterSurfaceColor(profile:CityAppearance):string{return profile.ground.waterColor ?? WATER_CSS;}
+/** Regional detail patches draw their water bodies in this colour (SeoulDetail landscape). */
+export const DETAIL_WATER_CSS='#7faaa6';
+
 /** 선형 채널값(0..1) → sRGB 바이트(0..255). 캔버스 ImageData 는 sRGB 를 기대한다. 순수. */
 export function linearToSrgbByte(v: number): number {
   const c = v <= 0 ? 0 : v >= 1 ? 1 : v;
@@ -124,7 +133,7 @@ function makeSurfaceCanvas(w:number,h:number): HTMLCanvasElement | OffscreenCanv
  return typeof document === "undefined" ? new OffscreenCanvas(w,h) : Object.assign(document.createElement("canvas"),{width:w,height:h});
 }
 
-function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain, profile:CityAppearance=defaultAppearance): THREE.CanvasTexture | null {
+function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain, profile:CityAppearance=defaultAppearance, trees:number[]=[]): THREE.CanvasTexture | null {
   if (typeof document === "undefined" && typeof OffscreenCanvas === "undefined") return null;
   const { size: tn, cellX0, cellZ0, step } = t;
   const chunkSize = step * (tn - 1);
@@ -197,6 +206,17 @@ function bakeSurfaceTexture(chunk: WorldChunk, t: ChunkTerrain, profile:CityAppe
       ctx.closePath();
     }
     ctx.fill("evenodd");
+  }
+  // Detail tier: baked contact shade (ambient-occlusion stand-in) at building feet and under crowns.
+  const shade=profile.detail?.contactShade??0;
+  if(shade>0){
+    ctx.save();ctx.lineJoin="round";
+    for(const [width,alpha] of [[9,.25],[5.5,.35],[2.5,.4]]){
+      ctx.strokeStyle=`rgba(22,28,30,${shade*alpha})`;ctx.lineWidth=width*sc;
+      for(const b of chunk.objects?.buildings??[])if(b.p.length>=6){trace(b.p,true);ctx.stroke();}
+    }
+    ctx.restore();
+    paintCanopyShade(ctx,trees,sc,cellX0,cellZ0,shade*1.3);
   }
   if(!profile.street.geometry)paintStreets(ctx,chunk.objects?.roads??[],sc,cellX0,cellZ0,profile.street);
 
@@ -354,15 +374,41 @@ export function forEachLandmarkNear(
   }
 }
 
-export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: number, originZ: number, appearance:CityAppearance|boolean = defaultAppearance, streets?:StreetMeshData[], preparing=false): ChunkBuild {
-  // Boolean compatibility for older standalone review pages. Runtime passes a city profile.
-  const profile=typeof appearance==='boolean'?(appearance?seoulAppearance:defaultAppearance):appearance;
+/** Nearest street direction and main-street flag (w ≥ 10m within 28m) per building centroid. Cell-local. */
+function streetFrontage(roads:WorldChunk['objects']['roads']):(x:number,z:number)=>{toward:[number,number];main:boolean}|undefined {
+  const bins=new Map<number,{ax:number;az:number;bx:number;bz:number;w:number}[]>();
+  for(const r of roads){if((r.w??0)<3||r.tunnel)continue;for(let i=2;i<r.p.length;i+=2){
+    const s={ax:r.p[i-2],az:r.p[i-1],bx:r.p[i],bz:r.p[i+1],w:r.w??6};
+    for(let a=Math.floor((Math.min(s.ax,s.bx)-40)/64);a<=Math.floor((Math.max(s.ax,s.bx)+40)/64);a++)for(let b=Math.floor((Math.min(s.az,s.bz)-40)/64);b<=Math.floor((Math.max(s.az,s.bz)+40)/64);b++){const k=a*65536+b,l=bins.get(k);if(l)l.push(s);else bins.set(k,[s]);}
+  }}
+  return (x,z)=>{
+    let best=Infinity,dx=0,dz=0,main=false;
+    for(const s of bins.get(Math.floor(x/64)*65536+Math.floor(z/64))??[]){
+      const ex=s.bx-s.ax,ez=s.bz-s.az,t=Math.max(0,Math.min(1,((x-s.ax)*ex+(z-s.az)*ez)/(ex*ex+ez*ez||1))),px=s.ax+ex*t,pz=s.az+ez*t;
+      const d=Math.hypot(px-x,pz-z)-s.w/2;if(d<best){best=d;dx=px-x;dz=pz-z;}
+      if(s.w>=10&&d<28)main=true;
+    }
+    if(!Number.isFinite(best))return undefined;
+    const len=Math.hypot(dx,dz)||1;return {toward:[dx/len,dz/len],main};
+  };
+}
+
+export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: number, originZ: number, profile:CityAppearance = defaultAppearance, streets?:StreetMeshData[], preparing=false): ChunkBuild {
   const detailedBuildings=profile.buildings.enabled;
   const group = new THREE.Group();
   group.name = `chunk:${chunk.cx}:${chunk.cz}`;
 
   // ── 지형 격자 ── 표면 텍스처(도로/물/면 베이크)를 UV 매핑. 텍스처 실패 시 고도 vertexColors 폴백.
   const terrain = chunkTerrainEntry(chunk, chunkSize);
+  // One tree model city-wide. Patch-authored trees (landmark groves, palace, Cheonggye pilot)
+  // keep their positions but render through the shared vegetation instances.
+  const unifiedTrees = !!terrain && !!profile.detail?.vegetation.enabled;
+  const authoredTrees: AuthoredTree[] = unifiedTrees ? [
+    ...seoulDetailTrees(chunk).map(([x,z])=>({x,z,kind:'grand' as const})),
+    ...(chunk.palaceSite?palaceTrees(chunk):[]).map(([x,z])=>({x,z,kind:'palace' as const})),
+    ...(chunk.streetPilot?pilotTreeSites(chunk):[]).map(([x,z])=>({x,z,kind:'street' as const})),
+  ] : [];
+  const treeSites = unifiedTrees ? vegetationSites(chunk, chunkSize, profile.detail!.vegetation, authoredTrees) : [];
   if (terrain) {
     const { size: tn, step, cellX0, cellZ0, heights } = terrain;
     const positions: number[] = [];
@@ -400,9 +446,9 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
       geo.setAttribute('position',new THREE.Float32BufferAttribute(cutPositions,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(cutUV,2));geo.setAttribute('color',new THREE.Float32BufferAttribute(cutColors,3));
     }else geo.setIndex(idx);
     geo.computeVertexNormals();
-    const tex = bakeSurfaceTexture(chunk, terrain, profile);
+    const tex = bakeSurfaceTexture(chunk, terrain, profile, treeSites);
     // 텍스처 성공 → 청크 전용 머티리얼(언로드 시 dispose). 실패 → 공유 폴백(고도 vertexColors).
-    const mat = tex ? streetMaterial(tex,originX,originZ,profile.street) : terrainMat;
+    const mat = tex ? streetMaterial(tex,originX,originZ,profile.street,waterSurface(profile,waterSurfaceColor(profile))) : terrainMat;
     const mesh = new THREE.Mesh(geo, mat);
     mesh.name="chunk_terrain";
     mesh.receiveShadow = true;
@@ -415,6 +461,9 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
   const bcol = new THREE.Color();
   let bVtx = 0; // 병합 누적 정점 수 — 건물별 정점 범위(병합은 입력 순서 보존) 추적
   const sourceBuildings=chunk.objects?.buildings??[];
+  // Detail tier: district facade grammar needs street frontage (nearest road) per building.
+  const grammarSettings=detailedBuildings?profile.detail?.grammar:undefined,grammarMode=!!grammarSettings;
+  const frontage=grammarMode?streetFrontage(chunk.objects?.roads??[]):undefined;
   const blockKey=(b:typeof sourceBuildings[number])=>{const xs=b.p.filter((_,i)=>i%2===0),zs=b.p.filter((_,i)=>i%2===1);return `${Math.floor(((Math.min(...xs)+Math.max(...xs))/2-originX)/256)}:${Math.floor(((Math.min(...zs)+Math.max(...zs))/2-originZ)/256)}`;};
   const orderedBuildings=preparing?[...sourceBuildings].sort((a,b)=>blockKey(a).localeCompare(blockKey(b))):sourceBuildings;
   for (const b of orderedBuildings) {
@@ -441,7 +490,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     if(b.statueModel){
       const statue=statueGeometry(b.statueModel,originX,originZ,contact.max);
       if(statue){
-        if(detailedBuildings)dressBuilding(statue,local,contact.max,-1);
+        if(detailedBuildings)dressBuilding(statue,local,contact.max,-1,0,grammarMode?0:undefined);
         statue.computeBoundingBox();const vCount=statue.getAttribute('position').count;
         bGeos.push(statue);buildings.push({poly:local,top:statue.boundingBox!.max.y,baseY:contact.max,vStart:bVtx,vCount,lm:b.lm,n:b.n});bVtx+=vCount;continue;
       }
@@ -449,7 +498,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     if(b.landmarkModel){
       const palace=palaceGeometry(b.landmarkModel,originX,originZ,contact.max,contact.min-.6);
       if(palace){
-        if(detailedBuildings)dressBuilding(palace,local,contact.max,-1);
+        if(detailedBuildings)dressBuilding(palace,local,contact.max,-1,0,grammarMode?0:undefined);
         palace.computeBoundingBox();const roof=palace.boundingBox!.max.y;
         const vCount=palace.getAttribute('position').count;
         bGeos.push(palace);buildings.push(...withPassages({poly:local,top:roof,baseY:contact.min-.6,vStart:bVtx,vCount,lm:b.lm,n:b.n}));bVtx+=vCount;
@@ -460,7 +509,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     if(b.seoulArchitecture){
       const asset=seoulArchitectureGeometry(b,originX,originZ,contact.max,contact.min-.6);
       if(asset){
-        if(detailedBuildings)dressBuilding(asset,local,contact.max,-1);
+        if(detailedBuildings)dressBuilding(asset,local,contact.max,-1,0,grammarMode?0:undefined);
         asset.computeBoundingBox();const vCount=asset.getAttribute('position').count;
         bGeos.push(asset);buildings.push(...withPassages({poly:local,top:asset.boundingBox!.max.y,baseY:contact.min-.6,vStart:bVtx,vCount,lm:b.lm,n:b.n}));bVtx+=vCount;
         continue;
@@ -470,13 +519,14 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     if(b.palaceBuildingId){
       const palace=palaceSiteBuilding(b.palaceBuildingId,originX,originZ,baseY,b);
       if(palace){
-        if(detailedBuildings)dressBuilding(palace,local,baseY,-1);
+        if(detailedBuildings)dressBuilding(palace,local,baseY,-1,0,grammarMode?0:undefined);
         palace.computeBoundingBox();const vCount=palace.getAttribute('position').count;
         bGeos.push(palace);buildings.push({poly:local,top:palace.boundingBox!.max.y,baseY,vStart:bVtx,vCount,lm:b.lm,n:b.n});bVtx+=vCount;
         continue;
       }
     }
     const roof=landmarkRoof(b,local,baseY,top);
+    let grammar:GrammarKind=GRAMMAR.none,toward:[number,number]|undefined;
     const shape = new THREE.Shape();
     shape.moveTo(local[0], -local[1]);
     for (let i = 1; i < n; i++) shape.lineTo(local[i * 2], -local[i * 2 + 1]);
@@ -508,11 +558,17 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
       let style=highlight||b.facilityKind?-1:facadeStyle(h,Math.abs(area)*.5,profile);
       if(!highlight&&!b.facilityKind&&b.landmarkAppearance?.wallMaterial==='glass')style=2;
       if(!highlight&&!b.facilityKind&&b.landmarkAppearance?.wallMaterial==='brick')style=0;
+      // Photo-palette wall colours (Seoul detail patch) still take the grammar; sourced materials do not.
+      const plainShell=!b.landmarkAppearance||b.landmarkAppearance.status==='photo-palette-estimate';
+      const street=frontage&&style>=0&&plainShell&&!b.lm?frontage(cxs/n,czs/n):undefined;
+      grammar=street&&grammarSettings?facadeGrammar(cxs/n,czs/n,h,Math.abs(area)*.5,street.main,grammarSettings):GRAMMAR.none;
+      toward=street?.toward;
+      if(grammar!==GRAMMAR.none)style=grammarFacadeKind(grammar,style);
       if(style>=0){
-        bcol.setHex(facadeColor(cxs/n,czs/n,profile));
+        bcol.setHex((grammarSettings&&grammarPaint(grammar,cxs/n,czs/n,grammarSettings))??facadeColor(cxs/n,czs/n,profile));
       }
-      if(b.landmarkAppearance?.wallColor)bcol.set(b.landmarkAppearance.wallColor);
-      geo=dressBuilding(geo,local,pilotBuilding?floorY:baseY,style,facadeVariant(cxs/n,czs/n)+(pilotBuilding?1:0));
+      if(b.landmarkAppearance?.wallColor&&grammar!==GRAMMAR.glassTower)bcol.set(b.landmarkAppearance.wallColor);
+      geo=dressBuilding(geo,local,pilotBuilding?floorY:baseY,style,facadeVariant(cxs/n,czs/n)+(pilotBuilding?1:0),grammarMode?grammar:undefined);
       if(roof){const faces=geo.getAttribute('facadeFace');for(let i=bodyVertices;i<faces.count;i++)faces.setX(i,2);}
     }
     setUniformColor(geo, bcol);
@@ -520,6 +576,20 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
       if(b.landmarkAppearance?.roofColor){const colors=geo.getAttribute('color'),faces=geo.getAttribute('facadeFace'),color=new THREE.Color(b.landmarkAppearance.roofColor);for(let i=0;i<colors.count;i++)if(faces.getX(i)===2)colors.setXYZ(i,color.r,color.g,color.b);}
     }
     geo.deleteAttribute("uv");
+    if(grammar!==GRAMMAR.none&&grammarSettings){
+      // Ornaments join the building's vertex range, so damage tint and collapse include them.
+      const ornament=grammarOrnaments(grammar,local,pilotBuilding?floorY:baseY,top,toward,cxs/n,czs/n,signDensity(cxs/n,czs/n,grammarSettings),grammarSettings.signs);
+      if(ornament){
+        const kinds=ornament.getAttribute('ornamentGrammar').array as Float32Array,signs=ornament.getAttribute('signCoord');
+        ornament.deleteAttribute('ornamentGrammar');ornament.deleteAttribute('signCoord');
+        dressBuilding(ornament,local,pilotBuilding?floorY:baseY,-1,facadeVariant(cxs/n,czs/n),kinds);
+        // Sign faces read face-local metres instead of building-relative facade coordinates.
+        const coords=ornament.getAttribute('facadePosition');for(let i=0;i<kinds.length;i++)if(kinds[i]>=GRAMMAR.sign)coords.setXYZ(i,signs.getX(i),signs.getY(i),signs.getZ(i));
+        const merged=mergeGeometries([geo,ornament],false);
+        if(merged){geo.dispose();geo=merged;}
+        ornament.dispose();
+      }
+    }
     const vCount = geo.getAttribute("position").count;
     bGeos.push(geo);
     // lm/n = 랜드마크 승격 표식(빌드가 부착) — 등록 시 일반 건물과 갈라지는 유일한 신호. 렌더는 동일(병합 메시).
@@ -618,15 +688,18 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     sites.push({ x: st.x - originX, y: st.y, z: st.z - originZ, r: st.r, lm: st.lm, ...(st.n ? { n: st.n } : {}) });
   }
 
-  if(!preparing && profile.street.geometry && terrain)addStreetGeometry(group,chunk.objects?.roads??[],terrain,originX,originZ,profile.street,streets,busanBridgeStreets(chunk.seoulDetail));
+  if(!preparing && profile.street.geometry && terrain)addStreetGeometry(group,chunk.objects?.roads??[],terrain,originX,originZ,profile.street,streets);
 
   if(profile.props.enabled && terrain)addStreetProps(group,chunk,chunkSize,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.props,profile.environment.night);
 
   if(chunk.streetPilot&&terrain){addPilotStreetDetails(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.environment.night);addPilotRiver(group,chunk.cx,chunk.cz,chunkSize,originX,originZ,(x,z)=>sampleChunkLandHeight(terrain,x,z));addPilotBridgeStructures(group,chunk.objects.roads,chunk.cx,chunk.cz,chunkSize,originX,originZ,(x,z)=>sampleStreetHeight(terrain,x,z));}
-  if(chunk.seoulDetail&&terrain)addSeoulLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
+  if(chunk.seoulDetail&&terrain)addSeoulLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),waterSurface(profile,DETAIL_WATER_CSS));
   if(chunk.palaceSite&&terrain)addPalaceLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
+  if(profile.detail?.parkFurniture && terrain)addParkFurniture(group,chunk,chunkSize,originX,originZ,(x,z)=>compiledStreetHeight(chunk.compiledStreet,x,z)??sampleChunkHeight(terrain,x,z),profile);
+  const vegetation = treeSites.length ? localVegetation(treeSites,(x,z)=>compiledStreetHeight(chunk.compiledStreet,x,z)??sampleChunkHeight(terrain,x,z),originX,originZ) : undefined;
+  if(!preparing)addVegetation(group,vegetation,profile.detail?.vegetation);
   if(!preparing && profile.renderStyle==='painted')applyPaintedMaterials(group,profile.environment.night);
-  return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, overhead, walls, roads, water, sites };
+  return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, overhead, walls, roads, water, sites, ...(vegetation?{vegetation}:{}) };
 }
 
 /**
@@ -636,7 +709,9 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
 export function disposeChunkGroup(group: THREE.Group): void {
   group.traverse((o) => {
     const mesh = o as THREE.Mesh;
-    if (mesh.geometry) mesh.geometry.dispose();
+    // Shared vegetation templates outlive chunks; only their per-chunk instance buffers are released.
+    if (mesh instanceof THREE.InstancedMesh) mesh.dispose();
+    if (mesh.geometry && !mesh.geometry.userData.shared) mesh.geometry.dispose();
     const mat = mesh.material as THREE.MeshStandardMaterial | undefined;
     if (mat?.map) { const image=mat.map.image; if(typeof ImageBitmap!=="undefined" && image instanceof ImageBitmap)image.close(); mat.map.dispose(); mat.dispose(); }
     else if(mat?.userData.paintedOwned)mat.dispose();

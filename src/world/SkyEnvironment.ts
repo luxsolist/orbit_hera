@@ -2,6 +2,7 @@ import {cityNightSky,defaultCityNight} from './cities/night';
 import {solarState,type CityClock} from './CityTime';
 import type {CityAppearance} from './cities/types';
 import * as THREE from "three";
+import {cityUniforms} from "./cityUniforms";
 import type { SpawnPoint } from "./MapData";
 import { SKY_COLOR, FOG_COLOR, FOG_NEAR_RATIO, FOG_FAR_DEFAULT, LIGHT } from "./palette";
 
@@ -21,7 +22,7 @@ export class SkyEnvironment {
 
 
   /** viewFar = 지오메트리가 존재하는 최대 거리(스트리밍 청크 로드 반경). 포그가 그 지점에서 끝난다. */
-  constructor(private scene: THREE.Scene, spawn: SpawnPoint, viewFar = FOG_FAR_DEFAULT, private environment?:CityAppearance['environment']) {
+  constructor(private scene: THREE.Scene, spawn: SpawnPoint, viewFar = FOG_FAR_DEFAULT, private environment?:CityAppearance['environment'], hazeStart=FOG_NEAR_RATIO) {
     const light=environment?.light??LIGHT;
     const hemi = new THREE.HemisphereLight(light.hemiSky, light.hemiGround, light.hemi);
     scene.add(hemi);this.hemi=hemi;
@@ -51,7 +52,8 @@ export class SkyEnvironment {
     scene.background = new THREE.Color(environment?.sky??SKY_COLOR); // 차분한 회청 — 청백 플라즈모이드가 묻히지 않게
     // 포그의 실질 기능은 **청크 경계 은폐**(로드 반경 밖은 지오메트리가 없다). 교전 사거리를 흐리지
     // 않도록 늦게 시작해 경계에서 100% 가 된다. 색은 하늘보다 밝다 — 같게 두면 원경이 가라앉는다(palette.ts).
-    scene.fog = new THREE.Fog(environment?.fog??FOG_COLOR, viewFar * FOG_NEAR_RATIO, viewFar);
+    // Detail tier starts earlier for aerial perspective; it still reaches 100% at the load boundary.
+    scene.fog = new THREE.Fog(environment?.fog??FOG_COLOR, viewFar * hazeStart, viewFar);
     this.update(spawn.x,spawn.z);
   }
 
@@ -77,8 +79,9 @@ export class SkyEnvironment {
       }
     }
     const s=this.solar;
-    if(s)this.sun.position.set(px+s.x*700,Math.max(45,s.y*700),pz+s.z*700);
+    if(s){this.sun.position.set(px+s.x*700,Math.max(45,s.y*700),pz+s.z*700);this.scene.userData.citySun=[s.x,s.y,s.z];cityUniforms.sun.value.set(s.x,s.y,s.z);}
     else this.sun.position.set(px + 300, 680, pz + 360); // 남동 오전 햇살(상대 방향 고정)
+    cityUniforms.time.value=performance.now()/1000;cityUniforms.daylight.value=s?.dayLight??1;cityUniforms.night.value=s?.night??0;
     this.sun.target.position.set(px, 0, pz);
   }
 }

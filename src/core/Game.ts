@@ -9,7 +9,6 @@ import { Input } from "./Input";
 import { MobileControls } from "./MobileControls";
 import { Sfx } from "./Sfx";
 import { Diagnostics } from "./Diagnostics";
-import { World } from "../world/World";
 import { StreamingWorld } from "../world/StreamingWorld";
 import { EXPOSURE } from "../world/palette";
 import type { GameWorld } from "../world/GameWorld";
@@ -38,8 +37,8 @@ import { KillBurst } from "../fx/killBurst";
 import { CinematicPlayer } from "../intro/CinematicPlayer";
 import { MenuBackground } from "../intro/MenuBackground";
 import { introScenes, menuScenes } from "../intro/scenes";
-import { fetchMap, fetchCatalog, loadTerrainHeights } from "../world/maps";
-import type { MapCatalogEntry, NormalizedMap } from "../world/MapData";
+import { fetchCatalog } from "../world/maps";
+import type { MapCatalogEntry } from "../world/MapData";
 import { GameInstance, runDeploy } from "../game/GameInstance";
 import { fetchMissions } from "../game/missions";
 import type { MissionOutcome } from "../game/mission";
@@ -269,21 +268,14 @@ export class Game {
     this.menu.hide();
     this.state = "loading";
     this.overlaySubtitle.textContent = "전장 전송 중… / DOWNLOADING";
-    // 카탈로그에서 이 전장이 스트리밍(타일 월드)인지 판별 — 모놀리식 <id>.json 은 스트리밍이 아닐 때만 받는다.
+    // 모든 전장은 스트리밍 타일 월드(완성 청크)다 — 카탈로그 항목이 좌표와 도시 프로필을 정한다.
     let entry: MapCatalogEntry | undefined;
     try {
       entry = (await fetchCatalog()).find((c) => c.id === id);
     } catch (e) {
       return this.failToMenu("전장 목록 로드 실패 — " + (e as Error).message);
     }
-    let map: NormalizedMap | undefined;
-    if (!entry?.stream) {
-      try {
-        map = await fetchMap(id);
-      } catch (e) {
-        return this.failToMenu("전송 실패 — " + (e as Error).message);
-      }
-    }
+    if (!entry?.stream || entry.lat == null || entry.lon == null) return this.failToMenu("스트리밍 전장 정보 누락 — " + id);
     // 고른 기체 스펙 로드
     let drone: DroneSpec;
     try {
@@ -315,18 +307,12 @@ export class Game {
     // 다음 프레임으로 넘겨 UI 가 갱신되도록
     await new Promise((r) => setTimeout(r, 16));
 
-    // 스트리밍 전장: 타일 월드를 플레이어 주변만 청크로 로드(StreamingWorld). 그 외: 모놀리식 World.
+    // 타일 월드를 플레이어 주변만 청크로 로드(StreamingWorld).
     let world: GameWorld;
-    if (entry?.stream) {
-      if (entry.lat == null || entry.lon == null) return this.failToMenu("스트리밍 전장 좌표 누락 — " + id);
-      try {
-        world = await StreamingWorld.create(this.scene, this.balanceReview ? 37.5725 : entry.lat, this.balanceReview ? 126.9769 : entry.lon, entry.spawnYaw ?? 0, entry.id, !!this.balanceReview);
-      } catch (e) {
-        return this.failToMenu("타일 월드 로드 실패 — " + (e as Error).message);
-      }
-    } else {
-      const terrainHeights = await loadTerrainHeights(map!); // DEM 하이트맵(있으면) — 없으면 null → 절차적 폴백
-      world = new World(this.scene, map!, terrainHeights);
+    try {
+      world = await StreamingWorld.create(this.scene, this.balanceReview ? 37.5725 : entry.lat, this.balanceReview ? 126.9769 : entry.lon, entry.spawnYaw ?? 0, entry.id, !!this.balanceReview);
+    } catch (e) {
+      return this.failToMenu("타일 월드 로드 실패 — " + (e as Error).message);
     }
     if(this.balanceReview){
       world.spawn.yaw=0;

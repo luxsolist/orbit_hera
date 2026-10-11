@@ -12,20 +12,16 @@ __pycache__/
 # Raw chunks, temporary output and correction sidecars remain local.
 # Keep other cities tracked until they have verified compressed replacements.
 /public/maps/37/126/*/
-/public/maps/35/129/*/
 /public/maps/41/12/*/
 /public/maps/37/23/*/
 
 /public/maps/road-grade/37/126/
-/public/maps/road-grade/35/129/
 /public/maps/road-grade/41/12/
 /public/maps/road-grade/37/23/
 /public/maps/details/seoul/
-/public/maps/details/busan/
 /public/maps/details/rome/
 /public/maps/details/athens/
 /public/maps/landmark-appearance/seoul/
-/public/maps/landmark-appearance/busan/
 /public/maps/landmark-appearance/rome/
 /public/maps/landmark-appearance/athens/
 

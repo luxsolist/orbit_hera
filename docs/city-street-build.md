@@ -18,7 +18,7 @@ config/street-regions.json에서 coverage를 manifest로 지정하면 해당 도
 
 ~~~bash
 npm run build:street-regions -- seoul city-wide
-node scripts/pack-street-region.mjs seoul city-wide
+node scripts/build-map-bundles.mjs seoul
 ~~~
 
 첫 명령은 준비 → 설계 → 메시 생성 → 면/지지/충돌/청크 경계 검사 → 보정 파일 반영 순서다. 둘째 명령은 검증 결과와 해시를 확인하고 400개 묶음을 생성한 뒤 인덱스를 마지막에 교체한다. 현재 실행 화면의 전환 기준은 이 인덱스다. Git 커밋/푸시와 GitHub Releases 게시를 자동으로 수행하지 않는다.

@@ -17,4 +17,3 @@ export const paintedSeoul:CityAppearance={
  environment:{night:seoulNight,clock:{latitude:37.5665,longitude:126.978,timeZone:'Asia/Seoul'},sky:0xb3cde2,fog:0xc8d2df,light:{hemiSky:0xbfcfdf,hemiGround:0xc9bda2,hemi:1.3,sunColor:0xfff0d7,sun:2.2,fillColor:0xadcbe8,fill:.35}}
 };
 
-export {paintedBusan} from './busan';

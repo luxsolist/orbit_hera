@@ -80,6 +80,19 @@ export function paintPalaceGround(ctx:CanvasRenderingContext2D,scale:number,x0:n
  for(const pond of site.water){ctx.beginPath();trace(pond.p);for(const p of pond.holes)trace(p);ctx.fillStyle='#71968f';ctx.fill('evenodd');}
  ctx.restore();
 }
+/** Palace grove positions owned by this chunk (authored trees + wood-area grid); cell-local. */
+export function palaceTrees(chunk:WorldChunk):number[][]{
+ const owned=(x:number,z:number)=>Math.floor(x/1024)===chunk.cx&&Math.floor(z/1024)===chunk.cz;
+ const trees=site.trees.map(t=>t.p);
+ for(const wood of site.areas.filter(a=>a.kind==='wood')){
+  const xs=wood.p.filter((_,i)=>i%2===0),zs=wood.p.filter((_,i)=>i%2===1);
+  for(let gx=Math.min(...xs)+5;gx<Math.max(...xs);gx+=12)for(let gz=Math.min(...zs)+5;gz<Math.max(...zs);gz+=12){
+   const x=gx+Math.sin(gx*13+gz*7)*3.6,z=gz+Math.cos(gx*5+gz*11)*3.6;
+   if(inPalace(x,z,wood.p)&&inPalace(x,z)&&!site.water.some(p=>inPalace(x,z,p.p))&&!site.buildings.some(b=>inPalace(x,z,b.p))&&!site.paths.some(p=>edgeDistance(x,z,p.p,false)<p.width/2+2)&&!trees.some(p=>Math.hypot(p[0]-x,p[1]-z)<7))trees.push([x,z]);
+  }
+ }
+ return trees.filter(([x,z])=>owned(x,z)&&!protectedArea(x,z));
+}
 export function addPalaceLandscape(group:THREE.Group,chunk:WorldChunk,ox:number,oz:number,height:(x:number,z:number)=>number){
  const owned=(x:number,z:number)=>Math.floor(x/1024)===chunk.cx&&Math.floor(z/1024)===chunk.cz;
  const geos:THREE.BufferGeometry[]=[];const push=(g:THREE.BufferGeometry,color:string)=>{const n=g.index?g.toNonIndexed():g;if(n!==g)g.dispose();n.deleteAttribute('uv');setUniformColor(n,new THREE.Color(color));geos.push(n);};
@@ -90,15 +103,6 @@ export function addPalaceLandscape(group:THREE.Group,chunk:WorldChunk,ox:number,
   const deck=new THREE.BoxGeometry(len,.35,path.width);deck.rotateY(angle);deck.translate(x-ox,y,z-oz);push(deck,'#bdb7a6');
   for(const side of [-1,1]){const rail=new THREE.BoxGeometry(len,.18,.14);rail.rotateY(angle);rail.translate(x-ox+side*(bz-az)/len*path.width/2,y+.8,z-oz-side*(bx-ax)/len*path.width/2);push(rail,'#a49c86');}
  }
- const trees=site.trees.map(t=>t.p);
- for(const wood of site.areas.filter(a=>a.kind==='wood')){
-  const xs=wood.p.filter((_,i)=>i%2===0),zs=wood.p.filter((_,i)=>i%2===1);
-  for(let gx=Math.min(...xs)+5;gx<Math.max(...xs);gx+=12)for(let gz=Math.min(...zs)+5;gz<Math.max(...zs);gz+=12){
-   const x=gx+Math.sin(gx*13+gz*7)*3.6,z=gz+Math.cos(gx*5+gz*11)*3.6;
-   if(inPalace(x,z,wood.p)&&inPalace(x,z)&&!site.water.some(p=>inPalace(x,z,p.p))&&!site.buildings.some(b=>inPalace(x,z,b.p))&&!site.paths.some(p=>edgeDistance(x,z,p.p,false)<p.width/2+2)&&!trees.some(p=>Math.hypot(p[0]-x,p[1]-z)<7))trees.push([x,z]);
-  }
- }
- for(const [x,z] of trees){if(!owned(x,z)||protectedArea(x,z))continue;const h=5+(Math.abs(Math.round(x*3+z*7))%30)/10,y=height(x,z);const trunk=new THREE.CylinderGeometry(.14,.23,h*.65,5);trunk.translate(x-ox,y+h*.325,z-oz);push(trunk,'#74604a');const crown=new THREE.IcosahedronGeometry(h*.42,1);crown.scale(1,1.15,.95);crown.translate(x-ox,y+h*.76,z-oz);push(crown,['#657e50','#768c59','#536e4c'][Math.abs(Math.round(x+z))%3]);}
  for(const wall of site.walls)for(let i=2;i<wall.p.length;i+=2){const ax=wall.p[i-2],az=wall.p[i-1],bx=wall.p[i],bz=wall.p[i+1],x=(ax+bx)/2,z=(az+bz)/2;if(!owned(x,z))continue;const len=Math.hypot(bx-ax,bz-az);if(len<.1)continue;const g=new THREE.BoxGeometry(len,.24,.85);g.rotateY(-Math.atan2(bz-az,bx-ax));g.translate(x-ox,Math.max(height(ax,az),height(bx,bz))+wall.height+.1,z-oz);push(g,'#596263');}
  if(geos.length){const g=mergeGeometries(geos,false);geos.forEach(g=>g.dispose());const mat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95});mat.userData.paintedOwned=true;const mesh=new THREE.Mesh(g,mat);mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);}
 }

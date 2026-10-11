@@ -8,7 +8,7 @@ import {streetArtifacts,writeStreetPart} from './street-artifacts.mjs';
 import {createElevatedStreetSampler} from './street-elevation.mjs';
 import {crossingHeight} from './street-crossings.mjs';
 import {createStreetSeamSampler,reconcileStreetTerrain} from './street-seams.mjs';
-const [city='seoul',region='jongno-cheonggye']=process.argv.slice(2),read=p=>JSON.parse(readFileSync(p,'utf8'));
+const [city='seoul',region='city-wide']=process.argv.slice(2),read=p=>JSON.parse(readFileSync(p,'utf8'));
 execFileSync(process.env.MAP_PYTHON??'python3',['scripts/street_walk_access.py',city,region],{stdio:'inherit'});
 const base='build/streets/'+city+'-'+region,inputText=readFileSync(base+'-input.json','utf8'),input=JSON.parse(readFileSync(base+'-resolved-input.json','utf8')),regions=streetArtifacts(base+'-regions.json');
 const hash=streetBuildHash(base),compilerVersion=mapBuildVersion(city);

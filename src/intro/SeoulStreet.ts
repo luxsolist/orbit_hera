@@ -1,22 +1,24 @@
 import * as THREE from 'three';
 import {buildChunkMesh,sampleChunkHeight} from '../world/chunkMesh';
-import {paintedSeoul} from '../world/cities/painted';
+import {cityAppearance} from '../world/cities';
+import {fetchWorldChunk} from '../world/mapLocator';
 import {SkyEnvironment} from '../world/SkyEnvironment';
 import {addPaintedSky} from '../world/PaintedCityStyle';
-import {seoulStudyTarget,SEOUL_STUDY_URL,SEOUL_STUDY_ORIGIN} from '../world/SeoulStudyLocation';
+import {seoulStudyTarget,SEOUL_STUDY_CHUNK,SEOUL_STUDY_ORIGIN} from '../world/SeoulStudyLocation';
 import type {WorldChunk} from '../world/chunkManifest';
 import type {Street} from './cinematicAssets';
 let data:WorldChunk|undefined,pending:Promise<void>|undefined;
 export function prepareSeoulStreet():Promise<void>{
  if(data)return Promise.resolve();
- return pending??=fetch(SEOUL_STUDY_URL).then(r=>{if(!r.ok)throw new Error('서울 인트로 지도 로딩 실패');return r.json();}).then(raw=>{data=raw;}).catch(error=>{pending=undefined;throw error;});
+ // Same completed chunk (map bundle) and city profile as gameplay.
+ return pending??=fetchWorldChunk(SEOUL_STUDY_CHUNK.cell,SEOUL_STUDY_CHUNK.cx,SEOUL_STUDY_CHUNK.cz,SEOUL_STUDY_CHUNK.block).then(raw=>{if(!raw)throw new Error('서울 인트로 지도 로딩 실패');data=raw;}).catch(error=>{pending=undefined;throw error;});
 }
 export function mappedSeoulStreet(scene:THREE.Scene):Street|undefined {
  if(!data)return undefined;
- const chunk=buildChunkMesh(data,1024,SEOUL_STUDY_ORIGIN.x,SEOUL_STUDY_ORIGIN.z,paintedSeoul);
+ const profile=cityAppearance('seoul-stream'),chunk=buildChunkMesh(data,1024,SEOUL_STUDY_ORIGIN.x,SEOUL_STUDY_ORIGIN.z,profile);
  const anchor=seoulStudyTarget(chunk);
  chunk.group.position.copy(anchor).multiplyScalar(-1);scene.add(chunk.group);
- const sky=new SkyEnvironment(scene,{x:0,z:0,yaw:0},900,paintedSeoul.environment);addPaintedSky(scene);
+ const sky=new SkyEnvironment(scene,{x:0,z:0,yaw:0},900,profile.environment,profile.detail?.hazeStart);addPaintedSky(scene,profile.environment.paintedSky,profile.environment.night,profile.detail?.clouds.enabled?profile.detail.clouds.coverage:undefined);
  scene.environmentIntensity=0;scene.userData.paintedCity=true;
  scene.userData.introCityUpdate=()=>sky.update(0,0);
  // Keep the same set origin for actors; the establishing shot uses the exact preview camera offset.

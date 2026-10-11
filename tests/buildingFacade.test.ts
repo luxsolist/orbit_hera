@@ -1,3 +1,4 @@
+import {seoulAppearance} from '../src/world/cities';
 import {it,expect} from 'vitest';
 import {buildChunkMesh,disposeChunkGroup} from '../src/world/chunkMesh';
 import {facadeStyle} from '../src/world/BuildingFacade';
@@ -8,7 +9,7 @@ it('selects all four dimensional archetypes',()=>{
  expect([facadeStyle(9,200),facadeStyle(30,300),facadeStyle(90,800),facadeStyle(8,1200)]).toEqual([0,1,2,3]);
 });
 it('preserves shell geometry and collision heights through decoration and collapse',()=>{
- const plain=buildChunkMesh(chunk,1024,0,0),dressed=buildChunkMesh(chunk,1024,0,0,true);
+ const plain=buildChunkMesh(chunk,1024,0,0),dressed=buildChunkMesh(chunk,1024,0,0,seoulAppearance);
  expect(dressed.buildings.map(b=>[b.poly,b.top,b.baseY])).toEqual(plain.buildings.map(b=>[b.poly,b.top,b.baseY]));
  const geometry=dressed.buildingMesh!.geometry,pos=geometry.getAttribute('position');
  expect(geometry.getAttribute('facadePosition').count).toBe(pos.count);
@@ -22,7 +23,7 @@ it('preserves shell geometry and collision heights through decoration and collap
  disposeChunkGroup(plain.group);disposeChunkGroup(dressed.group);
 });
 it('facade patterns stay stable when the streaming origin changes',()=>{
- const a=buildChunkMesh(chunk,1024,0,0,true),b=buildChunkMesh(chunk,1024,100,200,true);
+ const a=buildChunkMesh(chunk,1024,0,0,seoulAppearance),b=buildChunkMesh(chunk,1024,100,200,seoulAppearance);
  const av=a.buildingMesh!.geometry.getAttribute('facadePosition').array,bv=b.buildingMesh!.geometry.getAttribute('facadePosition').array;
  expect(Array.from(a.buildingMesh!.geometry.getAttribute('color').array)).toEqual(Array.from(b.buildingMesh!.geometry.getAttribute('color').array));
  expect(av.length).toBe(bv.length);for(let i=0;i<av.length;i++)expect(av[i]).toBeCloseTo(bv[i],4);

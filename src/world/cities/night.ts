@@ -10,7 +10,6 @@ export const defaultCityNight:CityNightSettings={
 };
 // Independent objects allow each city to evolve without changing the shared renderer.
 export const seoulNight:CityNightSettings={...defaultCityNight};
-export const busanNight:CityNightSettings={...defaultCityNight};
 export const romeNight:CityNightSettings={...defaultCityNight,
  occupancy:[.20,.23,.34,.12],windowColors:[0xffc987,0xffead4],coolShare:.18,
  windowIntensity:.90,brightnessRange:[.35,1],shopOccupancy:.62,

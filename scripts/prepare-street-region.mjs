@@ -8,7 +8,7 @@ import {createReadStream} from 'node:fs';
 import {createInterface} from 'node:readline';
 import {isVehicularHighway,roadWidthInfo,relationPolys,surfaceBuildingKind,structureFields,buildingVerticalFields,buildingHeightInfo,buildingHeightProvenance} from './osm.mjs';
 const read=p=>JSON.parse(readFileSync(p,'utf8'));
-const [city='seoul',region='jongno-cheonggye']=process.argv.slice(2);
+const [city='seoul',region='city-wide']=process.argv.slice(2);
 const cfg=streetRegions(city,region,{requireSource:true})[region];
 const cell=read('config/map-cities.json')[city],mlon=111320*Math.cos((cell[0]+.5)*Math.PI/180);
 if(cfg.coverage==='manifest'){

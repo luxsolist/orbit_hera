@@ -45,4 +45,4 @@ export function auditStreetRegion(city,region){
  if(errors.length)throw Error(errors.join('\n'));
  return {city,region,chunks:plans.keys.length,triangles,routeSamples:a.routeSamples,overlap:0};
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)console.log(JSON.stringify(auditStreetRegion(process.argv[2]??'seoul',process.argv[3]??'jongno-cheonggye')));
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)console.log(JSON.stringify(auditStreetRegion(process.argv[2]??'seoul',process.argv[3]??'city-wide')));

@@ -30,7 +30,7 @@ python3 -m pip install -r scripts/requirements-map-build.txt
 # 등록된 구역을 모두 준비 → 설계 → 삼각형 생성 → 검사 → 보정 파일 반영
 npm run build:street-regions -- seoul jongno-cheonggye
 # 시범구역이 속한 기존 2×2 묶음만 재생성하여 게임/뷰어에 활성화
-node scripts/pack-street-region.mjs seoul jongno-cheonggye
+node scripts/build-map-bundles.mjs seoul
 # 도시 전체 기존 높이 보정까지 재생성할 때도 위 구역 빌드가 포함된다
 npm run build:city-surfaces -- seoul
 ~~~

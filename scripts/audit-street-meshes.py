@@ -45,7 +45,7 @@ def check(key):
   if footprint.intersection(asphalt).area>.001 or footprint.difference(margin).area>.001:errors.append(dict(chunk=key,prop=p))
  return dict(layers=reports,props=count,errors=errors)
 def main():
- city=sys.argv[1] if len(sys.argv)>1 else 'seoul';region=sys.argv[2] if len(sys.argv)>2 else 'jongno-cheonggye';base=Path('build/streets')/(city+'-'+region)
+ city=sys.argv[1] if len(sys.argv)>1 else 'seoul';region=sys.argv[2] if len(sys.argv)>2 else 'city-wide';base=Path('build/streets')/(city+'-'+region)
  raw=base.with_name(base.name+'-plans.json').read_bytes();plans=json.loads(raw);regions=json.loads(base.with_name(base.name+'-regions.json').read_text());keys=list(plans.get('chunks',plans))
  result=dict(planHash=hashlib.sha256(raw).hexdigest(),layers=[],props=0,errors=[])
  with ProcessPoolExecutor(max_workers=min(4,len(keys)),initializer=init,initargs=(plans,regions)) as pool:

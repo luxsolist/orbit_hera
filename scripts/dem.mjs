@@ -1,4 +1,4 @@
-// 실측 DEM(AWS Terrarium 타일) 처리 순수 헬퍼 — build-terrain.mjs 와 테스트가 공유(부수효과 없음).
+// 실측 DEM(AWS Terrarium 타일) 처리 순수 헬퍼 — geodem.mjs 와 테스트가 공유(부수효과 없음).
 // 좌표/디코드 버그는 지형 전체를 조용히 어긋나게 하므로 단위 테스트로 고정한다.
 import zlib from "node:zlib";
 

@@ -1,11 +1,11 @@
 import {bindPilotRiverMaterial} from './cities/CheonggyeRiver';
 import {bindStreetLampNight} from './StreetProps';
-import {busanBridgeStreets} from './cities/BusanBridges';
 import * as THREE from 'three';
-import {buildChunkMesh,facadeMaterial,type ChunkBuild} from './chunkMesh';
+import {buildChunkMesh,facadeMaterial,waterSurfaceColor,DETAIL_WATER_CSS,type ChunkBuild} from './chunkMesh';
+import {addVegetation} from './Vegetation';
 import {CollisionWorld,type CollisionSnapshot} from './CollisionWorld';
 import {addStreetGeometry,prepareStreetMeshes,type StreetMeshData} from './StreetGeometry';
-import {streetMaterial} from './StreetSurface';
+import {streetMaterial,waterSurface,waterMaterial} from './StreetSurface';
 import {applyPaintedMaterials} from './PaintedCityStyle';
 import type {WorldChunk} from './chunkManifest';
 import type {CityAppearance} from './cities';
@@ -24,7 +24,7 @@ export interface PreparedChunk {
 export function prepareChunk(chunk:WorldChunk,size:number,ox:number,oz:number,profile:CityAppearance):PreparedChunk {
  const start=performance.now(),cb=buildChunkMesh(chunk,size,ox,oz,profile,undefined,true);
  const geometry=performance.now()-start,roadStart=performance.now();
- const streets=profile.street.geometry&&cb.terrain?prepareStreetMeshes(chunk.objects?.roads??[],cb.terrain,ox,oz,profile.street,busanBridgeStreets(chunk.seoulDetail)):[];
+ const streets=profile.street.geometry&&cb.terrain?prepareStreetMeshes(chunk.objects?.roads??[],cb.terrain,ox,oz,profile.street):[];
  const streetMs=performance.now()-roadStart,collisionStart=performance.now(),collision=new CollisionWorld();
  for(const b of cb.overhead??[])collision.addFootprintBox(b.poly,0,b.top,true,b.holes,b.bottom);
  for(const b of cb.buildings)collision.addFootprintBox(b.poly,.3,b.top,!!cb.terrain?.compiledStreet,b.holes??[],b.clearanceBottom??-Infinity,b.topPlane);
@@ -53,6 +53,7 @@ export function chunkTransfers(packet:PreparedChunk):Transferable[]{
  for(const m of packet.meshes){for(const a of Object.values(m.attributes))result.add(a.array.buffer as ArrayBuffer);if(m.index)result.add(m.index.array.buffer as ArrayBuffer);if(m.texture)result.add(m.texture);}
  if(packet.data.terrain)result.add(packet.data.terrain.heights.buffer as ArrayBuffer);
  if(packet.data.terrain?.roadHeights)result.add(packet.data.terrain.roadHeights.buffer as ArrayBuffer);
+ if(packet.data.vegetation)result.add(packet.data.vegetation.buffer as ArrayBuffer);
  for(const s of packet.streets){for(const v of Object.values(s))if(ArrayBuffer.isView(v))result.add(v.buffer as ArrayBuffer);}
  return [...result];
 }
@@ -66,8 +67,10 @@ export function* assembleChunk(packet:PreparedChunk,ox:number,oz:number,profile:
   const geometry=new THREE.BufferGeometry();for(const [k,a] of Object.entries(m.attributes))geometry.setAttribute(k,new THREE.BufferAttribute(a.array,a.itemSize,a.normalized));
   if(m.index)geometry.setIndex(new THREE.BufferAttribute(m.index.array,m.index.itemSize));
   let material:THREE.Material;
+  const detailWater=m.name==='detail_water'?waterSurface(profile,DETAIL_WATER_CSS):undefined;
   if(m.name==='chunk_buildings'&&profile.buildings.enabled)material=facadeMaterial(profile);
-  else if(m.texture){const tex=new THREE.Texture(m.texture);tex.colorSpace=THREE.SRGBColorSpace;tex.flipY=false;tex.anisotropy=4;tex.needsUpdate=true;material=streetMaterial(tex,ox,oz,profile.street);}
+  else if(detailWater)material=waterMaterial(ox,oz,detailWater);
+  else if(m.texture){const tex=new THREE.Texture(m.texture);tex.colorSpace=THREE.SRGBColorSpace;tex.flipY=false;tex.anisotropy=4;tex.needsUpdate=true;material=streetMaterial(tex,ox,oz,profile.street,waterSurface(profile,waterSurfaceColor(profile)));}
   else {material=new THREE.MaterialLoader().parse(m.material);material.userData.paintedOwned=true;}
   const mesh=new THREE.Mesh(geometry,material);mesh.name=m.name;mesh.castShadow=m.cast;mesh.receiveShadow=m.receive;mesh.renderOrder=m.order;mesh.userData=m.userData;
   if(mesh.name.startsWith('pilot_river_'))bindPilotRiverMaterial(mesh,ox,oz);
@@ -82,6 +85,7 @@ export function* assembleChunk(packet:PreparedChunk,ox:number,oz:number,profile:
   yield;
  }
  if(packet.data.terrain)for(const street of packet.streets){addStreetGeometry(group,[],packet.data.terrain,ox,oz,profile.street,[street]);yield;}
+ addVegetation(group,packet.data.vegetation,profile.detail?.vegetation);
  if(profile.renderStyle==='painted')applyPaintedMaterials(group,profile.environment.night);
  finished=true;return {...packet.data,group,buildingMesh};
  } finally {

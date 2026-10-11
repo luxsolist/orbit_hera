@@ -1,7 +1,7 @@
 import {readFileSync,writeFileSync} from 'node:fs';
 import {createServer} from 'vite';
 import {streetArtifacts} from './street-artifacts.mjs';
-const [city='seoul',region='jongno-cheonggye']=process.argv.slice(2),base='build/streets/'+city+'-'+region;
+const [city='seoul',region='city-wide']=process.argv.slice(2),base='build/streets/'+city+'-'+region;
 const plans=streetArtifacts(base+'-plans.json'),routes=JSON.parse(readFileSync(base+'-routes.json','utf8'));
 const cache=new Map();function plan(key){if(cache.has(key))return cache.get(key);if(!plans.keys.includes(key))return;const p=plans.read(key);cache.set(key,p);if(cache.size>5)cache.delete(cache.keys().next().value);return p;}
 // Bucket line segments, not every sample, so large cities use bounded memory.

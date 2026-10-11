@@ -8,7 +8,6 @@ import {applyRomeDetail} from './cities/RomeDetail';
 import type {Cell,WorldChunk} from './chunkManifest';
 import type {BundleChunk} from './MapBundles';
 import {applyRoadGradePatch,applyRoadNetworkPatch} from './RoadGradePatch';
-import {applyBusanDetail} from './cities/BusanDetail';
 import {applySeoulDetail,restoreRegionalArchitecture} from './cities/SeoulDetail';
 import {applySeoulLandmarkAppearance} from './cities/SeoulLandmarkAppearance';
 import {correctGwanghwamunRoadGrade} from './cities/GwanghwamunRoadGrade';
@@ -22,7 +21,6 @@ type Correction=(cell:Cell,chunk:WorldChunk,overlays:Overlays)=>WorldChunk;
 const beforeRoad:Record<string,Correction>={
  '37/23':(cell,chunk,{detail})=>detail?applyAthensDetail(cell,chunk,detail):chunk,
  '41/12':(cell,chunk,{detail})=>detail?applyRomeDetail(cell,chunk,detail):chunk,
- '35/129':(cell,chunk,{detail})=>detail?applyBusanDetail(cell,chunk,detail):chunk,
 };
 const afterRoad:Record<string,Correction>={
  '37/126':(cell,chunk,{detail,appearance})=>{

@@ -1,13 +1,5 @@
-import athensIndex from './cities/athens-detail-index.json';
-import romeIndex from './cities/rome-detail-index.json';
-import {applyMapCorrections} from './MapCorrections';
 import {readMapBundle,bundleEntry,type BundlePayload} from './MapBundles';
-import busanIndex from './cities/busan-detail-index.json';
-import {type LandmarkAppearancePatch} from './cities/SeoulLandmarkAppearance';
-import landmarkAppearanceIndex from './cities/seoul-landmark-appearance-index.json';
-import {type RoadGradePatch} from './RoadGradePatch';
-import {type SeoulDetail} from './cities/SeoulDetail';
-import seoulIndex from './cities/seoul-detail-index.json';
+import {restoreRegionalArchitecture} from './cities/SeoulDetail';
 import {fetchCatalog} from './maps';
 // 위치(위도/경도) → 전지구 타일 월드 조회 — 위경도 셀 디렉터리를 타고 들어가 그 위치의 1024m 청크를 읽는다.
 // 전역 랜드마크 인덱스(maps/landmarks.json)로 랜드마크 이름 → 위치/소속 청크도 조회.
@@ -74,42 +66,24 @@ export async function fetchWorldChunkAt(lat: number, lon: number, chunkSize = 10
   return fetchWorldChunk(cell,cx,cz);
 }
 
-/** 청크 좌표로 직접 로드. block=매니페스트 블록 크기(경로 <bx>_<bz>/ 계산). */
-const seoulChunks=new Set(seoulIndex.chunks);
-const busanChunks=new Set(busanIndex.chunks);
-const athensChunks=new Set(athensIndex.chunks);
-const romeChunks=new Set(romeIndex.chunks);
-const landmarkAppearanceChunks=new Set(landmarkAppearanceIndex.chunks);
-let roadGradeIndex:Promise<{cells:Record<string,string[]>}|null>|undefined;
-async function fetchRoadGrade(cell:Cell,key:string,baseUrl?:string){
- roadGradeIndex??=fetchJson<{cells:Record<string,string[]>}>('maps/road-grade/index.json',baseUrl);
- const index=await roadGradeIndex,cellKey=cell.join('/');
- return index?.cells?.[cellKey]?.includes(key)?fetchJson<RoadGradePatch>(`maps/road-grade/${cellKey}/${key}.json`,baseUrl):null;
-}
+/**
+ * 청크 좌표로 직접 로드. block=매니페스트 블록 크기(경로 <bx>_<bz>/ 계산).
+ * 런타임은 완성 청크(mapBuild v1: 보정·가로 컴파일이 빌드 시 끝난 데이터)만 받는다. 압축 묶음이 기본이고,
+ * DecompressionStream 이 없으면 같은 완성 청크 JSON 을 읽는다. 원본+보정 조합은 빌드(MapCorrections) 몫이다.
+ */
 export const fetchWorldChunk = async (cell: Cell, cx: number, cz: number, block?: number, baseUrl?:string, bundlePayload?:BundlePayload): Promise<WorldChunk | null> => {
-  const key=`${cx}_${cz}`;
-  // Preserve exactly the existing correction order, regardless of transport format.
-  let packed;
+  let raw:WorldChunk|null=null;
   if(bundleEntry(cell,cx,cz)&&typeof DecompressionStream!=='undefined'){
     for(let attempt=0;attempt<2;attempt++){
-      try{packed=await readMapBundle(cell,cx,cz,baseUrl,attempt===0?bundlePayload:undefined);break;}
+      try{raw=(await readMapBundle(cell,cx,cz,baseUrl,attempt===0?bundlePayload:undefined))?.raw??null;break;}
       catch(error){if(attempt===1)throw new Error(`지도 묶음 로드 실패 (${cx}, ${cz}): ${String(error)}`);}
     }
   }
-  if(packed)return applyMapCorrections(cell,packed.raw,packed);
-  const raw=await fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block),baseUrl);
+  raw??=await fetchJson<WorldChunk>(worldChunkPath(cell,cx,cz,block),baseUrl);
   if(!raw)return null;
-  if(raw.mapBuild?.version===1)return raw;
-  const [detail,roadGrade,appearance,busanDetail,romeDetail,athensDetail]=await Promise.all([
-    cell[0]===37&&cell[1]===126&&seoulChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/seoul/${key}.json`,baseUrl):Promise.resolve(null),
-    fetchRoadGrade(cell,key,baseUrl),
-    cell[0]===37&&cell[1]===126&&landmarkAppearanceChunks.has(key)?fetchJson<LandmarkAppearancePatch>(`maps/landmark-appearance/seoul/${key}.json`,baseUrl):Promise.resolve(null),
-    cell[0]===35&&cell[1]===129&&busanChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/busan/${key}.json`,baseUrl):Promise.resolve(null),
-    cell[0]===41&&cell[1]===12&&romeChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/rome/${key}.json`,baseUrl):Promise.resolve(null),
-    cell[0]===37&&cell[1]===23&&athensChunks.has(key)?fetchJson<SeoulDetail>(`maps/details/athens/${key}.json`,baseUrl):Promise.resolve(null),
-  ]);
-  if(!raw)return null;
-  return applyMapCorrections(cell,raw,{detail:detail??busanDetail??romeDetail??athensDetail,roadGrade,appearance});
+  if(raw.mapBuild?.version!==1)throw new Error(`완성 청크가 아닙니다 (${cell.join('/')} ${cx}, ${cz}) — 지도 빌드를 다시 실행하세요.`);
+  // Completed tiles built before the landmark-binding fix still need authored models re-bound.
+  return restoreRegionalArchitecture(raw);
 };
 
 /** 랜드마크 이름 → 위치(위경도/셀/청크). */

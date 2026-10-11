@@ -18,7 +18,7 @@
 
 공통 실행: node scripts/build-street-regions.mjs seoul city-wide
 
-압축: node scripts/pack-street-region.mjs seoul city-wide
+압축: node scripts/build-map-bundles.mjs seoul
 
 첫 명령은 준비·설계·삼각형 생성·검사·로컬 게시를 수행한다. 두 번째 명령은 검증한 결과를 2×2 묶음에 반영한다. GitHub Releases 발행은 별도다.
 

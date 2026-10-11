@@ -47,6 +47,6 @@ export function publishStreetRegion(city,region){
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  const city=process.argv[2]??'seoul';
- if(process.argv.includes('--publish-staged')){restoreMapBuildInputs(city);publishStreetRegion(city,process.argv[3]??'jongno-cheonggye');execFileSync(process.execPath,['scripts/complete-map-chunks.mjs',city],{cwd:root,stdio:'inherit'});}
+ if(process.argv.includes('--publish-staged')){restoreMapBuildInputs(city);publishStreetRegion(city,process.argv[3]??'city-wide');execFileSync(process.execPath,['scripts/complete-map-chunks.mjs',city],{cwd:root,stdio:'inherit'});}
  else {const staged=process.argv.includes('--stage-only');buildStreetRegions(city,process.argv[3],{complete:!staged,publish:!staged});}
 }

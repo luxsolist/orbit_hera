@@ -245,7 +245,7 @@
 - 최종 지형 완화는 보호 구역에 인접한 격자 한 칸도 보호한다. 경계 삼각형이 보호 영역 안으로 영향을 주어 도로와 담장 높이가 달라지는 것을 방지한다.
 
 기존 데이터 이행:
-`node scripts/repair-street-semantics.mjs <city> <source.osm>`로 등록 도시의 로컬 원본 추출본을 사용한다.
+(구 `repair-street-semantics.mjs`는 공통 가로 빌더(`build-street-regions.mjs`)로 대체되어 삭제됐다.)
 건물은 OSM ID로만 대조하며, 구형 도로는 같은 구조/방향의 선과 2m 이내, 구간 표본 90% 이상 일치하고 폭 근거가 동일할 때만 보정한다.
 원본이 없는 건물을 모양만 보고 승강장으로 바꾸지 않는다. 변경 원본 백업은 `build/street-semantics-backup`, 보고서는 `build/<city>-street-semantics-report.json`에 남는다.
 이번 실행은 해당 원본 범위의 승강장 2개, 지하 시설 1개, 도로 318개 구간을 6개 청크에 반영했다. 전 도시 전체 원본 재수집/재분류를 수행한 것은 아니다.

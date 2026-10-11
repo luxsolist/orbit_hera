@@ -7,7 +7,7 @@
 //  - **히스테리시스**(로드/언로드 반경 분리, 경계 thrash 차단), **속도방향 프리페치**, **LRU 캐시**.
 //
 // 결정 로직(desiredLoad/keepSet/fineActive)은 순수(테스트 가능). 실 fetch/메시빌드/dispose 는
-// 주입형 ChunkIO 훅 — 데이터 파이프라인(§5) 완성 시 maps.ts/World 에 배선.
+// 주입형 ChunkIO 훅 — StreamingWorld 가 완성 청크 로드/조립을 배선한다.
 
 export type Lod = "fine" | "coarse";
 

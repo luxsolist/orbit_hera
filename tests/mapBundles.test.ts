@@ -2,15 +2,13 @@ import {ChunkPreparation} from '../src/world/ChunkPreparation';
 import {paintedSeoul} from '../src/world/cities/painted';
 import {it,expect,vi,afterEach} from 'vitest';
 import {readFileSync} from 'node:fs';
-import {gunzipSync} from 'node:zlib';
-import busan from '../src/world/busan-bundles.json';
 import athensDetails from '../src/world/cities/athens-detail-index.json';
 import romeDetails from '../src/world/cities/rome-detail-index.json';
-import {applyMapCorrections} from '../src/world/MapCorrections';
+import {restoreRegionalArchitecture} from '../src/world/cities/SeoulDetail';
 import {fetchMapBundle,readMapBundle,bundleEntry} from '../src/world/MapBundles';
 import {fetchWorldChunk} from '../src/world/mapLocator';
 afterEach(()=>vi.unstubAllGlobals());
-it('shares a compressed download across four requests, decodes it and retains the correction path',async()=>{
+it('shares a compressed download across four requests and decodes it',async()=>{
  const entry=bundleEntry([37,126],84,46)!;const bytes=readFileSync(`public/maps/bundles/seoul/${entry.file}`);
  const fetcher=vi.fn(async()=>new Response(bytes));vi.stubGlobal('fetch',fetcher);
  const base='http://bundles.test/';const requests=[[84,46],[85,46],[84,47],[85,47]];
@@ -37,40 +35,32 @@ it('downloads queued chunks together and preserves shared transfer when one cons
  instances[0].onmessage({data:{id:message.id,packet:null}});expect(await b).toBeNull();expect(fetcher).toHaveBeenCalledTimes(1);prep.dispose();
 });
 
-it('loads Busan bridge/coast corrections from bundles through the shared correction path',async()=>{
- const fetcher=vi.fn(async(input:any)=>new Response(readFileSync('public/'+new URL(String(input)).pathname.slice(1))));vi.stubGlobal('fetch',fetcher);
- let bridges=0,negative=0,partial=0;
- for(const entry of Object.values(busan.bundles)){
-  const payload=JSON.parse(gunzipSync(readFileSync(`public/maps/bundles/busan/${entry.file}`)).toString());
-  if(entry.chunks.length<4)partial++;
-  for(const [key,value] of Object.entries(payload.chunks) as [string,any][]){
-   const [x,z]=key.split('_').map(Number);expect(bundleEntry([35,129],x,z)?.file).toBe(entry.file);if(x<0||z<0)negative++;
-   if(!value.detail)continue;
-   bridges+=(value.detail.bridges?.length??0);
-   const expected=applyMapCorrections([35,129],value.raw,value);
-   expect(await fetchWorldChunk([35,129],x,z,16,'http://busan.test/')).toEqual(expected);
-  }
- }
- expect(bridges).toBeGreaterThan(0);expect(negative).toBeGreaterThan(0);expect(partial).toBeGreaterThan(0);
-},30000);
+it('serves only completed chunks at runtime; old-format raw tiles fail loudly',async()=>{
+ const raw={cx:3,cz:4,terrain:{size:0,seaLevel:0,heights:[]},underground:null,objects:{buildings:[],roads:[],water:[]}};
+ vi.stubGlobal('fetch',vi.fn(async()=>new Response(JSON.stringify(raw))));
+ await expect(fetchWorldChunk([1,2],3,4,16,'http://raw.test/')).rejects.toThrow('완성 청크가 아닙니다');
+ const completed={...raw,mapBuild:{version:1,input:{raw,detail:null,roadGrade:null,appearance:null}}};
+ vi.stubGlobal('fetch',vi.fn(async()=>new Response(JSON.stringify(completed))));
+ expect(await fetchWorldChunk([1,2],3,4,16,'http://raw.test/')).toEqual(completed);
+});
 
 it('loads all Rome landmark overlays and additions through the bundled correction path',async()=>{
  const fetcher=vi.fn(async(input:any)=>{const path=new URL(String(input)).pathname;expect(path).toMatch(/^\/maps\/bundles\/rome\/.*\.bin$/);return new Response(readFileSync('public'+path));});vi.stubGlobal('fetch',fetcher);
  let additions=0,sites=0;
  for(const key of romeDetails.chunks){const [x,z]=key.split('_').map(Number),base='http://rome-packed.test/';const packed=(await readMapBundle([41,12],x,z,base))!;
   const result=await fetchWorldChunk([41,12],x,z,16,base);
-  expect(result).toEqual(applyMapCorrections([41,12],packed.raw,packed));
+  expect(result).toEqual(restoreRegionalArchitecture(packed.raw));
   additions+=((packed.detail??packed.raw.mapBuild?.input.detail) as any)?.add?.length??0;sites+=(packed.detail??packed.raw.mapBuild?.input.detail)?.romeSites?.length??0;
  }
  expect(additions).toBeGreaterThan(0);expect(sites).toBe(3);expect(fetcher).toHaveBeenCalled();
-});
+},30000);
 
 it('loads Athens landmarks through bundles without separate detail requests',async()=>{
  const fetcher=vi.fn(async(input:any)=>{const path=new URL(String(input)).pathname;expect(path).toMatch(/^\/maps\/bundles\/athens\/.*\.bin$/);return new Response(readFileSync('public'+path));});vi.stubGlobal('fetch',fetcher);
  let sites=0;
  for(const key of athensDetails.chunks){const [x,z]=key.split('_').map(Number),base='http://athens-packed.test/';const packed=(await readMapBundle([37,23],x,z,base))!;
-  expect(await fetchWorldChunk([37,23],x,z,16,base)).toEqual(applyMapCorrections([37,23],packed.raw,packed));
+  expect(await fetchWorldChunk([37,23],x,z,16,base)).toEqual(restoreRegionalArchitecture(packed.raw));
   sites+=(packed.detail??packed.raw.mapBuild?.input.detail)?.athensSites?.length??0;
  }
  expect(sites).toBeGreaterThan(0);
-});
+},30000);

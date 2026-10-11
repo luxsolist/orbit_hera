@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import {citySurfaceMaps} from './CitySurfaceMaps';
 import {seoulAppearance,type CityAppearance} from './cities';
+import {grammarGlsl} from './FacadeGrammar';
+import {PAINTED_SKY} from './PaintedCityStyle';
+import {cityUniforms} from './cityUniforms';
 
 /** Gameplay landmark status must not override Seoul's architectural materials. */
 export function landmarkHighlightEnabled(profile:CityAppearance):boolean{return profile.buildings.landmarkHighlight ?? !profile.id.startsWith('seoul');}
@@ -40,8 +43,12 @@ export function applyRoofColor(geometry:THREE.BufferGeometry,x:number,z:number,p
   for(let i=0;i<colors.count;i++)if(kinds.getX(i)>=0&&faces.getX(i)===2)colors.setXYZ(i,roof.r,roof.g,roof.b);
 }
 
-/** Add facade coordinates to the existing shell without rooftop ornaments. */
-export function dressBuilding(geometry: THREE.BufferGeometry, poly: number[], base: number, style: number, variant = 0): THREE.BufferGeometry {
+/**
+ * Add facade coordinates to the existing shell without rooftop ornaments.
+ * grammar: detail-tier archetype (FacadeGrammar), per building or per vertex; omitted in legacy profiles
+ * so their vertex layout is unchanged. Every building of a chunk must agree (merged mesh).
+ */
+export function dressBuilding(geometry: THREE.BufferGeometry, poly: number[], base: number, style: number, variant = 0, grammar?: number|Float32Array): THREE.BufferGeometry {
   const geo=geometry;
   let x=0,z=0;for(let i=0;i<poly.length;i+=2){x+=poly[i];z+=poly[i+1];}x/=poly.length/2;z/=poly.length/2;
   const pos=geo.getAttribute('position'),normal=geo.getAttribute('normal');
@@ -54,13 +61,20 @@ export function dressBuilding(geometry: THREE.BufferGeometry, poly: number[], ba
   geo.setAttribute('facadeKind',new THREE.BufferAttribute(kinds,1));
   geo.setAttribute('facadeFace',new THREE.BufferAttribute(faces,1));
   geo.setAttribute('facadeVariant',new THREE.BufferAttribute(new Float32Array(pos.count).fill(variant),1));
+  if(grammar!==undefined)geo.setAttribute('facadeGrammar',new THREE.BufferAttribute(typeof grammar==='number'?new Float32Array(pos.count).fill(grammar):grammar,1));
   return geo;
 }
 
 /** Shared material and surface textures; no per-window meshes or extra draw calls. */
 export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): THREE.MeshStandardMaterial {
  const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.85,metalness:0,flatShading:true});
+ const grammar=!!profile.detail?.grammar,sky=profile.environment.paintedSky??PAINTED_SKY,grammarCode=grammar?grammarGlsl(sky.horizon,sky.zenith):'';
  material.onBeforeCompile=shader=>{
+  if(grammar){
+   shader.uniforms.signNight=cityUniforms.night;
+   shader.vertexShader='attribute float facadeGrammar; varying float fGrammar;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nfGrammar=facadeGrammar;');
+   shader.fragmentShader='uniform float signNight; varying float fGrammar;\n'+shader.fragmentShader;
+  }
   shader.uniforms.cityDetail={value:new THREE.Vector3(profile.buildings.windowContrast,profile.buildings.windowSpacing,profile.buildings.architectureStrength)};
   const maps=citySurfaceMaps(profile.buildings.texturePath);
   for(const [name,texture] of Object.entries(maps))shader.uniforms[name]={value:texture};
@@ -195,6 +209,12 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
       }
     }
   `);
+  if(grammar){
+   // Detail tier: district grammar overrides the wall pattern after the shared base pass.
+   shader.fragmentShader=shader.fragmentShader.replace('float glazing=0.0;','float glazing=0.0;\n    vec3 signGlow=vec3(0.0);');
+   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',grammarCode+'\n#include <roughnessmap_fragment>');
+   shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n    totalEmissiveRadiance+=signGlow*signNight*1.6;');
+  }
   shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(fKind>=0.0?surfaceRough:roughnessFactor,.5,glazing);');
   shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
     vec3 dpX=dFdx(-vViewPosition),dpY=dFdy(-vViewPosition);
@@ -209,6 +229,6 @@ export function createFacadeMaterial(profile:CityAppearance=seoulAppearance): TH
     }
   `);
  };
- material.customProgramCacheKey=()=> 'city-facades-architectural-v9';
+ material.customProgramCacheKey=()=> 'city-facades-architectural-v9'+(grammar?'-grammar2-'+[...sky.horizon,...sky.zenith].join(','):'');
  return material;
 }

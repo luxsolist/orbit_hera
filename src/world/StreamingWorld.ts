@@ -5,7 +5,7 @@ import {assembleChunk,discardPreparedChunk,type PreparedChunk} from './PreparedC
 import {ChunkCollisionWorld} from './ChunkCollisionWorld';
 import {updateStreetDetail} from './StreetGeometry';
 import {addPaintedSky} from './PaintedCityStyle';
-import {cityAppearance,defaultAppearance} from './cities';
+import {cityAppearance,defaultAppearance,deviceAppearance,coarsePointerOnly,type CityAppearance} from './cities';
 // 스트리밍 전장 — 전지구 타일 월드(maps/<lat>/<lon>/) 를 플레이어 주변만 청크 단위로 로드/언로드.
 // 모놀리식 World 의 대체 구현(GameWorld 동일 표면): JSON 1장 전체 대신 1024m 청크를 ChunkStreamer 로
 // 스트리밍하고, heightAt/충돌은 로드된 청크 레지스트리에서 질의한다.
@@ -93,8 +93,8 @@ export class StreamingWorld implements GameWorld {
   private appearance = defaultAppearance;
   private readonly chunkPreparation = new ChunkPreparation();
 
-  private constructor(scene: THREE.Scene, manifest: TilesManifest, lat: number, lon: number, _yaw: number, mapId?: string, exact=false) {
-    this.appearance = cityAppearance(mapId);
+  private constructor(scene: THREE.Scene, manifest: TilesManifest, lat: number, lon: number, _yaw: number, mapId?: string, exact=false, appearance?:CityAppearance) {
+    this.appearance = deviceAppearance(appearance ?? cityAppearance(mapId),coarsePointerOnly());
     this.cell = manifest.cell;
     this.chunkSize = manifest.chunkSize;
     this.block = manifest.block ?? CHUNK_BLOCK;
@@ -124,8 +124,8 @@ export class StreamingWorld implements GameWorld {
     streamConfig.fineRadius += this.chunkSize;
     this.streamer = new ChunkStreamer(this.makeIO(), streamConfig);
     // 추가 선로딩 영역은 기존 가시거리 바깥에 유지한다.
-    this.sky = new SkyEnvironment(scene, this.spawn, viewFar,this.appearance.environment);
-    if(this.appearance.renderStyle==='painted')this.paintedSky=addPaintedSky(scene,this.appearance.environment.paintedSky,this.appearance.environment.night);
+    this.sky = new SkyEnvironment(scene, this.spawn, viewFar,this.appearance.environment,this.appearance.detail?.hazeStart);
+    if(this.appearance.renderStyle==='painted')this.paintedSky=addPaintedSky(scene,this.appearance.environment.paintedSky,this.appearance.environment.night,this.appearance.detail?.clouds.enabled?this.appearance.detail.clouds.coverage:undefined);
     scene.userData.paintedCity=this.appearance.renderStyle==='painted';
     scene.add(this.group);
   }
@@ -134,14 +134,15 @@ export class StreamingWorld implements GameWorld {
    * 스트리밍 전장 생성 — tiles.json 로드 → 인스턴스 구성 → 스폰 주변 지형 프리로드(지표면 확보).
    * (lat,lon)=스폰 위경도, yaw=시작 방위, mapId=스트림 카탈로그 id(셀 공유 시 스폰 범위 한정).
    */
-  static async create(scene: THREE.Scene, lat: number, lon: number, yaw = 0, mapId?: string, exact=false): Promise<StreamingWorld> {
+  /** appearance: review-only override (asset studio before/after); gameplay uses the city profile. */
+  static async create(scene: THREE.Scene, lat: number, lon: number, yaw = 0, mapId?: string, exact=false, appearance?:CityAppearance): Promise<StreamingWorld> {
     const manifest = await fetchCityTiles(lat,lon,mapId);
     if(exact){
       const p=manifestChunkAt(manifest,lat,lon);
       if(!manifest.chunks.some(c=>c.cx===p.cx&&c.cz===p.cz))
         throw new Error(`선택한 도시의 지도 범위 밖입니다: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
     }
-    const w = new StreamingWorld(scene, manifest, lat, lon, yaw, mapId, exact);
+    const w = new StreamingWorld(scene, manifest, lat, lon, yaw, mapId, exact, appearance);
     try { await w.preloadSpawn(); } catch (error) { w.dispose(); throw error; }
     return w;
   }

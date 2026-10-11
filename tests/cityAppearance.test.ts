@@ -1,6 +1,7 @@
 import {paintedAthens} from '../src/world/cities/athens';
 import {paintedRome} from '../src/world/cities/rome';
-import {paintedSeoul,paintedBusan} from '../src/world/cities/painted';
+import {paintedSeoul} from '../src/world/cities/painted';
+import {detailedSeoul,detailedRome,detailedAthens} from '../src/world/cities/detail';
 import {it,expect,vi} from 'vitest';
 import * as THREE from 'three';
 import {cityAppearance,seoulAppearance,defaultAppearance,type CityAppearance} from '../src/world/cities';
@@ -11,10 +12,10 @@ import type {WorldChunk} from '../src/world/chunkManifest';
 const chunk:WorldChunk={cx:0,cz:0,terrain:null,underground:null,objects:{buildings:[{p:[10,10,30,10,30,30,10,30],h:25}],roads:[{p:[5,100,195,100],w:10}],water:[]}};
 const other:CityAppearance={...seoulAppearance,id:'test-city',buildings:{...seoulAppearance.buildings,colors:[0xff0000],weights:[7],roofs:[0x00ff00],apartmentHeight:40,windowContrast:.25},props:{...seoulAppearance.props,maxPerChunk:2,lampHeight:9,metal:0xff0000}};
 it('resolves city IDs and leaves unconfigured cities on legacy appearance',()=>{
- expect(cityAppearance('seoul-stream')).toBe(paintedSeoul);
- expect(cityAppearance('busan-stream')).toBe(paintedBusan);
- expect(cityAppearance('rome-stream')).toBe(paintedRome);
- expect(cityAppearance('athens-stream')).toBe(paintedAthens);
+ expect(cityAppearance('seoul-stream')).toBe(detailedSeoul);
+ expect(cityAppearance('busan-stream')).toBe(defaultAppearance); // removed city → fallback
+ expect(cityAppearance('rome-stream')).toBe(detailedRome);
+ expect(cityAppearance('athens-stream')).toBe(detailedAthens);
  expect(landmarkHighlightEnabled(paintedRome)).toBe(false);
  expect(landmarkHighlightEnabled(defaultAppearance)).toBe(true);
  expect(cityAppearance()).toBe(defaultAppearance);
@@ -46,7 +47,7 @@ it('binds facade detail settings separately per material',()=>{
 
 it('paints configured cities without changing collision geometry or shared legacy materials',()=>{
  const legacy=buildChunkMesh(chunk,200,0,0,seoulAppearance);
- for(const profile of [paintedSeoul,paintedBusan,paintedRome,paintedAthens]){
+ for(const profile of [paintedSeoul,paintedRome,paintedAthens]){
   const painted=buildChunkMesh(chunk,200,0,0,profile);
   expect(painted.buildings).toEqual(legacy.buildings);
   const mat=painted.buildingMesh!.material as THREE.Material;
@@ -70,8 +71,8 @@ it('paints configured cities without changing collision geometry or shared legac
   const dispose=vi.spyOn(mat,'dispose');disposeChunkGroup(painted.group);expect(dispose).toHaveBeenCalled();
  }
  expect((legacy.buildingMesh!.material as THREE.Material).userData.paintedOwned).toBeUndefined();
- expect(paintedBusan.buildings).not.toBe(paintedSeoul.buildings);
- expect(paintedBusan.props).not.toBe(paintedSeoul.props);
+ expect(paintedRome.buildings).not.toBe(paintedSeoul.buildings);
+ expect(paintedRome.props).not.toBe(paintedSeoul.props);
  disposeChunkGroup(legacy.group);
 });
 

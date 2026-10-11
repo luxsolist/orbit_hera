@@ -82,19 +82,41 @@ export function applyPaintedMaterials(group:THREE.Group,settings:CityNightSettin
   object.material=Array.isArray(object.material)?object.material.map(convert):convert(object.material);
  });
 }
-export function addPaintedSky(scene:THREE.Scene,colors?:PaintedSkyColors,settings:CityNightSettings=defaultCityNight):THREE.Mesh {
+/** Default painted sky gradient (linear); also the reflected sky on detail-tier water. */
+export const PAINTED_SKY={horizon:[.65,.80,.94] as const,zenith:[.20,.48,.83] as const};
+/** cloudCoverage: detail-tier cumulus amount 0 (clear) … 1 (overcast); undefined keeps the legacy sky. */
+export function addPaintedSky(scene:THREE.Scene,colors?:PaintedSkyColors,settings:CityNightSettings=defaultCityNight,cloudCoverage?:number):THREE.Mesh {
+ const detailedClouds=cloudCoverage!==undefined,cloudLow=.47+(.5-(cloudCoverage??.5))*.32;
  const nightColors=cityNightSky(settings);
  const sky=new THREE.Mesh(new THREE.SphereGeometry(2200,32,16),new THREE.ShaderMaterial({
- side:THREE.BackSide,depthWrite:false,uniforms:{nightZenith:{value:nightColors.zenith},nightHorizon:{value:nightColors.horizon},daylight:{value:1},twilight:{value:0},horizon:{value:new THREE.Vector3(...(colors?.horizon??[.65,.80,.94]))},zenith:{value:new THREE.Vector3(...(colors?.zenith??[.20,.48,.83]))}},
+ defines:detailedClouds?{DETAIL_CLOUDS:''}:{},side:THREE.BackSide,depthWrite:false,uniforms:{sunDirection:{value:new THREE.Vector3(.4,.8,.45)},skyTime:{value:0},nightZenith:{value:nightColors.zenith},nightHorizon:{value:nightColors.horizon},daylight:{value:1},twilight:{value:0},horizon:{value:new THREE.Vector3(...(colors?.horizon??PAINTED_SKY.horizon))},zenith:{value:new THREE.Vector3(...(colors?.zenith??PAINTED_SKY.zenith))}},
  vertexShader:'varying vec3 skyDirection;void main(){skyDirection=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
- fragmentShader:`uniform vec3 horizon;uniform vec3 zenith;uniform vec3 nightZenith;uniform vec3 nightHorizon;uniform float daylight;uniform float twilight;varying vec3 skyDirection;
+ fragmentShader:`uniform vec3 sunDirection;uniform float skyTime;uniform vec3 horizon;uniform vec3 zenith;uniform vec3 nightZenith;uniform vec3 nightHorizon;uniform float daylight;uniform float twilight;varying vec3 skyDirection;
  float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
  float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
  void main(){vec3 d=normalize(skyDirection);float h=max(0.0,d.y);
  vec3 sky=mix(horizon,zenith,smoothstep(0.0,.8,h));
+ #ifdef DETAIL_CLOUDS
+ // Mobile-safe cumulus: two fbm lookups (density + toward-sun) give shaded undersides and lit rims.
+ vec3 sunN=normalize(sunDirection);
+ vec2 uv=d.xz/(h+.16)*1.45+vec2(skyTime*.0035,skyTime*.0012);
+ float n=noise(uv)*.52+noise(uv*2.03)*.25+noise(uv*4.1)*.13+noise(uv*8.3)*.07+noise(uv*17.0)*.03;
+ vec2 towardSun=normalize(sunN.xz+vec2(1e-4))*.22;
+ float m=noise(uv+towardSun)*.52+noise((uv+towardSun)*2.03)*.25+noise((uv+towardSun)*4.1)*.13+noise((uv+towardSun)*8.3)*.07;
+ float clouds=smoothstep(${cloudLow.toFixed(3)},${(cloudLow+.19).toFixed(3)},n)*smoothstep(.015,.14,h);
+ float shadow=clamp((m-n)*4.0+.45,0.0,1.0);
+ vec3 cloudLit=vec3(1.16,1.11,1.02),cloudShade=vec3(.66,.73,.86);
+ vec3 cloud=mix(cloudLit,cloudShade,shadow*.85)*mix(.86,1.0,smoothstep(.55,.75,n));
+ float sunAngle=max(dot(d,sunN),0.0);
+ cloud+=vec3(1.0,.88,.68)*pow(sunAngle,10.0)*(1.0-smoothstep(.55,.72,n))*.55;
+ sky=mix(sky,cloud,clouds*.94);
+ sky+=vec3(1.0,.92,.75)*(pow(sunAngle,600.0)*2.0+pow(sunAngle,12.0)*.10)*(1.0-clouds*.8);
+ #else
  vec2 uv=d.xz/(h+.24)*2.5;float n=noise(uv)*.50+noise(uv*2.1)*.25+noise(uv*4.0)*.14+noise(uv*9.0)*.075+noise(uv*19.0)*.035;
  float clouds=smoothstep(.50,.64,n)*smoothstep(.02,.17,h);
- sky=mix(sky,vec3(1.12,1.06,.92),clouds*.85);vec3 nightSky=mix(nightHorizon,nightZenith,smoothstep(0.0,.65,h));sky=mix(nightSky,sky,daylight);sky=mix(sky,vec3(.66,.30,.20),twilight*(1.0-smoothstep(0.0,.5,h))*.6);gl_FragColor=vec4(sky,1.0);
+ sky=mix(sky,vec3(1.12,1.06,.92),clouds*.85);
+ #endif
+vec3 nightSky=mix(nightHorizon,nightZenith,smoothstep(0.0,.65,h));sky=mix(nightSky,sky,daylight);sky=mix(sky,vec3(.66,.30,.20),twilight*(1.0-smoothstep(0.0,.5,h))*.6);gl_FragColor=vec4(sky,1.0);
  #include <tonemapping_fragment>
  #include <colorspace_fragment>
  // Dither after tone mapping / output conversion: one output code step,
@@ -103,6 +125,6 @@ export function addPaintedSky(scene:THREE.Scene,colors?:PaintedSkyColors,setting
  gl_FragColor.rgb=clamp(gl_FragColor.rgb+vec3(skyDither/255.0),0.0,1.0);
  }`
  }));sky.frustumCulled=false;sky.name='painted-sky';
- sky.onBeforeRender=(_renderer,_scene,camera)=>{sky.material.uniforms.daylight.value=_scene.userData.cityDaylight??1;sky.material.uniforms.twilight.value=_scene.userData.cityTwilight??0;sky.position.copy(camera.position);sky.updateMatrixWorld();};
+ sky.onBeforeRender=(_renderer,_scene,camera)=>{const sun=_scene.userData.citySun as number[]|undefined;if(sun)sky.material.uniforms.sunDirection.value.set(sun[0],Math.max(.05,sun[1]),sun[2]);sky.material.uniforms.skyTime.value=performance.now()/1000;sky.material.uniforms.daylight.value=_scene.userData.cityDaylight??1;sky.material.uniforms.twilight.value=_scene.userData.cityTwilight??0;sky.position.copy(camera.position);sky.updateMatrixWorld();};
  scene.add(sky);return sky;
 }

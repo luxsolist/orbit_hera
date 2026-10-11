@@ -31,37 +31,8 @@ const HAND = [
     bareEarth: false,
     heightmap: { src: "rome.terrain.bin", size: 2048, meters: 40000 },
   },
-  {
-    id: "busan",
-    name: "Busan · 부산",
-    subtitle: "부산 도심 반경 20km — 해운대·광안리·태종대",
-    lat0: 35.16,
-    lon0: 129.07,
-    // 부산 도심(서면/시청) 중심 반경 20km — 해운대(8.2km)·광안리(4.5km)·태종대(12.1km) 포함.
-    bbox: [34.9803, 128.8502, 35.3397, 129.2898],
-    catalogHidden: true, // 카탈로그는 busan-stream 항목으로 노출
-    catalogCity: "부산",
-    stream: { id: "busan-stream", name: "부산 · Busan", subtitle: "35/129 부산 도심 반경 20km — 해운대·광안리·태종대" },
-    // 해안 도시(바다+도심+산) — DEM raw, 건물 footprint 평탄화는 build-world(산 보존). 바다(0m)는 elevationColor 가 파랑.
-    bareEarth: false,
-    heightmap: { src: "busan.terrain.bin", size: 2048, meters: 40000 },
-  },
-  {
-    id: "everest",
-    name: "Everest · 에베레스트",
-    subtitle: "Himalaya — 세계 최고봉 8,849m (반경 20km)",
-    lat0: 27.9881,
-    lon0: 86.9250,
-    // 에베레스트 정상 중심 반경 20km(±0.18°lat / ±0.203°lon).
-    bbox: [27.8084, 86.7215, 28.1678, 87.1285],
-    catalogHidden: true, // 스트리밍 카탈로그 항목(everest-stream)으로 노출
-    // 자연 산악이라 큐레이션 도시 랜드마크 없음(catalogCity 없음).
-    stream: { id: "everest-stream", name: "에베레스트 · Everest", subtitle: "27/86 히말라야 — 세계 최고봉 8,849m (반경 20km 스트리밍)" },
-    // 자연 산악 — bare-earth 형태학 열림 생략(도시 건물 제거용이라 산에 쓰면 봉우리/능선이 깎임). 실측 DEM 그대로.
-    bareEarth: false,
-    // 실측 40km×40km DEM(AWS Terrarium). 생성: node scripts/build-terrain.mjs real everest 2048 40000 13.
-    heightmap: { src: "everest.terrain.bin", size: 2048, meters: 40000 },
-  },
+
+
   {
     id: "gyeongbokgung",
     name: "경복궁 · Gyeongbokgung",
@@ -114,6 +85,7 @@ const HAND = [
 // ─────────────────────────── 도시 100선 자동 생성 ───────────────────────────
 
 const CITY_CATALOG = "scripts/data/city-catalog.json";
+const STREET_REGIONS = "config/street-regions.json";
 // DEM 변 = 반경×2 (cityMapDef 가 계산). 어긋나면 지형이 맵보다 좁아진다.
 
 /** 장 번호 → 카탈로그 부제에 쓰는 라벨. 0 = 서장(기완료 3도시). */
@@ -178,7 +150,10 @@ function generatedMaps() {
   let cat;
   try { cat = JSON.parse(readFileSync(CITY_CATALOG, "utf8")); }
   catch { return []; } // 아직 생성 안 됨 — build:map 은 손 맵으로 계속 동작
-  return (cat.cities ?? []).filter((c) => !c.mapId && !c.buildExcluded).map(cityMapDef);
+  // 최신 빌드(도시 전역 가로 컴파일 → 완성 청크)가 가능한 도시만 맵이 된다. 100선 카탈로그 자체는
+  // 장 배속·랜드마크 큐레이션의 정본으로 남고, 새 도시는 config/street-regions.json 등록으로 편입한다.
+  const regions = JSON.parse(readFileSync(STREET_REGIONS, "utf8"));
+  return (cat.cities ?? []).filter((c) => !c.mapId && !c.buildExcluded && Object.values(regions[c.id] ?? {}).some((r) => r.enabled)).map(cityMapDef);
 }
 
 const handIds = new Set(HAND.map((m) => m.id));

@@ -3,10 +3,9 @@ import {readFileSync,existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {gunzipSync} from 'node:zlib';
 import index from '../src/world/seoul-bundles.json';
-import busan from '../src/world/busan-bundles.json';
 import rome from '../src/world/rome-bundles.json';
 import athens from '../src/world/athens-bundles.json';
-it.each([{city:'seoul',grid:'37/126',index,count:400,chunks:1600},{city:'busan',grid:'35/129',index:busan,count:420,chunks:1600},{city:'rome',grid:'41/12',index:rome,count:441,chunks:1640},{city:'athens',grid:'37/23',index:athens,count:441,chunks:1640}])('packs all $city chunks and overlays without changing data',({city,grid,index,count,chunks})=>{
+it.each([{city:'seoul',grid:'37/126',index,count:400,chunks:1600},{city:'rome',grid:'41/12',index:rome,count:441,chunks:1640},{city:'athens',grid:'37/23',index:athens,count:441,chunks:1640}])('packs all $city chunks and overlays without changing data',({city,grid,index,count,chunks})=>{
  const seen=new Set<string>();expect(Object.keys(index.bundles)).toHaveLength(count);
  for(const [key,entry] of Object.entries(index.bundles)){
   const bytes=readFileSync(`public/maps/bundles/${city}/${entry.file}`);expect(bytes.length).toBe(entry.bytes);
