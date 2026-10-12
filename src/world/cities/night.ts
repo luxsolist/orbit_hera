@@ -10,6 +10,13 @@ export const defaultCityNight:CityNightSettings={
 };
 // Independent objects allow each city to evolve without changing the shared renderer.
 export const seoulNight:CityNightSettings={...defaultCityNight};
+/** Dense, brightly lit high-rise city with heavy shop signage. */
+export const hongKongNight:CityNightSettings={...defaultCityNight,
+ occupancy:[.45,.5,.48,.2],windowColors:[0xffd9a3,0xe6f0ff],coolShare:.42,
+ windowIntensity:1.6,brightnessRange:[.5,1],shopOccupancy:.82,
+ lampColor:0xffd9a6,lampIntensity:2.6,sky:[.03,.04,.08],skyBrightness:1.2,horizonBrightness:1.7,fog:0x1e2738,
+ ambient:.34,fill:.18,surfaceTint:[.24,.30,.46]
+};
 export const romeNight:CityNightSettings={...defaultCityNight,
  occupancy:[.20,.23,.34,.12],windowColors:[0xffc987,0xffead4],coolShare:.18,
  windowIntensity:.90,brightnessRange:[.35,1],shopOccupancy:.62,

@@ -33,7 +33,11 @@ const sourceBuildings=new Map(els.filter(e=>e.tags?.building).map(e=>[e.type+'/'
 const roads=els.filter(e=>e.type==='way'&&isVehicularHighway(e.tags?.highway)&&e.geometry?.length>1).map(e=>{
  const t=e.tags;return {id:'way/'+e.id,highway:t.highway,name:t.name??t.ref??'',oneway:t.oneway??'no',lanes:t.lanes,nodes:e.nodes,covered:t.covered,service:t.service,access:t.access,ford:t.ford,...roadWidthInfo(t),bridge:!!t.bridge&&t.bridge!=='no',tunnel:!!t.tunnel&&t.tunnel!=='no',layer:Number(t.layer)||0,p:e.geometry.flatMap(p=>[(p.lon-cell[1])*mlon,(cell[0]+1-p.lat)*111320])};
 }).sort((a,b)=>a.id.localeCompare(b.id));
-const islands=els.filter(e=>e.geometry?.length>=3&&(e.tags?.['traffic_calming']==='island'||e.tags?.area==='yes'&&e.tags?.highway==='traffic_island')).map(e=>({id:e.id,p:e.geometry.flatMap(p=>[(p.lon-cell[1])*mlon,(cell[0]+1-p.lat)*111320])}));
+// Traffic islands are closed areas. A road or crossing way tagged traffic_calming=island only says
+// it passes an island; turning that line into a polygon would block the road itself.
+const closed=e=>{const g=e.geometry,a=g?.[0],b=g?.[g.length-1];return g?.length>=4&&a.lat===b.lat&&a.lon===b.lon;};
+const islandArea=e=>e.tags?.area==='yes'&&e.tags?.highway==='traffic_island'||e.tags?.['traffic_calming']==='island'&&(!e.tags?.highway||e.tags?.area==='yes');
+const islands=els.filter(e=>closed(e)&&islandArea(e)).map(e=>({id:e.id,p:e.geometry.flatMap(p=>[(p.lon-cell[1])*mlon,(cell[0]+1-p.lat)*111320])}));
 const server=await createServer({configFile:false,server:{middlewareMode:true},appType:'custom',optimizeDeps:{noDiscovery:true}});
 try {
  const {applyMapCorrections}=await server.ssrLoadModule('/src/world/MapCorrections.ts');

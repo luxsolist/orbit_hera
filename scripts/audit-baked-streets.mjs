@@ -45,7 +45,8 @@ try{
   if(da===db||da*db>0)continue;
   if(da===0&&(!r.prev||(r.prev[axis]-fixed)*db>=0))continue;
   if(db===0&&(!r.next||(r.next[axis]-fixed)*da>=0))continue;
-  const t=-da/(db-da),x=r.a[0]+(r.b[0]-r.a[0])*t,z=r.a[1]+(r.b[1]-r.a[1])*t,u=vertical?z:x;
+  // Snap the crossing onto the seam; interpolation error can leave it 1e-16 outside one tile.
+  const t=-da/(db-da),x=vertical?fixed:r.a[0]+(r.b[0]-r.a[0])*t,z=vertical?r.a[1]+(r.b[1]-r.a[1])*t:fixed,u=vertical?z:x;
   if(u<lo||u>hi)continue;
   const h=compiledStreetHeight(p,x,z,Infinity,r.level),k=compiledStreetHeight(q,x,z,Infinity,r.level);seamSamples++;
   if(h===undefined||k===undefined||Math.abs(h-k)>.03){seamErrors++;if(failures.filter(f=>f.kind==='seam').length<20)failures.push({kind:'seam',level:r.level,id:r.id,key,neighbor,x,z,h,k});}

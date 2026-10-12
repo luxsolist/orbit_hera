@@ -32,15 +32,8 @@ try{
  const connectedSample=(x,z)=>{const t=terrain.get(`${Math.floor(x/C)}_${Math.floor(z/C)}`);return t?sampleStreetHeight(t,x,z):NaN;};
  totals.connectedJoins=auditRoadJoins(allRoads,connectedSample);
  totals.classification={groundSteep:totals.issues.filter(i=>!i.bridge&&!i.layer&&i.steep).length,groundRough:totals.issues.filter(i=>!i.bridge&&!i.layer&&i.rough).length,bridgeTerrainCandidates:totals.issues.filter(i=>i.bridge).length,elevatedTerrainCandidates:totals.issues.filter(i=>!i.bridge&&i.layer>0).length};
- // Tagged bridges cannot be certified by sampling the terrain below their decks.
- const {busanBridgeStreets}=await server.ssrLoadModule('/src/world/cities/BusanBridges.ts');
- const deckSeen=new Set(),deckReview={sections:0,steepSections:0,discontinuousEnds:0,scope:'authored deck/approach geometry; unpaired OSM bridges remain review candidates'},deckEnds=new Map();
- for(const c of chunks.values())for(const s of busanBridgeStreets(c.seoulDetail??c.busanDetail)){
-  const key=JSON.stringify([s.a,s.b]);if(deckSeen.has(key))continue;deckSeen.add(key);deckReview.sections++;
-  const mid=r=>[(r[0]+r[3])/2,(r[1]+r[4])/2,(r[2]+r[5])/2],a=mid(s.a),b=mid(s.b),len=Math.hypot(b[0]-a[0],b[2]-a[2]);
-  if(len>.01&&Math.abs(b[1]-a[1])/len>ROAD_PROFILE_LIMITS.maxGrade)deckReview.steepSections++;
-  for(const p of [a,b]){const k=p[0].toFixed(2)+','+p[2].toFixed(2)+','+Math.round(p[1]/3);const old=deckEnds.get(k);if(old!=null&&Math.abs(old-p[1])>.1)deckReview.discontinuousEnds++;deckEnds.set(k,p[1]);}
- }
+ // No registered city carries authored bridge decks (the Busan decks were removed); OSM bridges stay review candidates.
+ const deckReview={sections:0,steepSections:0,discontinuousEnds:0,scope:'authored deck/approach geometry; unpaired OSM bridges remain review candidates'};
  totals.authoredDeckReview=deckReview;
  totals.issues.sort((a,b)=>b.maxGrade-a.maxGrade);totals.generatedAt=new Date().toISOString();totals.inputDataSha256=fingerprint.digest('hex');
  totals.interiorInvalidSamples=totals.invalidSamples-totals.outsideCoverageSamples;totals.qualityPassed=totals.steepSegments===0&&totals.roughSegments===0&&totals.interiorInvalidSamples===0&&totals.connectedJoins.roughJoins===0&&totals.authoredDeckReview.steepSections===0&&totals.authoredDeckReview.discontinuousEnds===0;

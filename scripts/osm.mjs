@@ -46,10 +46,13 @@ export function buildingHeightInfo(t = {}) {
 export const FACILITY_HEIGHTS=Object.freeze({platform:3,shelter:3,canopy:3,tollgate:7,toilets:3.2,kiosk:3,garage:3,shed:3,utility:3.5});
 export function surfaceBuildingKind(t={}) {
   const levels=String(t.level??'').split(';').map(Number);
-  if(t.building==='no'||t.location==='underground'||(t.level!=null&&levels.every(v=>Number.isFinite(v)&&v<0))||(Number(t.layer)<0&&(t.tunnel==='yes'||t.building||t['building:part'])))return 'underground';
+  // No storeys above ground but some below (e.g. mapped underground stations) is subterranean too.
+  const belowOnly=Number(t['building:levels'])===0&&Number(t['building:levels:underground'])>0;
+  if(t.building==='no'||t.location==='underground'||belowOnly||(t.level!=null&&levels.every(v=>Number.isFinite(v)&&v<0))||(Number(t.layer)<0&&(t.tunnel==='yes'||t.building||t['building:part'])))return 'underground';
   if(t.public_transport==='platform'||t.highway==='platform'||t.railway==='platform')return 'platform';
   if(t.barrier==='toll_booth')return 'tollgate';
-  if(t['building:part']==='roof')return 'canopy';
+  // Zero storeys above ground and none below: a roof / canopy over open ground, not an enclosed shell.
+  if(t['building:part']==='roof'||Number(t['building:levels'])===0&&!(Number(t['building:levels:underground'])>0))return 'canopy';
   const explicit={toilets:'toilets',kiosk:'kiosk',garage:'garage',garages:'garage',shed:'shed',hut:'shed',cabin:'shed',service:'utility',transformer_tower:'utility',shelter:'shelter',roof:'canopy'}[t.building];
   if(typeof explicit==='string')return explicit;
   // An amenity on an explicitly typed office/apartment/hotel does not replace that whole building.
@@ -64,8 +67,10 @@ export function surfaceBuildingKind(t={}) {
 export function buildingVerticalFields(t={}) {
  const levels=String(t.level??'').split(';').map(Number),explicitFloor=t.level!=null&&levels.length&&levels.every(v=>Number.isFinite(v)&&v>0)?Math.min(...levels)*3.3:0;
  const layer=Number(t.layer)||0,minHeight=parseFloat(t.min_height??t['building:min_height']??''),bridge=String(t.building??'').split(';').includes('bridge');
- const clearance=Number.isFinite(minHeight)&&minHeight>0?minHeight:explicitFloor>0?explicitFloor:layer>0?Math.max(5,layer*4):bridge?5:0;
- return {layer,...(t['building:part']&&t['building:part']!=='no'?{buildingPart:true}:{}),...(clearance?{groundClearance:clearance,clearanceSource:Number.isFinite(minHeight)&&minHeight>0?'min-height':explicitFloor>0?'level':'layer-estimate'}:{})};
+ // building:min_level counts empty storeys below the mapped part (elevated decks, bridging roofs).
+ const minLevel=Number(t['building:min_level']??t.min_level),levelFloor=Number.isFinite(minLevel)&&minLevel>0?minLevel*3.3:0;
+ const clearance=Number.isFinite(minHeight)&&minHeight>0?minHeight:explicitFloor>0?explicitFloor:levelFloor>0?levelFloor:layer>0?Math.max(5,layer*4):bridge?5:0;
+ return {layer,...(t['building:part']&&t['building:part']!=='no'?{buildingPart:true}:{}),...(clearance?{groundClearance:clearance,clearanceSource:Number.isFinite(minHeight)&&minHeight>0?'min-height':explicitFloor>0?'level':levelFloor>0?'min-level':'layer-estimate'}:{})};
 }
 export function structureFields(t={}) {
  const kind=surfaceBuildingKind(t);if(!Object.hasOwn(FACILITY_HEIGHTS,kind))return {};

@@ -164,6 +164,8 @@ export interface MapCatalogEntry {
   lon?: number; // 침공 지점 경도
   /** 전지구 타일 월드(청크 스트리밍) 전장. 모든 전장이 스트리밍이다. */
   stream?: boolean;
+  /** false 면 도시 선택 목록(메뉴·에셋 스튜디오)에서 숨긴다. 데이터·빌드·직접 로드는 유지. */
+  listed?: boolean;
   /** 스트리밍 전장 시작 방위(rad). 기본 0. */
   spawnYaw?: number;
 }

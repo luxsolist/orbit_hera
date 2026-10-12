@@ -20,6 +20,7 @@ it.each([
 });
 it('preserves houses, mixed-use buildings and explicit height evidence',()=>{
  expect(surfaceBuildingKind({building:'house'})).toBe('building');
+ expect(surfaceBuildingKind({'building:part':'train_station','building:levels':'0','building:levels:underground':'2'})).toBe('underground');expect(surfaceBuildingKind({building:'retail','building:levels':'0'})).toBe('canopy');
  expect(surfaceBuildingKind({building:'apartments',amenity:'toilets'})).toBe('building');
  expect(surfaceBuildingKind({building:'office',shop:'kiosk'})).toBe('building');
  expect(buildingHeightInfo({building:'yes',amenity:'toilets',height:'5.5'}).h).toBe(5.5);

@@ -30,7 +30,7 @@ try{
   for(let z=0;z<n;z++)for(let x=0;x<n;x++){const local=z*n+x,k=((c.cz-minZ)*stride+z)*width+(c.cx-minX)*stride+x;
    if(Number.isFinite(surface[k])&&(Math.abs(surface[k]-s[local])>.002||Math.abs(land[k]-h[local])>.002)){protect[k]=1;reasons[k]|=8;disagreements++;}
    land[k]=h[local];surface[k]=s[local];
-   if(authored.has(local)||cooked.palaceSite||cooked.busanDetail||cooked.romeDetail||cooked.athensDetail||(cooked.streetPilot&&pilotWeight(ox+(k%width)*step,oz+Math.floor(k/width)*step)>0)){protect[k]=1;reasons[k]|=1;}
+   if(authored.has(local)||cooked.palaceSite||cooked.romeDetail||cooked.athensDetail||(cooked.streetPilot&&pilotWeight(ox+(k%width)*step,oz+Math.floor(k/width)*step)>0)){protect[k]=1;reasons[k]|=1;}
   }
   for(const b of cooked.objects.buildings)eachRect(b.p,96,k=>built[k]=1);
   for(const w of cooked.objects.water??[])eachRect(w.p,(w.w??0)/2+step,(k,x,z)=>{if(waterContains(x,z,w)){protect[k]=1;reasons[k]|=2;}});

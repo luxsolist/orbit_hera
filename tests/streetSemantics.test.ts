@@ -55,6 +55,7 @@ it('classifies toll roofs and preserves the source of vertical clearance',()=>{
  expect(structureFields({building:'yes',barrier:'toll_booth'}).structureKind).toBe('canopy');
  expect(buildingVerticalFields({layer:'1',min_height:'8'})).toMatchObject({groundClearance:8,clearanceSource:'min-height'});
  expect(buildingVerticalFields({layer:'1'})).toMatchObject({groundClearance:5,clearanceSource:'layer-estimate'});
+ expect(buildingVerticalFields({building:'construction','building:min_level':'2'})).toMatchObject({groundClearance:6.6,clearanceSource:'min-level'});
  expect(buildingVerticalFields({})).toEqual({layer:0});
 });
 it('uses planned canopy supports without recreating posts in the carriageway',()=>{

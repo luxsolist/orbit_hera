@@ -5,7 +5,7 @@ import {mapBuildVersion} from './map-build-version.mjs';
 import {streetBuildHash} from './street-build-hash.mjs';
 import {createServer} from 'vite';
 import {streetArtifacts,writeStreetPart} from './street-artifacts.mjs';
-import {createElevatedStreetSampler} from './street-elevation.mjs';
+import {createElevatedStreetSampler,fitDeckSlots} from './street-elevation.mjs';
 import {crossingHeight} from './street-crossings.mjs';
 import {createStreetSeamSampler,reconcileStreetTerrain} from './street-seams.mjs';
 const [city='seoul',region='city-wide']=process.argv.slice(2),read=p=>JSON.parse(readFileSync(p,'utf8'));
@@ -27,7 +27,7 @@ try{
  // The final physical edge grid already includes crossing support. Reapplying
  // deck interpolation here would raise only road vertices above neighbouring land.
  const seamHeight=createStreetSeamSampler(terrains,(t,x,z)=>sampleChunkLandHeight(t,x,z,true));
- const elevatedHeight=createElevatedStreetSampler((x,z)=>seamHeight(x,z)??ground(x,z),read(base+'-elevated-roofs.json'));
+ const elevatedHeight=createElevatedStreetSampler((x,z)=>seamHeight(x,z)??ground(x,z),read(base+'-elevated-roofs.json'),(x,z)=>Math.max(seamHeight(x,z)??ground(x,z)??0,sourceGround(x,z)??-Infinity));
  const output={},sharded=input.coverage==='manifest';let totalTriangles=0,totalBytes=0;
  for(const chunk of input.chunks){const key=chunk.cx+'_'+chunk.cz,part=regions.keys.includes(key)?regions.read(key):null;if(!part)continue;
  const origin=[chunk.cx*1024,chunk.cz*1024],terrain=terrains.get(key);if(terrain)delete terrain.compiledStreet;
@@ -50,7 +50,8 @@ try{
  }
  layers.set(meshKey,pos);
  }
- const plan={version:1,region,terrainHeights:reconciled.get(key)?.land,roadHeights:reconciled.get(key)?.road,bounds:part.bounds,origin,sourceHash:hash,compilerVersion,supportVolumes,meshes:[...layers].sort((a,b)=>a[0].localeCompare(b[0])).map(([meshKey,source])=>{const [layer,level]=meshKey.split(':').map(Number);const position=[],index=[],keys=new Map();for(let i=0;i<source.length;i+=3){const p=source.slice(i,i+3),key=p.join();if(!keys.has(key)){keys.set(key,position.length/3);position.push(...p);}index.push(keys.get(key));}return {layer,level,position,index};}),props:part.props,resolvedSites:part.resolvedSites,walls:part.walls,resolvedWater:part.resolvedWater,resolvedBuildings:part.resolvedBuildings,resolvedStructures:part.resolvedStructures,buildings:(part.resolvedBuildings??chunk.objects.buildings).filter(b=>b.osmId&&!b.walkableProfile).flatMap(b=>b.passageGroundParts?[{id:b.osmId,p:b.p,h:b.h,holes:b.holes,groundClearance:b.passageClearance},...b.passageGroundParts.map(p=>({id:b.osmId,h:b.passageClearance,...p}))]:[{id:b.osmId,p:b.p,h:b.h,holes:b.holes,groundClearance:b.groundClearance}])};
+ const resolvedBuildings=part.resolvedBuildings&&fitDeckSlots(part.resolvedBuildings,elevatedHeight,[sourceGround,ground]);
+ const plan={version:1,region,terrainHeights:reconciled.get(key)?.land,roadHeights:reconciled.get(key)?.road,bounds:part.bounds,origin,sourceHash:hash,compilerVersion,supportVolumes,meshes:[...layers].sort((a,b)=>a[0].localeCompare(b[0])).map(([meshKey,source])=>{const [layer,level]=meshKey.split(':').map(Number);const position=[],index=[],keys=new Map();for(let i=0;i<source.length;i+=3){const p=source.slice(i,i+3),key=p.join();if(!keys.has(key)){keys.set(key,position.length/3);position.push(...p);}index.push(keys.get(key));}return {layer,level,position,index};}),props:part.props,resolvedSites:part.resolvedSites,walls:part.walls,resolvedWater:part.resolvedWater,resolvedBuildings,resolvedStructures:part.resolvedStructures,buildings:(resolvedBuildings??chunk.objects.buildings).filter(b=>b.osmId&&!b.walkableProfile).flatMap(b=>b.passageGroundParts?[{id:b.osmId,p:b.p,h:b.h,holes:b.holes,groundClearance:b.passageClearance},...b.passageGroundParts.map(p=>({id:b.osmId,h:b.passageClearance,...p}))]:[{id:b.osmId,p:b.p,h:b.h,holes:b.holes,groundClearance:b.groundClearance}])};
  totalTriangles+=plan.meshes.reduce((s,m)=>s+(m.index?.length??m.position.length/3)/3,0);totalBytes+=Buffer.byteLength(JSON.stringify(plan));
  output[key]=sharded?writeStreetPart(base+'-plans',key,plan):plan;
  if(Object.keys(output).length%100===0)console.log(JSON.stringify({bakedChunks:Object.keys(output).length,triangles:totalTriangles}));

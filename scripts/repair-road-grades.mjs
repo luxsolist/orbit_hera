@@ -61,13 +61,15 @@ export function repairRoadGrades({root='public/maps',cellFilter=null,write=true}
   const spikes=repairUrbanSpikes(grid,mask,protect,urban,width,height);
   const first=repairLattice(spikes.grid,mask,protect,width,height);
   const repaired=repairLattice(first.grid,mask,protect,width,height);
+  // Urban peaks may drop up to 80m but must stay within 30m of their ring target (validate-road-grades contract).
+  const bounds=k=>{const e=spikes.evidence.get(k);return e?[Math.max(grid[k]-80,e.target-30),Math.min(grid[k],e.target+30)]:[grid[k]-30,grid[k]+30];};
   repaired.maxDelta=0;
-  for(let k=0;k<grid.length;k++)if(Number.isFinite(grid[k])){const limit=spikes.evidence.has(k)?80:30;repaired.grid[k]=Math.max(grid[k]-limit,Math.min(grid[k]+30,repaired.grid[k]));repaired.maxDelta=Math.max(repaired.maxDelta,Math.abs(repaired.grid[k]-grid[k]));}
+  for(let k=0;k<grid.length;k++)if(Number.isFinite(grid[k])){const [low,high]=bounds(k);repaired.grid[k]=Math.max(low,Math.min(high,repaired.grid[k]));repaired.maxDelta=Math.max(repaired.maxDelta,Math.abs(repaired.grid[k]-grid[k]));}
   const designed=designUrbanRoadSurface(repaired.grid,mask,protect,urban,width,height,step);
   const faired=fairUrbanRoadSurface(designed.surface,designed.land,grid,mask,protect,urban,width,height);
   const surface=faired.surface;
   for(let k=0;k<grid.length;k++)if(Number.isFinite(grid[k])){
-   const low=grid[k]-(spikes.evidence.has(k)?80:30),high=grid[k]+30;
+   const [low,high]=bounds(k);
    repaired.grid[k]=Math.max(low,Math.min(high,faired.land[k]));
    surface[k]=Math.max(low,Math.min(high,surface[k]));
    repaired.maxDelta=Math.max(repaired.maxDelta,Math.abs(repaired.grid[k]-grid[k]));

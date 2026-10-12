@@ -1,4 +1,4 @@
-import {detailedSeoul,detailedRome,detailedAthens} from './detail';
+import {detailedSeoul,detailedRome,detailedAthens,detailedHongKong} from './detail';
 import {LIGHT,SKY_COLOR,FOG_COLOR} from '../palette';
 import type {CityAppearance} from './types';
 export type {CityAppearance} from './types';
@@ -12,7 +12,7 @@ export const defaultAppearance:CityAppearance={
  street:{asphalt:'#363a3f',pavement:'#bcb8ae',curb:'#8b8e90',marking:'#e0ddd0',center:'#cbb16a'},
  props:{enabled:false,maxPerChunk:48,spacing:45,minSpacing:14,offset:1.4,trees:true,lamps:true,treeScale:1,lampHeight:6,metal:0x727b80,bark:0x716253,leaves:0x647954}
 };
-const cities:Readonly<Record<string,CityAppearance>>={'seoul-stream':detailedSeoul,'rome-stream':detailedRome,'athens-stream':detailedAthens};
+const cities:Readonly<Record<string,CityAppearance>>={'seoul-stream':detailedSeoul,'rome-stream':detailedRome,'athens-stream':detailedAthens,'hong-kong-stream':detailedHongKong};
 export function cityAppearance(mapId?:string):CityAppearance{return cities[mapId??'']??defaultAppearance;}
 
 const handheld=new WeakMap<CityAppearance,CityAppearance>();

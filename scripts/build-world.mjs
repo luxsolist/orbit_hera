@@ -20,6 +20,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, readdirSync
 import { MAPS as MAP_DEFS } from "./maps.config.mjs";
 import { bbox, polyArea, clipRect, clipPolylineToRect, dedupeFlat } from "./clip.mjs";
 import { elevationMosaic, cellLattice, sampleLattice, DEM_HALO, DEM_PER_CHUNK } from "./geodem.mjs";
+import { applyCoastline } from "./coastline.mjs";
 import { cellOwner } from "./worldValidate.mjs";
 
 const BLOCK = 16; // 블록 디렉터리 한 변(청크) — 셀 내 <bx>_<bz>/<cx>_<cz>.json. 디렉터리당 ≤ BLOCK²(256) 파일.
@@ -199,6 +200,9 @@ if (coverM) {
   LAT = cellLattice(range, C, [cellLat, cellLon], M_LONc, mosaic, {
     bareEarthOn: mapDef?.bareEarth !== false, buildings: flatPolys,
   });
+  // 해안선 바다 마스크 — DEM 수면 노이즈(+1~5m)가 바다 위 육지 얼룩으로 그려지지 않도록.
+  const coast = applyCoastline(LAT, (terrain.coastline ?? []).map((p) => { const o = []; for (let i = 0; i < p.length; i += 2) o.push(...mapToCell(p[i], p[i + 1])); return o; }), seaLevel);
+  if (terrain.coastline?.length) console.error(`  해안선 ${terrain.coastline.length}개 · 바다 보정 ${coast.sea} · 해안 육지 보정 ${coast.land}`);
   // 검증용 산출물 — validate-world 가 같은 격자로 청크 표고를 교차검증한다.
   writeFileSync(`${BUILD_DIR}/${id}.lattice.bin`, Buffer.from(LAT.grid.buffer));
   writeFileSync(`${BUILD_DIR}/${id}.lattice.json`, JSON.stringify({ size: LAT.size, orig: LAT.orig, step: LAT.step, cell: [cellLat, cellLon], seaLevel }, null, 1));

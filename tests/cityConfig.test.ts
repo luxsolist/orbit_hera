@@ -107,11 +107,11 @@ describe("city-catalog.json — 생성 결과", () => {
 });
 
 describe("maps.config — 손 맵 + 생성 맵 병합", () => {
-  it("도시 전역 가로 구역이 등록된 도시만 맵이 된다(손 2 + 생성 1)", () => {
+  it("도시 전역 가로 구역이 등록된 도시만 맵이 된다(손 2 + 생성 2)", () => {
     // 100선 카탈로그는 장 배속·큐레이션 정본으로 남고, 최신 빌드가 가능한 도시만 MAPS 에 오른다.
-    expect((MAPS as { id: string }[]).map((m) => m.id).sort()).toEqual(["athens", "gyeongbokgung", "rome"]);
+    expect((MAPS as { id: string }[]).map((m) => m.id).sort()).toEqual(["athens", "gyeongbokgung", "hong-kong", "rome"]);
     const gen = MAPS.filter((m: { chapter?: number }) => m.chapter !== undefined);
-    expect(gen.map((m: { id: string }) => m.id)).toEqual(["athens"]);
+    expect(gen.map((m: { id: string }) => m.id)).toEqual(["athens", "hong-kong"]);
     const regions = JSON.parse(readFileSync("config/street-regions.json", "utf8"));
     for (const m of MAPS as { id: string; stream: { id: string } }[]) {
       const city = m.stream.id.replace(/-stream$/, "");

@@ -1,5 +1,5 @@
 import {streetRegions} from './street-config.mjs';
-import {restoreMapBuildInputs} from './complete-map-chunks.mjs';
+import {restoreMapBuildInputs,stripCompiledPlans} from './complete-map-chunks.mjs';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {resolve} from 'node:path';
@@ -9,7 +9,7 @@ import {validateCitySurfaces} from './validate-city-surfaces.mjs';
 // No network collection or release publication is performed here.
 export function buildCitySurfaces(city){
  streetRegions(city,undefined,{requireSource:true,requireCityCoverage:true});
- restoreMapBuildInputs(city);
+ restoreMapBuildInputs(city);stripCompiledPlans(city);
  execFileSync(process.execPath,['scripts/rebuild-building-heights.mjs',city,'--apply'],{cwd:fileURLToPath(new URL('../',import.meta.url)),stdio:'inherit'});
  if(city==='seoul')execFileSync('python3',['scripts/build-cheonggye-pilot.py'],{cwd:fileURLToPath(new URL('../',import.meta.url)),stdio:'inherit'});
  if(city==='seoul')execFileSync(process.execPath,['scripts/build-road-markings.mjs',city],{cwd:fileURLToPath(new URL('../',import.meta.url)),stdio:'inherit'});

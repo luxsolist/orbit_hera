@@ -1,6 +1,7 @@
 import {paintedSeoul} from './painted';
 import {paintedRome} from './rome';
 import {paintedAthens} from './athens';
+import {paintedHongKong} from './hongkong';
 import type {CityAppearance,CityDetailSettings,FacadeGrammarSettings,GrammarRule} from './types';
 // 도시별 상세 단계 파라미터. 렌더러는 공통이고 도시 특성(물·하늘·수종·나무 밀도·외관 권역·간판 밀도)은
 // 여기서만 정한다. 값은 아트 디렉션 추정이며 측량/식생 조사 자료가 아니다. 근거: docs/city-detail-tier.md.
@@ -28,6 +29,28 @@ export const seoulGrammar:FacadeGrammarSettings={
   streetCommercial:[0xd8d2c6,0xc7c2b8,0xb7a596,0xe4ded2,0xa9aaa4,0xcbb7a5,0xd2c8b0],
   retailFlagship:[0xeeece6,0xd7d9da,0x3b3f44,0xe8e2d6,0xc9ced2]},
 };
+/** Hong Kong: Central glass towers, Mong Kok / Causeway Bay neon tenements, Tsim Sha Tsui retail. */
+export const hongKongGrammar:FacadeGrammarSettings={
+ cell:[22,114],minArea:25,signs:[0xe0302a,0xf2c230,0x2a9d5a,0x2a63c4,0xf4f1e8,0xd23f8c,0xe86a1c,0x15181c],
+ zones:[
+  {id:'mongkok',south:22.3120,north:22.3260,west:114.1650,east:114.1750,signDensity:1,
+   rules:[{minHeight:80,mix:[['glassTower',.4],['stoneOffice',.6]]},{minHeight:8,mix:[['streetCommercial',.7],['retailFlagship',.3]]},shops]},
+  {id:'tsim-sha-tsui',south:22.2940,north:22.3040,west:114.1680,east:114.1780,signDensity:.9,
+   rules:[{minHeight:60,mix:[['glassTower',.7],['stoneOffice',.3]]},{minHeight:8,mix:[['retailFlagship',.45],['streetCommercial',.55]]},shops]},
+  {id:'causeway-bay',south:22.2760,north:22.2850,west:114.1780,east:114.1920,signDensity:.9,
+   rules:[{minHeight:60,mix:[['glassTower',.6],['stoneOffice',.4]]},{minHeight:8,mix:[['retailFlagship',.35],['streetCommercial',.65]]},shops]},
+  {id:'central',south:22.2760,north:22.2870,west:114.1500,east:114.1660,signDensity:.5,
+   rules:[{minHeight:40,mix:[['glassTower',.85],['stoneOffice',.15]]},{minHeight:10,mix:[['stoneOffice',.5],['retailFlagship',.2],['streetCommercial',.3]]},shops]},
+ ],
+ // Residential towers (25–100m) keep the base apartment pattern; very tall towers and main-street podiums get grammar.
+ fallback:{signDensity:.45,rules:[{minHeight:100,mix:[['glassTower',.6],['stoneOffice',.4]]},{minHeight:0,maxHeight:25,mainStreet:true,mix:[['streetCommercial',.7]]}]},
+ paint:{
+  glassTower:[0x7c9eae,0x6b8fa3,0x8aa9b5,0x5d7f93,0x9fb7c0,0x6f8f8c],
+  stoneOffice:[0xd8d4cc,0xc9c6bf,0xe2ded5,0xb8b3aa,0xcfc8ba],
+  streetCommercial:[0xd9d2c3,0xc7cbc4,0xe0d6c0,0xb9c2bd,0xd4c1b0,0xe3dbd6],
+  retailFlagship:[0xf0efea,0xdadedf,0x30353a,0xe7e3da]},
+};
+
 const mobileSafe={hazeStart:.32,contactShade:.22,parkFurniture:true};
 const vegetationBase={enabled:true,streetSpacing:9,minRoadWidth:10,parkSpacing:36,woodSpacing:8.5,gardenSpacing:26,maxPerChunk:4200,nearDistance:320,farDistance:1400};
 
@@ -52,6 +75,14 @@ export const athensDetail:CityDetailSettings={...mobileSafe,hazeStart:.35,
   species:{street:{broadleaf:1},forest:{conifer:.55,cypress:.2,broadleaf:.25},open:{broadleaf:.5,cypress:.3,conifer:.2},authored:{conifer:.4,cypress:.3,broadleaf:.3}}},
 };
 
+export const hongKongDetail:CityDetailSettings={...mobileSafe,hazeStart:.28,
+ // Victoria Harbour: busy sea with a green-blue body; humid sky with plenty of cumulus.
+ water:{enabled:true,deep:[.03,.10,.12],ripple:.09},clouds:{enabled:true,coverage:.55},grammar:hongKongGrammar,
+ // Subtropical broadleaf country parks (dense), banyan-like round street trees.
+ vegetation:{...vegetationBase,woodSpacing:8,leaves:[0x3f7040,0x4c7d45,0x37653c,0x5a8a4c,0x46743f],bark:0x6a5b48,streetCrown:[.95,1],
+  species:{street:{broadleaf:1},forest:{broadleaf:.85,conifer:.15},open:{broadleaf:.9,conifer:.1},authored:{broadleaf:.85,conifer:.15}}},
+};
+
 /** Street trees come from the vegetation layer, so the shared prop trees are switched off. */
 const withDetail=(base:CityAppearance,id:string,detail:CityDetailSettings,fog?:number):CityAppearance=>({
  ...base,id,props:{...base.props,trees:false},detail,...(fog!==undefined?{environment:{...base.environment,fog}}:{}),
@@ -59,3 +90,4 @@ const withDetail=(base:CityAppearance,id:string,detail:CityDetailSettings,fog?:n
 export const detailedSeoul=withDetail(paintedSeoul,'seoul-detailed',seoulDetail,0xc4d3e3);
 export const detailedRome=withDetail(paintedRome,'rome-detailed',romeDetail);
 export const detailedAthens=withDetail(paintedAthens,'athens-detailed',athensDetail);
+export const detailedHongKong=withDetail(paintedHongKong,'hong-kong-detailed',hongKongDetail);

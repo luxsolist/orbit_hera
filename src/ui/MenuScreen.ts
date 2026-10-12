@@ -129,7 +129,7 @@ export class MenuScreen {
     }
     void this.loadControls(this.selectedDroneId); // 기본 기체 조작 안내
     try {
-      if (!this.catalog.length) this.catalog = await fetchCatalog();
+      if (!this.catalog.length) this.catalog = (await fetchCatalog()).filter((c) => c.listed !== false);
       this.pickInvaded();
       this.renderWorldMap();
     } catch (e) {

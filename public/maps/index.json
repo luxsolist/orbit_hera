@@ -33,6 +33,19 @@
   "lat": 37.9755648,
   "lon": 23.7348324,
   "stream": true,
+  "spawnYaw": 0,
+  "listed": false
+ },
+ {
+  "id": "hong-kong-stream",
+  "name": "홍콩 · Hong Kong",
+  "subtitle": "중국 — 도심 반경 20km 청크 스트리밍 (2장 같은 박자)",
+  "buildings": 97265,
+  "landmarks": 287,
+  "sites": 2,
+  "lat": 22.2818333,
+  "lon": 114.1582831,
+  "stream": true,
   "spawnYaw": 0
  }
 ]

@@ -21,6 +21,16 @@ export function restoreMapBuildInputs(city){
  if(restored){const path='public/maps/road-grade/index.json';if(existsSync(path)){const index=read(path);index.cells[data.grid]=data.rows.filter(row=>existsSync(row.overlays.roadGrade)).map(row=>row.key);writeFileSync(path,JSON.stringify(index));}delete data.manifest.completedChunkVersion;writeFileSync(data.manifestPath,JSON.stringify(data.manifest));}
  return restored;
 }
+/**
+ * Full surface rebuilds recompile every street plan, so the previous plan restored into road-grade
+ * overlays must not feed the design stages (grades/refinement would apply it in different orders).
+ */
+export function stripCompiledPlans(city){
+ const data=cityChunkFiles(city);let stripped=0;
+ for(const row of data.rows){const file=row.overlays.roadGrade;if(!existsSync(file))continue;const grade=read(file);
+  if(!grade.streetPlan)continue;delete grade.streetPlan;writeFileSync(file+'.tmp',JSON.stringify(grade));renameSync(file+'.tmp',file);stripped++;}
+ return stripped;
+}
 export async function completeCityChunks(city){
  const data=cityChunkFiles(city),server=await createServer({root:fileURLToPath(new URL('../',import.meta.url)),configFile:false,server:{middlewareMode:true},appType:'custom',optimizeDeps:{noDiscovery:true}});
  const buildVersion=mapBuildVersion(city),staged=[];let bytes=0,already=0;

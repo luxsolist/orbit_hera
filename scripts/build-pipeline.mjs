@@ -22,7 +22,7 @@
 import { execFileSync } from "node:child_process";
 import {streetRegions} from './street-config.mjs';
 import {restoreMapBuildInputs} from './complete-map-chunks.mjs';
-import {readFileSync} from 'node:fs';
+import {readFileSync,existsSync} from 'node:fs';
 import {buildCitySurfaces} from './build-city-surfaces.mjs';
 import { MAPS } from "./maps.config.mjs";
 
@@ -50,7 +50,8 @@ console.error(`=== 맵데이터 파이프라인: ${id} ===`);
 const registeredCities=JSON.parse(readFileSync('config/map-cities.json','utf8'));
 const targetCity=Object.entries(registeredCities).find(([name,cell])=>name===(m.stream?.id?.replace(/-stream$/, '')??m.id)||cell[0]===Math.floor(m.lat0)&&cell[1]===Math.floor(m.lon0))?.[0];
 streetRegions(targetCity??m.stream?.id?.replace(/-stream$/, '')??m.id,undefined,{requireSource:true,requireCityCoverage:true});
-if(targetCity)restoreMapBuildInputs(targetCity);
+// A first build has no completed chunks to restore inputs from.
+if(targetCity&&existsSync(`public/maps/${registeredCities[targetCity].join('/')}/tiles.json`))restoreMapBuildInputs(targetCity);
 
 // 1) OSM 수집 + 오브젝트 가공 → build/<id>.json
 run("1/4 OSM 수집·가공", "scripts/build-maps.mjs", [id]);

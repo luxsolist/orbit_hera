@@ -28,5 +28,30 @@
       "refreshObjects": true,
       "enabled": true
     }
+  },
+  "hong-kong": {
+    "city-wide": {
+      "coverage": "manifest",
+      "halo": 160,
+      "source": "build/map-sources/hong-kong-region.osm.pbf",
+      "sidewalk": 2.3,
+      "minCarriageway": 3,
+      "enabled": true,
+      "reviewedWalking": {
+        "way/448598537": "Untagged footbridge/causeway: trail crosses a Tai Lam Chung Reservoir arm for ~49m (no bridge tag in OSM).",
+        "way/1282465711": "Untagged footbridge/causeway: trail crosses a Shing Mun Reservoir arm for ~41m (no bridge tag in OSM).",
+        "way/1289562066": "Untagged indoor passage through the Novo Walk mall footprint (way/1289562068).",
+        "way/748921938": "Emergency pedestrian access mapped through The Whampoa footprint (relation/16947418) without indoor/covered tags.",
+        "way/1068799389": "Footway mapped through the Arts Pavilion footprint (relation/14241228) without indoor/covered tags.",
+        "way/1315695282": "Village footway mapped through a house footprint (way/1106333918) and an adjacent stream.",
+        "way/1304814811": "Footway crosses a pond (way/1304814808) for ~72m; likely an untagged boardwalk.",
+        "way/1289659542": "Trail crosses a Kowloon Reservoir arm (way/23618305) for ~32m without a bridge tag.",
+        "way/1343932906": "Informal dirt path through an intermittent (seasonal) pond, way/1237320326.",
+        "way/94850121": "Alpine hiking trail (sac_scale=alpine_hiking) repeatedly crossing a small stream (way/184908771) without ford/stepping-stone tags.",
+        "way/817372538": "Hiking path crossing a small stream (way/1406482511) diagonally for ~7m without a ford tag.",
+        "way/1433564303": "Hiking path crossing a small stream (way/323624590) diagonally for ~9m without a ford tag."
+      },
+      "estimatedStreamWidth": 2
+    }
   }
 }

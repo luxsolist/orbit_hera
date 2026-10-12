@@ -105,6 +105,7 @@ function processOSM(osm, proj) {
   const walls = [];
   const areas = [];
   const waterways = []; // 강/하천 중심선(지표 노출 판정 후 water 로)
+  const coastline = []; // natural=coastline 선(육지가 진행 방향 왼쪽) — 바다 마스크용
 
   const wayFlat = (el) => {
     const flat = [];
@@ -134,7 +135,8 @@ function processOSM(osm, proj) {
     if (flat.length < 6) return;
     const cp = sanitizeRing(flat, false);
     if (!cp) return;
-    if (t.natural === "water" || t.water || t.waterway === "riverbank") {
+    // Covered / culverted / below-ground water bodies are not surface water (same rule as waterways).
+    if ((t.natural === "water" || t.water || t.waterway === "riverbank") && !isUndergroundWaterway(t)) {
       const hs = [];
       for (const h of holes) { const hc = sanitizeRing(h, false); if (hc && ringArea(hc) >= 4) hs.push(hc); }
       water.push({p: cp, ...waterMetadata(t, osmId), ...(hs.length ? {holes: hs} : {})});
@@ -146,6 +148,7 @@ function processOSM(osm, proj) {
 
   for (const el of osm.elements) {
     const t = el.tags || {};
+    if (el.type === "way" && t.natural === "coastline" && el.geometry?.length >= 2) { coastline.push(wayFlat(el)); continue; }
     if (el.type === "relation") {
       // 멀티폴리곤 outer 들을 개별 면으로(건물 관계 = 건물).
       const isBld = !!t.building || !!t['building:part'] || !['building','underground'].includes(surfaceBuildingKind(t));
@@ -189,7 +192,7 @@ function processOSM(osm, proj) {
   const nEst = bEst.filter(Boolean).length;
   interpolateBuildingHeights(buildings, bEst);
   console.error(`  건물 높이 보간: 미상 ${nEst}/${buildings.length} → 주변 중앙값 추정`);
-  return { buildings, roads: mergedRoads, water, walls, areas };
+  return { buildings, roads: mergedRoads, water, walls, areas, coastline };
 }
 
 /**
@@ -297,7 +300,7 @@ for (const m of MAPS) {
     // 소스가 평면(v1) 또는 섹션(v2) 둘 다 수용.
     const src = JSON.parse(readFileSync(m.local.from, "utf8"));
     if (src.objects) {
-      core = { buildings: src.objects.buildings, roads: src.objects.roads, water: src.terrain?.water ?? [], walls: src.objects.walls ?? [], areas: src.objects.areas ?? [] };
+      core = { buildings: src.objects.buildings, roads: src.objects.roads, water: src.terrain?.water ?? [], coastline: src.terrain?.coastline ?? [], walls: src.objects.walls ?? [], areas: src.objects.areas ?? [] };
       boundary = src.objects.boundary;
       precinct = src.objects.precinct;
     } else {
@@ -326,6 +329,7 @@ for (const m of MAPS) {
       ...(m.heightmap ? { heightmap: m.heightmap } : {}),
       procedural: { ...(m.mountains ? { mountains: m.mountains } : {}), flattenCity: true },
       water: core.water,
+      ...(core.coastline?.length ? { coastline: core.coastline } : {}),
     },
     objects: {
       buildings: core.buildings,

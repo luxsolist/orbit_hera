@@ -5,7 +5,7 @@ logical routes; surfaces are a single partition shared by all consumers.
 import json, math, hashlib, sys, os, pickle, inspect
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-sys.path.insert(0,str(Path(__file__).resolve().parent.parent/('build/busan-python' if os.name=='nt' else 'build/map-python')))
+sys.path.insert(0,str(Path(__file__).resolve().parent.parent/'build/map-python'))
 from shapely import make_valid, constrained_delaunay_triangles, get_num_coordinates, clip_by_rect, coverage_union_all, disjoint_subset_union_all, get_parts
 from shapely.geometry import Polygon, LineString, Point, box, GeometryCollection, MultiPolygon, MultiLineString
 from shapely.ops import unary_union, substring
@@ -277,12 +277,19 @@ def upper_walking_surfaces(data,core,walking_obstacle):
         if not levels or not (any(level>0 for level in levels) or r.get('bridge') or boardwalk):continue
         corridor=line.buffer(r['w']/2,quad_segs=3).intersection(core)
         if len(levels)==1:
-            roof=max([all_buildings[i].get('h',0)+.2 for i in roof_tree.query(corridor,predicate='intersects')]+[levels[0]*3.3])
+            # A footbridge rides over low roofs and enters towers: walking across a
+            # 150m roof is a mis-inferred level, so taller unauthored volumes clip it.
+            under=[all_buildings[i] for i in roof_tree.query(corridor,predicate='intersects')]
+            towers=[b for b in under if b.get('h',0)>ELEVATED_ROOF_CAP and not any(b.get(k) for k in ('landmarkModel','seoulArchitecture','palaceBuildingId','statueModel'))]
+            if towers:
+                inside=union([ring(b).buffer(.1,quad_segs=2) for b in towers]);corridor=corridor.difference(inside);line=line.difference(inside)
+            roof=max([b.get('h',0)+.2 for b in under if b not in towers and ring(b).intersects(corridor)]+[levels[0]*3.3])
             levels=[roof/3.3]
+        if corridor.is_empty:claimed.add(r['id']);continue
         # Explicit upper levels retain a separate support plane. Building roofs
         # are sampled during baking; an upper route cannot be buried in a roof.
         surfaces.append(dict(kind='walklevel-'+str(len(surfaces)),shape=corridor,profile=dict(path=r['p'],levels=levels),source=r['id']))
-        claimed.add(r['id']);records.append(dict(r,line=line))
+        claimed.add(r['id']);records.extend(dict(r,line=l) for l in lines(line))
     return surfaces,claimed,records
 
 def normalize_ruins(data):
@@ -421,10 +428,21 @@ def prepare_obstacles(data,core,halo):
                                 return (b.x-a.x)*(point.y-q.y)-(b.y-a.y)*(point.x-q.x)
                             a,b=Point(wet.coords[0]),Point(wet.coords[-1])
                             opposite=shape.boundary.distance(a)<.15 and shape.boundary.distance(b)<.15 and bank_side(a)*bank_side(b)<-.01
-                        if wet.length>.1 and (wet.length<=limit or opposite or r.get('bridge') or r.get('layer',0)>0 or r.get('ford')=='yes'):
+                        ford=r.get('ford') in ('yes','intermittent','stepping_stones')
+                        # Shoreline trails: a pedestrian way that only dips into an area water body
+                        # (reservoir draw-down line, lake edge) stays within a shallow band of its shore.
+                        shoreline=bool(r.get('pedestrian') and not w.get('w') and wet.length>.1 and max(min(part.boundary.distance(Point(xy)) for part in polygons(shape)) for xy in wet.coords)<=8)
+                        if wet.length>.1 and (wet.length<=limit or opposite or shoreline or r.get('bridge') or r.get('layer',0)>0 or ford):
                             apertures.append(wet.buffer(r['w']/2+4,quad_segs=3))
-                            crossings.append(dict(id=r['id'],p=[v for xy in wet.coords for v in xy],w=r['w'],pedestrian=r.get('pedestrian',False),source='ford' if r.get('ford')=='yes' else 'tag' if r.get('bridge') else 'opposite-bank-crossing' if opposite else 'short-water-crossing'))
-            water_parts.append(shape.difference(union(apertures)))
+                            crossings.append(dict(id=r['id'],p=[v for xy in wet.coords for v in xy],w=r['w'],pedestrian=r.get('pedestrian',False),source='ford' if ford else 'shoreline-path' if shoreline else 'tag' if r.get('bridge') else 'opposite-bank-crossing' if opposite else 'short-water-crossing'))
+            obstacle_shape=shape
+            # Estimated stream widths (no width tag) must not squeeze out a parallel road's minimum
+            # reservation: trim the guessed banks back, but always keep a 1.5m channel on the axis.
+            if w.get('w') and (w.get('waterInfo') or {}).get('widthSource')=='estimate':
+                near=[reserves[i] for i in reserve_tree.query(shape,predicate='intersects')]
+                near+=[walk_access_lines[i].buffer(walk_access[i]['w']/2+.25,quad_segs=3) for i in walk_access_tree.query(shape,predicate='intersects')]
+                if near:obstacle_shape=shape.difference(union(near)).union(LineString(points(w['p'])).buffer(.75,quad_segs=3))
+            water_parts.append(obstacle_shape.difference(union(apertures)))
             if bank_cuts or w.get('holes'):
                 fixed=shape.difference(union(bank_cuts))
                 for p in polygons(fixed):
@@ -546,6 +564,61 @@ def reserve_final_routes(asphalt,pavement,road_records,obstacle,core):
     allocated=union(reservations)
     return union([asphalt,allocated]),overlay(pavement,allocated,'difference')
 
+# A deck rests on a podium roof, never on a tower: one OSM footprint often spans both,
+# and lifting the deck to the tower top pulled whole districts' decks 500m into the air.
+# Taller crossed volumes keep a podium under the deck and resume above its headroom.
+ELEVATED_ROOF_CAP=30;DECK_LEVEL_RISE=5;DECK_HEADROOM=6
+def terrain_sampler(data):
+    tiles={(c['cx'],c['cz']):c['terrain'] for c in data['chunks'] if c.get('terrain',{}).get('heights')}
+    def sample(x,z):
+        cx,cz=math.floor(x/1024),math.floor(z/1024);t=tiles.get((cx,cz))
+        if not t:return None
+        n=t['size'];h=t['heights'];gx=min(n-1.0,max(0.0,(x-cx*1024)/1024*(n-1)));gz=min(n-1.0,max(0.0,(z-cz*1024)/1024*(n-1)))
+        x0,z0=int(gx),int(gz);x1,z1=min(n-1,x0+1),min(n-1,z0+1);fx,fz=gx-x0,gz-z0
+        top=h[z0*n+x0]+(h[z0*n+x1]-h[z0*n+x0])*fx;bottom=h[z1*n+x0]+(h[z1*n+x1]-h[z1*n+x0])*fx
+        return top+(bottom-top)*fz
+    return sample
+def split_deck_towers(data,decks,elevated_surfaces):
+    roofs=[];upper_query=prep(decks);ground=terrain_sampler(data);count=0
+    # Ground routes under a deck keep a passage through the podium (as normalize_passages).
+    under=[r for r in data['roads']+data.get('walking',[]) if not any(v!=0 for v in route_levels(r)) and not r.get('tunnel') and not r.get('bridge') and r.get('layer',0)==0 and len(r['p'])>=4]
+    under_paths=[LineString(points(r['p'])).buffer(max(3,r.get('w',3))/2+1.6,quad_segs=3) for r in under];under_tree=STRtree(under_paths)
+    for c in data['chunks']:
+        for kind in ('buildings','structures'):
+            output=[]
+            for b in c['objects'].get(kind,[]):
+                shape=ring(b)
+                if not upper_query.intersects(shape):output.append(b);continue
+                h=max(b.get('h',3),b.get('groundClearance',0)+.4)
+                # Authored models keep their modelled roof; the deck still clears them.
+                authored=any(b.get(k) for k in ('landmarkModel','seoulArchitecture','palaceBuildingId','statueModel'))
+                roofs.append(dict(p=b['p'],holes=b.get('holes',[]),h=h if authored else min(h,ELEVATED_ROOF_CAP)))
+                strip=shape.intersection(decks)
+                if h<=ELEVATED_ROOF_CAP or authored or strip.area<1:output.append(b);continue
+                level=max([l for l,g in elevated_surfaces.items() if g.intersects(shape)] or [1])
+                heights=[v for v in (ground(x,z) for x,z in points(b['p'])) if v is not None] or [0]
+                clearance=ELEVATED_ROOF_CAP+(max(1,level)-1)*DECK_LEVEL_RISE+DECK_HEADROOM+(max(heights)-min(heights))
+                if clearance>=h-3:output.append(dict(b,h=ELEVATED_ROOF_CAP,**({'clearanceSource':b['clearanceSource']} if b.get('groundClearance',0)>0 else {})));count+=1;continue
+                # Lower parts keep any mapped raised base (groundClearance) of the source volume.
+                # Bake replaces these estimates with the baked deck heights (fitDeckSlots).
+                sid=f"{b.get('osmId')}#{count}"
+                strips=[dict(level=l,p=[v for xy in part.exterior.coords for v in xy],holes=[[v for xy in q.coords for v in xy] for q in part.interiors]) for l,g in elevated_surfaces.items() for part in polygons(g.intersection(strip)) if part.area>=1]
+                output.append(dict(b,groundClearance=round(max(clearance,b.get('groundClearance',0)),2),clearanceSource='elevated-deck-estimate',passageRole='upper-volume',deckSplit=sid,deckStrips=strips))
+                base=b.get('groundClearance',0)
+                piece=lambda part,**k:dict(b,p=[v for xy in part.exterior.coords for v in xy],holes=[[v for xy in q.coords for v in xy] for q in part.interiors],deckSplit=sid,sourceP=b['p'],**k)
+                for part in polygons(shape.difference(strip)):
+                    if part.area>=1 and base<clearance:output.append(piece(part,h=round(clearance,2),passageRole='ground-pier'))
+                passage=union([under_paths[i] for i in under_tree.query(strip,predicate='intersects')]).intersection(strip)
+                for part in polygons(strip.difference(passage)):
+                    if part.area>=1 and base<ELEVATED_ROOF_CAP-.4:output.append(piece(part,h=ELEVATED_ROOF_CAP,passageRole='deck-podium'))
+                lift=max(base,6)
+                for part in polygons(passage):
+                    if part.area>=1 and lift<ELEVATED_ROOF_CAP-.4:output.append(piece(part,h=ELEVATED_ROOF_CAP,groundClearance=lift,clearanceSource=b.get('clearanceSource') if base>=6 else 'elevated-deck-estimate',passageRole='deck-podium-passage'))
+                count+=1
+            c['objects'][kind]=output
+    print('street compiler: split deck towers',count,flush=True)
+    return roofs
+
 def compile_region(data):
     bounds=data['bounds']; core=box(*bounds); halo=core.buffer(data.get('halo',160),join_style=2)
     walk=data.get('sidewalk',2.3)
@@ -616,12 +689,7 @@ def compile_region(data):
     asphalt=stage('ground-layer-only',lambda:overlay(asphalt,ground,'intersection'))
     elevated_surfaces={level:clip_surface(union([a for identity,a in family_areas.items() if identity[-1] and max(1,identity[2])==level]),bounds) for level in sorted({max(1,k[2]) for k in family_areas if k[-1]})}
     decks=union(list(elevated_surfaces.values()))
-    elevated_roofs=[]
-    upper_query=prep(decks)
-    for c in data['chunks']:
-        for b in c['objects'].get('buildings',[])+c['objects'].get('structures',[]):
-            if upper_query.intersects(ring(b)):
-                elevated_roofs.append(dict(p=b['p'],holes=b.get('holes',[]),h=max(b.get('h',3),b.get('groundClearance',0)+.4)))
+    elevated_roofs=split_deck_towers(data,decks,elevated_surfaces)
     final_sources=[inspect.getsource(compile_region).split('\n    # Tiny residual slivers')[0],normalize_source,normalize_passages,prepare_obstacles,route_guides,overlay,metric_buffer,stitch_tiles,ring,union,fill_sliver_holes,'separate-elevated-v1']
     asphalt,pavement=cached_stage(data,'filled-surfaces',final_sources,lambda:fill_sliver_holes(asphalt,pavement,ground_obstacle))
     asphalt,pavement=cached_stage(data,'clipped-surfaces',final_sources+[clip_surface],lambda:(clip_surface(asphalt,bounds),clip_surface(pavement,bounds)))
@@ -676,6 +744,11 @@ def compile_region(data):
     host_surface=union([s['shape'] for s in walk_surfaces if s['kind'].startswith(('walkhost-','walkramp-'))])
     hosted_samples,hosted_missing,hosted_uncovered,hosted_blocked=audit_route_coverage(host_walk_records,union([s['shape'] for s in walk_surfaces]),core)
     walking_records=[dict(r,line=piece) for r in walking_records for piece in lines(r['line'].difference(host_surface))]
+    # Reviewed source exceptions (config street-regions <city>.<region>.reviewedWalking: {id: reason}) are
+    # reported, never silently dropped: e.g. untagged indoor mall passages or untagged reservoir footbridges.
+    reviewed=data.get('reviewedWalking') or {}
+    reviewed_walking=[dict(id=r['id'],reason=reviewed[r['id']]) for r in walking_records if r['id'] in reviewed]
+    walking_records=[r for r in walking_records if r['id'] not in reviewed]
     walking_samples,walking_missing,walking_uncovered,walking_blocked=audit_route_coverage([r for r in walking_records if not r.get('area')],GeometryCollection([pavement,asphalt]),core)
     walking_samples+=hosted_samples;walking_missing+=hosted_missing;walking_uncovered+=hosted_uncovered;walking_blocked+=hosted_blocked
     # Clearances and continuity measured on final surfaces, not proposed widths.
@@ -684,7 +757,7 @@ def compile_region(data):
     route_samples+=upper_samples;missing+=upper_missing;uncovered_length+=upper_uncovered;blocked+=upper_blocked
     print('street compiler: partition audited',missing,flush=True)
     if data.get('coverage')=='manifest':
-        report=dict(interiorWalking=interior_walks,missingRouteSamples=missing,uncoveredRouteMeters=uncovered_length,blockedRoutes=blocked,walkingSamples=walking_samples,walkingMissing=walking_missing,walkingUncoveredMeters=walking_uncovered,walkingBlocked=walking_blocked,walkingGuideFailures=walking_guide_failures)
+        report=dict(interiorWalking=interior_walks,reviewedWalking=reviewed_walking,missingRouteSamples=missing,uncoveredRouteMeters=uncovered_length,blockedRoutes=blocked,walkingSamples=walking_samples,walkingMissing=walking_missing,walkingUncoveredMeters=walking_uncovered,walkingBlocked=walking_blocked,walkingGuideFailures=walking_guide_failures)
         (ROOT/'build/streets'/(data['city']+'-'+data['region']+'-design-progress.json')).write_text(json.dumps(report))
         if missing or uncovered_length>.01 or walking_missing or walking_uncovered>.01:
             raise ValueError('Disconnected city routes; see design-progress.json. Geometry generation and publishing stopped.')
@@ -829,18 +902,28 @@ def encode_region(data,result,output_dir=None):
             resolved=[]
             for source in c['objects'].get(kind,[]):
                 b=dict(source)
-                for fit in frontage_by_id.get(b.get('osmId'),[]):
+                if b.get('sourceP'):
+                    # Deck-split pieces inherit the source volume's street-frontage fit.
+                    fits=[fit for fit in frontage_by_id.get(b.get('osmId'),[]) if fit.get('sourceP')==b['sourceP'] and fit.get('chunk')==[cx,cz]]
+                    if fits:
+                        fitted=union([ring(part) for fit in fits for part in fit.get('parts',[dict(p=fit['p'],holes=fit.get('holes',[]))])])
+                        clipped=[part for part in polygons(ring(b).intersection(fitted)) if part.area>=1]
+                        if not clipped:continue
+                        b.update(p=[v for xy in clipped[0].exterior.coords for v in xy],holes=[[v for xy in q.coords for v in xy] for q in clipped[0].interiors])
+                        for part in clipped[1:]:resolved.append(dict(b,p=[v for xy in part.exterior.coords for v in xy],holes=[[v for xy in q.coords for v in xy] for q in part.interiors]))
+                for fit in frontage_by_id.get(b.get('osmId'),[]) if not b.get('sourceP') else []:
                     if fit.get('sourceP')==b['p'] and fit.get('chunk')==[cx,cz]:
                         pieces=fit.get('parts',[dict(p=fit['p'],holes=fit.get('holes',[]))])
                         for extra in pieces[1:]:resolved.append(dict(b,**extra))
                         b.update(pieces[0]);break
                 if b.get('groundClearance',0)>0 or b.get('structureKind') in ('canopy','shelter','platform'):
-                    sites=[];path=points(b['p'])
+                    sites=[];path=points(b['p']);cut=local_wall_cut
+                    if b.get('deckSplit'):cut=union([local_wall_cut]+[delivery_clip(layer_parts[k][i],source_tile.bounds).buffer(.35,quad_segs=4) for k in layer_parts if k.startswith('deck-') for i in layer_trees[k].query(source_tile)])
                     for a,d in zip(path,path[1:]+path[:1]):
                         length=math.dist(a,d);steps=max(1,math.ceil(length/6))
                         for j in range(steps):
                             x=a[0]+(d[0]-a[0])*j/steps;z=a[1]+(d[1]-a[1])*j/steps
-                            if not local_wall_cut.intersects(box(x-.1,z-.1,x+.1,z+.1)):sites.extend([round(x,4),round(z,4)])
+                            if not cut.intersects(box(x-.1,z-.1,x+.1,z+.1)):sites.extend([round(x,4),round(z,4)])
                     b['supportPoints']=sites
                 resolved.append(b)
             return resolved
