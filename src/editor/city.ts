@@ -2,12 +2,14 @@ import {RenderMetrics} from '../core/RenderMetrics';
 import * as THREE from 'three';
 import {StreamingWorld} from '../world/StreamingWorld';
 import {fetchCatalog} from '../world/maps';
+import {cityDateForPreset,type CityTimePreset} from '../world/CityTime';
+import {cityAppearance} from '../world/cities';
 import type {LandmarkIndex} from '../world/chunkManifest';
 const AIR_ENTRY_HEIGHT=100; // 지면 기준 높이(m)
 const AIR_SPEED=48,AIR_FAST_SPEED=320; // m/s
 /** Free-flight city viewer: the game's StreamingWorld, lighting and shadows; city and landmark entry only. */
 export async function mountCityViewer(host:HTMLElement){
- host.innerHTML='<div class="workspace"><div class="stage" tabindex="0" aria-label="도시 공중 탐색"></div><aside class="panel"><h2>도시 탐색</h2><label>도시<select id="city"></select></label><label>랜드마크<select id="landmark"><option value="">랜드마크 선택</option></select></label><p>화면을 드래그해 시선을 돌립니다.<br>WASD / 방향키: 이동 · Shift: 빠르게<br>Q 하강 / E 상승 · 기본 48m/s, 빠르게 320m/s<br>진입 높이: 지면 위 100m</p><div class="status city-coordinates" id="cityStatus" tabindex="0" title="좌표를 드래그한 뒤 Ctrl+C로 복사할 수 있습니다.">도시 목록 로딩 중…</div></aside></div>';
+ host.innerHTML='<div class="workspace"><div class="stage" tabindex="0" aria-label="도시 공중 탐색"></div><aside class="panel"><h2>도시 탐색</h2><label>도시<select id="city"></select></label><label>시간대<select id="cityTime"><option value="live">현재 시간</option><option value="twilight">아침/저녁</option><option value="day">낮</option><option value="night">밤</option></select></label><label>랜드마크<select id="landmark"><option value="">랜드마크 선택</option></select></label><p>화면을 드래그해 시선을 돌립니다.<br>WASD / 방향키: 이동 · Shift: 빠르게<br>Q 하강 / E 상승 · 기본 48m/s, 빠르게 320m/s<br>진입 높이: 지면 위 100m</p><div class="status city-coordinates" id="cityStatus" tabindex="0" title="좌표를 드래그한 뒤 Ctrl+C로 복사할 수 있습니다.">도시 목록 로딩 중…</div></aside></div>';
  const stage=host.querySelector<HTMLElement>('.stage')!,status=host.querySelector<HTMLElement>('#cityStatus')!;
  const city=host.querySelector<HTMLSelectElement>('#city')!,landmark=host.querySelector<HTMLSelectElement>('#landmark')!;
  const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;stage.append(renderer.domElement);
@@ -45,13 +47,28 @@ export async function mountCityViewer(host:HTMLElement){
  try{const r=await fetch('/api/editor/landmarks');if(r.ok)Object.assign(index,await r.json());}catch{}
  for(const c of catalog)city.add(new Option(c.name,c.id));
  const selected=()=>catalog.find(c=>c.id===city.value)!;
+ const time=host.querySelector<HTMLSelectElement>('#cityTime')!;
+ // Presets resolve on the city's own date and timezone, so evening tracks the season's sunset.
+ function applyTime(){
+  if(!world)return;
+  const c=selected(),clock=cityAppearance(c.id).environment.clock??{latitude:c.lat!,longitude:c.lon!,timeZone:'UTC'};
+  world.setTime(cityDateForPreset(new Date(),time.value as CityTimePreset,clock),clock);
+ }
+ time.onchange=applyTime;
  function landmarks(){const c=selected();landmark.replaceChildren(new Option('랜드마크 선택',''));for(const [name,l] of Object.entries(index))if(l.mapId===c.id||l.mapId===c.id.replace('-stream',''))landmark.add(new Option(l.name??name,name));}
  async function go(lat:number,lon:number){
   const n=++request;stopFlightTest();metrics.reset();held.clear();status.textContent='지도 로딩 중…';world?.dispose();world=undefined;scene.clear();scene.background=new THREE.Color('#bcd9eb');scene.fog=null;
   try{const next=await StreamingWorld.create(scene,lat,lon,0,selected().id,true);if(dead||n!==request){next.dispose();next.group.removeFromParent();return;}
-   world=next;camera.position.set(0,world.heightAt(0,0)+AIR_ENTRY_HEIGHT,0);yaw=0;pitch=-.7;status.textContent=selected().name+' · 지도 로드 완료';}
+   world=next;applyTime();camera.position.set(0,world.heightAt(0,0)+AIR_ENTRY_HEIGHT,0);yaw=0;pitch=-.7;status.textContent=selected().name+' · 지도 로드 완료';}
   catch(e){if(n===request)status.textContent='지도를 불러오지 못했습니다: '+String(e);}
  }
+ // Opt-in (?review) hook for scripted visual review: place the world origin and the camera exactly.
+ if(new URLSearchParams(location.search).has('review'))Object.assign(window,{cityReview:{
+  async open(id:string,lat:number,lon:number,preset:CityTimePreset='day'){city.value=id;time.value=preset;landmarks();await go(lat,lon);},
+  view(x:number,y:number,z:number,lookYaw:number,lookPitch:number){held.clear();camera.position.set(x,y,z);yaw=lookYaw;pitch=lookPitch;},
+  heightAt:(x:number,z:number,feetY=Infinity)=>world?.heightAt(x,z,feetY)??0,
+  pending:()=>world?world.performanceMetrics.pending:-1,
+ }});
  city.onchange=()=>{landmarks();go(selected().lat!,selected().lon!);};landmark.onchange=()=>{const l=index[landmark.value];if(l)go(l.lat,l.lon);};
  stage.addEventListener('keydown',e=>{stopFlightTest();if(['KeyW','KeyA','KeyS','KeyD','KeyQ','KeyE','ShiftLeft','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();held.add(e.code);}},{signal:events.signal});window.addEventListener('keyup',e=>held.delete(e.code),{signal:events.signal});stage.addEventListener('blur',()=>{stopFlightTest();held.clear();},{signal:events.signal});
  let drag=false;stage.addEventListener('pointerdown',e=>{stopFlightTest();drag=true;stage.focus();stage.setPointerCapture(e.pointerId);},{signal:events.signal});stage.addEventListener('pointerup',()=>drag=false,{signal:events.signal});stage.addEventListener('pointercancel',()=>drag=false,{signal:events.signal});stage.addEventListener('pointermove',e=>{if(drag){yaw-=e.movementX*.003;pitch=THREE.MathUtils.clamp(pitch-e.movementY*.003,-1.5,1.5);}},{signal:events.signal});

@@ -408,7 +408,7 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
     ...(chunk.palaceSite?palaceTrees(chunk):[]).map(([x,z])=>({x,z,kind:'palace' as const})),
     ...(chunk.streetPilot?pilotTreeSites(chunk):[]).map(([x,z])=>({x,z,kind:'street' as const})),
   ] : [];
-  const treeSites = unifiedTrees ? vegetationSites(chunk, chunkSize, profile.detail!.vegetation, authoredTrees) : [];
+  const treeSites = unifiedTrees ? vegetationSites(chunk, chunkSize, profile.detail!.vegetation, authoredTrees, (x,z)=>sampleChunkLandHeight(terrain, x, z, true)) : [];
   if (terrain) {
     const { size: tn, step, cellX0, cellZ0, heights } = terrain;
     const positions: number[] = [];
@@ -695,8 +695,11 @@ export function buildChunkMesh(chunk: WorldChunk, chunkSize: number, originX: nu
   if(chunk.streetPilot&&terrain){addPilotStreetDetails(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),profile.environment.night);addPilotRiver(group,chunk.cx,chunk.cz,chunkSize,originX,originZ,(x,z)=>sampleChunkLandHeight(terrain,x,z));addPilotBridgeStructures(group,chunk.objects.roads,chunk.cx,chunk.cz,chunkSize,originX,originZ,(x,z)=>sampleStreetHeight(terrain,x,z));}
   if(chunk.seoulDetail&&terrain)addSeoulLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z),waterSurface(profile,DETAIL_WATER_CSS));
   if(chunk.palaceSite&&terrain)addPalaceLandscape(group,chunk,originX,originZ,(x,z)=>sampleChunkHeight(terrain,x,z));
-  if(profile.detail?.parkFurniture && terrain)addParkFurniture(group,chunk,chunkSize,originX,originZ,(x,z)=>compiledStreetHeight(chunk.compiledStreet,x,z)??sampleChunkHeight(terrain,x,z),profile);
-  const vegetation = treeSites.length ? localVegetation(treeSites,(x,z)=>compiledStreetHeight(chunk.compiledStreet,x,z)??sampleChunkHeight(terrain,x,z),originX,originZ) : undefined;
+  // Ground-level props stand on the at-grade surface (level 0): the highest surface at a point
+  // under an elevated road is the deck, and planting there put trees and benches on the roadway.
+  const atGrade=(x:number,z:number)=>compiledStreetHeight(chunk.compiledStreet,x,z,Infinity,0)??sampleChunkHeight(terrain,x,z);
+  if(profile.detail?.parkFurniture && terrain)addParkFurniture(group,chunk,chunkSize,originX,originZ,atGrade,profile);
+  const vegetation = treeSites.length ? localVegetation(treeSites,atGrade,originX,originZ) : undefined;
   if(!preparing)addVegetation(group,vegetation,profile.detail?.vegetation);
   if(!preparing && profile.renderStyle==='painted')applyPaintedMaterials(group,profile.environment.night);
   return { cx: chunk.cx, cz: chunk.cz, group, terrain, buildings, buildingMesh, overhead, walls, roads, water, sites, ...(vegetation?{vegetation}:{}) };

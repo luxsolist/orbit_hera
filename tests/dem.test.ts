@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import zlib from "node:zlib";
 // @ts-expect-error — JS 빌드 헬퍼(타입 선언 없음)
-import { decodePNG, lonToPx, latToPx, terrariumElev, bareEarth, morphPass, flattenUnderBuildings, pointInPoly } from "../scripts/dem.mjs";
+import { decodePNG, lonToPx, latToPx, terrariumElev, bareEarth, morphPass, flattenUnderBuildings, pointInPoly, buildingMask, urbanGround } from "../scripts/dem.mjs";
 
 // 실측 DEM(terrarium) 처리 순수 헬퍼 — 투영/디코드 버그는 지형 전체를 어긋나게 하므로 고정.
 
@@ -97,5 +97,33 @@ describe("dem.flattenUnderBuildings — 건물 아래만 평탄화(산 보존)",
     const sq = [0, 0, 10, 0, 10, 10, 0, 10];
     expect(pointInPoly(5, 5, sq)).toBe(true);
     expect(pointInPoly(15, 5, sq)).toBe(false);
+  });
+});
+
+describe("dem.urbanGround — 탑 사이 DSM 잔여 제거(산·경사 보존)", () => {
+  const s = 41;
+  // 격자 전체를 4칸 간격 1×1 건물로 덮는다(피복률 ≈ 25%) — 고층 밀집가.
+  const dense = () => { const m = new Uint8Array(s * s); for (let j = 0; j < s; j += 2) for (let i = 0; i < s; i += 2) m[j * s + i] = 1; return m; };
+  it("건물 사이 도로 격자점의 혹은 깎인다", () => {
+    const H = new Float32Array(s * s).fill(10);
+    for (let j = 18; j <= 22; j++) for (let i = 18; i <= 22; i++) H[j * s + i] = 80; // 탑 무리가 번진 100m 폭 혹
+    H[20 * s + 21] = 95;
+    const out = urbanGround(H, s, dense());
+    expect(out[20 * s + 21]).toBeLessThan(12);
+  });
+  it("밀집가의 평면 경사는 그대로 둔다", () => {
+    const H = new Float32Array(s * s); for (let j = 0; j < s; j++) for (let i = 0; i < s; i++) H[j * s + i] = 2 * j;
+    const out = urbanGround(H, s, dense());
+    for (const j of [12, 20, 28]) expect(Math.abs(out[j * s + 20] - 2 * j)).toBeLessThan(0.5);
+  });
+  it("건물이 없는 산은 깎지 않는다", () => {
+    const H = new Float32Array(s * s); for (let j = 0; j < s; j++) for (let i = 0; i < s; i++) H[j * s + i] = Math.max(0, 300 - 30 * Math.hypot(i - 20, j - 20));
+    const out = urbanGround(H, s, new Uint8Array(s * s));
+    expect(out[20 * s + 20]).toBe(300);
+  });
+  it("buildingMask — 중심이 풋프린트 안인 격자점만", () => {
+    const m = buildingMask(5, [{ p: [0.5, 0.5, 2.5, 0.5, 2.5, 1.5, 0.5, 1.5] }], 0, 1);
+    expect([...m.slice(5, 10)]).toEqual([0, 1, 1, 0, 0]);
+    expect(m[2 * 5 + 1]).toBe(0);
   });
 });

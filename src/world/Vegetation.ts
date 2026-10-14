@@ -6,6 +6,7 @@ import type {CityDetailSettings,SpeciesMix,TreeSpecies} from './cities/types';
 import {inPilot,pilotInRiver} from './cities/CheonggyePilot';
 import {inPalace} from './cities/PalaceSite';
 import {cityUniforms} from './cityUniforms';
+import {deckTreeConflict,crownProbe} from './treeClearance.mjs';
 // 녹지 — 가로수(컴파일된 보도 위), 공원·정원·숲·덤불 산포. 워커는 위치 배열만 만들고
 // 메인 스레드가 공유 템플릿 + InstancedMesh(512m 블록 × 수종 × 근/원 LOD)로 그린다.
 // 충돌은 없다(기존 가로수/가로등과 같은 시각 소품).
@@ -43,18 +44,37 @@ export class Bins<T> {
  at(x:number,z:number):T[]{return this.cells.get(Math.floor(x/16)*65536+Math.floor(z/16))??[];}
 }
 type Tri=Float64Array;
+/**
+ * Level-0 pavement and carriageway triangles (x,z) for placement, plus every elevated deck
+ * triangle (x,y,z) — a tree under an elevated road must still clear the deck above it.
+ */
 export function streetTriangles(plan:CompiledStreetPlan|undefined){
- const pavement=new Bins<Tri>(),road=new Bins<Tri>();
- if(!plan)return {pavement,road};
+ const pavement=new Bins<Tri>(),road=new Bins<Tri>(),deck=new Bins<Tri>();
+ if(!plan)return {pavement,road,deck};
  for(const m of plan.meshes){
-  const bins=m.layer===1?pavement:m.layer===3||m.layer===2||m.layer===6?road:undefined;if(!bins||(m.level??0)!==0)continue;
+  const elevated=(m.level??0)!==0;
+  // Deck driving surfaces only: girder/pier faces (layer 6) are vertical and have no footprint.
+  const bins=elevated?(m.layer===3?deck:undefined):m.layer===1?pavement:m.layer===3||m.layer===2||m.layer===6?road:undefined;if(!bins)continue;
   const n=m.index?.length??m.position.length/3;
   for(let i=0;i+2<n;i+=3){
-   const t=new Float64Array(6);for(let k=0;k<3;k++){const j=(m.index?.[i+k]??i+k)*3;t[k*2]=m.position[j]+plan.origin[0];t[k*2+1]=m.position[j+2]+plan.origin[1];}
-   bins.add(Math.min(t[0],t[2],t[4]),Math.min(t[1],t[3],t[5]),Math.max(t[0],t[2],t[4]),Math.max(t[1],t[3],t[5]),t);
+   const t=new Float64Array(elevated?9:6);
+   for(let k=0;k<3;k++){const j=(m.index?.[i+k]??i+k)*3;if(elevated){t[k*3]=m.position[j]+plan.origin[0];t[k*3+1]=m.position[j+1];t[k*3+2]=m.position[j+2]+plan.origin[1];}else{t[k*2]=m.position[j]+plan.origin[0];t[k*2+1]=m.position[j+2]+plan.origin[1];}}
+   const xs=elevated?[t[0],t[3],t[6]]:[t[0],t[2],t[4]],zs=elevated?[t[2],t[5],t[8]]:[t[1],t[3],t[5]];
+   bins.add(Math.min(...xs),Math.min(...zs),Math.max(...xs),Math.max(...zs),t);
   }
  }
- return {pavement,road};
+ return {pavement,road,deck};
+}
+/** Lowest elevated deck surface over (x,z), or undefined in open sky. */
+export function deckAbove(bins:Bins<Tri>,x:number,z:number):number|undefined {
+ let low:number|undefined;
+ for(const t of bins.at(x,z)){
+  const det=(t[5]-t[8])*(t[0]-t[6])+(t[6]-t[3])*(t[2]-t[8]);if(Math.abs(det)<1e-9)continue;
+  const a=((t[5]-t[8])*(x-t[6])+(t[6]-t[3])*(z-t[8]))/det,b=((t[8]-t[2])*(x-t[6])+(t[0]-t[6])*(z-t[8]))/det,c=1-a-b;
+  if(Math.min(a,b,c)<-1e-6)continue;
+  const y=a*t[1]+b*t[4]+c*t[7];low=Math.min(low??Infinity,y);
+ }
+ return low;
 }
 export function onTriangle(bins:Bins<Tri>,x:number,z:number):boolean {
  for(const t of bins.at(x,z)){
@@ -71,11 +91,23 @@ export function onTriangle(bins:Bins<Tri>,x:number,z:number):boolean {
  */
 /** Hand-placed trees from city patches, re-rendered with the shared model: landmark groves, palace, street. */
 export interface AuthoredTree {x:number;z:number;kind:'grand'|'palace'|'street'}
-export function vegetationSites(chunk:WorldChunk,size:number,settings:Settings,authoredTrees:readonly AuthoredTree[]=[]):number[] {
+/**
+ * `ground` is the at-grade land height (chunkMesh passes the same sampler it plants with). Without
+ * it every tree whose crown reaches under an elevated deck is rejected outright.
+ */
+export function vegetationSites(chunk:WorldChunk,size:number,settings:Settings,authoredTrees:readonly AuthoredTree[]=[],ground?:(x:number,z:number)=>number):number[] {
  if(!settings.enabled)return [];
  const objects=chunk.objects;if(!objects)return [];
  const x0=chunk.cx*size,z0=chunk.cz*size,x1=x0+size,z1=z0+size;
- const plan=chunk.compiledStreet,{pavement,road}=streetTriangles(plan);
+ const plan=chunk.compiledStreet,{pavement,road,deck}=streetTriangles(plan);
+ // Shared with the build audit (treeClearance.mjs): no tree trunk on a carriageway, no crown
+ // reaching an elevated deck. Applies to every source — authored patches included, because
+ // road widths are re-fitted after those patches were placed.
+ const clearOfRoads=(x:number,z:number,w:number,h:number)=>{
+  if(onTriangle(road,x,z))return false;
+  let low:number|undefined;for(const [px,pz] of crownProbe(x,z,w)){const y=deckAbove(deck,px,pz);if(y!==undefined)low=Math.min(low??Infinity,y);}
+  return low===undefined||(ground?!deckTreeConflict(ground(x,z),h,low):false);
+ };
  const buildings=new Bins<number[]>();
  for(const b of [...objects.buildings,...(objects.structures??[]),...(plan?.resolvedStructures??[])]){if(b.p.length<6)continue;const r=bbox(b.p);buildings.add(r.x0-1,r.z0-1,r.x1+1,r.z1+1,b.p);}
  const water=new Bins<{p:number[];w?:number;holes?:number[][]}>();
@@ -102,10 +134,12 @@ export function vegetationSites(chunk:WorldChunk,size:number,settings:Settings,a
  for(const p of plan?.props??[])if(!p.tree)claim(p.x,p.z,1.5); // keep lamps clear of canopies' trunks
  // Authored trees first (exact positions, no clearance tests: their patches already placed them).
  for(const t of authoredTrees){
-  if(t.x<x0||t.x>=x1||t.z<z0||t.z>=z1)continue;claim(t.x,t.z,0);
+  if(t.x<x0||t.x>=x1||t.z<z0||t.z>=z1)continue;
   // Landmark groves stay large broadleaf; palace groves follow the city's authored mix; street → street mix.
   const r=hash(t.x,t.z,53),species=t.kind==='grand'?0:pickSpecies(t.kind==='palace'?settings.species.authored:settings.species.street,hash(t.x,t.z,59));
   const [w,h]=t.kind==='grand'?[1.35+r*.35,1.25+r*.45]:t.kind==='palace'?[.8+r*.25,.75+r*.3]:[settings.streetCrown[0],settings.streetCrown[1]+r*.15];
+  if(!clearOfRoads(t.x,t.z,w*SPECIES_WIDTH[species],h))continue;
+  claim(t.x,t.z,0);
   out.push({x:t.x,z:t.z,w:w*SPECIES_WIDTH[species],h,yaw:hash(t.x,t.z,5)*Math.PI*2,species,tint:Math.floor(hash(t.x,t.z,7)*leaves),priority:-1});
  }
 
@@ -132,13 +166,14 @@ export function vegetationSites(chunk:WorldChunk,size:number,settings:Settings,a
      [x,z]=at(k);
      if([[.6,0],[-.6,0],[0,.6],[0,-.6]].every(([dx,dz])=>onTriangle(pavement,x+dx,z+dz))){found=true;break;}
     }
-    if(!found||blocked(x,z,1.6)||!claim(x,z,4))continue;
-    const s=.9+hash(x,z,3)*.3,species=pickSpecies(settings.species.street,hash(x,z,59));
-    out.push({x,z,w:settings.streetCrown[0]*s*SPECIES_WIDTH[species],h:settings.streetCrown[1]*s,yaw:hash(x,z,5)*Math.PI*2,species,tint:Math.floor(hash(x,z,7)*leaves),priority:0});
+    if(!found||blocked(x,z,1.6))continue;
+    const s=.9+hash(x,z,3)*.3,species=pickSpecies(settings.species.street,hash(x,z,59)),tw=settings.streetCrown[0]*s*SPECIES_WIDTH[species],th=settings.streetCrown[1]*s;
+    if(!clearOfRoads(x,z,tw,th)||!claim(x,z,4))continue;
+    out.push({x,z,w:tw,h:th,yaw:hash(x,z,5)*Math.PI*2,species,tint:Math.floor(hash(x,z,7)*leaves),priority:0});
    }
   }
  }
- for(const p of plan?.props??[])if(p.tree&&!blocked(p.x,p.z,.5)&&claim(p.x,p.z,2))out.push({x:p.x,z:p.z,w:.8,h:1,yaw:hash(p.x,p.z,5)*Math.PI*2,species:0,tint:Math.floor(hash(p.x,p.z,7)*leaves),priority:0});
+ for(const p of plan?.props??[])if(p.tree&&!blocked(p.x,p.z,.5)&&clearOfRoads(p.x,p.z,.8,1)&&claim(p.x,p.z,2))out.push({x:p.x,z:p.z,w:.8,h:1,yaw:hash(p.x,p.z,5)*Math.PI*2,species:0,tint:Math.floor(hash(p.x,p.z,7)*leaves),priority:0});
 
  // Area scatter on a world-anchored jittered grid: identical across chunk seams.
  // Two land-cover classes render differently:
@@ -163,8 +198,9 @@ export function vegetationSites(chunk:WorldChunk,size:number,settings:Settings,a
     const a=hash(gx+k,gz,41)*Math.PI*2,d=k?3.5+hash(gx,gz+k,43)*2:0,x=cx+Math.cos(a)*d,z=cz+Math.sin(a)*d;
     if(!inside(x,z,area.p))continue;
     if(onTriangle(pavement,x,z)||onTriangle(road,x,z)||[[2,0],[-2,0],[0,2],[0,-2]].some(([dx,dz])=>onTriangle(road,x+dx,z+dz)||onTriangle(pavement,x+dx,z+dz)))continue;
-    if(blocked(x,z,2.4)||!claim(x,z,kind.open?2:s*.3))continue;
+    if(blocked(x,z,2.4))continue;
     const scale=.82+hash(x,z,19)*.5,species=pickSpecies(kind.mix,hash(x,z,23));
+    if(!clearOfRoads(x,z,kind.w*scale*SPECIES_WIDTH[species],kind.h*scale)||!claim(x,z,kind.open?2:s*.3))continue;
     out.push({x,z,w:kind.w*scale*SPECIES_WIDTH[species],h:kind.h*scale,yaw:hash(x,z,29)*Math.PI*2,species,tint:Math.floor(hash(x,z,31)*leaves),priority:1+hash(x,z,37)});
    }
   }

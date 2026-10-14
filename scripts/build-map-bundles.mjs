@@ -4,6 +4,8 @@ import {readFile,writeFile,mkdir,rename} from 'node:fs/promises';
 import {gzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
 import {loadMapCities,selectMapCities} from './map-city-config.mjs';
+import {execFileSync} from 'node:child_process';
+import {unlink} from 'node:fs/promises';
 const cities=await loadMapCities(),selected=selectMapCities(cities,process.argv[2]);
 for(const city of selected){
 // Validate before writing any bundle or replacing the index. publish uses this same path.
@@ -25,7 +27,18 @@ for(const [key,coords] of groups){
  const hash=createHash('sha256').update(compressed).digest('hex'),file=`${key}.${hash.slice(0,16)}.bin`;
  await writeFile(`${out}/${file}`,compressed);index.bundles[key]={file,bytes:compressed.length,rawBytes:raw.length,sha256:hash,chunks:Object.keys(chunks)};bytes+=compressed.length;rawBytes+=raw.length;
 }
-await writeFile(`src/world/${city}-bundles.json.next`,JSON.stringify(index,null,2)+'\n');await rename(`src/world/${city}-bundles.json.next`,`src/world/${city}-bundles.json`);
+const indexPath=`src/world/${city}-bundles.json`,previous=await readFile(indexPath,'utf8').catch(()=>null);
+await writeFile(`${indexPath}.next`,JSON.stringify(index,null,2)+'\n');await rename(`${indexPath}.next`,indexPath);
+// Regression gate on what the game will render: floating deck ends, missing ramps, trees on roads
+// (scripts/audit-elevated-roads.mjs, ceilings in config/map-quality/elevated-roads.json).
+// A failing build keeps the previous playable index and drops the bundles it just wrote.
+try{execFileSync(process.execPath,['--max-old-space-size=3072','scripts/audit-elevated-roads.mjs',city,'--strict'],{stdio:'inherit'});}
+catch(error){
+ const keep=new Set(previous?Object.values(JSON.parse(previous).bundles).map(e=>e.file):[]);
+ for(const e of Object.values(index.bundles))if(!keep.has(e.file))await unlink(`${out}/${e.file}`).catch(()=>{});
+ if(previous!==null)await writeFile(indexPath,previous);
+ throw new Error(`Elevated road / roadside tree gate failed for ${city}; previous bundles kept (build/${city}-elevated-audit.json)`);
+}
 console.log(JSON.stringify({city,chunks:manifest.chunks.length,bundles:groups.size,rawBytes,gzipBytes:bytes}));
 
 }

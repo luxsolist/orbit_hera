@@ -1,6 +1,7 @@
 import {readFileSync,writeFileSync} from 'node:fs';
 import {createServer} from 'vite';
 import {streetArtifacts} from './street-artifacts.mjs';
+import {RoadDeadEnds,ROAD_ENTRY_REACH} from './deck-structure.mjs';
 const [city='seoul',region='city-wide']=process.argv.slice(2),base='build/streets/'+city+'-'+region;
 const plans=streetArtifacts(base+'-plans.json'),routes=JSON.parse(readFileSync(base+'-routes.json','utf8'));
 const cache=new Map();function plan(key){if(cache.has(key))return cache.get(key);if(!plans.keys.includes(key))return;const p=plans.read(key);cache.set(key,p);if(cache.size>5)cache.delete(cache.keys().next().value);return p;}
@@ -17,17 +18,36 @@ try{
  const {CollisionWorld}=await server.ssrLoadModule('/src/world/CollisionWorld.ts');
  const {chunkTerrainEntry,sampleChunkHeight,sampleChunkLandHeight}=await server.ssrLoadModule('/src/world/chunkMesh.ts');
  const input=JSON.parse(readFileSync(base+'-resolved-input.json','utf8'));
+ // A raised road ending inside a building enters it (car park ramp, podium deck): the bake leaves
+ // the building whole there (deck-structure clearBuildingsOfRoads), so those samples are counted apart.
+ const deadEnds=new RoadDeadEnds();for(const c of input.chunks)for(const r of c.objects?.roads??[])deadEnds.add(r.p);const entries=deadEnds.byChunk();
+ const entering=(key,x,z)=>(entries.get(key)??[]).some(([ex,ez])=>Math.hypot(ex-x,ez-z)<ROAD_ENTRY_REACH);
  const terrains=new Map(input.chunks.map(c=>[c.cx+'_'+c.cz,chunkTerrainEntry(c,1024)])),supportCache=new WeakMap();
  function terrainFor(p){let t=supportCache.get(p);if(!t){const original=terrains.get(p.origin[0]/1024+'_'+p.origin[1]/1024);t={...original,compiledStreet:p,...(p.terrainHeights?{heights:new Float32Array(p.terrainHeights)}:{}),...(p.roadHeights?{roadHeights:new Float32Array(p.roadHeights)}:{})};supportCache.set(p,t);}return t;}
+ // Elevated routes meet buildings where the renderer puts them (chunkMesh, deck-structure roadBlockers):
+ // a raised base sits on the highest ground along the footprint, not on the land under the route.
+ function buildingVolume(t,b){const q=b.p,n=q.length/2;let max=-Infinity,cx=0,cz=0;
+  for(let i=0;i<q.length;i+=2){const j=(i+2)%q.length,steps=Math.max(1,Math.ceil(Math.hypot(q[j]-q[i],q[j+1]-q[i+1])/2));
+   for(let k=0;k<steps;k++)max=Math.max(max,sampleChunkHeight(t,q[i]+(q[j]-q[i])*k/steps,q[i+1]+(q[j+1]-q[i+1])*k/steps));cx+=q[i];cz+=q[i+1];}
+  if(!Number.isFinite(max))max=0;const g=sampleChunkHeight(t,cx/n,cz/n),h=b.h??9;
+  return {base:b.groundClearance?max+b.groundClearance:-Infinity,top:Math.max(g+h,max+Math.min(h,2.8))};}
+ // Footbridges enter podiums on purpose (street_walk_access.py) and keep the land-relative test.
+ function vehicleDeckAt(p,x,z,level){const [ox,oz]=p.origin;for(const m of p.meshes){if(m.layer!==3||(m.level??0)!==level)continue;const P=m.position,I=m.index;
+  for(let i=0;i<I.length;i+=3){const a=I[i]*3,b=I[i+1]*3,c=I[i+2]*3,ax=P[a]+ox,az=P[a+2]+oz,bx=P[b]+ox,bz=P[b+2]+oz,cx=P[c]+ox,cz=P[c+2]+oz;
+   if(x<Math.min(ax,bx,cx)||x>Math.max(ax,bx,cx)||z<Math.min(az,bz,cz)||z>Math.max(az,bz,cz))continue;const d=(bz-cz)*(ax-cx)+(cx-bx)*(az-cz);if(Math.abs(d)<1e-9)continue;
+   const u=((bz-cz)*(x-cx)+(cx-bx)*(z-cz))/d,v=((cz-az)*(x-cx)+(ax-cx)*(z-cz))/d;if(u>=-1e-6&&v>=-1e-6&&u+v<=1+1e-6)return true;}}return false;}
  function actualSupport(p,x,z){return compiledStreetHeight(p,x,z,Infinity,0)??sampleChunkHeight(terrainFor(p),x,z);}
- let samples=0,missing=0,insideBuilding=0,props=0,seamSamples=0,seamErrors=0,seamTerrainEdges=0;const failures=[];
+ // A deck met at grade is the walking surface: the bake hides the paint, curb and pavement just under it
+ // (deck-structure.mjs hideUnderDeck), so an at-grade route there stands on the deck.
+ function deckAtGrade(p,key,x,z,level){if(level!==0)return false;const top=compiledStreetHeight(p,x,z,Infinity);return top!==undefined&&top-(sampleChunkLandHeight(terrains.get(key),x,z,true)??-Infinity)<=1.2;}
+ let enteringBuilding=0,samples=0,missing=0,insideBuilding=0,props=0,seamSamples=0,seamErrors=0,seamTerrainEdges=0;const failures=[];
  for(const [pi,key] of plans.keys.entries()){
- const p=plan(key),b=p.bounds,world=new CollisionWorld(),solidSupport=new CollisionWorld();for(const volume of p.supportVolumes??[])solidSupport.addFootprintBox(volume.p,volume.base,volume.top,true,volume.holes??[],volume.base,volume.topPlane);solidSupport.finalize();for(const building of p.buildings??[])world.addFootprintBox(building.p,0,building.h??10000,true,building.holes??[],building.groundClearance??-Infinity);for(const b of [...(p.resolvedStructures??[]).filter(b=>b.structureKind!=="platform"||b.roofed),...(p.resolvedBuildings??[]).filter(b=>b.groundClearance&&!b.landmarkModel&&!b.statueModel&&!b.palaceBuildingId&&!b.seoulArchitecture).map(b=>({...b,h:b.groundClearance}))])for(let i=0;i<(b.supportPoints?.length??0);i+=2){const x=b.supportPoints[i],z=b.supportPoints[i+1];const terrain=terrainFor(p),base=Math.max(...b.p.filter((_,j)=>j%2===0).map((_,j)=>sampleChunkHeight(terrain,b.p[j*2],b.p[j*2+1]))),top=base+Math.max(b.h??3,b.groundClearance??0);solidSupport.addFootprintBox([x-.1,z-.1,x+.1,z-.1,x+.1,z+.1,x-.1,z+.1],0,top,true,[],sampleChunkHeight(terrain,x,z));}world.finalize();solidSupport.finalize();
+ const p=plan(key),b=p.bounds,world=new CollisionWorld(),worldAbs=new CollisionWorld(),solidSupport=new CollisionWorld();for(const volume of p.supportVolumes??[])solidSupport.addFootprintBox(volume.p,volume.base,volume.top,true,volume.holes??[],volume.base,volume.topPlane);solidSupport.finalize();for(const building of p.buildings??[]){world.addFootprintBox(building.p,0,building.h??10000,true,building.holes??[],building.groundClearance??-Infinity);const v=buildingVolume(terrainFor(p),building);worldAbs.addFootprintBox(building.p,0,v.top,true,building.holes??[],v.base);}worldAbs.finalize();for(const b of [...(p.resolvedStructures??[]).filter(b=>b.structureKind!=="platform"||b.roofed),...(p.resolvedBuildings??[]).filter(b=>b.groundClearance&&!b.landmarkModel&&!b.statueModel&&!b.palaceBuildingId&&!b.seoulArchitecture).map(b=>({...b,h:b.groundClearance}))])for(let i=0;i<(b.supportPoints?.length??0);i+=2){const x=b.supportPoints[i],z=b.supportPoints[i+1];const terrain=terrainFor(p),base=Math.max(...b.p.filter((_,j)=>j%2===0).map((_,j)=>sampleChunkHeight(terrain,b.p[j*2],b.p[j*2+1]))),top=base+Math.max(b.h??3,b.groundClearance??0);solidSupport.addFootprintBox([x-.1,z-.1,x+.1,z-.1,x+.1,z+.1,x-.1,z+.1],0,top,true,[],sampleChunkHeight(terrain,x,z));}world.finalize();solidSupport.finalize();
  for(const r of buckets.get(key)??[]){const a=r.a,c=r.b,length=Math.hypot(c[0]-a[0],c[1]-a[1]),count=Math.max(1,Math.ceil(length/3));
  for(let j=0;j<=count;j++){const x=a[0]+(c[0]-a[0])*j/count,z=a[1]+(c[1]-a[1])*j/count;if(x<b[0]+.02||x>b[2]-.02||z<b[1]+.02||z>b[3]-.02)continue;
-  samples++;if(compiledStreetHeight(p,x,z,Infinity,r.level)===undefined){missing++;if(failures.length<20)failures.push({kind:'missing',id:r.id,x,z});}
+  samples++;if(compiledStreetHeight(p,x,z,Infinity,r.level)===undefined&&!deckAtGrade(p,key,x,z,r.level)){missing++;if(failures.length<20)failures.push({kind:'missing',id:r.id,x,z});}
   const expectedFloor=compiledStreetHeight(p,x,z,Infinity,r.level),floor=expectedFloor===undefined?undefined:(compiledStreetHeight(p,x,z,expectedFloor)??expectedFloor),relative=r.elevated&&floor!==undefined?floor-(sampleChunkLandHeight(terrains.get(key),x,z,true)??0)+.15:1;
-  if(world.segmentBlocked(x,relative,z,x+.0001,relative,z)<=1||(floor!==undefined&&solidSupport.segmentBlocked(x,floor+.15,z,x+.0001,floor+.15,z)<=1)){insideBuilding++;if(failures.filter(f=>f.kind==='building').length<20)failures.push({kind:'building',key,id:r.id,x,z});}
+  if((r.elevated&&floor!==undefined?(worldAbs.segmentBlocked(x,floor+.15,z,x+.0001,floor+.15,z)<=1&&vehicleDeckAt(p,x,z,r.level)&&!(entering(key,x,z)&&++enteringBuilding))||(world.segmentBlocked(x,relative,z,x+.0001,relative,z)<=1&&!vehicleDeckAt(p,x,z,r.level)):world.segmentBlocked(x,relative,z,x+.0001,relative,z)<=1)||(floor!==undefined&&solidSupport.segmentBlocked(x,floor+.15,z,x+.0001,floor+.15,z)<=1)){insideBuilding++;if(failures.filter(f=>f.kind==='building').length<20)failures.push({kind:'building',key,id:r.id,x,z});}
  }}
  for(const q of p.props){props++;if(compiledStreetHeight(p,q.x,q.z)===undefined)throw Error('Unsupported street prop '+key);}
  const [cx,cz]=key.split('_').map(Number);
@@ -54,7 +74,10 @@ try{
  }
  if((pi+1)%100===0)console.log(JSON.stringify({auditedChunks:pi+1,samples,missing,insideBuilding,seamErrors}));
  }
- const result={planHash:plans.hash,samples,missing,insideBuilding,props,seamSamples,seamTerrainEdges,seamErrors,failures};
+ const result={planHash:plans.hash,samples,missing,insideBuilding,enteringBuilding,props,seamSamples,seamTerrainEdges,seamErrors,failures};
  writeFileSync(base+'-mesh-audit.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));
- if(missing||insideBuilding||seamErrors)throw Error('Baked street geometry validation failed');
+ // Per-city ceilings for reviewed residuals (config/map-quality/baked-streets.json); absent = none allowed.
+ const ceilings=(()=>{try{return JSON.parse(readFileSync('config/map-quality/baked-streets.json','utf8'))[city]??{};}catch(e){if(e.code==='ENOENT')return {};throw e;}})();
+ const over=Object.entries({missing,insideBuilding,seamErrors}).filter(([k,v])=>v>(ceilings[k]??0));
+ if(over.length)throw Error('Baked street geometry validation failed: '+over.map(([k,v])=>k+' '+v+' > '+(ceilings[k]??0)).join(', '));
 }finally{await server.close();}

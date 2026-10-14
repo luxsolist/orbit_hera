@@ -68,9 +68,17 @@ export function pointInPoly(x, z, p) {
 export function flattenUnderBuildings(H, size, buildings, gOrigin, gStep, openR = 4) {
   if (!buildings || !buildings.length) return H;
   const E = morphPass(H, size, openR, Math.min); // 침식 = 주변 지면 최저
+  const mask = buildingMask(size, buildings, gOrigin, gStep);
+  const out = new Float32Array(H.length);
+  for (let i = 0; i < H.length; i++) out[i] = mask[i] ? E[i] : H[i];
+  return out;
+}
+
+/** 격자점(중심)이 건물 풋프린트 안이면 1. 순수. */
+export function buildingMask(size, buildings, gOrigin, gStep) {
   const mask = new Uint8Array(size * size);
   const g = (v) => (v - gOrigin) / gStep;
-  for (const b of buildings) {
+  for (const b of buildings ?? []) {
     const p = b.p; if (!p || p.length < 6) continue;
     let x0 = Infinity, z0 = Infinity, x1 = -Infinity, z1 = -Infinity;
     for (let i = 0; i < p.length; i += 2) { if (p[i] < x0) x0 = p[i]; if (p[i] > x1) x1 = p[i]; if (p[i + 1] < z0) z0 = p[i + 1]; if (p[i + 1] > z1) z1 = p[i + 1]; }
@@ -80,9 +88,31 @@ export function flattenUnderBuildings(H, size, buildings, gOrigin, gStep, openR 
       if (pointInPoly(gOrigin + gx * gStep, gOrigin + gz * gStep, p)) mask[gz * size + gx] = 1;
     }
   }
-  const out = new Float32Array(H.length);
-  for (let i = 0; i < H.length; i++) out[i] = mask[i] ? E[i] : H[i];
-  return out;
+  return mask;
+}
+
+/**
+ * 도시 지면 — 풋프린트 평탄화가 못 지우는 DSM 잔여를 건물 밀도에 비례해 깎는다. 순수.
+ *
+ * Terrarium 은 건물이 섞인 표면(DSM)이고 한 화소(≈18m)가 탑 높이를 이웃 화소로 번지게 한다. 풋프린트
+ * 평탄화는 중심이 건물 안인 격자점만 낮추므로, 탑 사이 도로·마당 격자점에 수십 m 혹이 남는다(홍콩
+ * 상환 교차로 +70m → 지상 도로가 작은 산처럼 솟았다). 실제 지면을 복원하는 대신 **자연스러운 지면**을
+ * 만든다: 형태학적 열림(침식→팽창)은 평면 경사·골짜기를 그대로 두고 창보다 좁은 혹만 깎는다.
+ *  - 넓은 열림(broadR, 창 2r+1 ≈ 216m)+블러: 고층 밀집가 전체의 DSM 부풂. 건물 피복률 반경 coverR 이
+ *    broadCover[0]→[1] 로 오를 때 0→1 가중(산지·공원은 피복률이 낮아 산세가 보존된다).
+ *  - 좁은 열림(r=1, 3×3): 건물이 듬성한 곳에 남는 격자점 1~2개짜리 스파이크. 피복률 fineCover 가중.
+ * 낮추기만 한다(열림 ≤ 원본). 영향 반경 = max(broadR*2+blurR, coverR) 샘플 — geodem 의 halo 근거.
+ */
+export const URBAN_GROUND = { broadR: 5, blurR: 3, coverR: 5, broadCover: [0.08, 0.25], fineCover: [0.01, 0.04] };
+export function urbanGround(H, size, mask, o = URBAN_GROUND) {
+  const cover = new Float32Array(size * size);
+  for (let i = 0; i < cover.length; i++) cover[i] = mask[i];
+  const C = boxBlur(cover, size, o.coverR);
+  const ramp = ([lo, hi], v) => { const t = Math.min(1, Math.max(0, (v - lo) / (hi - lo))); return t * t * (3 - 2 * t); };
+  const lower = (G, open, range) => { const out = new Float32Array(G.length); for (let i = 0; i < G.length; i++) out[i] = G[i] - ramp(range, C[i]) * Math.max(0, G[i] - open[i]); return out; };
+  const fine = lower(H, morphPass(morphPass(H, size, 1, Math.min), size, 1, Math.max), o.fineCover);
+  const broad = boxBlur(morphPass(morphPass(fine, size, o.broadR, Math.min), size, o.broadR, Math.max), size, o.blurR);
+  return lower(fine, broad, o.broadCover);
 }
 
 /** 위경도 → 웹 메르카토르 전역 픽셀(줌 z, 타일 256px). 순수. */

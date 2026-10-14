@@ -6,15 +6,16 @@ from concurrent.futures import ProcessPoolExecutor
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from street_compile import ring,union
 from shapely.geometry import Polygon,box,GeometryCollection
+from shapely import union_all
 
 def read_part(root,key):
  if root.get('format')!='chunk-files':return root[key]
  entry=root['chunks'][key];file=entry if isinstance(entry,str) else entry['file'];raw=Path(file).read_bytes()
  if isinstance(entry,dict) and entry.get('sha256')!=hashlib.sha256(raw).hexdigest():raise ValueError('Changed artifact '+file)
  return json.loads(raw)
-def init(plans,regions):
- global PLANS,REGIONS
- PLANS=plans;REGIONS=regions
+def init(plans,regions,yielded=None):
+ global PLANS,REGIONS,YIELDED
+ PLANS=plans;REGIONS=regions;YIELDED=yielded or {}
 @lru_cache(maxsize=4)
 def region_part(key):return read_part(REGIONS,key)
 @lru_cache(maxsize=12)
@@ -22,6 +23,17 @@ def expected(key,kind):
  keys=REGIONS.get('chunks',REGIONS)
  if key not in keys:return GeometryCollection()
  return union([ring(r) for r in region_part(key)['regions'] if r['kind']==kind])
+@lru_cache(maxsize=24)
+def stacked(key,kind):
+ # Where a deck and an at-grade surface overlap in plan, the bake lets one yield (deck-structure.mjs:
+ # paint/curb/pavement hidden just under a deck, decks trimmed back over a street they hang low on).
+ # Only that overlap may go missing; every other hole still fails.
+ keys=REGIONS.get('chunks',REGIONS)
+ if key not in keys:return GeometryCollection()
+ deck=kind.startswith('deck-')
+ # Ramp-side feathers the bake turned into retaining walls (bake-street-region.mjs -yielded.json).
+ t=YIELDED.get(key,{}).get(kind,[]);walls=[Polygon([(t[i],t[i+1]),(t[i+2],t[i+3]),(t[i+4],t[i+5])]) for i in range(0,len(t),6)]
+ return union([ring(r) for r in region_part(key)['regions'] if r['kind']!=kind and r['kind']!='walkdeck' and (r['kind'].startswith('deck-')!=deck or deck and r['kind'].startswith('deck-'))]+[w for w in walls if w.area>1e-10])
 def check(key):
  plan=read_part(PLANS,key);errors=[];reports=[];surfaces={};count=0
  meshes={(m['layer'],m.get('level',0)):m for m in plan['meshes']}
@@ -30,8 +42,9 @@ def check(key):
   if mesh:
    pos=mesh['position'];idx=mesh['index'];ox,oz=plan['origin']
    triangles=[Polygon([(pos[k*3]+ox,pos[k*3+2]+oz) for k in idx[i:i+3]]) for i in range(0,len(idx),3)]
-  actual=union([t for t in triangles if t.area>1e-10]);surfaces[(layer,level)]=actual;target=expected(key,kind)
-  extra=actual.difference(target.buffer(.002)).area;absent=target.difference(actual.buffer(.002)).area
+  # A 0.1 mm precision grid: plain GEOS overlay (3.14), and still a 1e-6 grid, dropped thin pavement slivers from the union.
+  actual=union_all([t for t in triangles if t.area>1e-10],grid_size=1e-4);surfaces[(layer,level)]=actual;target=expected(key,kind)
+  extra=actual.difference(target.buffer(.002)).area;absent=target.difference(actual.buffer(.002)).difference(stacked(key,kind).buffer(.002)).area
   report=dict(chunk=key,layer=kind,extra=round(extra,6),missing=round(absent,6));reports.append(report)
   if extra>.02 or absent>.02:errors.append(report)
  pavement_margin=surfaces[(1,0)].buffer(.002)
@@ -46,9 +59,9 @@ def check(key):
  return dict(layers=reports,props=count,errors=errors)
 def main():
  city=sys.argv[1] if len(sys.argv)>1 else 'seoul';region=sys.argv[2] if len(sys.argv)>2 else 'city-wide';base=Path('build/streets')/(city+'-'+region)
- raw=base.with_name(base.name+'-plans.json').read_bytes();plans=json.loads(raw);regions=json.loads(base.with_name(base.name+'-regions.json').read_text());keys=list(plans.get('chunks',plans))
+ raw=base.with_name(base.name+'-plans.json').read_bytes();plans=json.loads(raw);regions=json.loads(base.with_name(base.name+'-regions.json').read_text());y=base.with_name(base.name+'-yielded.json');yielded=json.loads(y.read_text()) if y.exists() else {};keys=list(plans.get('chunks',plans))
  result=dict(planHash=hashlib.sha256(raw).hexdigest(),layers=[],props=0,errors=[])
- with ProcessPoolExecutor(max_workers=min(4,len(keys)),initializer=init,initargs=(plans,regions)) as pool:
+ with ProcessPoolExecutor(max_workers=min(4,len(keys)),initializer=init,initargs=(plans,regions,yielded)) as pool:
   for i,report in enumerate(pool.map(check,keys,chunksize=1)):
    result['layers'].extend(report['layers']);result['props']+=report['props'];result['errors'].extend(report['errors'])
    if (i+1)%100==0:print(json.dumps(dict(auditedChunks=i+1,errors=len(result['errors']))),flush=True)

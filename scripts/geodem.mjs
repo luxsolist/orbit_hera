@@ -14,14 +14,14 @@
 // bareEarth(침식4 → 팽창4 → 블러2)와 flattenUnderBuildings 는 이웃을 본다. 그래서 작업 격자를
 // 필요 범위보다 **halo 만큼 넓게** 잡고 그 안에서 계산해야 경계가 어긋나지 않는다.
 // 이론 영향 반경 = 4+4+2 = 10 샘플. 실측도 지형에 따라 6~10 에서 수렴했다(그 이상은 완전 동일).
-// 여유를 둬 **12** 를 쓴다(≈236m). 비용은 무시할 수준 — 오사카 범위에서 격자가 2048² → 2729² 다.
+// 여유를 둬 **12** 를 썼다(≈236m). 도시 지면(urbanGround: 열림5+5+블러3=13, 피복률 5)이 더해져 **16**(≈315m). 비용은 무시할 수준 — 오사카 범위에서 격자가 2048² → 2729² 다.
 import { existsSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { decodePNG, lonToPx, latToPx, terrariumElev, bareEarth, flattenUnderBuildings } from "./dem.mjs";
+import { decodePNG, lonToPx, latToPx, terrariumElev, bareEarth, flattenUnderBuildings, buildingMask, urbanGround } from "./dem.mjs";
 
 const TERRARIUM = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium";
 export const M_LAT = 111320;
-export const DEM_HALO = 12; //        작업 격자 여유(샘플) — 위 주석의 근거
+export const DEM_HALO = 16; //        작업 격자 여유(샘플) — 위 주석의 근거
 export const DEM_PER_CHUNK = 52; //  청크 한 변당 작업 격자 샘플 수(1024m → 19.69m/샘플)
 
 /** bbox 를 덮는 Terrarium 타일 모자이크. 타일은 /tmp 에 캐시(도시 간 공유). */
@@ -90,6 +90,8 @@ export function cellLattice(range, chunkSize, cell, mLon, mosaic, opts = {}) {
   if (bareEarthOn) grid = bareEarth(grid, size, 4, 2);
   // 건물 footprint 아래 평탄화(도시 DSM 스파이크 제거). buildings 는 **셀-로컬** 폴리곤.
   if (buildings?.length) grid = flattenUnderBuildings(grid, size, buildings, lo, step, 4);
+  // 탑 사이에 번진 DSM 잔여(도로·마당 위 혹)를 건물 밀도만큼 깎는다 — dem.mjs urbanGround.
+  if (buildings?.length) grid = urbanGround(grid, size, buildingMask(size, buildings, lo, step));
   return { grid, size, orig: lo, step };
 }
 

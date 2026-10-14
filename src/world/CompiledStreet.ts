@@ -3,6 +3,8 @@ export interface CompiledStreetPlan {
  version:1; region:string; bounds:number[]; sourceHash:string; compilerVersion:string;
  origin:number[]; meshes:{layer:number;level?:number;position:number[];index?:number[]}[];
  supportVolumes?:{p:number[];holes?:number[][];base:number;top:number;topPlane?:[number,number,number]}[];
+ /** Stamped once the shared deck plan (scripts/deck-structure.mjs) shaped decks, ramps and supports. */
+ deckStructure?:{version:number};
  props:{x:number;z:number;tree:boolean}[];
  terrainHeights?:number[]; roadHeights?:number[];
  buildings?:{id:string;p:number[];holes?:number[][];groundClearance?:number}[];

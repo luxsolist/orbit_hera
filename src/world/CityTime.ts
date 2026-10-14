@@ -17,3 +17,27 @@ export function solarState(date:Date,city:CityClock){
  const dayLight=smooth(-6,18,elevation),twilight=smooth(-8,0,elevation)*(1-smooth(6,22,elevation));
  return {x,y,z,elevation,dayLight,twilight,night:1-smooth(-6,3,elevation)};
 }
+/** Resolve the selected civil hour on today's date in the city's IANA timezone. */
+export function cityDateAtHour(now:Date,hour:number,timeZone:string):Date {
+ const parts=(date:Date)=>Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date).map(p=>[p.type,p.value]));
+ const p=parts(now),target=Date.UTC(+p.year,+p.month-1,+p.day,0,Math.round(hour*60));
+ let guess=target;
+ for(let i=0;i<3;i++){const q=parts(new Date(guess));guess+=target-Date.UTC(+q.year,+q.month-1,+q.day,+q.hour,+q.minute,+q.second);}
+ return new Date(guess);
+}
+
+export type CityTimePreset = 'live' | 'twilight' | 'day' | 'night';
+/** Pick representative solar conditions on the city's current date, including seasonal sunset changes. */
+export function cityDateForPreset(now:Date,preset:CityTimePreset,clock:CityClock):Date|undefined {
+ if(preset==='live')return undefined;
+ const start=+cityDateAtHour(now,0,clock.timeZone),end=+cityDateAtHour(now,24,clock.timeZone),step=300000;
+ let best=start,error=Infinity;
+ for(let x=start;x<end;x+=step){
+  const elevation=solarState(new Date(x),clock).elevation;
+  // The combined morning/evening preview uses the descending (evening) sun.
+  if(preset==='twilight' && solarState(new Date(x+step),clock).elevation>elevation)continue;
+  const score=preset==='day'?-elevation:preset==='night'?elevation:Math.abs(elevation-3);
+  if(score<error){error=score;best=x;}
+ }
+ return new Date(best);
+}

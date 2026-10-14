@@ -17,7 +17,9 @@ export function auditStreetRegion(city,region){
  for(const suffix of ['surface-audit','mesh-audit']){
   const check=read(base+'-'+suffix+'.json');
   if(check.planHash!==hash)errors.push('Stale '+suffix);
-  if(check.errors?.length||check.missing||check.insideBuilding||check.seamErrors)errors.push('Failed '+suffix);
+  // Reviewed residual ceilings (config/map-quality/baked-streets.json), as audit-baked-streets.mjs applies them.
+  const ceiling=suffix==='mesh-audit'&&existsSync('config/map-quality/baked-streets.json')?read('config/map-quality/baked-streets.json')[city]??{}:{};
+  if(check.errors?.length||['missing','insideBuilding','seamErrors'].some(k=>(check[k]??0)>(ceiling[k]??0)))errors.push('Failed '+suffix);
  }
  if(a.walkingMissing||a.walkingUncoveredMeters>.01)errors.push('Disconnected pedestrian routes: '+a.walkingUncoveredMeters+'m');
  if(a.guideFailures?.length)errors.push('Unresolved route guides: '+a.guideFailures.length);

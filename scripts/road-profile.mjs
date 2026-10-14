@@ -19,7 +19,8 @@ export function auditRoadProfile(roads,sample,limits=ROAD_PROFILE_LIMITS){
     }
    }
    out.segments++;out.maxGrade=Math.max(out.maxGrade,maxGrade);out.maxGradeChange=Math.max(out.maxGradeChange,maxChange);
-   const steep=maxGrade>limits.maxGrade,rough=maxChange>limits.maxGradeChange||reversals>0;
+   // 1e-4: heights are stored as Float32; a refinement fitted exactly to the limit read 0.1800003.
+   const steep=maxGrade>limits.maxGrade+1e-4,rough=maxChange>limits.maxGradeChange||reversals>0;
    if(steep)out.steepSegments++;if(rough)out.roughSegments++;
    if(steep||rough)out.issues.push({p:[ax,az,bx,bz],location,maxGrade,maxChange,reversals,steep,rough,w:r.w??6,bridge:!!r.bridge,layer:r.layer??0});
   }
