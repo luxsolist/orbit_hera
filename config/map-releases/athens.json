@@ -1,10 +1,10 @@
 {
   "version": 1,
   "repository": "luxsolist/orbit_hera",
-  "tag": "maps-athens-0c81318c1c9460ae",
+  "tag": "maps-athens-9be2e5a6dfa4fc44",
   "asset": "athens-source.tar.gz",
-  "sha256": "a56e9e5d8def8c2d87bab2573cdf7143c9e49fc387765dbf45aa875022f7ee0b",
-  "bundleIndexSha256": "910cf72c7b21f938923f274e6c693239306963a123b7d6ded228167ee7dd60c5",
-  "sourceFiles": 2430,
-  "bytes": 16130090
+  "sha256": "7b6ef1c3eebfe314f171cef3eb38b9e427f025a49c52d2203ac36bc59bc6c36a",
+  "bundleIndexSha256": "1656a9f4347d4d767e9ffcb0a7f833ffe94bd6dcb2a7ae9eed4ebac11e98193a",
+  "sourceFiles": 1641,
+  "bytes": 876975687
 }

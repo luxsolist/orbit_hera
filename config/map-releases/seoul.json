@@ -1,10 +1,10 @@
 {
   "version": 1,
   "repository": "luxsolist/orbit_hera",
-  "tag": "maps-seoul-47e52f42c5a0de1b",
+  "tag": "maps-seoul-74ceeb9b2672a0c2",
   "asset": "seoul-source.tar.gz",
-  "sha256": "cfaa7187ae035a38b10243d9f66e5b10f8dd897c4fa79fcc4fa5b6adf0c559d0",
-  "bundleIndexSha256": "1d3dee445ea463e42ce7e3f2b1f3e574af3f99dc24c3a0adeb24b1d752ebc252",
+  "sha256": "b55c8cb547a2383bcd23080382c6fd436d0259d68d30b234a8a298bd9b8e7557",
+  "bundleIndexSha256": "7874456883f7462e77d1937a52364f4b068f8b10de4b285a6d97dfe82fdc192e",
   "sourceFiles": 1601,
-  "bytes": 1143941418
+  "bytes": 1232167158
 }

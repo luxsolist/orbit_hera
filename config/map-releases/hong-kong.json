@@ -1,10 +1,10 @@
 {
   "version": 1,
   "repository": "luxsolist/orbit_hera",
-  "tag": "maps-hong-kong-9938e96ecc57f861",
+  "tag": "maps-hong-kong-6316dc8c6b77a3c1",
   "asset": "hong-kong-source.tar.gz",
-  "sha256": "a17b297ed7052a90505c07ac90d2c150d4d7cbdce069dd548110ee7e9b696715",
-  "bundleIndexSha256": "a27d31fbc074e48f4c27cb0237cf744b22fcb545f68fddc33c64ce9e33240229",
+  "sha256": "3d8409bae65e2ed3de6d85d0022843fc8188d9baedd437170b1a76b4757b8290",
+  "bundleIndexSha256": "c9560cc1c184f374be215230b579717495440b333b65d825e0f1ba57be6cb98d",
   "sourceFiles": 1601,
-  "bytes": 478546061
+  "bytes": 498650049
 }

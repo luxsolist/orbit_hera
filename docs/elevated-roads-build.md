@@ -221,6 +221,6 @@ OSM은 흔히 교차로 위 경간만 `bridge`로 표시하고 접근부는 일�
 
 ## 배포 시 주의
 
-보정한 도시는 번들 색인 해시가 바뀐다. 그래서 `config/map-releases/<city>.json`과 일치하지 않고 `npm run build`의 `prebuild`(`verify-map-bundles`)가 실패한다. 개발 서버는 영향이 없다. 원본 스냅샷을 Releases에 게시(`npm run maps:publish:city -- <city>`)해야 하며, 이 작업에는 포함하지 않았다.
+보정한 도시는 번들 색인 해시가 바뀐다. 그래서 `config/map-releases/<city>.json`과 일치하지 않고 `npm run build`의 `prebuild`(`verify-map-bundles`)가 실패한다. 개발 서버는 영향이 없다. 원본 스냅샷을 Releases에 게시(`npm run maps:publish:city -- <city>`)해야 한다. 번들만 보정해 로컬에 청크 원본이 없는 도시는 번들의 `raw`·`detail`·`roadGrade`·`appearance`를 `public/maps/` 경로로 풀어 낸 뒤 `python3 scripts/map-release.py publish --city <city>`로 게시한다(`publish`는 번들과 원본이 같은지 검사한다). 2026-10-15에 서울·홍콩·아테네를 이렇게 게시했다.
 
 빌드 코드(`chunkMesh.ts` 의존성, `bake-street-region.mjs`)가 바뀌었으므로 `mapBuildVersion`도 바뀐다. 다음 정식 번들 생성은 전체 재빌드를 요구하고, 그 재빌드가 같은 규칙을 굽는다.
