@@ -1,4 +1,6 @@
 {
-  "_comment": "도시별 상한 — scripts/audit-baked-streets.mjs (build-street-regions 게이트). 없는 도시·항목은 0. 경로 표본(3m 간격) 중 노면 없음(missing), 건물·지지 볼륨 안(insideBuilding), 청크 경계 높이차 3cm 초과(seamErrors)의 검토된 잔여다. 홍콩(2026-10-15, 표본 531만): 건물 62는 대부분 서구룡 복합 단지(16_75)에서 건물을 도로를 따라 자른 조각이 컴파일러의 보행 통로와 맞지 않는 곳, 경계 4는 3~25cm 차, 노면 없음 3은 데크 가장자리. 줄면 함께 낮추고, 늘리려면 원인을 docs/elevated-roads-build.md에 남긴다.",
-  "hong-kong": {"missing": 3, "insideBuilding": 62, "seamErrors": 4}
+  "_comment": "도시별 상한 — scripts/audit-baked-streets.mjs (build-street-regions 게이트). 없는 도시·항목은 0. 경로 표본(3m 간격) 중 노면 없음(missing), 건물·지지 볼륨 안(insideBuilding), 청크 경계 높이차 3cm 초과(seamErrors)의 검토된 잔여다. 홍콩(2026-10-15, 표본 531만): 건물 62는 대부분 서구룡 복합 단지(16_75)에서 건물을 도로를 따라 자른 조각이 컴파일러의 보행 통로와 맞지 않는 곳, 경계 4는 3~25cm 차, 노면 없음 3은 데크 가장자리. 로마(2026-10-16, 표본 751만): 건물 30은 건물 볼륨 안을 지나는 1층 차로(주차장 통로 way/1057560147, 진입로 way/989515605)와 A1 교량 1곳, 노면 없음 2. 아테네(2026-10-16, 표본 650만): 건물 5는 주차 건물 안의 주차 통로 way/442153231 한 곳(6m), 노면 없음 1은 보도 way/666599578 끝. 줄면 함께 낮추고, 늘리려면 원인을 docs/elevated-roads-build.md에 남긴다.",
+  "hong-kong": {"missing": 3, "insideBuilding": 62, "seamErrors": 4},
+  "rome": {"missing": 2, "insideBuilding": 30, "seamErrors": 0},
+  "athens": {"missing": 1, "insideBuilding": 5, "seamErrors": 0}
 }

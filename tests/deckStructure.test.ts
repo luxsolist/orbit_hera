@@ -1,6 +1,6 @@
 import {it,expect,describe} from 'vitest';
 // @ts-expect-error build script module
-import {createDeckProfile,deckStructures,planCityDecks,meshPieces,refitDeckSplits,approachRamps,liftSkirts,liftTriangles,hideUnderDeck,trimDeckTriangles,TRIM_CORE,WELD_GRADE,limitDeckGrade,DECK_SURFACE_GRADE,TRIM_HEADROOM,LIFT_SPLIT_MIN,LIFT_STEEP_NY,nodeKey,DECK_CLEARANCE,RAMP_GRADE,MAX_GRADE,PORTAL_LIFT,DECK_SLAB_DEPTH,DECK_HEADROOM,LAYER_HOLD,streamClearance,clearBuildingsOfRoads,ROAD_GATE_HEADROOM} from '../scripts/deck-structure.mjs';
+import {createDeckProfile,deckStructures,planCityDecks,meshPieces,refitDeckSplits,approachRamps,liftSkirts,liftTriangles,hideUnderDeck,trimDeckTriangles,TRIM_CORE,WELD_GRADE,limitDeckGrade,holdsDeckEnd,DECK_SURFACE_GRADE,TRIM_HEADROOM,LIFT_SPLIT_MIN,LIFT_STEEP_NY,nodeKey,DECK_CLEARANCE,RAMP_GRADE,MAX_GRADE,PORTAL_LIFT,DECK_SLAB_DEPTH,DECK_HEADROOM,LAYER_HOLD,streamClearance,clearBuildingsOfRoads,ROAD_GATE_HEADROOM} from '../scripts/deck-structure.mjs';
 
 const flat=()=>0;
 const keys=(...pts:number[][])=>new Set(pts.map(([x,z])=>nodeKey(x,z)));
@@ -137,6 +137,23 @@ describe('deck structures',()=>{
   expect(raised).toBeGreaterThan(0);
   for(let x=0;x<20;x++)expect(Math.abs(P[(x+1)*6+1]-P[x*6+1])).toBeLessThanOrEqual(DECK_SURFACE_GRADE+.011);
   expect(P[1]).toBe(8);expect(P[9*6+1]).toBeCloseTo(10-DECK_SURFACE_GRADE,5);
+ });
+ it('lowers a span into a slope down to a deck pinned flush to its junction',()=>{
+  // x = 0 is met at grade at 8 m (locked); the span beside it holds 11 m from x = 2 on — a 3 m cliff raising cannot fix.
+  const P:number[]=[],idx:number[]=[];
+  for(let x=0;x<=20;x++)P.push(x,x>=2?11:8,0,x,x>=2?11:8,1);
+  for(let x=0;x<20;x++){const a=x*2;idx.push(a,a+2,a+1,a+1,a+2,a+3);}
+  const locked=(v:number)=>P[v*3]===0;
+  expect(limitDeckGrade(P,idx,locked)).toBeGreaterThan(0);
+  for(let x=0;x<20;x++)expect(Math.abs(P[(x+1)*6+1]-P[x*6+1])).toBeLessThanOrEqual(DECK_SURFACE_GRADE+.011);
+  expect(P[1]).toBe(8);expect(P[4*6+1]).toBeCloseTo(8+4*DECK_SURFACE_GRADE,5);expect(P[20*6+1]).toBe(11);
+ });
+ it('pins only deck vertices that ramp from a nearby deck end',()=>{
+  const end:[number,number,number]=[0,0,10];
+  expect(holdsDeckEnd(end,4,10.5,0)).toBe(true);   // on the ramp
+  expect(holdsDeckEnd(end,4,9,0)).toBe(true);      // below the end
+  expect(holdsDeckEnd(end,4,13,0)).toBe(false);    // a span standing 3 m above it, 4 m away
+  expect(holdsDeckEnd(end,12,10,0)).toBe(false);   // out of reach
  });
  it('places piers only where the column fits and never on a blocked footprint',()=>{
   const lines=[line(0,0,120,0)];

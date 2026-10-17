@@ -806,13 +806,20 @@ export function hideUnderDeck(t,covered,out=[],depth=0,dropped){
 export const TRIM_FLUSH=.3;   // m — a slab lying on the street (a crossing met at grade) is one surface, not cut
 const TRIM_PIECE=3,TRIM_PROBE=2;
 export const GRADE_LOCK_REACH=10; // m — deck vertices this close to a portal or dead end keep their height in limitDeckGrade
+/** A deck vertex near a deck end `[x,z,h]` that keeps its height: within GRADE_LOCK_REACH and on a ramp from
+ * that end (no higher than MAX_GRADE + 0.3 m). One standing far above it belongs to a span that met the end
+ * too soon — pinned too, it stood beside the end as an unfixable cliff (Rome 53_29: 3 m in 6 m). */
+export const holdsDeckEnd=([ex,ez,eh],x,y,z)=>{const d=Math.hypot(ex-x,ez-z);return d<GRADE_LOCK_REACH&&(eh===undefined||y-eh<=MAX_GRADE*d+.3);};
 export const DECK_SURFACE_GRADE=.35; // a deck surface never climbs faster than this between two of its vertices (≈ the 20° audit limit)
 /**
  * Raise deck vertices so no mesh edge climbs faster than DECK_SURFACE_GRADE (max-plus cone from the
  * highest vertex down). Where two welded roads held different heights the blend stood as a 1–2 m
  * cliff across the junction; raised, it is a slope. `P` flat xyz, `idx` triangle indices (vertices
  * at the same position are joined), `locked(v)` true for a vertex that must keep its height (a deck
- * met at grade on its street). Returns the number of vertices raised.
+ * met at grade on its street). Raising alone cannot reach a locked vertex: a deck pinned flush to the
+ * junction it lands on stood beside its own 3 m-high span as a 40° crumple (Rome, 312 of 476 steep
+ * spots). So first every free vertex is lowered into the same cone rising from the locked ones; the
+ * raise below then stays inside it. Returns the number of vertices moved.
  */
 export function limitDeckGrade(P,idx,locked){
  const n=P.length/3,id=new Int32Array(n),key=new Map();
@@ -820,15 +827,24 @@ export function limitDeckGrade(P,idx,locked){
  const adj=new Map(),link=(a,b)=>{if(a===b)return;(adj.get(a)??adj.set(a,[]).get(a)).push(b);};
  for(let i=0;i+2<idx.length;i+=3)for(let k=0;k<3;k++){const a=id[idx[i+k]],b=id[idx[i+(k+1)%3]];link(a,b);link(b,a);}
  const y=new Map();for(const v of adj.keys())y.set(v,P[v*3+1]);
+ const lock=new Map();for(const v of adj.keys())lock.set(v,locked(v));
+ // Min-plus cone from the locked vertices (Dijkstra on edge length): a free vertex sits at most
+ // DECK_SURFACE_GRADE × path length above any locked one.
+ {const cap=new Map(),q=[];for(const v of adj.keys())if(lock.get(v)){cap.set(v,y.get(v));q.push([y.get(v),v]);}
+  const lo=i=>{while(i>0){const p=(i-1)>>1;if(q[p][0]<=q[i][0])break;[q[p],q[i]]=[q[i],q[p]];i=p;}},
+   sink=i=>{for(;;){const l=2*i+1,r=l+1;let b=i;if(l<q.length&&q[l][0]<q[b][0])b=l;if(r<q.length&&q[r][0]<q[b][0])b=r;if(b===i)return;[q[b],q[i]]=[q[i],q[b]];i=b;}};
+  for(let i=(q.length>>1)-1;i>=0;i--)sink(i);
+  while(q.length){const [c,v]=q[0];const last=q.pop();if(q.length){q[0]=last;sink(0);}if(c>cap.get(v))continue;
+   for(const u of adj.get(v)){if(lock.get(u))continue;const w=c+DECK_SURFACE_GRADE*Math.hypot(P[u*3]-P[v*3],P[u*3+2]-P[v*3+2]);if(w>=(cap.get(u)??Infinity))continue;cap.set(u,w);q.push([w,u]);lo(q.length-1);}}
+  for(const [v,c] of cap)if(!lock.get(v)&&c<y.get(v))y.set(v,c);}
  const heap=[...adj.keys()].map(v=>[y.get(v),v]),up=i=>{while(i>0){const p=(i-1)>>1;if(heap[p][0]>=heap[i][0])break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p;}},
   down=i=>{for(;;){const l=2*i+1,r=l+1;let b=i;if(l<heap.length&&heap[l][0]>heap[b][0])b=l;if(r<heap.length&&heap[r][0]>heap[b][0])b=r;if(b===i)return;[heap[b],heap[i]]=[heap[i],heap[b]];i=b;}};
  for(let i=(heap.length>>1)-1;i>=0;i--)down(i);
- const lock=new Map();
  while(heap.length){const [h,v]=heap[0];const last=heap.pop();if(heap.length){heap[0]=last;down(0);}if(h<y.get(v))continue;
   for(const u of adj.get(v)){const d=Math.hypot(P[u*3]-P[v*3],P[u*3+2]-P[v*3+2]),w=h-DECK_SURFACE_GRADE*d;if(w<=y.get(u)+.01)continue;
-   if(!lock.has(u))lock.set(u,locked(u));if(lock.get(u))continue;y.set(u,w);heap.push([w,u]);up(heap.length-1);}}
- let raised=0;for(let v=0;v<n;v++){const r=y.get(id[v]);if(r!==undefined&&r>P[v*3+1]+.01){P[v*3+1]=Math.round(r*1e4)/1e4;raised++;}}
- return raised;
+   if(lock.get(u))continue;y.set(u,w);heap.push([w,u]);up(heap.length-1);}}
+ let moved=0;for(let v=0;v<n;v++){const r=y.get(id[v]);if(r!==undefined&&Math.abs(r-P[v*3+1])>.01){P[v*3+1]=Math.round(r*1e4)/1e4;moved++;}}
+ return moved;
 }
 /**
  * Cut a deck slab back to its core where it hangs low over a street running along it (`soup`

@@ -17,7 +17,7 @@ import {gunzipSync,gzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
 import {createServer} from 'vite';
 import {loadMapCities,selectMapCities} from './map-city-config.mjs';
-import {PORTAL_LIFT,planCityDecks,meshPieces,trimDeckTriangles,deckTrimTests,limitDeckGrade,GRADE_LOCK_REACH,TRIM_FLUSH,UNDER_DECK_LAYERS,hideUnderDeck,deckStructures,refitDeckSplits,approachRamps,liftSkirts,liftTriangles,clearBuildingsOfRoads,structuresOffRoads,RoadDeadEnds,slimTerrain,SKIRT_LAYERS,DECK_STRUCTURE_VERSION} from './deck-structure.mjs';
+import {PORTAL_LIFT,planCityDecks,meshPieces,trimDeckTriangles,deckTrimTests,limitDeckGrade,holdsDeckEnd,TRIM_FLUSH,UNDER_DECK_LAYERS,hideUnderDeck,deckStructures,refitDeckSplits,approachRamps,liftSkirts,liftTriangles,clearBuildingsOfRoads,structuresOffRoads,RoadDeadEnds,slimTerrain,SKIRT_LAYERS,DECK_STRUCTURE_VERSION} from './deck-structure.mjs';
 
 const args=process.argv.slice(2),dry=args.includes('--dry-run');
 const cities=await loadMapCities(),[city]=selectMapCities(cities,args.find(a=>!a.startsWith('--')));
@@ -90,8 +90,8 @@ try{
  console.log(JSON.stringify({city,phase:'planned',...plan.stats,approachRamps:ramps.lifts.length,residualSteps:ramps.residual.length}));
  // Pass 2 needs only three lookups; release every city-wide pass-1 structure before it starts.
  // Deck ends (portals, dead ends) on a 16 m hash: limitDeckGrade keeps the slab near them where it lies low.
- const endCells=new Map();for(const n of plan.nodes)if(n.portal||n.deadEnd){const k=Math.floor(n.x/16)+':'+Math.floor(n.z/16);(endCells.get(k)??endCells.set(k,[]).get(k)).push([n.x,n.z]);}
- const nearEnd=(x,z)=>{for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(const [ex,ez] of endCells.get((Math.floor(x/16)+a)+':'+(Math.floor(z/16)+b))??[])if(Math.hypot(ex-x,ez-z)<GRADE_LOCK_REACH)return true;return false;};
+ const endCells=new Map();for(const n of plan.nodes)if(n.portal||n.deadEnd){const k=Math.floor(n.x/16)+':'+Math.floor(n.z/16);(endCells.get(k)??endCells.set(k,[]).get(k)).push([n.x,n.z,n.h]);}
+ const nearEnd=(x,y,z)=>{for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(const e of endCells.get((Math.floor(x/16)+a)+':'+(Math.floor(z/16)+b))??[])if(holdsDeckEnd(e,x,y,z))return true;return false;};
  const deck={height:plan.height,nearest:plan.nearest,linesThrough:plan.linesThrough,inWater:plan.inWater,stats:plan.stats,conflicts:plan.conflicts};
  const ramp={lift:ramps.lift,count:ramps.lifts.length,residual:ramps.residual};
  const entries=deadEnds.byChunk();
@@ -132,7 +132,7 @@ try{
     // A deck never dips under an at-grade street it overlaps (on a hillside the uphill street pushed through it).
     for(let v=0;v<P.length/3;v++){const i=v*3,top=streetSurface.highest(P[i]+ox,P[i+2]+oz),y=Math.max(deck.height(P[i]+ox,P[i+2]+oz,m.level,P[i+1],[P[i],P[i+2]].some(u=>Math.abs(u)<.01||Math.abs(u-1024)<.01)?undefined:own.get(v)),top===undefined?-Infinity:top+PORTAL_LIFT),q=Math.round(y*1e4)/1e4;if(q!==P[i+1]){maxDrop=Math.max(maxDrop,P[i+1]-q);changedVertices++;P[i+1]=q;}}
     // No cliff where two roads' heights meet; a deck on its street, near its end, or on the chunk seam stays put: raised there, the end stood as a step.
-    gradeRaised+=limitDeckGrade(P,idx,v=>{const x=P[v*3]+ox,z=P[v*3+2]+oz,top=streetSurface.highest(x,z),seam=u=>Math.abs(u)<.01||Math.abs(u-1024)<.01;return seam(P[v*3])||seam(P[v*3+2])||top!==undefined&&P[v*3+1]-top<TRIM_FLUSH+.01||nearEnd(x,z);});
+    gradeRaised+=limitDeckGrade(P,idx,v=>{const x=P[v*3]+ox,z=P[v*3+2]+oz,top=streetSurface.highest(x,z),seam=u=>Math.abs(u)<.01||Math.abs(u-1024)<.01;return seam(P[v*3])||seam(P[v*3+2])||top!==undefined&&P[v*3+1]-top<TRIM_FLUSH+.01||nearEnd(x,P[v*3+1],z);});
     trimmedDeck+=trimDeckMesh(m,street.origin,v=>trimTests(m.level,own.get(v)));
     for(const t of triangles(m,street.origin))deckTris.push(t);}
    // Paint, curbs and pavement just under a deck met at grade showed through it (white dashes on the slab).

@@ -198,7 +198,7 @@ if (coverM) {
   const [laS, loE] = toLLc((cxMax + 1) * C + halo, (czMax + 1) * C + halo);
   const mosaic = elevationMosaic(Math.min(laN, laS), Math.max(laN, laS), Math.min(loW, loE), Math.max(loW, loE), 13);
   LAT = cellLattice(range, C, [cellLat, cellLon], M_LONc, mosaic, {
-    bareEarthOn: mapDef?.bareEarth !== false, buildings: flatPolys,
+    bareEarthOn: mapDef?.bareEarth !== false, urbanGroundOn: mapDef?.urbanGround === true, buildings: flatPolys,
   });
   // 해안선 바다 마스크 — DEM 수면 노이즈(+1~5m)가 바다 위 육지 얼룩으로 그려지지 않도록.
   const coast = applyCoastline(LAT, (terrain.coastline ?? []).map((p) => { const o = []; for (let i = 0; i < p.length; i += 2) o.push(...mapToCell(p[i], p[i + 1])); return o; }), seaLevel);

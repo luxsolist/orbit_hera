@@ -13,7 +13,8 @@ export function buildStreetRegions(city,selectedRegion,options={complete:true}){
  for(const region of selectedRegion?[selectedRegion]:Object.keys(config)){
   if(!selectedRegion&&config[region].enabled===false)continue;
   execFileSync(process.execPath,['scripts/prepare-street-region.mjs',city,region],{cwd:root,stdio:'inherit'});
-  try{execFileSync(process.env.MAP_PYTHON??'python3',['scripts/street_compile.py',city,region],{cwd:root,stdio:'inherit'});}catch(error){
+  // Few malloc arenas: GEOS worker threads otherwise strand freed city-wide geometry.
+  try{execFileSync(process.env.MAP_PYTHON??'python3',['scripts/street_compile.py',city,region],{cwd:root,stdio:'inherit',env:{...process.env,MALLOC_ARENA_MAX:process.env.MALLOC_ARENA_MAX??'2'}});}catch(error){
    if(existsSync('build/streets/'+city+'-'+region+'-guide-audit.json'))execFileSync(process.env.MAP_PYTHON??'python3',['scripts/classify-street-conflicts.py',city,region],{cwd:root,stdio:'inherit'});
    throw error;
   }

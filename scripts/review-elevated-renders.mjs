@@ -5,7 +5,7 @@
 // Needs the dev server (npm run dev) and a fresh audit (npm run maps:audit-roads -- <city>) plus,
 // for the tallest approach ramps, a repair report (build/<city>-deck-repair.json). Picks the worst
 // deck-above and road-above steps, the tallest approach lifts and the highest floating ends, then
-// opens the city viewer with ?review and shoots each spot from two aerial sides and one low angle.
+// the worst low-headroom and steep deck spots, then opens the city viewer with ?review and shoots each spot from two aerial sides and one low angle.
 // Numbers say where to look; these pictures say whether the street reads as a natural street.
 import {readFileSync,existsSync,mkdirSync,writeFileSync} from 'node:fs';
 import {chromium} from 'playwright';
@@ -25,6 +25,9 @@ take(audit.steps?.filter(s=>!s.roadAbove),'step',p=>p.step);
 take(audit.steps?.filter(s=>s.roadAbove),'roadAbove',p=>p.step);
 take(repair?.approach?.tallest,'lift',p=>p.step);
 take(audit.floating,'float',p=>p.height);
+const surfaces=JSON.parse(readFileSync(auditPath,'utf8')).surfaces;
+take(surfaces?.worstLowHeadroom,'gap',p=>p.gap);
+take(surfaces?.worstSteepDeck,'steep',p=>p.n);
 
 mkdirSync(out,{recursive:true});
 const mapId=`${city}-stream`,browser=await chromium.launch({args:['--use-gl=angle','--enable-gpu','--ignore-gpu-blocklist']});

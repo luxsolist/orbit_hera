@@ -22,6 +22,18 @@ def rings(e,role='outer'):
   out.append([v for n in c[:-1] for v in n])
  return out
 
+def ring_distance(a,b):
+ """Symmetric Hausdorff distance between two rings (vertex to edge)."""
+ def directed(p,q):
+  worst=0
+  for i in range(0,len(p),2):
+   d=math.inf
+   for j in range(0,len(q),2):
+    k=(j+2)%len(q);dx=q[k]-q[j];dz=q[k+1]-q[j+1];t=max(0,min(1,((p[i]-q[j])*dx+(p[i+1]-q[j+1])*dz)/(dx*dx+dz*dz or 1)))
+    d=min(d,math.hypot(p[i]-q[j]-t*dx,p[i+1]-q[j+1]-t*dz))
+   worst=max(worst,d)
+  return worst
+ return max(directed(a,b),directed(b,a))
 def center(p):return (sum(p[::2])/(len(p)//2),sum(p[1::2])/(len(p)//2))
 def bounds(p):return min(p[::2]),min(p[1::2]),max(p[::2]),max(p[1::2])
 def inside(x,z,p):
@@ -34,7 +46,9 @@ raw={}
 for c in manifest['chunks']:
  if 60<=c['cx']<=65 and 0<=c['cz']<=4:
   k=f"{c['cx']}_{c['cz']}";b=manifest.get('block',16)
-  raw[k]=json.loads((ROOT/f"public/maps/37/23/{c['cx']//b}_{c['cz']//b}/{k}.json").read_text())
+  chunk=json.loads((ROOT/f"public/maps/37/23/{c['cx']//b}_{c['cz']//b}/{k}.json").read_text())
+  # A completed chunk already has this overlay applied; bind against its build input.
+  raw[k]=chunk.get('mapBuild',{}).get('input',{}).get('raw') or chunk
 patch={k:dict(buildings=[],add=[],remove=[],areas=[],paths=[],walls=[],water=[],trees=[],terrain=[],athensSites=[]) for k in raw}
 models={
  'way/910010406':('parthenon',17,'파르테논 신전','published-plan/photo-height'),
@@ -58,7 +72,9 @@ for e in source['elements']:
   x,z=center(p);key=f'{int(x//1024)}_{int(z//1024)}'
   if key not in patch:raise ValueError('Missing source tile '+id)
   hits=[(k,b) for k,c in raw.items() for b in c['objects']['buildings'] if ring_matches(p,b['p'])]
-  if len(hits)>1:raise ValueError('Ambiguous source binding '+id)
+  # OSM now maps the Parthenon and the Stoa as stacked building:parts (steps, colonnade) that all lie within
+  # 3 m of the outline: bind the closest ring, not the first.
+  hits.sort(key=lambda h:ring_distance(p,h[1]['p']))
   if id in models:
    kind,h,name,status=models[id];d=dict(id=id,p=p,modelFootprint=p,holes=[q for q in holes if inside(*center(q),p)],name=name,h=h,kind='athens-'+kind,roof='',heightSource=None)
    landscape=kind in ['dionysus','odeon','stadium','zeus','hadrian']
@@ -68,6 +84,13 @@ for e in source['elements']:
    else:
     if hits:
      key,b=hits[0];d['p']=b['p']
+     # Bind by the way the chunk actually holds: street baking may cut the footprint, and the runtime
+     # matcher then falls back to the OSM id (the Parthenon is way/384709197 in the 2026-10 extract).
+     if b.get('osmId'):d['id']=b['osmId']
+     # The other parts inside the model footprint would poke through the model.
+     for k,c in raw.items():
+      for o in c['objects']['buildings']:
+       if o is not b and inside(*center(o['p']),p) and o['p'] not in patch[k]['remove']:patch[k]['remove'].append(o['p'])
     else:patch[key]['add'].append(d)
     patch[key]['buildings'].append(d)
    rows.append(dict(id=id,name=name,kind=kind,height=h,heightStatus=status,binding='landscape' if landscape else 'existing' if hits else 'new-source-footprint',chunk=key,source='https://www.openstreetmap.org/'+id))

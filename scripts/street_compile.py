@@ -2,7 +2,7 @@
 A region is solved with a halo, then clipped into delivery chunks. OSM ways are
 logical routes; surfaces are a single partition shared by all consumers.
 """
-import json, math, hashlib, sys, os, pickle, inspect
+import json, math, hashlib, sys, os, pickle, inspect, gc
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent/'build/map-python'))
@@ -13,6 +13,9 @@ from shapely.strtree import STRtree
 from shapely.errors import GEOSException
 from shapely.prepared import prep
 ROOT=Path(__file__).resolve().parent.parent
+# Tile workers each hold clipped copies of city-wide operands; two keep a
+# full city region within an 8GB build machine. Results do not depend on it.
+TILE_WORKERS=2
 def polygons(g):
     if g.is_empty:return []
     if g.geom_type=='Polygon':return [g]
@@ -44,7 +47,7 @@ def metric_buffer(geometry,distance,quad_segs=4,limit=50000,tile_size=2048):
         local=union([make_valid(clip_by_rect(parts[i],*bounds)) for i in tree.query(box(*bounds))])
         return local.buffer(distance,quad_segs=quad_segs).intersection(tile) if not local.is_empty else None
     # GEOS operations release the GIL. map retains deterministic tile ordering.
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with ThreadPoolExecutor(max_workers=TILE_WORKERS) as pool:
         for i,piece in enumerate(pool.map(work,tasks)):
             if piece is not None:out.append(piece)
             if len(tasks)>100 and (i+1)%100==0:print('street compiler: metric buffer',distance,i+1,'/',len(tasks),flush=True)
@@ -63,7 +66,7 @@ def overlay(a,b,operation,limit=50000,tile_size=2048):
         if left.is_empty:return GeometryCollection()
         right=union([make_valid(clip_by_rect(bp[i],*tile.bounds)) for i in bt.query(tile)])
         return getattr(left,operation)(right)
-    with ThreadPoolExecutor(max_workers=4) as pool:parts=[p for piece in pool.map(work,tasks) for p in polygons(piece)]
+    with ThreadPoolExecutor(max_workers=TILE_WORKERS) as pool:parts=[p for piece in pool.map(work,tasks) for p in polygons(piece)]
     # Clipped floating-point edges are not guaranteed to be a noded coverage.
     # The subset union handles them without the pathological coverage-union pass.
     return stitch_tiles(parts)
@@ -176,8 +179,11 @@ def cached_stage(data,name,functions,build):
     signature=hashlib.sha256((data['_sourceHash']+hashlib.sha256(Path(__file__).read_bytes()).hexdigest()+''.join(inspect.getsource(f) if callable(f) else f for f in functions)).encode()).hexdigest()
     file=ROOT/'build/streets'/(data['city']+'-'+data['region']+'-'+name+'-'+signature[:16]+'.pickle')
     if file.exists():
-        print('street compiler: cached',name,flush=True);return pickle.loads(file.read_bytes())
-    value=build();tmp=file.with_suffix('.tmp');tmp.write_bytes(pickle.dumps(value));tmp.replace(file)
+        print('street compiler: cached',name,flush=True)
+        with file.open('rb') as f:return pickle.load(f)
+    value=build();tmp=file.with_suffix('.tmp')
+    with tmp.open('wb') as f:pickle.dump(value,f,protocol=pickle.HIGHEST_PROTOCOL)
+    tmp.replace(file)
     print('street compiler: saved',name,flush=True);return value
 
 def normalize_source(data):
@@ -461,18 +467,20 @@ def fill_sliver_holes(asphalt,pavement,obstacle):
     # Modify hole rings directly; avoid re-noding the entire city for small fills.
     obstacles=polygons(obstacle);tree=STRtree(obstacles);filled=[];rebuilt=[]
     for p in polygons(asphalt):
-        holes=[]
+        holes=[];changed=False
         for h in p.interiors:
             hole=Polygon(h)
             local=union([make_valid(clip_by_rect(obstacles[i],*hole.bounds)) for i in tree.query(hole)]) if hole.area<250 else None
-            if hole.area<250 and hole.intersection(local).area<.01 and hole.buffer(-1.4).is_empty:filled.append(hole)
+            if hole.area<250 and hole.intersection(local).area<.01 and hole.buffer(-1.4).is_empty:filled.append(hole);changed=True
             else:holes.append(h)
-        rebuilt.append(Polygon(p.exterior,holes))
+        # Untouched polygons are reused, not copied: the city-wide surface is large.
+        rebuilt.append(Polygon(p.exterior,holes) if changed else p)
     if not filled:return asphalt,pavement
     tree=STRtree(filled)
     # Existing asphalt islands inside a filled hole are already included by its parent.
     kept=[p for p in rebuilt if not any(filled[i].covers(p) for i in tree.query(p.representative_point()))]
-    result=MultiPolygon(kept)
+    del rebuilt
+    result=MultiPolygon(kept);del kept
     if not result.is_valid:result=make_valid(result,method='structure')
     return result,overlay(pavement,union(filled),'difference')
 
@@ -497,7 +505,7 @@ def buffered_overlay(a,b,operation,distance,linear=False,exclude=None,tile_size=
         result=getattr(left,operation)(right)
         return result.difference(exclude) if exclude is not None else result
     pieces=[]
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with ThreadPoolExecutor(max_workers=TILE_WORKERS) as pool:
         for i,piece in enumerate(pool.map(work,tasks)):
             pieces.append(piece)
             if len(tasks)>100 and (i+1)%100==0:print('street compiler: buffered overlay',distance,i+1,'/',len(tasks),flush=True)
@@ -560,9 +568,16 @@ def reserve_final_routes(asphalt,pavement,road_records,obstacle,core):
         corridor=line.buffer(min(r['w']/2,1.5),quad_segs=4).intersection(core)
         mask=union([make_valid(clip_by_rect(parts[i],*corridor.bounds)) for i in tree.query(corridor)])
         reservations.append(corridor.difference(mask))
+    del query
     if not reservations:return asphalt,pavement
     allocated=union(reservations)
-    return union([asphalt,allocated]),overlay(pavement,allocated,'difference')
+    # Only asphalt pieces the reservations reach take part in the union; the
+    # rest of the city's partition is carried over unchanged.
+    pieces=polygons(asphalt);touched=set(STRtree(pieces).query(allocated,predicate='intersects').tolist())
+    merged=union([allocated,*(pieces[i] for i in touched)])
+    result=MultiPolygon([p for i,p in enumerate(pieces) if i not in touched]+polygons(merged));del pieces
+    if not result.is_valid:result=make_valid(result,method='structure')
+    return result,overlay(pavement,allocated,'difference')
 
 # A deck rests on a podium roof, never on a tower: one OSM footprint often spans both,
 # and lifting the deck to the tower top pulled whole districts' decks 500m into the air.
@@ -627,6 +642,9 @@ def compile_region(data):
     buildings,ground_obstacle,building_clearance,frontages,frontage_conflicts,crossings,water_updates,walking_obstacle=cached_stage(data,'obstacles',[normalize_source,normalize_passages,prepare_obstacles,metric_buffer,stitch_tiles,ring,union],lambda:prepare_obstacles(data,core,halo))
     protected=cached_stage(data,'protected',[normalize_source,normalize_passages,prepare_obstacles,metric_buffer,stitch_tiles,ring,union],lambda:metric_buffer(ground_obstacle,data.get('buildingClearance',.8),quad_segs=3))
     guides,guide_changes,guide_failures=cached_stage(data,'guides',[normalize_source,normalize_passages,prepare_obstacles,metric_buffer,stitch_tiles,route_guides,ring,union],lambda:route_guides(data['roads'],ground_obstacle,core,protected=protected))
+    # City-wide regions approach the build machine's memory; drop each
+    # intermediate as soon as its last consumer has run.
+    del protected
     print('street compiler: guides ready',len(guide_changes),len(guide_failures),flush=True)
     if data.get('coverage')=='manifest':
         (ROOT/'build/streets'/(data['city']+'-'+data['region']+'-guide-audit.json')).write_text(json.dumps(dict(sourceWays=len(data['roads']),adjusted=len(guide_changes),failures=guide_failures)))
@@ -645,6 +663,7 @@ def compile_region(data):
             # Only opposing carriageways sharing semantic road identity can close a median gap.
             identity=(r.get('name') or r['id'],r.get('highway','unknown'),r.get('layer',0),elevated)
             families.setdefault(identity,[]).append(record)
+    del guides
     surfaces=[];group_info=[];family_areas={};elevated_masks=[]
     for identity,rs in sorted(families.items()):
         parts=[r['line'].buffer(r['w']/2,quad_segs=4) for r in rs]
@@ -663,7 +682,9 @@ def compile_region(data):
     # rather than wrapping each lane/way in its own sidewalk.
     print('street compiler: families ready',len(families),flush=True)
     ground=stage('ground',lambda:union([a for a,e in surfaces if not e]))
+    del surfaces
     decks=stage('decks',lambda:overlay(union(elevated_masks),building_clearance,'difference'))
+    del elevated_masks,building_clearance
     envelope=stage('envelope',lambda:overlay(metric_buffer(ground,walk),ground_obstacle,'difference'))
     asphalt=stage('initial-asphalt',lambda:overlay(ground,metric_buffer(envelope,-walk),'intersection'))
     # Intersections are union surfaces; narrow links can be shared streets (no
@@ -679,14 +700,18 @@ def compile_region(data):
         local_mask=union([make_valid(clip_by_rect(obstacle_parts[i],*footprint.bounds)) for i in obstacle_tree.query(footprint)])
         free=footprint.difference(local_mask)
         if not free.is_empty:shared.append(free)
+    del coverage_initial,obstacle_parts,obstacle_tree
     asphalt=stage('shared-asphalt',lambda:overlay(union([asphalt,*shared]),envelope,'intersection'))
+    del shared
     asphalt=stage('all-asphalt',lambda:union([asphalt,decks]))
     pavement=stage('pavement',lambda:overlay(overlay(envelope,asphalt,'difference'),decks,'difference'))
+    del envelope;gc.collect()
     # Tiny residual slivers of pavement inside a same-level carriageway are not
     # authored traffic islands. Turn only enclosed, non-protected holes into road.
     # Ground allocation and elevated decks have different owners. A building
     # footprint must never erase a road above it.
     asphalt=stage('ground-layer-only',lambda:overlay(asphalt,ground,'intersection'))
+    del ground;gc.collect()
     elevated_surfaces={level:clip_surface(union([a for identity,a in family_areas.items() if identity[-1] and max(1,identity[2])==level]),bounds) for level in sorted({max(1,k[2]) for k in family_areas if k[-1]})}
     decks=union(list(elevated_surfaces.values()))
     elevated_roofs=split_deck_towers(data,decks,elevated_surfaces)
@@ -716,6 +741,7 @@ def compile_region(data):
         # nodes. This is a real detour around obstacles, never erased water.
         walking_guides,walking_adjustments,walking_guide_failures=route_guides(eligible,walking_obstacle,core,max_shift=data.get('pedestrianFallbackShift',16),protected=metric_buffer(walking_obstacle,.2,quad_segs=3))
     walking_paths=walking_guides+[r for r in data.get('walking',[]) if r.get('area')]
+    del eligible,exterior,walking_guides,entry_parts,entry_tree,entry_query
     for path in walking_paths:
         if path['id'] in upper_walk_ids or path.get('indoor') in ('yes','room','corridor') or path.get('tunnel') or path.get('layer',0)!=0 or path.get('bridge'):continue
         if len(path['p'])<4:continue
@@ -737,8 +763,10 @@ def compile_region(data):
         if terminal:
             walking_records.extend(dict(path,line=part) for part in lines(free))
         else:walking_records.append(dict(path,line=line))
+    del walking_paths,walking_obstacles,walking_tree,walking_obstacle,ground_obstacle
     pedestrian=union(walk_parts)
     if walk_parts:pavement=overlay(union([pavement,pedestrian]),asphalt,'difference')
+    del walk_parts,pedestrian;gc.collect()
     # Terraced hosts supply actual baked support; remove their footprint from
     # the ground route audit only after checking the same emitted surface.
     host_surface=union([s['shape'] for s in walk_surfaces if s['kind'].startswith(('walkhost-','walkramp-'))])
@@ -764,6 +792,7 @@ def compile_region(data):
     pavement=overlay(pavement,host_surface,'difference')
     road_building=overlay(asphalt,buildings,'intersection').area
     overlap=overlay(asphalt,pavement,'intersection').area
+    del host_surface,buildings;gc.collect()
     # Curbs follow the actual partition boundary; never source-way interior edges.
     def build_curbs():
         curb_lines=buffered_overlay(asphalt.boundary,pavement,'intersection',.03,linear=True,exclude=core.boundary.buffer(.06))
@@ -823,6 +852,7 @@ def compile_region(data):
             if not hit.is_empty:junctions.append(hit.buffer(4))
     paint=buffered_overlay(union([a.buffer(.075,cap_style=2) for a in axes]),asphalt,'intersection',-.7)
     paint=overlay(paint,union(junctions),'difference')
+    del paint_tiles,axes,axis_tree,junctions;gc.collect()
     # Sites derived from final continuous sidewalk boundaries, with footprint and
     # walking clear space rather than lane offsets. Stable global spacing.
     props=[];prop_grid={}

@@ -39,4 +39,4 @@ it('covers every baked landmark in the Seoul cell with an exact footprint entry'
   for(const b of landmarks){expect(entries.some((e:LandmarkAppearance)=>JSON.stringify(e.p)===JSON.stringify(b.p))).toBe(true);count++;}
  }
  expect(count).toBeGreaterThan(800);
-},30000);
+},120000); // parses every Seoul chunk (3.4 GB JSON) — ~35 s on the dev box

@@ -42,7 +42,8 @@ export async function mountCityViewer(host:HTMLElement){
   const stop=document.createElement('button');stop.textContent='측정 중지';stop.onclick=stopFlightTest;controls.append(stop);panel.append(controls,flightStatus);
  }
 
- const catalog=(await fetchCatalog()).filter(c=>c.stream&&c.listed!==false&&Number.isFinite(c.lat)&&Number.isFinite(c.lon));
+ // ?review also opens unlisted cities (Athens), which still need the visual deck review.
+ const catalog=(await fetchCatalog()).filter(c=>c.stream&&(c.listed!==false||new URLSearchParams(location.search).has('review'))&&Number.isFinite(c.lat)&&Number.isFinite(c.lon));
  let index:LandmarkIndex={};try{const r=await fetch('/maps/landmarks.json');if(r.ok)index=await r.json();}catch{}
  try{const r=await fetch('/api/editor/landmarks');if(r.ok)Object.assign(index,await r.json());}catch{}
  for(const c of catalog)city.add(new Option(c.name,c.id));

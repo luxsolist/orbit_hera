@@ -70,7 +70,7 @@ export function sampleMosaic(M, lat, lon) {
  * @returns {{grid, size, orig, step}} orig/step 은 셀-로컬 m
  */
 export function cellLattice(range, chunkSize, cell, mLon, mosaic, opts = {}) {
-  const { bareEarthOn = true, buildings = null, halo = DEM_HALO, perChunk = DEM_PER_CHUNK } = opts;
+  const { bareEarthOn = true, urbanGroundOn = false, buildings = null, halo = DEM_HALO, perChunk = DEM_PER_CHUNK } = opts;
   const step = chunkSize / perChunk;
   const lo = Math.min(range.cxMin, range.czMin) * chunkSize - halo * step;
   const hi = Math.max(range.cxMax + 1, range.czMax + 1) * chunkSize + halo * step;
@@ -91,7 +91,7 @@ export function cellLattice(range, chunkSize, cell, mLon, mosaic, opts = {}) {
   // 건물 footprint 아래 평탄화(도시 DSM 스파이크 제거). buildings 는 **셀-로컬** 폴리곤.
   if (buildings?.length) grid = flattenUnderBuildings(grid, size, buildings, lo, step, 4);
   // 탑 사이에 번진 DSM 잔여(도로·마당 위 혹)를 건물 밀도만큼 깎는다 — dem.mjs urbanGround.
-  if (buildings?.length) grid = urbanGround(grid, size, buildingMask(size, buildings, lo, step));
+  if (urbanGroundOn && buildings?.length) grid = urbanGround(grid, size, buildingMask(size, buildings, lo, step));
   return { grid, size, orig: lo, step };
 }
 

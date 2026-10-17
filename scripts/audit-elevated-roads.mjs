@@ -23,6 +23,7 @@ import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
 import {gunzipSync} from 'node:zlib';
 import {createServer} from 'vite';
+import {fileURLToPath} from 'node:url';
 import {loadMapCities,selectMapCities} from './map-city-config.mjs';
 import {deckTreeConflict,crownProbe,TREE_TOP_PER_SCALE} from '../src/world/treeClearance.mjs';
 import {PORTAL_REACH,ELEVATED_GAP,slimTerrain,nodeKey,roadsThroughBuildings,RoadDeadEnds} from './deck-structure.mjs';
@@ -40,7 +41,8 @@ const cell=cities[city],out=flag('--out')??`build/${city}-elevated-audit.json`,s
 const ref=flag('--ref'),load=path=>ref?execFileSync('git',['show',`${ref}:${path}`],{maxBuffer:1<<30}):readFileSync(path);
 const index=JSON.parse(load(`src/world/${city}-bundles.json`).toString());
 
-const server=await createServer({configFile:false,server:{middlewareMode:true},appType:'custom',optimizeDeps:{noDiscovery:true},logLevel:'error'});
+// Modules load from this repo; data paths stay relative to the cwd (the map pipeline test runs in a temp root).
+const server=await createServer({root:fileURLToPath(new URL('..',import.meta.url)),configFile:false,server:{middlewareMode:true},appType:'custom',optimizeDeps:{noDiscovery:true},logLevel:'error'});
 try{
  const {vegetationSites}=await server.ssrLoadModule('/src/world/Vegetation.ts');
  const {chunkTerrainEntry,sampleChunkLandHeight}=await server.ssrLoadModule('/src/world/chunkMesh.ts');
@@ -164,7 +166,8 @@ try{
   trees:{total:trees.total,authored:trees.authored,onCarriageway:trees.onCarriageway.length,throughDeck:trees.throughDeck.length,
    onCarriagewayAuthored:trees.onCarriageway.filter(t=>t.authored).length,samplesOnCarriageway:trees.onCarriageway.slice(0,40),samplesThroughDeck:worst(trees.throughDeck,'treeTop')}};
  // Regression gate: per-city ceilings (structural residuals stay reported, never silently grown).
- const limits=JSON.parse(readFileSync('config/map-quality/elevated-roads.json','utf8'))[city]??{};
+ // Absent file = no residual allowed, as audit-baked-streets.mjs treats its ceilings.
+ const limits=(()=>{try{return JSON.parse(readFileSync('config/map-quality/elevated-roads.json','utf8'))[city]??{};}catch(e){if(e.code==='ENOENT')return {};throw e;}})();
  const measured={lowHeadroomSpots:lowHeadroom.size,steepDeckSpots:steepDeck.size,roadsThroughBuildings:blocked.filter(b=>!b.authored).length,portalSteps:steps.length,floatingDeadEnds:floating.length,treesOnCarriageway:trees.onCarriageway.length,treesThroughDeck:trees.throughDeck.length};
  report.limits=limits;report.exceeded=Object.entries(measured).filter(([k,v])=>v>(limits[k]??0)).map(([k,v])=>({check:k,measured:v,limit:limits[k]??0}));
  report.passed=!report.exceeded.length;
@@ -184,8 +187,9 @@ function surfaceChecks(tris,low,steep){
   const x0=Math.min(t[0],t[3],t[6]),x1=Math.max(t[0],t[3],t[6]),z0=Math.min(t[2],t[5],t[8]),z1=Math.max(t[2],t[5],t[8]);
   for(let x=Math.ceil(x0/2)*2;x<=x1;x+=2)for(let z=Math.ceil(z0/2)*2;z<=z1;z+=2){const w=bary(t,x,z);if(!w||Math.min(...w)<-1e-6)continue;const k=x*1e6+z;(at.get(k)??at.set(k,[]).get(k)).push(w[0]*t[1]+w[1]*t[4]+w[2]*t[7]);}
  }
+ // k = x*1e6+z on the 2 m grid; round (not floor/%) so negative z decodes to itself.
  for(const [k,ys] of at){if(ys.length<2)continue;ys.sort((a,b)=>a-b);
-  for(let i=1;i<ys.length;i++){const g=ys[i]-ys[i-1];if(g>HEADROOM_SEAM&&g<HEADROOM_MIN){const o=spot(low,Math.floor(k/1e6),k%1e6);o.n++;o.gap=Math.min(o.gap??Infinity,+g.toFixed(2));break;}}}
+  for(let i=1;i<ys.length;i++){const g=ys[i]-ys[i-1];if(g>HEADROOM_SEAM&&g<HEADROOM_MIN){const gx=Math.round(k/1e6),o=spot(low,gx,k-gx*1e6);o.n++;o.gap=Math.min(o.gap??Infinity,+g.toFixed(2));break;}}}
 }
 function bary(t,x,z){
  const det=(t[5]-t[8])*(t[0]-t[6])+(t[6]-t[3])*(t[2]-t[8]);if(Math.abs(det)<1e-9)return;

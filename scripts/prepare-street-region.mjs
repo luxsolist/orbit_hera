@@ -48,7 +48,9 @@ try {
  if(!existsSync(path))continue;
  const stored=read(path),source=stored.mapBuild?.input,raw=source?.raw??stored,grade=source?.roadGrade??optional('public/maps/road-grade/'+cell.join('/')+'/'+key+'.json');if(grade)delete grade.streetPlan;
  let chunk=applyMapCorrections(cell,raw,{roadGrade:grade,detail:source?.detail??optional('public/maps/details/'+city+'/'+key+'.json'),appearance:source?.appearance??optional('public/maps/landmark-appearance/'+city+'/'+key+'.json')},{surfaceCoherence:!cfg.refreshObjects,roadNetwork:!cfg.refreshObjects,streetSections:!cfg.refreshObjects});
- if(cfg.refreshObjects)chunk=reconcileUrbanTerrain({...refreshStreetObjects(chunk,refreshed),surfaceReconciled:false});
+ const detail=source?.detail??optional('public/maps/details/'+city+'/'+key+'.json'),removedP=new Set((detail?.remove??[]).map(p=>JSON.stringify(p)));
+ const removedIds=new Set(raw.objects.buildings.filter(b=>b.osmId&&removedP.has(JSON.stringify(b.p))).map(b=>b.osmId));
+ if(cfg.refreshObjects)chunk=reconcileUrbanTerrain({...refreshStreetObjects(chunk,refreshed,removedIds),surfaceReconciled:false});
  // Restore exact source outlines/courtyards and vertical roles before allocating streets.
  const classified=[];
  for(const b of [...chunk.objects.buildings,...(chunk.objects.structures??[])]){

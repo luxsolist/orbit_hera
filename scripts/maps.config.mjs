@@ -107,7 +107,11 @@ const CHAPTER_LABEL = {
 // 겹치면 소유 경계에서 지형이 어긋나(실측 최대 30m) 나라를 반경 11.2km 로 줄여야 했다.
 // 지금은 겹쳐도 같은 값이 나오므로(실측 0m) 모든 도시가 규격 반경 20km 를 쓴다.
 // 남겨 두는 이유: 특정 도시의 중심·반경을 손으로 조정할 필요가 생길 때의 자리.
-export const PLACEMENT = {}; // 지형이 위치 순수 함수가 되어 배치 조정이 불필요해졌다(검증 중)
+export const PLACEMENT = {};
+
+// 도시 지면(geodem urbanGround) — 고층 탑 높이가 DSM 지면으로 번진 도시에만 켠다. 저층 건물이 언덕을
+// 덮은 도시(로마 카스텔리 로마니 실측 최대 74m)는 언덕 마을 자체를 좁은 혹으로 깎는다.
+export const URBAN_GROUND_CITIES = new Set(["hong-kong"]); // 지형이 위치 순수 함수가 되어 배치 조정이 불필요해졌다(검증 중)
 
 
 export function cityMapDef(c) {
@@ -129,6 +133,7 @@ export function cityMapDef(c) {
     bbox,
     catalogHidden: true,
     bareEarth: false,
+    urbanGround: URBAN_GROUND_CITIES.has(c.id),
     heightmap: { src: `${c.id}.terrain.bin`, size: 2048, meters: r * 2 },
     stream: {
       id: `${c.id}-stream`,

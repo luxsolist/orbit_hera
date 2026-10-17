@@ -38,14 +38,19 @@ export function collectStreetSource(elements,project,policy={}){
  return {roads,walking,buildings,roles,waterByChunk};
 }
 /** Rehydrate legacy geometry from source; retain reviewed models by ID and footprint. */
-export function refreshStreetObjects(chunk,source){
+export function refreshStreetObjects(chunk,source,removedIds=new Set()){
  const authored=chunk.objects.buildings.filter(b=>b.seoulArchitecture||b.landmarkModel||b.palaceBuildingId||b.statueModel);
  const sites=authored.filter(b=>source.roles?.[b.osmId]==='site');
  const custom=authored.filter(b=>source.roles?.[b.osmId]!=='site');
  const ids=new Set(custom.map(b=>b.osmId).filter(Boolean));
  const owned=b=>{const p=b.p,n=p.length/2;let x=0,z=0;for(let i=0;i<p.length;i+=2){x+=p[i];z+=p[i+1];}return Math.floor(x/n/1024)===chunk.cx&&Math.floor(z/n/1024)===chunk.cz;};
  const contains=(p,x,z)=>{let yes=false;for(let i=0,j=p.length-2;i<p.length;j=i,i+=2)if((p[i+1]>z)!==(p[j+1]>z)&&x<(p[j]-p[i])*(z-p[i+1])/(p[j+1]-p[i+1])+p[i])yes=!yes;return yes;};
- const replaced=b=>ids.has(b.osmId)||custom.some(c=>b.p.every((v,i)=>i%2||contains(c.p,b.p[i],b.p[i+1])));
+ // A source building under an authored model is replaced when its centre is inside — an outline that
+ // shares the model's vertices (Athens way/910010406, the old Parthenon) fails the every-vertex test on
+ // the boundary and drew a windowed wall under the temple. removedIds = regional detail removals, which
+ // this refresh would otherwise bring back from the source.
+ const centre=p=>{let x=0,z=0;for(let i=0;i<p.length;i+=2){x+=p[i];z+=p[i+1];}return [x*2/p.length,z*2/p.length];};
+ const replaced=b=>ids.has(b.osmId)||removedIds.has(b.osmId)||custom.some(c=>contains(c.p,...centre(b.p))||b.p.every((v,i)=>i%2||contains(c.p,b.p[i],b.p[i+1])));
  const buildings=source.buildings.filter(b=>owned(b)&&!replaced(b));
  const roads=source.roads.flatMap(r=>clipPolylineToRect(r.p,chunk.cx*1024,chunk.cz*1024,(chunk.cx+1)*1024,(chunk.cz+1)*1024).map(p=>({...r,p})));
  return {...chunk,objects:{...chunk.objects,...(source.waterByChunk?{water:source.waterByChunk.get(chunk.cx+'_'+chunk.cz)??[]}:{}),sites:[...(chunk.objects.sites??[]),...sites.map(b=>{const n=b.p.length/2;return {x:b.p.filter((_,i)=>i%2===0).reduce((a,v)=>a+v,0)/n,z:b.p.filter((_,i)=>i%2===1).reduce((a,v)=>a+v,0)/n,y:chunk.terrain.heights[Math.floor(chunk.terrain.heights.length/2)],r:25,lm:b.lm??'archive',n:b.n,osmId:b.osmId};})],buildings:[...custom,...buildings.filter(b=>!b.structureKind)],structures:buildings.filter(b=>b.structureKind),roads}};

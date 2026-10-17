@@ -6,6 +6,7 @@ import {createHash} from 'node:crypto';
 import {loadMapCities,selectMapCities} from './map-city-config.mjs';
 import {execFileSync} from 'node:child_process';
 import {unlink} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
 const cities=await loadMapCities(),selected=selectMapCities(cities,process.argv[2]);
 for(const city of selected){
 // Validate before writing any bundle or replacing the index. publish uses this same path.
@@ -32,7 +33,7 @@ await writeFile(`${indexPath}.next`,JSON.stringify(index,null,2)+'\n');await ren
 // Regression gate on what the game will render: floating deck ends, missing ramps, trees on roads
 // (scripts/audit-elevated-roads.mjs, ceilings in config/map-quality/elevated-roads.json).
 // A failing build keeps the previous playable index and drops the bundles it just wrote.
-try{execFileSync(process.execPath,['--max-old-space-size=3072','scripts/audit-elevated-roads.mjs',city,'--strict'],{stdio:'inherit'});}
+try{execFileSync(process.execPath,['--max-old-space-size=3072',fileURLToPath(new URL('./audit-elevated-roads.mjs',import.meta.url)),city,'--strict'],{stdio:'inherit'});}
 catch(error){
  const keep=new Set(previous?Object.values(JSON.parse(previous).bundles).map(e=>e.file):[]);
  for(const e of Object.values(index.bundles))if(!keep.has(e.file))await unlink(`${out}/${e.file}`).catch(()=>{});

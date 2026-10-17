@@ -93,6 +93,15 @@ describe("dem.flattenUnderBuildings — 건물 아래만 평탄화(산 보존)",
     expect(out[5 * s + 5]).toBeLessThan(50); // 스파이크 제거 → 주변 40
     expect(out[2 * s + 2]).toBe(300); // 산 보존
   });
+  it("절벽 위 건물은 둘레 지면 아래로 파이지 않는다(침식 창이 절벽 아래까지 닿아도)", () => {
+    const s = 15; const H = new Float32Array(s * s).fill(120); // 절벽 아래
+    for (let j = 4; j <= 10; j++) for (let i = 4; i <= 10; i++) H[j * s + i] = 145; // 정상 대지
+    H[7 * s + 7] = 160; // 신전 DSM
+    const buildings = [{ p: [6.5, 6.5, 7.5, 6.5, 7.5, 7.5, 6.5, 7.5] }];
+    const out = flattenUnderBuildings(H, s, buildings, 0, 1, 4);
+    expect(out[7 * s + 7]).toBe(145); // 120 구덩이가 아니라 정상 지면
+    expect(out[0]).toBe(120);
+  });
   it("pointInPoly — 사각형 내부/외부", () => {
     const sq = [0, 0, 10, 0, 10, 10, 0, 10];
     expect(pointInPoly(5, 5, sq)).toBe(true);

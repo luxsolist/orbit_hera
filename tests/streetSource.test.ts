@@ -41,3 +41,11 @@ it('retains an explicitly elevated building floor independently of road layer',(
  const source=collectStreetSource([{type:'way',id:3,tags:{building:'yes',level:'1'},geometry:[{lat:0,lon:0},{lat:10,lon:0},{lat:10,lon:10},{lat:0,lon:0}]}],project);
  expect(source.buildings[0]).toMatchObject({groundClearance:3.3,clearanceSource:'level',sourceLevel:'1'});
 });
+
+it('drops source outlines under an authored model and regional detail removals',()=>{
+ const temple=[100,100,170,100,170,133,100,133];
+ const source={roads:[],walking:[],buildings:[{osmId:'way/old-outline',p:temple,h:9},{osmId:'way/crepis',p:[120,110,150,110,150,120,120,120],h:.8},{osmId:'way/removed',p:[300,300,310,300,310,310],h:9},{osmId:'way/shed',p:[180,140,190,140,190,150,180,150],h:3}]};
+ const chunk={cx:0,cz:0,terrain:{heights:[3]},objects:{buildings:[{osmId:'way/temple',p:temple,h:17,seoulArchitecture:{kind:'athens-parthenon'}}],roads:[]}};
+ const result=refreshStreetObjects(chunk,source,new Set(['way/removed']));
+ expect(result.objects.buildings.map(b=>b.osmId)).toEqual(['way/temple','way/shed']);
+});

@@ -63,15 +63,43 @@ export function pointInPoly(x, z, p) {
 /**
  * 건물 풋프린트 아래 지형만 평탄화 — 도시(건물 DSM 스파이크)는 제거하되 **산·공원 등은 원본 보존**.
  * 마스크된 셀(건물 내부)은 형태학적 침식값(주변 지면 최저)으로 치환, 그 외는 raw. 전역 격자라 청크 이음매 일관. 순수.
+ *
+ * 침식 창(반경 openR 샘플 ≈ 80m)은 절벽 위 건물에서 절벽 아래까지 닿는다 — 아크로폴리스 정상(≈145m)의
+ * 파르테논 자리가 120m 구덩이로 파여 신전이 20m 벽 위에 앉았다. 그래서 바닥은 **이어진 풋프린트 덩어리
+ * 바로 바깥 둘레(8-이웃 비건물 셀)의 최저 raw 지면** 아래로 내려가지 않는다. 둘레 최저는 덩어리를
+ * 둘러싼 실제 지면 중 가장 낮은 곳이라 DSM 스파이크는 여전히 지운다(낮추기만 — raw 를 넘지 않는다).
  * buildings: [{p:[mapX,mapZ,...]}] (맵-로컬). gOrigin/gStep: DEM 격자 원점·간격(맵-로컬). 반환: 새 Float32Array.
  */
 export function flattenUnderBuildings(H, size, buildings, gOrigin, gStep, openR = 4) {
   if (!buildings || !buildings.length) return H;
   const E = morphPass(H, size, openR, Math.min); // 침식 = 주변 지면 최저
   const mask = buildingMask(size, buildings, gOrigin, gStep);
+  const floor = footprintRimFloor(H, size, mask);
   const out = new Float32Array(H.length);
-  for (let i = 0; i < H.length; i++) out[i] = mask[i] ? E[i] : H[i];
+  for (let i = 0; i < H.length; i++) out[i] = mask[i] ? Math.min(H[i], Math.max(E[i], floor[i])) : H[i];
   return out;
+}
+
+/** 건물 셀마다 그 셀이 속한 4-연결 덩어리의 둘레(8-이웃 비건물 셀) 최저 raw 높이. 둘레가 없으면 -Infinity. 순수. */
+function footprintRimFloor(H, size, mask) {
+  const floor = new Float32Array(H.length).fill(-Infinity), seen = new Uint8Array(H.length), queue = new Int32Array(H.length);
+  for (let s = 0; s < H.length; s++) {
+    if (!mask[s] || seen[s]) continue;
+    let head = 0, tail = 0, rim = Infinity; queue[tail++] = s; seen[s] = 1;
+    while (head < tail) {
+      const i = queue[head++], x = i % size, y = (i - x) / size;
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const xx = x + dx, yy = y + dy;
+        if ((!dx && !dy) || xx < 0 || yy < 0 || xx >= size || yy >= size) continue;
+        const j = yy * size + xx;
+        if (!mask[j]) { if (H[j] < rim) rim = H[j]; }
+        else if (!seen[j] && (!dx || !dy)) { seen[j] = 1; queue[tail++] = j; }
+      }
+    }
+    const v = rim === Infinity ? -Infinity : rim;
+    for (let k = 0; k < tail; k++) floor[queue[k]] = v;
+  }
+  return floor;
 }
 
 /** 격자점(중심)이 건물 풋프린트 안이면 1. 순수. */

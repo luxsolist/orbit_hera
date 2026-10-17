@@ -6,7 +6,7 @@ import {streetBuildHash} from './street-build-hash.mjs';
 import {createServer} from 'vite';
 import {streetArtifacts,writeStreetPart} from './street-artifacts.mjs';
 import {createElevatedStreetSampler,fitDeckSlots} from './street-elevation.mjs';
-import {PORTAL_LIFT,planCityDecks,meshPieces,trimDeckTriangles,deckTrimTests,limitDeckGrade,GRADE_LOCK_REACH,TRIM_FLUSH,UNDER_DECK_LAYERS,hideUnderDeck,approachRamps,deckStructures,liftSkirts,liftTriangles,clearBuildingsOfRoads,structuresOffRoads,RoadDeadEnds,SKIRT_LAYERS,DECK_STRUCTURE_VERSION} from './deck-structure.mjs';
+import {PORTAL_LIFT,planCityDecks,meshPieces,trimDeckTriangles,deckTrimTests,limitDeckGrade,holdsDeckEnd,TRIM_FLUSH,UNDER_DECK_LAYERS,hideUnderDeck,approachRamps,deckStructures,liftSkirts,liftTriangles,clearBuildingsOfRoads,structuresOffRoads,RoadDeadEnds,SKIRT_LAYERS,DECK_STRUCTURE_VERSION} from './deck-structure.mjs';
 import {crossingHeight} from './street-crossings.mjs';
 import {createStreetSeamSampler,reconcileStreetTerrain} from './street-seams.mjs';
 const [city='seoul',region='city-wide']=process.argv.slice(2),read=p=>JSON.parse(readFileSync(p,'utf8'));
@@ -85,7 +85,7 @@ try{
  for(const k of [...layers.keys()].filter(k=>k.startsWith('3:')&&k!=='3:0')){const level=Number(k.slice(2)),tests=trimTests(level),out=[];
   // No cliff where two roads' heights meet; a deck on its street, near its end, or on the chunk seam
   // (the neighbour cannot see this chunk's raise) stays put (repair-elevated-decks.mjs).
-  const deckEnds=deckPlan.nodes.filter(n=>(n.portal||n.deadEnd)&&Math.abs(n.x-origin[0]-512)<540&&Math.abs(n.z-origin[1]-512)<540).map(n=>[n.x,n.z]),soup=toCell(k).flat();limitDeckGrade(soup,soup.map((_,i)=>i).slice(0,soup.length/3),v=>{const top=streetTop(soup[v*3],soup[v*3+2]);const x=soup[v*3],z=soup[v*3+2];return edgeOfChunk(x,z)||top!==undefined&&soup[v*3+1]-top<TRIM_FLUSH+.01||deckEnds.some(([ex,ez])=>Math.hypot(ex-x,ez-z)<GRADE_LOCK_REACH);});
+  const deckEnds=deckPlan.nodes.filter(n=>(n.portal||n.deadEnd)&&Math.abs(n.x-origin[0]-512)<540&&Math.abs(n.z-origin[1]-512)<540).map(n=>[n.x,n.z,n.h]),soup=toCell(k).flat();limitDeckGrade(soup,soup.map((_,i)=>i).slice(0,soup.length/3),v=>{const top=streetTop(soup[v*3],soup[v*3+2]);const x=soup[v*3],z=soup[v*3+2];return edgeOfChunk(x,z)||top!==undefined&&soup[v*3+1]-top<TRIM_FLUSH+.01||deckEnds.some(e=>holdsDeckEnd(e,x,soup[v*3+1],z));});
   for(let i=0;i<soup.length;i+=9){const t=soup.slice(i,i+9),r=trimDeckTriangles(t,tests);out.push(...r.tris);
    // A cut deck triangle is recorded for the surface audit like a ramp-side feather.
    if(r.cut)((yielded[key]??={})['deck-'+level]??=[]).push(...[t[0],t[2],t[3],t[5],t[6],t[8]].map(v=>Math.round(v*1000)/1000));}
